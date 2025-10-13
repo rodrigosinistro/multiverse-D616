@@ -1,0 +1,145 @@
+{
+  "conditions": [
+    {
+      "id": "mmrpg.ablaze",
+      "name": "Ablaze (Em Chamas)",
+      "icon": "icons/m.svg",
+      "description": "Perde 5 Health no fim de cada turno. Narrador decide inflamabilidade.",
+      "remove": "Água/extintor ou rolar no chão (Agility TN 10, 1 ação)."
+    },
+    {
+      "id": "mmrpg.bleeding",
+      "name": "Bleeding (Sangrando)",
+      "icon": "icons/m.svg",
+      "description": "Perde 5 Health no fim de cada turno.",
+      "remove": "Logic TN 10 (1 ação) ou recuperar 1+ Health."
+    },
+    {
+      "id": "mmrpg.corroding",
+      "name": "Corroding (Corroído)",
+      "icon": "icons/m.svg",
+      "description": "Perde 5 Health no fim de cada turno.",
+      "remove": "Lavar com muita água."
+    },
+    {
+      "id": "mmrpg.grabbed",
+      "name": "Grabbed (Agarrado)",
+      "icon": "icons/m.svg",
+      "description": "Agarrador e alvo não se movem (a menos que carregue o outro). Ataques contra alvo específico: Trouble; ataques sem alvo específico: Edge."
+    },
+    {
+      "id": "mmrpg.pinned",
+      "name": "Pinned (Imobilizado)",
+      "icon": "icons/m.svg",
+      "description": "Como Grabbed, mas com Trouble em Melee e Agility; não pode usar ações de movimento."
+    },
+    {
+      "id": "mmrpg.prone",
+      "name": "Prone (Caído)",
+      "icon": "icons/m.svg",
+      "description": "No chão; você tem Trouble em ataques de Melee; inimigos em Melee têm Edge; ataques à distância contra você têm Trouble."
+    },
+    {
+      "id": "mmrpg.restrained",
+      "name": "Restrained (Restrito)",
+      "icon": "icons/m.svg",
+      "description": "Não pode se mover; ataques contra você têm Edge."
+    },
+    {
+      "id": "mmrpg.paralyzed",
+      "name": "Paralyzed (Paralisado)",
+      "icon": "icons/m.svg",
+      "description": "Não pode se mover/agir com Melee/Agility; Agility Defense = 10 contra ranged; ataques em Melee acertam automaticamente."
+    },
+    {
+      "id": "mmrpg.blinded",
+      "name": "Blinded (Cego)",
+      "icon": "icons/m.svg",
+      "description": "Velocidade -50%; perde poderes que exigem visão; Trouble em ações visuais; inimigos têm Edge."
+    },
+    {
+      "id": "mmrpg.deafened",
+      "name": "Deafened (Surdo)",
+      "icon": "icons/m.svg",
+      "description": "Perde poderes que exigem audição; Trouble em ações que dependem de ouvir."
+    },
+    {
+      "id": "mmrpg.confused",
+      "name": "Confused (Confuso)",
+      "icon": "icons/m.svg",
+      "description": "Ações erráticas (Narrador define)."
+    },
+    {
+      "id": "mmrpg.charmed",
+      "name": "Charmed (Encantado)",
+      "icon": "icons/m.svg",
+      "description": "Você vê o causador como aliado."
+    },
+    {
+      "id": "mmrpg.dominated",
+      "name": "Dominated (Dominado)",
+      "icon": "icons/m.svg",
+      "description": "Segue ordens do controlador."
+    },
+    {
+      "id": "mmrpg.frightened",
+      "name": "Frightened (Amedrontado)",
+      "icon": "icons/m.svg",
+      "description": "Tenta fugir ou sofre desvantagem contra o causador."
+    },
+    {
+      "id": "mmrpg.demoralized",
+      "name": "Demoralized (Desmoralizado)",
+      "icon": "icons/m.svg",
+      "description": "Poderes em concentração terminam; Trouble em todas as ações."
+    },
+    {
+      "id": "mmrpg.stunned",
+      "name": "Stunned (Atordoado)",
+      "icon": "icons/m.svg",
+      "description": "Não pode agir; poderes em concentração terminam; ataques contra você têm Edge."
+    },
+    {
+      "id": "mmrpg.shattered",
+      "name": "Shattered (Arrasado)",
+      "icon": "icons/m.svg",
+      "description": "Permanentemente Stunned; só frases curtas."
+    },
+    {
+      "id": "mmrpg.surprised",
+      "name": "Surprised (Surpreso)",
+      "icon": "icons/m.svg",
+      "description": "No round bônus não age; se surpreendido, inimigos têm Edge por 1 rodada."
+    },
+    {
+      "id": "mmrpg.unconscious",
+      "name": "Unconscious (Inconsciente)",
+      "icon": "icons/m.svg",
+      "description": "Não pode agir; todas as defesas = 10; ataques em Melee acertam automaticamente."
+    },
+    {
+      "id": "mmrpg.incapacitated",
+      "name": "Incapacitated (Incapaz/KO)",
+      "icon": "icons/m.svg",
+      "description": "Fora de combate até recuperar."
+    },
+    {
+      "id": "mmrpg.exhausted",
+      "name": "Exhausted (Exausto)",
+      "icon": "icons/m.svg",
+      "description": "+5 Focus ao custo de poderes por 24h sem dormir (pode ultrapassar limite); Trouble em todas as ações."
+    },
+    {
+      "id": "mmrpg.poisoned",
+      "name": "Poisoned (Envenenado)",
+      "icon": "icons/m.svg",
+      "description": "No início do turno: Resilience TN 18 (falha = -1 Health; sucesso fantástico = cura)."
+    },
+    {
+      "id": "mmrpg.infected",
+      "name": "Infected (Infectado)",
+      "icon": "icons/m.svg",
+      "description": "Exposição por ar (até 3 espaços) ou contato; teste imediato de Resilience vs TN (padrão 12). Sucesso fantástico = imunidade por 1 dia."
+    }
+  ]
+}
