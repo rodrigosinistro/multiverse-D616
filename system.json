@@ -1,0 +1,148 @@
+{
+  "id": "multiverse-d616",
+  "title": "Multiverse-D616",
+  "description": "The Multiverse-D616 system for FoundryVTT!",
+  "authors": [
+    {
+      "name": "RodrigoSinistro",
+      "discord": "rodrigosinistro"
+    }
+  ],
+  "url": "https://github.com/rodrigosinistro/multiverse-D616",
+  "license": "LICENSE.txt",
+  "readme": "README.md",
+  "bugs": "Replace this with a link to file issues or tickets",
+  "changelog": "CHANGELOG.md",
+  "media": [
+    {
+      "type": "cover",
+      "loop": false,
+      "flags": {}
+    },
+    {
+      "type": "setup",
+      "url": "systems/multiverse-d616/ui/official/mmrpg-setup.png",
+      "thumbnail": "systems/multiverse-d616/ui/official/mmrpg-setup-thumbnail.png"
+    }
+  ],
+  "version": "0.1.14",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13.341"
+  },
+  "esmodules": [
+    "multiverse-d616.mjs",
+    "scripts/hover-tooltips.js",
+    "scripts/chat-power-details.js",
+    "scripts/damage-reduction-helper.js",
+    "scripts/conditions-hud.js",
+    "apps/charactermancer/scripts/charactermancer.js",
+    "apps/charactermancer/scripts/mmc-guard-core-listeners.js",
+    "apps/charactermancer/scripts/mmc-compat-cleaner-titlebar.js",
+    "apps/charactermancer/scripts/utils/mmc-load-traits-tags.js",
+    "features/sheet-export-m616/m616-export.js"
+  ],
+  "styles": [
+    "css/multiverse-d616.css",
+    "styles/chat-power-details.css",
+    "styles/damage-reduction-helper.css",
+    "styles/conditions-hud.css",
+    "apps/charactermancer/styles/styles.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "pt-BR",
+      "name": "Português (Brasil)",
+      "path": "lang/pt-BR.json"
+    }
+  ],
+  "packs": [
+    {
+      "name": "tags",
+      "label": "Tags",
+      "system": "multiverse-d616",
+      "path": "packs/tags",
+      "type": "Item",
+      "private": false,
+      "flags": {}
+    },
+    {
+      "name": "traits",
+      "label": "Traits",
+      "system": "multiverse-d616",
+      "path": "packs/traits",
+      "type": "Item",
+      "private": false,
+      "flags": {}
+    },
+    {
+      "name": "powers",
+      "label": "Powers",
+      "system": "multiverse-d616",
+      "path": "packs/powers",
+      "type": "Item",
+      "private": false,
+      "flags": {}
+    },
+    {
+      "name": "origins",
+      "label": "Origins",
+      "system": "multiverse-d616",
+      "path": "packs/origins",
+      "type": "Item",
+      "private": false,
+      "flags": {}
+    },
+    {
+      "name": "occupations",
+      "label": "Occupations",
+      "system": "multiverse-d616",
+      "path": "packs/occupations",
+      "type": "Item",
+      "private": false,
+      "flags": {}
+    },
+    {
+      "name": "items",
+      "label": "Items",
+      "system": "multiverse-d616",
+      "path": "packs/items",
+      "type": "Item",
+      "private": false,
+      "flags": {}
+    }
+  ],
+  "packFolders": [
+    {
+      "name": "MMRPG Content",
+      "sorting": "m",
+      "color": "#cd2c1e",
+      "packs": [
+        "tags",
+        "traits",
+        "origins",
+        "occupations",
+        "items",
+        "powers"
+      ]
+    }
+  ],
+  "socket": true,
+  "manifest": "https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json",
+  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.1.14/multiverse-d616-v0.1.14.zip",
+  "background": "systems/multiverse-d616/ui/official/mmrpg-background.webp",
+  "grid": {
+    "distance": 5,
+    "units": "ft"
+  },
+  "primaryTokenAttribute": "health",
+  "secondaryTokenAttribute": "focus",
+  "flags": {
+    "hotReload": false
+  }
+}
