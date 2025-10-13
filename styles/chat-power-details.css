@@ -1,0 +1,13 @@
+
+.mcpd-card {
+  border: 1px solid var(--color-border-light-2, #b5b5b5);
+  background: var(--bgc-message, rgba(0,0,0,0.04));
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 6px 0 0 0;
+  font-size: 13.5px;
+  line-height: 1.25;
+}
+.mcpd-row { margin: 2px 0; }
+.mcpd-label { font-weight: 700; margin-right: 4px; }
+.mcpd-value { font-weight: 500; }
