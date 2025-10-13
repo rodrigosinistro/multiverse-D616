@@ -1,0 +1,340 @@
+{
+  "name": "modelo",
+  "type": "character",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "attributes": {
+      "init": {
+        "value": 0,
+        "edge": false,
+        "trouble": false
+      },
+      "rank": {
+        "value": 1
+      }
+    },
+    "abilities": {
+      "mle": {
+        "value": 0,
+        "defense": 0,
+        "noncom": 0,
+        "edge": false,
+        "damageMultiplier": 0,
+        "label": ""
+      },
+      "agl": {
+        "value": 0,
+        "defense": 0,
+        "noncom": 0,
+        "edge": false,
+        "damageMultiplier": 0,
+        "label": ""
+      },
+      "res": {
+        "value": 0,
+        "defense": 0,
+        "noncom": 0,
+        "edge": false,
+        "damageMultiplier": 0,
+        "label": ""
+      },
+      "vig": {
+        "value": 0,
+        "defense": 0,
+        "noncom": 0,
+        "edge": false,
+        "damageMultiplier": 0,
+        "label": ""
+      },
+      "ego": {
+        "value": 0,
+        "defense": 0,
+        "noncom": 0,
+        "edge": false,
+        "damageMultiplier": 0,
+        "label": ""
+      },
+      "log": {
+        "value": 0,
+        "defense": 0,
+        "noncom": 0,
+        "edge": false,
+        "damageMultiplier": 0,
+        "label": ""
+      }
+    },
+    "health": {
+      "value": 0,
+      "max": 0
+    },
+    "healthDamageReduction": 0,
+    "focus": {
+      "value": 0,
+      "max": 0
+    },
+    "focusDamageReduction": 0,
+    "karma": {
+      "value": 0,
+      "max": 0
+    },
+    "codename": "",
+    "realname": "",
+    "height": "",
+    "weight": "",
+    "gender": "",
+    "eyes": "",
+    "hair": "",
+    "size": "average",
+    "distinguishingFeatures": "",
+    "teams": "",
+    "history": "",
+    "personality": "",
+    "actorSizes": {
+      "microscopic": {
+        "label": "MARVEL_MULTIVERSE.Size.Microscopic"
+      },
+      "miniature": {
+        "label": "MARVEL_MULTIVERSE.Size.Miniature"
+      },
+      "tiny": {
+        "label": "MARVEL_MULTIVERSE.Size.Tiny"
+      },
+      "little": {
+        "label": "MARVEL_MULTIVERSE.Size.Little"
+      },
+      "small": {
+        "label": "MARVEL_MULTIVERSE.Size.Small"
+      },
+      "average": {
+        "label": "MARVEL_MULTIVERSE.Size.Average"
+      },
+      "big": {
+        "label": "MARVEL_MULTIVERSE.Size.Big"
+      },
+      "huge": {
+        "label": "MARVEL_MULTIVERSE.Size.Huge"
+      },
+      "gigantic": {
+        "label": "MARVEL_MULTIVERSE.Size.Gigantic"
+      },
+      "titanic": {
+        "label": "MARVEL_MULTIVERSE.Size.Titanic"
+      },
+      "gargantuan": {
+        "label": "MARVEL_MULTIVERSE.Size.Gargantuan"
+      }
+    },
+    "movement": {
+      "run": {
+        "label": "MARVEL_MULTIVERSE.Movement.Run",
+        "value": 5,
+        "noncom": 5,
+        "active": true,
+        "rankMode": ""
+      },
+      "climb": {
+        "label": "MARVEL_MULTIVERSE.Movement.Climb",
+        "value": 5,
+        "noncom": 5,
+        "active": true,
+        "rankMode": ""
+      },
+      "swim": {
+        "label": "MARVEL_MULTIVERSE.Movement.Swim",
+        "value": 5,
+        "noncom": 5,
+        "active": true,
+        "rankMode": ""
+      },
+      "jump": {
+        "label": "MARVEL_MULTIVERSE.Movement.Jump",
+        "value": 5,
+        "noncom": 5,
+        "active": true,
+        "rankMode": ""
+      },
+      "flight": {
+        "label": "MARVEL_MULTIVERSE.Movement.Flight",
+        "value": 5,
+        "noncom": 5,
+        "active": false,
+        "rankMode": ""
+      },
+      "glide": {
+        "label": "MARVEL_MULTIVERSE.Movement.Glide",
+        "value": 5,
+        "noncom": 5,
+        "active": false,
+        "rankMode": ""
+      },
+      "swingline": {
+        "label": "MARVEL_MULTIVERSE.Movement.Swingline",
+        "value": 5,
+        "noncom": 5,
+        "active": false,
+        "rankMode": ""
+      },
+      "levitation": {
+        "label": "MARVEL_MULTIVERSE.Movement.Levitation",
+        "value": 5,
+        "noncom": 5,
+        "active": false,
+        "rankMode": ""
+      }
+    },
+    "base": "",
+    "occupations": [],
+    "weapons": [],
+    "origins": [],
+    "gear": [],
+    "tags": [],
+    "traits": [],
+    "powers": {
+      "basic": [],
+      "elementalControl": [],
+      "healing": [],
+      "illusion": [],
+      "luck": [],
+      "magic": [],
+      "martialArts": [],
+      "meleeWeapons": [],
+      "narrative": [],
+      "omniversalTravel": [],
+      "phasing": [],
+      "plasticity": [],
+      "powerControl": [],
+      "rangedWeapons": [],
+      "resize": [],
+      "shieldBearer": [],
+      "sixthSense": [],
+      "spiderPowers": [],
+      "superSpeed": [],
+      "superStrength": [],
+      "tactics": [],
+      "telekinesis": [],
+      "telepathy": [],
+      "teleportation": [],
+      "translation": [],
+      "weatherControl": []
+    },
+    "reach": 1,
+    "defaultElement": "",
+    "teamManeuver": {
+      "maneuverType": "",
+      "level": 1
+    }
+  },
+  "prototypeToken": {
+    "name": "modelo",
+    "displayName": 0,
+    "actorLink": false,
+    "width": 1,
+    "height": 1,
+    "texture": {
+      "src": "icons/svg/mystery-man.svg",
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "offsetX": 0,
+      "offsetY": 0,
+      "fit": "contain",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "tint": "#ffffff",
+      "alphaThreshold": 0.75
+    },
+    "lockRotation": false,
+    "rotation": 0,
+    "alpha": 1,
+    "disposition": -1,
+    "displayBars": 0,
+    "bar1": {
+      "attribute": "health"
+    },
+    "bar2": {
+      "attribute": "focus"
+    },
+    "light": {
+      "negative": false,
+      "priority": 0,
+      "alpha": 0.5,
+      "angle": 360,
+      "bright": 0,
+      "color": null,
+      "coloration": 1,
+      "dim": 0,
+      "attenuation": 0.5,
+      "luminosity": 0.5,
+      "saturation": 0,
+      "contrast": 0,
+      "shadows": 0,
+      "animation": {
+        "type": null,
+        "speed": 5,
+        "intensity": 5,
+        "reverse": false
+      },
+      "darkness": {
+        "min": 0,
+        "max": 1
+      }
+    },
+    "sight": {
+      "enabled": false,
+      "range": 0,
+      "angle": 360,
+      "visionMode": "basic",
+      "color": null,
+      "attenuation": 0.1,
+      "brightness": 0,
+      "saturation": 0,
+      "contrast": 0
+    },
+    "detectionModes": [],
+    "occludable": {
+      "radius": 0
+    },
+    "ring": {
+      "enabled": false,
+      "colors": {
+        "ring": null,
+        "background": null
+      },
+      "effects": 1,
+      "subject": {
+        "scale": 1,
+        "texture": null
+      }
+    },
+    "turnMarker": {
+      "mode": 1,
+      "animation": null,
+      "src": null,
+      "disposition": false
+    },
+    "movementAction": null,
+    "flags": {},
+    "randomImg": false,
+    "appendNumber": false,
+    "prependAdjective": false
+  },
+  "items": [],
+  "effects": [],
+  "folder": null,
+  "flags": {},
+  "_stats": {
+    "coreVersion": "13.347",
+    "systemId": "marvel-multiverse",
+    "systemVersion": "2.2.0",
+    "createdTime": 1757101073554,
+    "modifiedTime": 1757101076203,
+    "lastModifiedBy": "uGOPHsw3mBdJh7CN",
+    "exportSource": {
+      "worldId": "marvel-616-testes",
+      "uuid": "Actor.jWUBxpLTZ8VXvIuQ",
+      "coreVersion": "13.347",
+      "systemId": "marvel-multiverse",
+      "systemVersion": "2.2.0"
+    }
+  }
+}

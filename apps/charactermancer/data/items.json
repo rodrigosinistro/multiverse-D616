@@ -1,0 +1,487 @@
+{
+  "package": "world.items",
+  "metadata": {
+    "name": "items",
+    "label": "Items",
+    "path": "worlds/marvel-multiverse/packs/items",
+    "type": "Item",
+    "system": "marvel-multiverse",
+    "ownership": {
+      "PLAYER": "OBSERVER",
+      "ASSISTANT": "OWNER"
+    },
+    "flags": {},
+    "packageType": "world",
+    "packageName": "marvel-multiverse",
+    "id": "world.items"
+  },
+  "type": "Item",
+  "items": [
+    {
+      "name": "Bow",
+      "type": "weapon",
+      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "system": {
+        "description": "Um arco é uma arma de longo alcance que dispara flechas usando a elasticidade da madeira ou do material. É uma arma simples que pode ser utilizada por qualquer pessoa.",
+        "range": "15",
+        "ability": "agl",
+        "attackTarget": "agl",
+        "attackKind": "ranged",
+        "attack": true,
+        "damageType": "health",
+        "quantity": 1,
+        "formula": "{1d6,1dm,1d6}",
+        "kind": "close",
+        "equipped": false,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "damageMultiplierBonus": "0"
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "8b60348af8f8d703",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150597,
+        "modifiedTime": 1756480150597,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "0XgDOUXsuxjPL9J0"
+    },
+    {
+      "name": "Pistol",
+      "type": "weapon",
+      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "system": {
+        "description": "Uma pequena arma de fogo, fácil de ocultar.",
+        "range": "10",
+        "ability": "agl",
+        "attackTarget": "agl",
+        "attackKind": "ranged",
+        "attack": true,
+        "damageType": "health",
+        "quantity": 1,
+        "formula": "{1d6,1dm,1d6}",
+        "kind": "close",
+        "equipped": false,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "damageMultiplierBonus": "0"
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "8b60348af8f8d703",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150597,
+        "modifiedTime": 1756480150597,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "7opv2wGVab0xoPnI"
+    },
+    {
+      "name": "Shotgun",
+      "type": "weapon",
+      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "system": {
+        "description": "Ataques com esta arma contra alvos a até 5 espaços de distância sofrem desvantagem. A espingarda é uma arma de fogo projetada para ser disparada do ombro, que usa a energia de um cartucho para disparar diversos projéteis esféricos chamados chumbo, ou um projétil sólido chamado slug. Existem espingardas em variados calibres e mecanismos de operação, incluindo de cano único, cano duplo, ação por bomba, ferrolho, alavanca, semiautomáticas e até totalmente automáticas.",
+        "range": "6",
+        "ability": "agl",
+        "rule": "This weapon can attack up to two targets In adjacent spaces to which the attacker can draw a line of sight. Make a single attack roll and compare it to the Agility defense scores of the targets. Split the damage from that roll equally.",
+        "attackTarget": "agl",
+        "attackKind": "ranged",
+        "attack": true,
+        "damageType": "health",
+        "quantity": 1,
+        "formula": "{1d6,1dm,1d6}",
+        "kind": "close",
+        "equipped": false,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "damageMultiplierBonus": "0"
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "8b60348af8f8d703",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150597,
+        "modifiedTime": 1756480150597,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "AnZTMyUUjb1Yn8ip"
+    },
+    {
+      "name": "Knife",
+      "type": "weapon",
+      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "system": {
+        "description": "Uma faca é uma pequena lâmina afiada usada para cortar ou como arma. É uma arma simples, fácil de esconder e pode ser usada para diversos propósitos.",
+        "range": "Reach",
+        "ability": "mle",
+        "attackTarget": "mle",
+        "attackKind": "close",
+        "attack": true,
+        "damageType": "health",
+        "quantity": 1,
+        "formula": "{1d6,1dm,1d6}",
+        "kind": "close",
+        "equipped": false,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "damageMultiplierBonus": "0"
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "8b60348af8f8d703",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150597,
+        "modifiedTime": 1756480150597,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "UnHYyhfw2lStMD28"
+    },
+    {
+      "name": "Rifle",
+      "type": "weapon",
+      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "system": {
+        "description": "Um rifle é uma arma de fogo projetada para ser disparada do ombro, com um cano que possui ranhuras helicoidais internas chamadas raiamento. As áreas elevadas chamadas campos entram em contato com o projétil (a bala), imprimindo rotação em torno de seu eixo. Isso dá estabilidade giroscópica e evita que o projétil tombe em voo, permitindo o uso de balas pontiagudas aerodinamicamente eficientes e melhorando o alcance e a precisão.",
+        "range": "20",
+        "ability": "agl",
+        "rule": "Attacks with this weapon against targets 5 spaces away or lower have trouble.",
+        "attackTarget": "agl",
+        "attackKind": "ranged",
+        "attack": true,
+        "damageType": "health",
+        "quantity": 1,
+        "formula": "{1d6,1dm,1d6}",
+        "kind": "close",
+        "equipped": false,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "damageMultiplierBonus": "0"
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "8b60348af8f8d703",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150597,
+        "modifiedTime": 1756480150597,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "VguWFWzy7TvCa0Ku"
+    },
+    {
+      "name": "Sniper Rifle",
+      "type": "weapon",
+      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "system": {
+        "description": "Um rifle de alta potência capaz de atingir alvos a longa distância.",
+        "range": "40",
+        "ability": "agl",
+        "attackTarget": "agl",
+        "attackKind": "ranged",
+        "attack": true,
+        "damageType": "health",
+        "quantity": 1,
+        "formula": "{1d6,1dm,1d6}",
+        "kind": "close",
+        "equipped": false,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "damageMultiplierBonus": "0"
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "8b60348af8f8d703",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150597,
+        "modifiedTime": 1756480150597,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "XQznswXxDbPREr8K"
+    },
+    {
+      "name": "Submachine Gun",
+      "type": "weapon",
+      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "system": {
+        "description": "A submetralhadora é uma carabina automática alimentada por carregador, projetada para disparar cartuchos de pistola. O termo foi cunhado por John T. Thompson, inventor da Thompson.",
+        "range": "10",
+        "ability": "agl",
+        "rule": "This weapon can attack up to three targets in adjacent spaces to which the attacker can draw a line of sight. Make a single attack roll and compare it to the Agility defense scores of the targets. Split the damage from that roll equally, Attacks with this weapon against targets 5 spaces away or fewer have trouble.",
+        "attackTarget": "agl",
+        "attackKind": "ranged",
+        "attack": true,
+        "damageType": "health",
+        "quantity": 1,
+        "formula": "{1d6,1dm,1d6}",
+        "kind": "close",
+        "equipped": false,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "damageMultiplierBonus": "0"
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "8b60348af8f8d703",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150597,
+        "modifiedTime": 1756480150597,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "blzBKzyetSk4ARPQ"
+    },
+    {
+      "name": "Frag Grenade",
+      "type": "weapon",
+      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "system": {
+        "description": "Uma granada que explode ao impacto, causando dano a todos os inimigos em um raio de 3 metros.",
+        "range": "10",
+        "ability": "agl",
+        "rule": "This weapon affects all characters within 2 spaces of where it lands and to which the grenade (not its thrower) would have a line of sight past any Intervening obstacles. Pick a target space and make a Challenging Agility check. If it succeeds, the grenade lands in the desired space. If the check fails, the grenade still winds up somewhere. Roll 1d6 to see how many spaces away from its Intended target it lands, It's up to the Narrator which direction it goes. Once you figure out where the grenade lands, compare the result of the check against the Agility defense of each character it could affect. Unlike with other, more precise weapons, a grenade uses its own damage multiplier (×2) Instead of that of the attacker. On a Fantastic success, it does double that (in other words, x4) damage to the character in the space where it lands, and regular damage to all other affected targets.",
+        "attackTarget": "agl",
+        "attackKind": "ranged",
+        "attack": true,
+        "damageType": "health",
+        "quantity": 1,
+        "formula": "{1d6,1dm,1d6}",
+        "kind": "close",
+        "equipped": false,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "damageMultiplierBonus": "0"
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "8b60348af8f8d703",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150597,
+        "modifiedTime": 1756480150597,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "f9Io1R0ytEwpzXMd"
+    },
+    {
+      "name": "Sword",
+      "type": "weapon",
+      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "system": {
+        "description": "Uma espada é uma longa peça de metal com fio usada para cortar, perfurar ou golpear. A lâmina mede normalmente entre 90 e 115 cm, com um punho de 15 a 20 cm. Pode ser de duplo fio ou fio único. É uma arma versátil usada em diversas culturas, estilos de luta e períodos históricos, exigindo habilidade e treinamento para ser eficaz.",
+        "range": "Reach",
+        "ability": "mle",
+        "attackTarget": "mle",
+        "attackKind": "close",
+        "attack": true,
+        "damageType": "health",
+        "quantity": 1,
+        "formula": "{1d6,1dm,1d6}",
+        "kind": "close",
+        "equipped": false,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "damageMultiplierBonus": "0"
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "8b60348af8f8d703",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150597,
+        "modifiedTime": 1756480150597,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "fzr9JkNDZ7z0PkCK"
+    },
+    {
+      "name": "Fist",
+      "type": "weapon",
+      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "system": {
+        "description": "A mão de uma pessoa com os dedos fechados contra a palma, usada para desferir um golpe.",
+        "range": "Reach",
+        "ability": "mle",
+        "attackTarget": "mle",
+        "attackKind": "close",
+        "attack": true,
+        "damageType": "health",
+        "quantity": 1,
+        "formula": "{1d6,1dm,1d6}",
+        "kind": "close",
+        "equipped": false,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "damageMultiplierBonus": "0"
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "8b60348af8f8d703",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150597,
+        "modifiedTime": 1756480150597,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "knJV74XNP1iOgiFC"
+    },
+    {
+      "name": "Flash Bang Grenade",
+      "type": "weapon",
+      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "system": {
+        "description": "Uma granada que emite um clarão ofuscante e um estrondo alto.",
+        "range": "10",
+        "ability": "agl",
+        "rule": "This works much like a frag grenade, but it does no Health damage, Instead, once you figure out where the grenade lands, compare the attack roll against the Vigilance defense of any character within 2 spaces of it. Those who are affected are blinded and stunned for one round.",
+        "attackTarget": "agl",
+        "attackKind": "ranged",
+        "attack": true,
+        "damageType": "health",
+        "quantity": 1,
+        "formula": "{1d6,1dm,1d6}",
+        "kind": "close",
+        "equipped": false,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "damageMultiplierBonus": "0"
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "8b60348af8f8d703",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150597,
+        "modifiedTime": 1756480150597,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "o4ffYXy4Yh3F4MQK"
+    },
+    {
+      "name": "Club",
+      "type": "weapon",
+      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "system": {
+        "description": "Um porrete é uma arma curta e robusta feita de madeira ou metal. É uma arma simples, fácil de usar, encontrada nas mãos de muitos combatentes.",
+        "range": "Reach",
+        "ability": "mle",
+        "attackTarget": "mle",
+        "attackKind": "close",
+        "attack": true,
+        "damageType": "health",
+        "quantity": 1,
+        "formula": "{1d6,1dm,1d6}",
+        "kind": "close",
+        "equipped": false,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "damageMultiplierBonus": "0"
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "8b60348af8f8d703",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150597,
+        "modifiedTime": 1756480150597,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "s1rbIflleUsIsC2N"
+    },
+    {
+      "name": "Knife Thrown",
+      "type": "weapon",
+      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "system": {
+        "description": "Uma faca é uma pequena lâmina afiada usada para cortar ou como arma. É uma arma simples, fácil de esconder e pode ser usada para diversos propósitos.",
+        "range": "5",
+        "ability": "agl",
+        "attackTarget": "agl",
+        "attackKind": "ranged",
+        "attack": true,
+        "damageType": "health",
+        "quantity": 1,
+        "formula": "{1d6,1dm,1d6}",
+        "kind": "close",
+        "equipped": false,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "damageMultiplierBonus": "0"
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "8b60348af8f8d703",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150597,
+        "modifiedTime": 1756480150597,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "uyZiEpiq4X9OMRaU"
+    }
+  ],
+  "source": {
+    "world": "marvel-multiverse",
+    "system": "marvel-multiverse",
+    "version": {
+      "core": "13.346",
+      "system": "2.2.0"
+    }
+  },
+  "folders": [
+    {
+      "name": "Weapon",
+      "type": "Item",
+      "folder": null,
+      "flags": {},
+      "color": "#a27ebc",
+      "description": "",
+      "sorting": "a",
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480150578,
+        "modifiedTime": 1756480150578,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "_id": "8b60348af8f8d703"
+    }
+  ],
+  "folder": {
+    "id": "GMJbBokUYDgVYTCs",
+    "name": "Marvel Multiverse"
+  }
+}

@@ -1,0 +1,4441 @@
+{
+  "package": "world.origins",
+  "metadata": {
+    "name": "origins",
+    "label": "Origins",
+    "path": "worlds/marvel-multiverse/packs/origins",
+    "type": "Item",
+    "system": "marvel-multiverse",
+    "ownership": {
+      "PLAYER": "OBSERVER",
+      "ASSISTANT": "OWNER"
+    },
+    "flags": {},
+    "packageType": "world",
+    "packageName": "marvel-multiverse",
+    "id": "world.origins"
+  },
+  "type": "Item",
+  "items": [
+    {
+      "name": "Alien",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem não é humano e provavelmente não é da Terra ou pelo menos não da Terra-616. O Multiverso Marvel apresenta todos os tipos de raças alienígenas diferentes. As mais comuns delas - Kree, Skrulls e assim por diante - têm suas próprias entradas. Se o personagem não se encaixa em uma delas, então esta origem se aplica.",
+        "examples": "Dinossauro Demônio, Gamora, Groot, Rocket Raccoon.",
+        "suggestedOccupation": "Forasteiro.",
+        "tags": [
+          {
+            "_id": "q8ee046cEAITCKE0",
+            "name": "Alien Heritage",
+            "type": "tag",
+            "system": {
+              "description": "O personagem ou pelo menos um de seus ancestrais não é da Terra. Escolha uma raça alienígena à qual ele pertença. Se não foi criado na Terra, deve considerar pegar a ocupação de Forasteiro.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!q8ee046cEAITCKE0"
+          },
+          {
+            "_id": "cTYI0iDJwrB7t8Zq",
+            "name": "Extreme Appearance",
+            "type": "tag",
+            "system": {
+              "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode dar outras informações úteis, como se uma aparência extrema é comum.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cTYI0iDJwrB7t8Zq"
+          }
+        ],
+        "traits": [],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "1ZmPLT1jTGtSUTFO"
+    },
+    {
+      "name": "Unknown",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem desenvolveu poderes, mas não tem certeza de como. Pode ser que o jogador ou o Narrador saiba, mas o personagem não, ou talvez ninguém mais saiba. Coisas surpreendentes acontecem o tempo todo no Multiverso Marvel, e não há como classificar todas elas. A fonte desses poderes pode ser explicada com o tempo. Pode acontecer que o personagem na verdade tenha um tipo padrão de origem, ou pode ser que ele tenha uma origem totalmente única.",
+        "examples": "Garota Esquilo, Treinador.",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "wOhcCEVTSmI1RikE",
+            "name": "Mysterious",
+            "type": "tag",
+            "system": {
+              "description": "O personagem não entende totalmente como ou por que tem poderes. Isso pode ser inquietante e talvez até perigoso, ou ele pode simplesmente levar na boa.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!wOhcCEVTSmI1RikE"
+          }
+        ],
+        "traits": [],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "2wwQyfGKeQacXVtW"
+    },
+    {
+      "name": "Symbiote: Knull",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem se uniu a um dos Klyntar, uma raça de simbiontes alienígenas criados pelo deus alienígena Knull e que há muito tempo está sob sua influência - ao contrário do simbionte Venom e sua prole. Quando um personagem se une a tal simbionte, ele sobe um rank e ganha os poderes listados, que devem ser escolhidos para os poderes que o rank concede.",
+        "examples": "Carnificina, Venom (Eddie Brock), Shriek.",
+        "suggestedOccupation": "",
+        "tags": [],
+        "traits": [
+          {
+            "_id": "ilcUJqW4kKC8Soul",
+            "name": "Anathema",
+            "type": "trait",
+            "system": {
+              "restriction": "Lightning/Anti-Venom.",
+              "description": "O personagem sofre dano direto quando exposto a uma substância específica. Eles não podem entrar voluntariamente no mesmo espaço que ela. Se forem tocados por ela, eles sofrem instantaneamente o dano de um ataque de Rank 3 que acerta automaticamente. Isso continua a cada turno até que eles sejam separados da substância ou sejam mortos ou destruídos. O dano causado por Anátema ignora toda a redução de dano que o personagem possui e não pode ser curado pelo seu Fator de Cura."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!ilcUJqW4kKC8Soul"
+          },
+          {
+            "_id": "xGRaRAbxMRSIuPpv",
+            "name": "Berserker",
+            "type": "trait",
+            "img": "systems/marvel-multiverse/icons/trait.svg",
+            "system": {
+              "restriction": "",
+              "description": "O personagem frequentemente perde o controle de seu temperamento. A qualquer momento que ele sofra dano físico, ele deve fazer um teste de Ego com um ND igual à quantidade de dano sofrido. Se ele falhar, ele fica furioso e deve atacar com velocidade total em combate o inimigo que o feriu. Estar furioso dá ao personagem uma vantagem em todos os ataques corpo a corpo e adiciona +2 às suas defesas de Corpo a Corpo, Resiliência e Ego. No entanto, tira –2 de sua defesa de Agilidade, e ele não pode usar armas de longo alcance. Se o personagem derrotar o inimigo que o feriu, ele deve então atacar o inimigo mais próximo. No final do turno do personagem, ele perde 5 de Foco. Quando seu Foco é reduzido ao ponto em que o personagem não poderia gastar voluntariamente mais Foco - ou se não houver inimigos à vista - o estado de fúria termina automaticamente."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!xGRaRAbxMRSIuPpv"
+          }
+        ],
+        "powers": [
+          {
+            "_id": "ody1G0sSPcvPumiu",
+            "name": "Disguise",
+            "type": "power",
+            "img": "systems/marvel-multiverse/icons/super-powers.svg",
+            "system": {
+              "description": "O personagem parece ser outra pessoa,",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "Standard",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem altera instantaneamente sua aparência para que pareça ser outra pessoa. O número alvo para qualquer um que tente ver através do disfarce é a defesa de Ego do personagem. Se o personagem estiver se passando por alguém conhecido da outra pessoa, essa pessoa tem uma vantagem."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!ody1G0sSPcvPumiu"
+          },
+          {
+            "_id": "w0JXTcF5QKfGbpYA",
+            "name": "Healing Factor",
+            "type": "power",
+            "img": "systems/marvel-multiverse/icons/super-powers.svg",
+            "system": {
+              "description": "O personagem se cura incrivelmente rápido.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "No final do turno do personagem, ele recupera Vida igual à sua Resiliência. (Isso também funciona fora de combate, trazendo-o rapidamente de volta à Vida total)"
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!w0JXTcF5QKfGbpYA"
+          },
+          {
+            "_id": "55JFEkuCOICgpk8i",
+            "name": "Environmental Protection",
+            "type": "power",
+            "system": {
+              "description": "Efeitos ambientais não incomodam o personagem.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "Permanent",
+              "trigger": "The character takes Health damage.",
+              "duration": "Instant",
+              "range": "",
+              "cost": "15 Focus",
+              "effect": "O personagem não é prejudicado por frio ou calor intensos, pela pressão das profundezas do mar ou pela intensa radiação e vácuo do espaço. O jogador pode escolher qualquer uma ou todas essas proteções, conforme melhor se adequar ao conceito do personagem."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!55JFEkuCOICgpk8i"
+          },
+          {
+            "_id": "rJ3KMZQWpKUdheWX",
+            "name": "Mighty 1",
+            "type": "power",
+            "system": {
+              "description": "O personagem é sobre-humanamente forte.",
+              "powerSet": "Basic",
+              "prerequisites": "Mighty 1, Rank 2",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "Trate o personagem como um tamanho maior para levantar, carregar, balançar e arremessar coisas. Eles também adicionam +1 ao seu multiplicador de dano Corpo a Corpo, e ganham um bônus de +1 em testes de Corpo a Corpo que não sejam ataques."
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "sizeUp",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.rJ3KMZQWpKUdheWX",
+                "_id": "86a0562a3464b7c1",
+                "changes": [
+                  {
+                    "key": "system.abilities.mle.damageMultiplier",
+                    "mode": 2,
+                    "value": 1
+                  },
+                  {
+                    "key": "system.abilities.mle.noncom",
+                    "mode": 2,
+                    "value": 1
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!rJ3KMZQWpKUdheWX.86a0562a3464b7c1"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!rJ3KMZQWpKUdheWX"
+          }
+        ],
+        "limitation": "Eles devem selecionar a maioria dos seus outros poderes dos conjuntos de Magia: Demoníaca e Controle Elemental: Fogo do Inferno. O personagem deve ser pelo menos de Rank 4. A menos que o personagem tenha outra origem, ele não pode escolher outros poderes.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "3GGYy0dp2j3W8VHO"
+    },
+    {
+      "name": "Magic",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "Os poderes do personagem surgem de meios sobrenaturais. Existem muitas tradições diferentes dentro da magia, cada uma com seus próprios ensinamentos.",
+        "examples": "Clea, Doutor Vodu (Jericho Drumm), Encantor.",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "6fBuya40ZqhFufiD",
+            "name": "Supernatural",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem poderes que são mágicos ou baseados em algo mágico.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!6fBuya40ZqhFufiD"
+          }
+        ],
+        "traits": [],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "5Q8J2vF8khcD5Pev"
+    },
+    {
+      "name": "Magic: Sorcery",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "Os poderes do personagem surgem do estudo e da prática da feitiçaria.",
+        "examples": "Agatha Harkness, Ancião (Yao), Doutor Estranho, Magik, Wong.",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "XU72N4s2vphkgp9o",
+            "name": "Sorcerous",
+            "type": "tag",
+            "system": {
+              "description": "O personagem se dedicou ao estudo da magia tradicional, também conhecida como feitiçaria.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!XU72N4s2vphkgp9o"
+          },
+          {
+            "_id": "6fBuya40ZqhFufiD",
+            "name": "Supernatural",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem poderes que são mágicos ou baseados em algo mágico.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!6fBuya40ZqhFufiD"
+          }
+        ],
+        "traits": [],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "7PmqnN6jRiJge5r1"
+    },
+    {
+      "name": "Alien: Shi'ar",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é um membro dos Shi'ar, uma raça humanoide aviária do planeta Chandilar que formou o Império interestelar Shi'ar na Galáxia Shi'ar. Eles se assemelham a humanos, mas são muito mais fortes e têm penas em vez de cabelo na cabeça.",
+        "examples": "Adam-X, Deathbird, Majestrix Lilandra Neramani.",
+        "suggestedOccupation": "Forasteiro.",
+        "tags": [
+          {
+            "_id": "q8ee046cEAITCKE0",
+            "name": "Alien Heritage",
+            "type": "tag",
+            "system": {
+              "description": "O personagem ou pelo menos um de seus ancestrais não é da Terra. Escolha uma raça alienígena à qual ele pertença. Se não foi criado na Terra, deve considerar pegar a ocupação de Forasteiro.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!q8ee046cEAITCKE0"
+          },
+          {
+            "_id": "cTYI0iDJwrB7t8Zq",
+            "name": "Extreme Appearance",
+            "type": "tag",
+            "system": {
+              "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode dar outras informações úteis, como se uma aparência extrema é comum.",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cTYI0iDJwrB7t8Zq"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "qXxLcIEUkPZbUG0L",
+            "name": "Enhanced Physique",
+            "type": "trait",
+            "system": {
+              "description": "O personagem é mais forte que os humanos normais. Trate-os como um tamanho maior para levantar, carregar, balançar e arremessar coisas. (Isso não se acumula com outros fatores.)"
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!qXxLcIEUkPZbUG0L"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "8bmIfDklkESAP95k"
+    },
+    {
+      "name": "Mutant: External",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é membro de uma rara e poderosa subespécie de mutantes imortais que remonta a milhares de anos. Cerca de mil anos atrás, os Externos formaram um grupo chamado de Altos Senhores que continua a influenciar o destino do mundo por trás dos bastidores. Alguns deles acreditam que Míssil é o mais novo de sua espécie, embora isso não seja confirmado.",
+        "examples": "Apocalipse, Selene.",
+        "suggestedOccupation": "Forasteiro",
+        "tags": [
+          {
+            "_id": "9J9gJLRtH1WwYFjo",
+            "name": "Externally Immortal",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem um elo telepático com todos os outros Externos. Isso lhes permite: Saber onde outros Externos estão. Saber quando outros Externos são mortos pela primeira vez. Saber quando um Externo mata outro Externo. Chamar telepaticamente outros Externos.",
+              "restriction": "For Externals only.",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!9J9gJLRtH1WwYFjo"
+          },
+          {
+            "_id": "FLj25V9KsgBRGmdT",
+            "name": "Hounded",
+            "type": "tag",
+            "system": {
+              "description": "O personagem é membro de um grupo de pessoas que são perseguidas por simplesmente serem elas mesmas.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!FLj25V9KsgBRGmdT"
+          },
+          {
+            "_id": "v74c4tbt02uOrI8z",
+            "name": "X-Gene",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem genes mutantes que o fazem desenvolver superpoderes.",
+              "restriction": "For mutants only.",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!v74c4tbt02uOrI8z"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "Cg8hqQG9Z6KIbP3L",
+            "name": "External Awareness",
+            "type": "trait",
+            "system": {
+              "restriction": "For Externals only",
+              "description": "O personagem tem um elo telepático com todos os outros Externos. Isso lhes permite saber onde outros Externos estão agora e quando outros Externos são mortos pela primeira vez. - Saber quando um Externo mata - Chamar telepaticamente por outros Externos"
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!Cg8hqQG9Z6KIbP3L"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "9J9gJLRtH1WwYFjo"
+    },
+    {
+      "name": "High Tech: Pym Particles",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem usa Partículas Pym (em homenagem a seu inventor, Henry Pym) para crescer ou encolher drasticamente de tamanho. Após exposição suficiente às Partículas Pym, muitas pessoas são capazes de gerar tais partículas por conta própria, sem a necessidade de ajuda externa. Eles ainda podem precisar usar Partículas Pym extras para atingir tamanhos extremamente grandes ou pequenos.",
+        "examples": "Homem-Formiga (Scott Lang), Gigante (Rax Malhotra), Vespa (Janet Van Dyne).",
+        "suggestedOccupation": "",
+        "tags": [],
+        "traits": [
+          {
+            "_id": "FpFegyRxkuHv2Uf8",
+            "name": "Tech Reliance",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem depende da tecnologia para seus poderes. Quando ele sofre dano que o deixaria inconsciente, ele pode, em vez disso, escolher perder todos os seus poderes relacionados à tecnologia e permanecer consciente com 1 ponto de Vida restante. Supondo que o personagem tenha acesso a peças e ferramentas, os poderes perdidos podem ser reparados após uma batalha."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!FpFegyRxkuHv2Uf8"
+          }
+        ],
+        "powers": [
+          {
+            "_id": "eTaKCWFQoLn5X4lr",
+            "name": "Shrink 1",
+            "type": "power",
+            "system": {
+              "description": "O personagem pensa pequeno.",
+              "powerSet": "Resize",
+              "prerequisites": "",
+              "action": "Standard or reaction",
+              "trigger": "The character is attacked.",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem pode encolher até o tamanho pequeno. Ele pode retornar ao seu tamanho normal à vontade."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "b74def8c3ea77646",
+            "_key": "!items!eTaKCWFQoLn5X4lr"
+          },
+          {
+            "_id": "szSEXqUgEPxAqMLe",
+            "name": "Grow 1",
+            "type": "power",
+            "system": {
+              "description": "O personagem aumenta de tamanho!",
+              "powerSet": "Resize",
+              "prerequisites": "",
+              "action": "Standard or reaction",
+              "trigger": "The character is attacked.",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem pode crescer até o tamanho enorme. Ele pode retornar ao seu tamanho normal à vontade."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "b74def8c3ea77646",
+            "_key": "!items!szSEXqUgEPxAqMLe"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "BEM0ZpWjkeXSRhjC"
+    },
+    {
+      "name": "Spirit of Vengeance",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem foi possuído por um Espírito de Vingança. Seu propósito é encontrar pecadores e impor penitência. Quando um personagem é possuído por um Espírito de Vingança, ele ganha a tag Forma Alternativa, que pode usar voluntariamente a qualquer momento. Quando o personagem assume sua forma de Motoqueiro Fantasma, ele ganha acesso às tags, características e poderes listados. Quando retorna à forma humana, ele perde os benefícios de sua forma de Motoqueiro Fantasma.",
+        "examples": "Motoqueiro Fantasma (Johnny Blaze), Motoqueiro Fantasma (Danny Ketch), Motoqueiro Fantasma (Robbie Reyes).",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "iVKiXScePf6WCNdi",
+            "name": "Alternate Form",
+            "type": "tag",
+            "system": {
+              "description": "O personagem pode mudar de sua forma humana regular para outra forma e vice-versa. Quando em qualquer uma das formas, o personagem só pode acessar os poderes atribuídos a essa forma. Na maioria dos casos, isso significa que o personagem só pode usar poderes quando está em sua forma alternativa. Esta tag se aplica a personagens que mudam de uma forma humanoide para outra, como Colossus, Emma Frost e muitos dos Hulks. Também se aplica a personagens que têm formas inumanas, como lobisomens e vampiros.",
+              "restriction": "Ghost Rider",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!iVKiXScePf6WCNdi"
+          },
+          {
+            "_id": "mfXxO2r53F9Ix6re",
+            "name": "Cursed",
+            "type": "tag",
+            "system": {
+              "description": "Querendo ou não, o personagem é afiliado ao Inferno. Isso pode expô-lo a todos os tipos de tramas e planos nefastos.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!mfXxO2r53F9Ix6re"
+          },
+          {
+            "_id": "6fBuya40ZqhFufiD",
+            "name": "Supernatural",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem poderes que são mágicos ou baseados em algo mágico.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!6fBuya40ZqhFufiD"
+          }
+        ],
+        "traits": [],
+        "powers": [
+          {
+            "_id": "yb97VVVc5sEekOAY",
+            "name": "Elemental Protection 2",
+            "type": "power",
+            "system": {
+              "description": "A proteção elemental do personagem é como uma armadura.",
+              "powerSet": "Elemental Control",
+              "prerequisites": "Elemental Barrier, Rank 3",
+              "action": "Standard or Reaction",
+              "trigger": "The character is attacked or otherwise in danger.",
+              "duration": "Concentration",
+              "range": "",
+              "cost": "10 Focus",
+              "effect": "O personagem se protege com seu elemento. Quaisquer ataques contra ele que causem 10 pontos de dano ou menos são instantaneamente absorvidos, e a proteção continua. Se um ataque causar mais de 10 pontos de dano, ele destrói a proteção. De qualquer forma, o personagem permanece ileso."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "a9ecc3931cffa8a5",
+            "_key": "!items!yb97VVVc5sEekOAY"
+          },
+          {
+            "_id": "55JFEkuCOICgpk8i",
+            "name": "Environmental Protection",
+            "type": "power",
+            "system": {
+              "description": "Efeitos ambientais não incomodam o personagem.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "Permanent",
+              "trigger": "The character takes Health damage.",
+              "duration": "Instant",
+              "range": "",
+              "cost": "15 Focus",
+              "effect": "O personagem não é prejudicado por frio ou calor intensos, pela pressão das profundezas do mar ou pela intensa radiação e vácuo do espaço. O jogador pode escolher qualquer uma ou todas essas proteções, conforme melhor se adequar ao conceito do personagem."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!55JFEkuCOICgpk8i"
+          },
+          {
+            "_id": "rKtil3qVYx7o61lL",
+            "name": "Healing Factor",
+            "type": "power",
+            "system": {
+              "description": "O personagem se cura incrivelmente rápido.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "No final do turno do personagem, ele recupera Vida igual à sua Resiliência. (Isso também funciona fora de combate, trazendo-o rapidamente de volta à Vida total)"
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!rKtil3qVYx7o61lL"
+          },
+          {
+            "_id": "2nEDkl95B9AEgBJW",
+            "name": "Mighty 2",
+            "type": "power",
+            "system": {
+              "description": "O personagem poderia levantar um ônibus.",
+              "powerSet": "Basic",
+              "prerequisites": "Mighty 1, Rank 2",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "Trate o personagem como três tamanhos maior para levantar, carregar, balançar e arremessar coisas. Eles também adicionam +2 ao seu multiplicador de dano Corpo a Corpo, e ganham um bônus de +2 em testes de Corpo a Corpo que não sejam ataques."
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "sizeUp 2",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.2nEDkl95B9AEgBJW",
+                "_id": "a35fd80b6b2cca2c",
+                "changes": [
+                  {
+                    "key": "system.abilities.mle.damageMultiplier",
+                    "mode": 2,
+                    "value": 2
+                  },
+                  {
+                    "key": "system.abilities.mle.noncom",
+                    "mode": 2,
+                    "value": 2
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!2nEDkl95B9AEgBJW.a35fd80b6b2cca2c"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!2nEDkl95B9AEgBJW"
+          },
+          {
+            "_id": "GZHCEwpA0varVil4",
+            "name": "Hellfire Chains",
+            "type": "power",
+            "system": {
+              "description": "O personagem dispara correntes cobertas de fogo do inferno.",
+              "powerSet": "Magic",
+              "prerequisites": "Cursed, Rank 2",
+              "action": "Standard",
+              "trigger": "",
+              "duration": "Concentration",
+              "range": "",
+              "cost": "5 Focus",
+              "effect": "O personagem invoca correntes cobertas de fogo do inferno e pode usá-las para prender ou esmagar alvos. Ele pode atacar qualquer um dentro de 10 espaços por rank e linha de visão. Faça um ataque de Ego. Em um sucesso, o alvo sofre dano de Vida normal. Em um sucesso Fantástico, o alvo também é agarrado e paralisado. Se um alvo for agarrado pelas correntes de fogo do inferno, em cada rodada subsequente, o personagem pode fazer um teste de Ego contra a defesa de Resiliência do alvo para infligir dano de Vida normal e dano de Foco normal. Libertar-se das correntes de fogo do inferno requer um teste de Corpo a Corpo com um número alvo de 20."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "8c23e6cd16b9bb49",
+            "_key": "!items!GZHCEwpA0varVil4"
+          },
+          {
+            "_id": "aIhFvhibdgr3kjae",
+            "name": "Penance Stare",
+            "type": "power",
+            "system": {
+              "description": "O personagem pode punir os ímpios com seu olhar.",
+              "powerSet": "Magic",
+              "prerequisites": "Cursed",
+              "action": "Standard",
+              "trigger": "",
+              "duration": "Instant",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem faz um ataque de Ego contra um personagem alvo dentro de 3 espaços por rank. Se for um sucesso, o alvo sofre dano de Foco. Em um sucesso Fantástico, o alvo sofre o dobro do dano e fica paralisado por uma rodada. Personagens com a tag Heroico sofrem metade do dano listado deste poder em qualquer caso. Se um alvo for estilhaçado por este poder, ele pode se recuperar, mas volta de uma de duas maneiras. Ou ele é purificado de seus pecados e pronto para um novo começo com uma ficha limpa, ou suas emoções são drenadas permanentemente. Como isso funciona em cada caso, fica a critério do Narrador."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "8c23e6cd16b9bb49",
+            "_key": "!items!aIhFvhibdgr3kjae"
+          },
+          {
+            "_id": "KsxkGd418QbSZJRa",
+            "name": "Possess Vehicle",
+            "type": "power",
+            "system": {
+              "description": "O personagem assume o controle de um veículo.",
+              "powerSet": "Magic",
+              "prerequisites": "Cursed, Rank 3",
+              "action": "Standard",
+              "trigger": "",
+              "duration": "Concentration",
+              "range": "",
+              "cost": "10 focus",
+              "effect": "O personagem assume o controle mágico de um veículo em que está dentro ou tocando. Fogo do inferno envolve o exterior do veículo, mas não causa danos a ele. Qualquer um que entrar em contato com ele, no entanto, sofre dano normal com um multiplicador de dano igual ao rank do personagem. Em um sucesso Fantástico, ele inflige dano de Vida normal e dano de Foco normal em vez disso. O personagem controla o veículo pela vontade, desde que esteja dentro de 20 espaços vezes o rank do personagem. Ele usa seu Ego para todos os testes para operá-lo, e ele obtém uma vantagem em todos esses testes. A velocidade do veículo dobra. Ele pode escalar paredes a essa velocidade e pode até mesmo dar saltos na mesma velocidade."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "8c23e6cd16b9bb49",
+            "_key": "!items!KsxkGd418QbSZJRa"
+          }
+        ],
+        "limitation": "Eles devem selecionar a maioria dos seus outros poderes dos conjuntos de Magia: Demoníaca e Controle Elemental: Fogo do Inferno. O personagem deve ser pelo menos de Rank 4. A menos que o personagem tenha outra origem, ele não pode escolher outros poderes.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "GVuwuEX6ZN8SPvLK"
+    },
+    {
+      "name": "Alien: Technarch",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é um membro da espécie alienígena conhecida como Tecnarquia. Esses seres tecno-orgânicos de inteligência artificial usam um vírus Transmode para infectar outras criaturas e, eventualmente, dominar um planeta para prepará-lo para se tornar parte da Falange ou ser devorado.",
+        "examples": "Warlock, Magus.",
+        "suggestedOccupation": "Forasteiro.",
+        "tags": [
+          {
+            "_id": "Df3ixqweXZ77mpg0",
+            "name": "A.I.",
+            "type": "tag",
+            "system": {
+              "description": "O personagem possui uma inteligência artificial em uma mente computadorizada. Sua natureza digital significa que cópias ou backups podem ser feitos de sua mente e podem até ser transferidos para outras formas compatíveis.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!Df3ixqweXZ77mpg0"
+          },
+          {
+            "_id": "q8ee046cEAITCKE0",
+            "name": "Alien Heritage",
+            "type": "tag",
+            "system": {
+              "description": "O personagem ou pelo menos um de seus ancestrais não é da Terra. Escolha uma raça alienígena à qual ele pertença. Se não foi criado na Terra, deve considerar pegar a ocupação de Forasteiro.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!q8ee046cEAITCKE0"
+          },
+          {
+            "_id": "cTYI0iDJwrB7t8Zq",
+            "name": "Extreme Appearance",
+            "type": "tag",
+            "system": {
+              "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode dar outras informações úteis, como se uma aparência extrema é comum.",
+              "rarity": "In their natural form"
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cTYI0iDJwrB7t8Zq"
+          },
+          {
+            "_id": "7bggrQuRWLhuUXyW",
+            "name": "Powerful",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem acesso aos recursos de toda a sua comunidade. Na maioria dos casos, ele deve ter cuidado com a forma como usa tais recursos para não perder esse acesso.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!7bggrQuRWLhuUXyW"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "LoLixQyN1XUPDTOX",
+            "name": "Enduring Constitution",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem pode funcionar por até 48 horas sem dormir e tem uma vantagem em testes de Resiliência para superar a fadiga ou o cansaço."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!LoLixQyN1XUPDTOX"
+          },
+          {
+            "_id": "GbVoUmZQVxYlKLO9",
+            "name": "Fresh Eyes",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem tem sua própria maneira de fazer as coisas. Isso muitas vezes os faz parecer estranhos para aqueles ao seu redor, mas significa que eles podem trazer novas perspectivas para questões existentes. Eles têm uma vantagem em testes de Lógica quando confrontados com algo pela primeira vez."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!GbVoUmZQVxYlKLO9"
+          },
+          {
+            "_id": "9SkJ8HbHTTSP3c6v",
+            "name": "Infector",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem pode infectar um alvo com uma doença, que deve ser escolhida junto com a característica. Exemplos incluem: implantação de Brood, vírus Tecno-Orgânico, vírus Transmode. Veja a condição infectado para detalhes sobre como a infecção funciona, e a seção Infecções e Posses (p146) para os efeitos das doenças acima."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!9SkJ8HbHTTSP3c6v"
+          }
+        ],
+        "powers": [
+          {
+            "_id": "koztrVWDI32IPiQ2",
+            "name": "Brain Drain",
+            "type": "power",
+            "system": {
+              "description": "O personagem dispara raios encantados de eletricidade de seus dedos.",
+              "powerSet": "Magic",
+              "prerequisites": "Rank 2",
+              "action": "Reaction",
+              "trigger": "The target is grabbed.",
+              "duration": "Instant",
+              "range": "",
+              "cost": "5 Focus",
+              "effect": "O personagem faz um ataque de Ego contra a Vigilância do alvo. Se tiver sucesso, o alvo sofre dano de Foco normal, e o personagem cura metade desse Foco para si mesmo. Em um sucesso Fantástico, o personagem cura todo o seu dano de Foco em vez disso.",
+              "ability": "ego",
+              "attackTarget": "vig",
+              "damageType": "focus",
+              "attackKind": "close"
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "8c23e6cd16b9bb49",
+            "_key": "!items!koztrVWDI32IPiQ2"
+          },
+          {
+            "_id": "uV1jKFUWY3LzWAkl",
+            "name": "Disguise",
+            "type": "power",
+            "system": {
+              "description": "O personagem parece ser outra pessoa,",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "Standard",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem altera instantaneamente sua aparência para que pareça ser outra pessoa. O número alvo para qualquer um que tente ver através do disfarce é a defesa de Ego do personagem. Se o personagem estiver se passando por alguém conhecido da outra pessoa, essa pessoa tem uma vantagem."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!uV1jKFUWY3LzWAkl"
+          },
+          {
+            "_id": "55JFEkuCOICgpk8i",
+            "name": "Environmental Protection",
+            "type": "power",
+            "system": {
+              "description": "Efeitos ambientais não incomodam o personagem.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "Permanent",
+              "trigger": "The character takes Health damage.",
+              "duration": "Instant",
+              "range": "",
+              "cost": "15 Focus",
+              "effect": "O personagem não é prejudicado por frio ou calor intensos, pela pressão das profundezas do mar ou pela intensa radiação e vácuo do espaço. O jogador pode escolher qualquer uma ou todas essas proteções, conforme melhor se adequar ao conceito do personagem."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!55JFEkuCOICgpk8i"
+          },
+          {
+            "_id": "y9wvLxDeUlbgKfcA",
+            "name": "Extended Reach 1",
+            "type": "power",
+            "system": {
+              "description": "O alcance do personagem aumenta.",
+              "powerSet": "Plasticity",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O alcance do personagem quadruplica",
+              "numbered": 1
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "Reach x4",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.y9wvLxDeUlbgKfcA",
+                "_id": "bea1573f91f7ac3a",
+                "changes": [
+                  {
+                    "key": "system.reach",
+                    "mode": 1,
+                    "value": 4
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!y9wvLxDeUlbgKfcA.bea1573f91f7ac3a"
+              }
+            ],
+            "folder": "b660cb39178688a5",
+            "_key": "!items!y9wvLxDeUlbgKfcA"
+          },
+          {
+            "_id": "Cz1imI5LnsmZ7P5v",
+            "name": "Flexible Bones 1",
+            "type": "power",
+            "system": {
+              "description": "O esqueleto do personagem é elástico.",
+              "powerSet": "Plasticity",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem ganha Redução de Dano de Vida 1. Ele também tem uma vantagem em testes de Agilidade para contorção e fuga.",
+              "numbered": 1
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "Health Damage Reduction 1",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.Cz1imI5LnsmZ7P5v",
+                "_id": "96ae1d4e6e1faf99",
+                "changes": [
+                  {
+                    "key": "system.healthDamageReduction",
+                    "mode": 4,
+                    "value": 1
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!Cz1imI5LnsmZ7P5v.96ae1d4e6e1faf99"
+              }
+            ],
+            "folder": "b660cb39178688a5",
+            "_key": "!items!Cz1imI5LnsmZ7P5v"
+          },
+          {
+            "_id": "g7Wqzpeod6uVHeV1",
+            "name": "Leech Life",
+            "type": "power",
+            "system": {
+              "description": "O personagem consome a força vital de outro.",
+              "powerSet": "Magic",
+              "prerequisites": "Rank 2",
+              "action": "Reaction",
+              "trigger": "Target is grabbed.",
+              "duration": "Instant",
+              "range": "",
+              "cost": "5 Focus",
+              "effect": "O personagem faz um ataque de Ego contra a defesa de Resiliência do alvo. Se tiver sucesso, o alvo sofre dano de Vida normal, e o personagem cura metade desse dano de Vida para si mesmo. Em um sucesso Fantástico, o personagem cura todo o dano de Vida em vez disso."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "8c23e6cd16b9bb49",
+            "_key": "!items!g7Wqzpeod6uVHeV1"
+          },
+          {
+            "_id": "E2VtGoJbd5TEpwri",
+            "name": "Shape-Shift",
+            "type": "power",
+            "system": {
+              "description": "O personagem pode mudar de forma.",
+              "powerSet": "Basic",
+              "prerequisites": "Disguise, Rank 3",
+              "action": "standard or reaction",
+              "trigger": "The character is attacked or otherwise in danger.",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem pode se transformar em outra forma não mais do que um tamanho maior ou menor do que sua forma normal. Quando em qualquer forma, o personagem tem acesso às habilidades naturais dessa forma. Por exemplo, se ele se transformasse em um pássaro, poderia voar. Quando transformado em um peixe, pode respirar na água."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!E2VtGoJbd5TEpwri"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "HgunmYb5VPPZRwWb"
+    },
+    {
+      "name": "Symbiote",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem se uniu a um dos Klyntar, uma raça de simbiontes alienígenas criados pelo deus alienígena Knull. A maioria dessas criaturas na Terra exibe poderes semelhantes aos de uma aranha. Quando um personagem se une a um simbionte, ele sobe um rank e ganha as tags, características e poderes listados. Quaisquer poderes restantes que ele selecionar são frequentemente do conjunto de Poderes-Aranha, mas não precisam ser. Muitos simbiontes têm o poder Disfarce. Se o simbionte for Venom ou um de seus descendentes, o Homem-Aranha (Peter Parker) não pode obter nenhum benefício de seu poder Sentido-Aranha contra o personagem unido.",
+        "examples": "Carnificina, Venom (Eddie Brock), Shriek.",
+        "suggestedOccupation": "",
+        "tags": [],
+        "traits": [
+          {
+            "_id": "ilcUJqW4kKC8Soul",
+            "name": "Anathema",
+            "type": "trait",
+            "system": {
+              "restriction": "Extreme Heat/Extreme Sonics.",
+              "description": "O personagem sofre dano direto quando exposto a uma substância específica. Eles não podem entrar voluntariamente no mesmo espaço que ela. Se forem tocados por ela, eles sofrem instantaneamente o dano de um ataque de Rank 3 que acerta automaticamente. Isso continua a cada turno até que eles sejam separados da substância ou sejam mortos ou destruídos. O dano causado por Anátema ignora toda a redução de dano que o personagem possui e não pode ser curado pelo seu Fator de Cura."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!ilcUJqW4kKC8Soul"
+          }
+        ],
+        "powers": [
+          {
+            "_id": "yb97VVVc5sEekOAY",
+            "name": "Elemental Protection 2",
+            "type": "power",
+            "system": {
+              "description": "A proteção elemental do personagem é como uma armadura.",
+              "powerSet": "Elemental Control",
+              "prerequisites": "Elemental Barrier, Rank 3",
+              "action": "Standard or Reaction",
+              "trigger": "The character is attacked or otherwise in danger.",
+              "duration": "Concentration",
+              "range": "",
+              "cost": "10 Focus",
+              "effect": "O personagem se protege com seu elemento. Quaisquer ataques contra ele que causem 10 pontos de dano ou menos são instantaneamente absorvidos, e a proteção continua. Se um ataque causar mais de 10 pontos de dano, ele destrói a proteção. De qualquer forma, o personagem permanece ileso."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "a9ecc3931cffa8a5",
+            "_key": "!items!yb97VVVc5sEekOAY"
+          },
+          {
+            "_id": "55JFEkuCOICgpk8i",
+            "name": "Environmental Protection",
+            "type": "power",
+            "system": {
+              "description": "Efeitos ambientais não incomodam o personagem.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "Permanent",
+              "trigger": "The character takes Health damage.",
+              "duration": "Instant",
+              "range": "",
+              "cost": "15 Focus",
+              "effect": "O personagem não é prejudicado por frio ou calor intensos, pela pressão das profundezas do mar ou pela intensa radiação e vácuo do espaço. O jogador pode escolher qualquer uma ou todas essas proteções, conforme melhor se adequar ao conceito do personagem."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!55JFEkuCOICgpk8i"
+          },
+          {
+            "_id": "rJ3KMZQWpKUdheWX",
+            "name": "Mighty 1",
+            "type": "power",
+            "system": {
+              "description": "O personagem é sobre-humanamente forte.",
+              "powerSet": "Basic",
+              "prerequisites": "Mighty 1, Rank 2",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "Trate o personagem como um tamanho maior para levantar, carregar, balançar e arremessar coisas. Eles também adicionam +1 ao seu multiplicador de dano Corpo a Corpo, e ganham um bônus de +1 em testes de Corpo a Corpo que não sejam ataques."
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "sizeUp",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.rJ3KMZQWpKUdheWX",
+                "_id": "86a0562a3464b7c1",
+                "changes": [
+                  {
+                    "key": "system.abilities.mle.damageMultiplier",
+                    "mode": 2,
+                    "value": 1
+                  },
+                  {
+                    "key": "system.abilities.mle.noncom",
+                    "mode": 2,
+                    "value": 1
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!rJ3KMZQWpKUdheWX.86a0562a3464b7c1"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!rJ3KMZQWpKUdheWX"
+          }
+        ],
+        "limitation": "Eles devem selecionar a maioria dos seus outros poderes dos conjuntos de Magia: Demoníaca e Controle Elemental: Fogo do Inferno. O personagem deve ser pelo menos de Rank 4. A menos que o personagem tenha outra origem, ele não pode escolher outros poderes.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "HpdpSjugxI4UEL5j"
+    },
+    {
+      "name": "Magic: Chaos Magic",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é capaz de usar a magia do caos, o que lhe permite dobrar a realidade à sua vontade. Ela se origina do antigo deus Chthon.",
+        "examples": "Morgana Le Fay, Feiticeira Escarlate, Wiccano.",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "6fBuya40ZqhFufiD",
+            "name": "Supernatural",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem poderes que são mágicos ou baseados em algo mágico.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!6fBuya40ZqhFufiD"
+          },
+          {
+            "_id": "DZrvxpm8ZDvYARXo",
+            "name": "Chaotic",
+            "type": "tag",
+            "system": {
+              "description": "O personagem foi afetado pelo senhor do caos Chthon.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!DZrvxpm8ZDvYARXo"
+          }
+        ],
+        "traits": [],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "I3vULwxR9Ck3dDrP"
+    },
+    {
+      "name": "Monstrous: Vampire",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem já esteve vivo, mas foi abraçado por um vampiro e ressuscitou da morte como um vampiro também. Ele pode transmitir essa doença mágica para as vítimas de sua escolha. Quando um personagem se torna um vampiro, ele sobe um rank e ganha as tags, características e poderes listados. Ele não ganha nenhum poder ou característica adicional com esse aumento de rank, mas ganha 5 pontos de habilidade e adiciona +1 ao seu multiplicador de dano. Se ele tiver a tag Heroico, também adiciona 1 ao seu Karma.",
+        "examples": "Barão Sangue, Drácula, Blade (meio vampiro).",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "iVKiXScePf6WCNdi",
+            "name": "Alternate Form",
+            "type": "tag",
+            "system": {
+              "description": "O personagem pode mudar de sua forma humana regular para outra forma e vice-versa. Quando em qualquer uma das formas, o personagem só pode acessar os poderes atribuídos a essa forma. Na maioria dos casos, isso significa que o personagem só pode usar poderes quando está em sua forma alternativa. Esta tag se aplica a personagens que mudam de uma forma humanoide para outra, como Colossus, Emma Frost e muitos dos Hulks. Também se aplica a personagens que têm formas inumanas, como lobisomens e vampiros.",
+              "restriction": "Bat/Mist/Wolf",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!iVKiXScePf6WCNdi"
+          },
+          {
+            "_id": "9gP6PczqLN8w66uM",
+            "name": "Deceased",
+            "type": "tag",
+            "system": {
+              "description": "O personagem está tecnicamente morto - embora presumivelmente ainda seja capaz de interagir com o resto do mundo de alguma forma. Ele pode ser um vampiro, um fantasma, um zumbi ou até mesmo um cérebro flutuando em um pote.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!9gP6PczqLN8w66uM"
+          },
+          {
+            "_id": "fBageBmfjQ1mBh1O",
+            "name": "Imageless",
+            "type": "tag",
+            "system": {
+              "description": "O personagem não projeta reflexo e sua imagem não pode ser capturada por câmeras.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!fBageBmfjQ1mBh1O"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "c2B1oku7LKehKv2S",
+            "name": "Monster",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é algum tipo de monstro, muitas vezes de um tipo falado em lendas. Ele tem uma vantagem sempre que tenta intimidar alguém."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!c2B1oku7LKehKv2S"
+          },
+          {
+            "_id": "ilcUJqW4kKC8Soul",
+            "name": "Anathema",
+            "type": "trait",
+            "system": {
+              "restriction": "Garlic/Holy Symbols (including Holy Water)/Sunshine.",
+              "description": "O personagem sofre dano direto quando exposto a uma substância específica. Eles não podem entrar voluntariamente no mesmo espaço que ela. Se forem tocados por ela, eles sofrem instantaneamente o dano de um ataque de Rank 3 que acerta automaticamente. Isso continua a cada turno até que eles sejam separados da substância ou sejam mortos ou destruídos. O dano causado por Anátema ignora toda a redução de dano que o personagem possui e não pode ser curado pelo seu Fator de Cura."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!ilcUJqW4kKC8Soul"
+          },
+          {
+            "_id": "giaO7vnY7R73bqrr",
+            "name": "BloodThirsty",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem gosta de machucar pessoas - até mesmo de matá-las. Depois de deixar alguém inconsciente, ele deve fazer um teste de Ego Desafiador para evitar continuar a atacá-lo até que esteja morto. Um personagem com essa característica não pode ter a tag Heroico."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!giaO7vnY7R73bqrr"
+          },
+          {
+            "_id": "GWfvcE4vjJit0azi",
+            "name": "Weakness",
+            "type": "trait",
+            "system": {
+              "restriction": "Silver, Wood.",
+              "description": "O personagem sofre uma quantidade incomum de dano de certas substâncias. Qualquer ataque feito com essa substância ignora toda a redução de dano inerente que o personagem possui e não pode ser curado pelo seu Fator de Cura."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!GWfvcE4vjJit0azi"
+          }
+        ],
+        "powers": [
+          {
+            "_id": "qPO9atM8lstQlTpm",
+            "name": "Animal Communication",
+            "type": "power",
+            "system": {
+              "description": "O personagem pode entrar no Plano Astral.",
+              "powerSet": "Telepathy",
+              "prerequisites": "",
+              "action": "Standard",
+              "trigger": "The character is harmed by an attack.",
+              "duration": "Concentration",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem pode se comunicar telepaticamente com uma ordem taxonômica de animais, como pássaros, mamíferos, peixes, anfíbios e assim por diante. Ele pode chamá-los como um grupo a até 500 espaços por rank de distância, e pode se comunicar especificamente com aqueles que encontrou ou pelo menos viu. Ele não pode mudar para outra ordem taxonômica, mas pode selecionar este poder várias vezes, se desejar. A comunicação com os animais pode ser verbal, visual ou até mais complexa, como transmitir informações de localização. Não há limite para a distância da comunicação, desde que o personagem e os animais estejam na mesma dimensão. Animais amigáveis ​​geralmente fazem o que o personagem pede, desde que não os coloque em perigo - e eles podem estar dispostos a arriscar até mesmo isso por alguém que consideram um amigo. Animais hostis simplesmente ignoram todos esses pedidos - o que os torna uma má escolha para comunicação.",
+              "restictions": "Bats/Rodents"
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "9e745fc9dcc37bb2",
+            "_key": "!items!qPO9atM8lstQlTpm"
+          },
+          {
+            "_id": "C6K9GjTNbbTYFQGy",
+            "name": "Command",
+            "type": "power",
+            "system": {
+              "description": "O personagem força alguém a seguir uma ordem.",
+              "powerSet": "Telepathy",
+              "prerequisites": "Telepathic Link, Rank 2",
+              "action": "Standard",
+              "trigger": "",
+              "duration": "1 round",
+              "range": "",
+              "cost": "5 Focus",
+              "effect": "O personagem dá uma ordem a um alvo com quem estabeleceu um Elo Telepático. O personagem faz um teste de Lógica contra a defesa de Lógica do alvo. Em um sucesso, o alvo cumpre a ordem. Em um sucesso Fantástico, o personagem ganha uma vantagem na próxima vez que usar este poder contra este mesmo alvo. O comando deve ser algo que possa ser concluído em uma única ação. Se envolver ferir alguém, o personagem tem dificuldade no teste. Se levar o alvo a se ferir, o personagem tem dupla dificuldade no teste."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "9e745fc9dcc37bb2",
+            "_key": "!items!C6K9GjTNbbTYFQGy"
+          },
+          {
+            "_id": "rKtil3qVYx7o61lL",
+            "name": "Healing Factor",
+            "type": "power",
+            "system": {
+              "description": "O personagem se cura incrivelmente rápido.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "No final do turno do personagem, ele recupera Vida igual à sua Resiliência. (Isso também funciona fora de combate, trazendo-o rapidamente de volta à Vida total)"
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!rKtil3qVYx7o61lL"
+          },
+          {
+            "_id": "g7Wqzpeod6uVHeV1",
+            "name": "Leech Life",
+            "type": "power",
+            "system": {
+              "description": "O personagem consome a força vital de outro.",
+              "powerSet": "Magic",
+              "prerequisites": "Rank 2",
+              "action": "Reaction",
+              "trigger": "Target is grabbed.",
+              "duration": "Instant",
+              "range": "",
+              "cost": "5 Focus",
+              "effect": "O personagem faz um ataque de Ego contra a defesa de Resiliência do alvo. Se tiver sucesso, o alvo sofre dano de Vida normal, e o personagem cura metade desse dano de Vida para si mesmo. Em um sucesso Fantástico, o personagem cura todo o dano de Vida em vez disso."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "8c23e6cd16b9bb49",
+            "_key": "!items!g7Wqzpeod6uVHeV1"
+          },
+          {
+            "_id": "rJ3KMZQWpKUdheWX",
+            "name": "Mighty 1",
+            "type": "power",
+            "system": {
+              "description": "O personagem é sobre-humanamente forte.",
+              "powerSet": "Basic",
+              "prerequisites": "Mighty 1, Rank 2",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "Trate o personagem como um tamanho maior para levantar, carregar, balançar e arremessar coisas. Eles também adicionam +1 ao seu multiplicador de dano Corpo a Corpo, e ganham um bônus de +1 em testes de Corpo a Corpo que não sejam ataques."
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "sizeUp",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.rJ3KMZQWpKUdheWX",
+                "_id": "86a0562a3464b7c1",
+                "changes": [
+                  {
+                    "key": "system.abilities.mle.damageMultiplier",
+                    "mode": 2,
+                    "value": 1
+                  },
+                  {
+                    "key": "system.abilities.mle.noncom",
+                    "mode": 2,
+                    "value": 1
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!rJ3KMZQWpKUdheWX.86a0562a3464b7c1"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!rJ3KMZQWpKUdheWX"
+          },
+          {
+            "_id": "0bTrKA7ROyGlOte3",
+            "name": "Sturdy 2",
+            "type": "power",
+            "system": {
+              "description": "O personagem está protegido como se fosse de aço.",
+              "powerSet": "Basic",
+              "prerequisites": "Sturdy 1, Rank 2",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem ganha Redução de Dano de Vida 2."
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "Health Damage Reduction 2",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.0bTrKA7ROyGlOte3",
+                "_id": "9cfacc0270f59b4b",
+                "changes": [
+                  {
+                    "key": "system.healthDamageReduction",
+                    "mode": 4,
+                    "value": 2
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!0bTrKA7ROyGlOte3.9cfacc0270f59b4b"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!0bTrKA7ROyGlOte3"
+          },
+          {
+            "_id": "YjoiYsdw8NSOmoDn",
+            "name": "Telepathic Link",
+            "type": "power",
+            "system": {
+              "description": "O personagem pode falar com outro telepaticamente.",
+              "powerSet": "Telepathy",
+              "prerequisites": "",
+              "action": "Standard",
+              "trigger": "",
+              "duration": "Concentration",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem pode se comunicar telepaticamente com uma pessoa de cada vez, e deve ter conhecido ou visto a outra pessoa antes. A comunicação pode ser verbal, visual ou até mais complexa, como transmitir informações de localização. Não há limite para a distância da comunicação, desde que o personagem e o alvo estejam na mesma dimensão. Se a outra pessoa não desejar falar com o personagem, o alvo pode automaticamente ignorá-lo. Para forçar um elo telepático, o personagem pode fazer um teste de Lógica contra a defesa de Vigilância do alvo. Em uma falha, o personagem não pode tentar se comunicar com o alvo desta forma pelo resto do dia. Em um sucesso, o personagem pode se comunicar com o alvo por uma rodada. Em um sucesso Fantástico, o alvo não pode ignorar o personagem pelo resto do dia."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "9e745fc9dcc37bb2",
+            "_key": "!items!YjoiYsdw8NSOmoDn"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "KulFXtot4dZZM6aI"
+    },
+    {
+      "name": "Monstrous: Werewolf",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é afligido pela licantropia, uma doença mágica que o faz assumir a forma de um lobisomem durante as três noites de lua cheia. Ele pode transmitir essa doença mágica às vítimas de sua escolha que sobreviverem aos seus ataques. Quando um personagem se torna um lobisomem, ele ganha as tags Transformação Lunar e Forma Alternativa. Quando o personagem assume sua forma de lobisomem, ele sobe um rank e ganha o restante das tags, características e poderes listados. Ele não ganha nenhum poder ou característica adicional com esse aumento de rank, mas ganha 5 pontos de habilidade e adiciona +1 ao seu multiplicador de dano. Se ele tiver a tag Heroico, também adiciona 1 ao seu Karma. Quando retorna à forma humana, ele perde os benefícios de sua forma de lobisomem. O personagem pode mudar de forma voluntariamente a qualquer momento - exceto durante as três noites em que a lua está mais cheia. Nessas noites, enquanto a lua está acima do horizonte, o personagem deve se transformar em um lobisomem e é governado por sua natureza animal. Ele não pode deixar de caçar e atacar qualquer pessoa ou criatura que encontrar, não importa se é amigo ou inimigo.",
+        "examples": "Lobisomem (Jack Russell), Lobisomem (Jake Gomez).",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "iVKiXScePf6WCNdi",
+            "name": "Alternate Form",
+            "type": "tag",
+            "system": {
+              "description": "O personagem pode mudar de sua forma humana regular para outra forma e vice-versa. Quando em qualquer uma das formas, o personagem só pode acessar os poderes atribuídos a essa forma. Na maioria dos casos, isso significa que o personagem só pode usar poderes quando está em sua forma alternativa. Esta tag se aplica a personagens que mudam de uma forma humanoide para outra, como Colossus, Emma Frost e muitos dos Hulks. Também se aplica a personagens que têm formas inumanas, como lobisomens e vampiros.",
+              "restriction": "Werewolf/Wolf",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!iVKiXScePf6WCNdi"
+          },
+          {
+            "_id": "cTYI0iDJwrB7t8Zq",
+            "name": "Extreme Appearance",
+            "type": "tag",
+            "system": {
+              "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode dar outras informações úteis, como se uma aparência extrema é comum.",
+              "restriction": "in werewolf form",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cTYI0iDJwrB7t8Zq"
+          },
+          {
+            "_id": "y3HXLx5dcgKdcEw5",
+            "name": "Lunar Transformation",
+            "type": "tag",
+            "system": {
+              "description": "Nas três noites em que a lua está mais cheia e enquanto a lua está acima do horizonte, o personagem deve se transformar em um lobisomem e é governado por sua natureza animal. Ele não pode deixar de caçar e atacar qualquer pessoa ou criatura que encontrar, não importa se é amigo ou inimigo.",
+              "restriction": "For werewolves only.",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!y3HXLx5dcgKdcEw5"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "c2B1oku7LKehKv2S",
+            "name": "Monster",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é algum tipo de monstro, muitas vezes de um tipo falado em lendas. Ele tem uma vantagem sempre que tenta intimidar alguém."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!c2B1oku7LKehKv2S"
+          },
+          {
+            "_id": "ktYRW4ENrQNViaTy",
+            "name": "Berserker",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem frequentemente perde o controle de seu temperamento. A qualquer momento que ele sofra dano físico, ele deve fazer um teste de Ego com um ND igual à quantidade de dano sofrido. Se ele falhar, ele fica furioso e deve atacar com velocidade total em combate o inimigo que o feriu. Estar furioso dá ao personagem uma vantagem em todos os ataques corpo a corpo e adiciona +2 às suas defesas de Corpo a Corpo, Resiliência e Ego. No entanto, tira –2 de sua defesa de Agilidade, e ele não pode usar armas de longo alcance. Se o personagem derrotar o inimigo que o feriu, ele deve então atacar o inimigo mais próximo. No final do turno do personagem, ele perde 5 de Foco. Quando seu Foco é reduzido ao ponto em que o personagem não poderia gastar voluntariamente mais Foco - ou se não houver inimigos à vista - o estado de fúria termina automaticamente."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!ktYRW4ENrQNViaTy"
+          },
+          {
+            "_id": "GWfvcE4vjJit0azi",
+            "name": "Weakness",
+            "type": "trait",
+            "system": {
+              "restriction": "Silver.",
+              "description": "O personagem sofre uma quantidade incomum de dano de certas substâncias. Qualquer ataque feito com essa substância ignora toda a redução de dano inerente que o personagem possui e não pode ser curado pelo seu Fator de Cura."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!GWfvcE4vjJit0azi"
+          }
+        ],
+        "powers": [
+          {
+            "_id": "GimTxYXydif7ILVH",
+            "name": "Evasion",
+            "type": "power",
+            "system": {
+              "description": "O personagem pode se esquivar de socos rapidamente,",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem também pode usar sua pontuação de defesa de Agilidade contra ataques Corpo a Corpo."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!GimTxYXydif7ILVH"
+          },
+          {
+            "_id": "rKtil3qVYx7o61lL",
+            "name": "Healing Factor",
+            "type": "power",
+            "system": {
+              "description": "O personagem se cura incrivelmente rápido.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "No final do turno do personagem, ele recupera Vida igual à sua Resiliência. (Isso também funciona fora de combate, trazendo-o rapidamente de volta à Vida total)"
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!rKtil3qVYx7o61lL"
+          },
+          {
+            "_id": "rJ3KMZQWpKUdheWX",
+            "name": "Mighty 1",
+            "type": "power",
+            "system": {
+              "description": "O personagem é sobre-humanamente forte.",
+              "powerSet": "Basic",
+              "prerequisites": "Mighty 1, Rank 2",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "Trate o personagem como um tamanho maior para levantar, carregar, balançar e arremessar coisas. Eles também adicionam +1 ao seu multiplicador de dano Corpo a Corpo, e ganham um bônus de +1 em testes de Corpo a Corpo que não sejam ataques."
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "sizeUp",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.rJ3KMZQWpKUdheWX",
+                "_id": "86a0562a3464b7c1",
+                "changes": [
+                  {
+                    "key": "system.abilities.mle.damageMultiplier",
+                    "mode": 2,
+                    "value": 1
+                  },
+                  {
+                    "key": "system.abilities.mle.noncom",
+                    "mode": 2,
+                    "value": 1
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!rJ3KMZQWpKUdheWX.86a0562a3464b7c1"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!rJ3KMZQWpKUdheWX"
+          },
+          {
+            "_id": "0bTrKA7ROyGlOte3",
+            "name": "Sturdy 2",
+            "type": "power",
+            "system": {
+              "description": "O personagem está protegido como se fosse de aço.",
+              "powerSet": "Basic",
+              "prerequisites": "Sturdy 1, Rank 2",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem ganha Redução de Dano de Vida 2."
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "Health Damage Reduction 2",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.0bTrKA7ROyGlOte3",
+                "_id": "9cfacc0270f59b4b",
+                "changes": [
+                  {
+                    "key": "system.healthDamageReduction",
+                    "mode": 4,
+                    "value": 2
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!0bTrKA7ROyGlOte3.9cfacc0270f59b4b"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!0bTrKA7ROyGlOte3"
+          },
+          {
+            "_id": "KzOd2L3zaDzob5nq",
+            "name": "Heightened Senses 1",
+            "type": "power",
+            "system": {
+              "description": "O personagem tem sentidos superiores.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem pode sentir coisas a uma distância aproximadamente duas vezes maior que o normal. Ele também tem uma vantagem em testes de Vigilância para perceber coisas, e os inimigos têm dificuldade em testes que fazem para passar furtivamente pelo personagem."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!KzOd2L3zaDzob5nq"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "KzOd2L3zaDzob5nq"
+    },
+    {
+      "name": "Alien: Skrull",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é um membro dos Skrulls, uma raça humanoide reptiliana de metamorfos que formou o Império interestelar Skrull. Em sua forma natural, eles têm pele verde, olhos vermelhos ou verdes, orelhas pontudas e queixos franzidos. Eles surgiram do planeta Skrullos na Galáxia de Andrômeda. Os Skrulls originais não podiam se metamorfosear, mas os Celestiais fizeram experiências com eles para formar os Skrulls Eternos e os Skrulls Deviantes, assim como fizeram com os humanos na Terra. Os Skrulls Deviantes se tornaram a forma dominante da espécie, levando os originais à extinção.",
+        "examples": "Hulkling (meio Skrull e meio Kree), Lyja, Super-Skrull (Kl'rt).",
+        "suggestedOccupation": "Forasteiro.",
+        "tags": [
+          {
+            "_id": "q8ee046cEAITCKE0",
+            "name": "Alien Heritage",
+            "type": "tag",
+            "system": {
+              "description": "O personagem ou pelo menos um de seus ancestrais não é da Terra. Escolha uma raça alienígena à qual ele pertença. Se não foi criado na Terra, deve considerar pegar a ocupação de Forasteiro.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!q8ee046cEAITCKE0"
+          },
+          {
+            "_id": "cTYI0iDJwrB7t8Zq",
+            "name": "Extreme Appearance",
+            "type": "tag",
+            "system": {
+              "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode dar outras informações úteis, como se uma aparência extrema é comum.",
+              "rarity": "In their natural form"
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cTYI0iDJwrB7t8Zq"
+          }
+        ],
+        "traits": [],
+        "powers": [
+          {
+            "_id": "yBDIdgmEYcp5jlhv",
+            "name": "Disguise",
+            "type": "power",
+            "system": {
+              "description": "O personagem parece ser outra pessoa,",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "Standard",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem altera instantaneamente sua aparência para que pareça ser outra pessoa. O número alvo para qualquer um que tente ver através do disfarce é a defesa de Ego do personagem. Se o personagem estiver se passando por alguém conhecido da outra pessoa, essa pessoa tem uma vantagem."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!yBDIdgmEYcp5jlhv"
+          },
+          {
+            "_id": "y9wvLxDeUlbgKfcA",
+            "name": "Extended Reach 1",
+            "type": "power",
+            "system": {
+              "description": "O alcance do personagem aumenta.",
+              "powerSet": "Plasticity",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O alcance do personagem quadruplica"
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "Reach x4",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.y9wvLxDeUlbgKfcA",
+                "_id": "bea1573f91f7ac3a",
+                "changes": [
+                  {
+                    "key": "system.reach",
+                    "mode": 1,
+                    "value": 4
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!y9wvLxDeUlbgKfcA.bea1573f91f7ac3a"
+              }
+            ],
+            "folder": "b660cb39178688a5",
+            "_key": "!items!y9wvLxDeUlbgKfcA"
+          },
+          {
+            "_id": "Cz1imI5LnsmZ7P5v",
+            "name": "Flexible Bones 1",
+            "type": "power",
+            "system": {
+              "description": "O esqueleto do personagem é elástico.",
+              "powerSet": "Plasticity",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem ganha Redução de Dano de Vida 1. Ele também tem uma vantagem em testes de Agilidade para contorção e fuga."
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "Health Damage Reduction 1",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.Cz1imI5LnsmZ7P5v",
+                "_id": "96ae1d4e6e1faf99",
+                "changes": [
+                  {
+                    "key": "system.healthDamageReduction",
+                    "mode": 4,
+                    "value": 1
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!Cz1imI5LnsmZ7P5v.96ae1d4e6e1faf99"
+              }
+            ],
+            "folder": "b660cb39178688a5",
+            "_key": "!items!Cz1imI5LnsmZ7P5v"
+          },
+          {
+            "_id": "E2VtGoJbd5TEpwri",
+            "name": "Shape-Shift",
+            "type": "power",
+            "system": {
+              "description": "O personagem pode mudar de forma.",
+              "powerSet": "Basic",
+              "prerequisites": "Disguise, Rank 3",
+              "action": "standard or reaction",
+              "trigger": "The character is attacked or otherwise in danger.",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem pode se transformar em outra forma não mais do que um tamanho maior ou menor do que sua forma normal. Quando em qualquer forma, o personagem tem acesso às habilidades naturais dessa forma. Por exemplo, se ele se transformasse em um pássaro, poderia voar. Quando transformado em um peixe, pode respirar na água."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!E2VtGoJbd5TEpwri"
+          },
+          {
+            "_id": "AvUL1VAuQK2V57Jq",
+            "name": "Slip Free",
+            "type": "power",
+            "system": {
+              "description": "O personagem é impossível de conter.",
+              "powerSet": "Plasticity",
+              "prerequisites": "",
+              "action": "reaction",
+              "trigger": "The character is grabbed or pinned.",
+              "duration": "Instant",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem não é agarrado ou imobilizado."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "b660cb39178688a5",
+            "_key": "!items!AvUL1VAuQK2V57Jq"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "LeLfEsJP2xKGnMie"
+    },
+    {
+      "name": "Weird Science",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "Os poderes do personagem surgiram de um experimento científico ou acidente que é difícil - se não impossível - de reproduzir. Muitas vezes, eles tinham o potencial genético latente para desenvolver poderes e foram de alguma forma expostos aos gatilhos certos - que provavelmente teriam matado a maioria das outras pessoas. Esses tipos de personagens às vezes são chamados de mutados. A diferença entre um mutado e um mutante é que os poderes de um mutante vêm naturalmente, mas os poderes de um mutado exigem um incidente desencadeador que pode nunca acontecer. Nesse sentido, os Inumanos são todos mutados que compartilham um gene com um gatilho conhecido: a Névoa Terrígena.",
+        "examples": "Capitão América (Steve Rogers), Demolidor (Matt Murdock), Mulher Invisível, Jessica Jones, Luke Cage, Homem-Aranha (Miles Morales), Homem-Aranha (Peter Parker).",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "wOhcCEVTSmI1RikE",
+            "name": "Mysterious",
+            "type": "tag",
+            "system": {
+              "description": "O personagem não entende totalmente como ou por que tem poderes. Isso pode ser inquietante e talvez até perigoso, ou ele pode simplesmente levar na boa.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!wOhcCEVTSmI1RikE"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "HLRSFq7h3p5W6FYe",
+            "name": "Weird",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem tem algo estranho (ou até maravilhoso) nele. Isso faz com que as pessoas tenham reações fortes a ele, tanto boas quanto ruins. Ele tem uma vantagem em todos os testes de Ego para persuadir pessoas inclinadas a gostar dele e dificuldade em todos os testes de Ego contra pessoas inclinadas a não gostar dele."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!HLRSFq7h3p5W6FYe"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "MQLKeQnlUU7H8m3N"
+    },
+    {
+      "name": "Inhuman",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é um membro do Homo sapiens inhumanus, uma raça variante da humanidade geneticamente modificada pelos Kree. Por milênios, eles viveram isolados do mundo, mas emergiram nos últimos anos, liderados por Raio Negro. Todos os Inumanos carregam um gene latente que pode ser ativado pela Névoa Terrígena. A explosão de uma Bomba Terrígena espalhou a névoa por todo o planeta, revelando que muitos humanos (incluindo Kamala Khan) tinham genética Inumana. Raio Negro foi mais tarde forçado a destruir os Inumanos, deixando poucos vivos fora da família real. O personagem é um daqueles raros Inumanos que sobreviveram.",
+        "examples": "Raio Negro, Cristal, Karnak, Dentinho, Medusa, Ms. Marvel (Kamala Khan).",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "0k1I22K4yz0akX0C",
+            "name": "Inhuman Genes",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem genes Inumanos latentes que o fazem desenvolver superpoderes quando exposto à Névoa Terrígena.",
+              "restriction": "For Inhumans only.",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!0k1I22K4yz0akX0C"
+          }
+        ],
+        "traits": [],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "MW6nYPrxE9kFFV59"
+    },
+    {
+      "name": "Deviant",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é um membro do Homo descendus, uma raça variante da humanidade criada pelos Celestiais. Eles estão espalhados pela Terra, mas vivem principalmente em cidades subterrâneas sob o Oceano Pacífico, perto de Lemúria. Apenas cem Deviantes foram criados originalmente, mas muitos outros nasceram ao longo dos milênios desde então. Eles variam muito fisicamente, vindo em todos os tamanhos, formas, cores e texturas. Cada um nasce com uma mutação física única e eles têm a habilidade genética latente de desenvolver poderes, muito parecido com os mutantes. Os Eternos são compelidos a matar os mutados Deviantes como parte de seu princípio 'Corrigir o desvio excessivo'.",
+        "examples": "Irmão Tode, Karkas, Kro.",
+        "suggestedOccupation": "Forasteiro.",
+        "tags": [
+          {
+            "_id": "cTYI0iDJwrB7t8Zq",
+            "name": "Extreme Appearance",
+            "type": "tag",
+            "system": {
+              "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode dar outras informações úteis, como se uma aparência extrema é comum.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cTYI0iDJwrB7t8Zq"
+          },
+          {
+            "_id": "d2WaQos1EtT01G2v",
+            "name": "Hunted",
+            "type": "tag",
+            "system": {
+              "description": "O personagem é procurado pela lei por crimes que supostamente (ou de fato) cometeu. Se capturado pela polícia, ele pode ser preso, julgado por seus crimes e potencialmente enviado para a prisão.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!d2WaQos1EtT01G2v"
+          }
+        ],
+        "traits": [],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "NSE6nDBAho7JK75n"
+    },
+    {
+      "name": "Alien: Marginalian",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é um Marginal, uma espécie de hermafroditas que se reproduzem assexuadamente e vêm de Marginalia, um espaço entre universos. Eles não têm pernas, têm a forma de uma batata verde com braços e se locomovem por meio de levitação.",
+        "examples": "Doop.",
+        "suggestedOccupation": "Forasteiro.",
+        "tags": [
+          {
+            "_id": "q8ee046cEAITCKE0",
+            "name": "Alien Heritage",
+            "type": "tag",
+            "system": {
+              "description": "O personagem ou pelo menos um de seus ancestrais não é da Terra. Escolha uma raça alienígena à qual ele pertença. Se não foi criado na Terra, deve considerar pegar a ocupação de Forasteiro.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!q8ee046cEAITCKE0"
+          },
+          {
+            "_id": "cTYI0iDJwrB7t8Zq",
+            "name": "Extreme Appearance",
+            "type": "tag",
+            "system": {
+              "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode dar outras informações úteis, como se uma aparência extrema é comum.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cTYI0iDJwrB7t8Zq"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "zleRKnyc4ULezfDl",
+            "name": "Weird",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem tem algo estranho (ou até maravilhoso) nele. Isso faz com que as pessoas tenham reações fortes a ele, tanto boas quanto ruins. Ele tem uma vantagem em todos os testes de Ego para persuadir pessoas inclinadas a gostar dele e dificuldade em todos os testes de Ego contra pessoas inclinadas a não gostar dele."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!zleRKnyc4ULezfDl"
+          }
+        ],
+        "powers": [
+          {
+            "_id": "cbqOfS8gOuXcSTLL",
+            "name": "Dimensional Portal",
+            "type": "power",
+            "system": {
+              "description": "O personagem abre um portal para outro lugar.",
+              "powerSet": "Omniversal Travel",
+              "prerequisites": "Dimensional Travel Together, Rank 4",
+              "action": "Standard",
+              "trigger": "",
+              "duration": "Concentration",
+              "range": "",
+              "cost": "15 Focus",
+              "effect": "O personagem abre um portal brilhante em um espaço ao lado dele que move qualquer coisa que entre nele entre esse espaço e seu destino, que forma um portal brilhante correspondente no outro lugar. A outra extremidade do portal deve estar em um espaço livre em outra dimensão em que o personagem já esteve. Qualquer coisa pode se mover através do portal em qualquer direção até que ele seja fechado, o que o personagem pode fazer à vontade."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "882fb16dc4a7430e",
+            "_key": "!items!cbqOfS8gOuXcSTLL"
+          },
+          {
+            "_id": "2IPM74RkO66nciFw",
+            "name": "Dimensional Travel",
+            "type": "power",
+            "system": {
+              "description": "O personagem se move de uma dimensão para outra.",
+              "powerSet": "Omniversal Travel",
+              "prerequisites": "Rank 3",
+              "action": "Standard or movement",
+              "trigger": "",
+              "duration": "Instant",
+              "range": "",
+              "cost": "10 Focus",
+              "effect": "O personagem se move instantaneamente de sua dimensão atual para outra dimensão dentro do mesmo universo. Por exemplo: da Terra para Asgard, Limbo ou Kun-Lun. Quando ele se move para a outra dimensão, ele pode chegar a qualquer lugar em que já esteve antes. Caso contrário, ele chega à entrada mais comum para essa dimensão."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "882fb16dc4a7430e",
+            "_key": "!items!2IPM74RkO66nciFw"
+          },
+          {
+            "_id": "66uas2LSVtRpd4Rj",
+            "name": "Dimensional Travel Other",
+            "type": "power",
+            "system": {
+              "description": "O personagem envia alguém para outra dimensão.",
+              "powerSet": "Omniversal Travel",
+              "prerequisites": "Dimensional Travel, Rank 4",
+              "action": "Standard, movement or reaction",
+              "trigger": "The target is grabbed",
+              "duration": "Instant",
+              "range": "",
+              "cost": "15 Focus",
+              "effect": "O personagem faz um teste de Ego contra a defesa de Vigilância de um alvo que ele agarrou. Se o teste for bem-sucedido, o personagem pode enviar o alvo para outra dimensão. O alvo pode ser enviado para qualquer local nessa dimensão em que o personagem já esteve antes. Caso contrário, o alvo chega à entrada mais comum para essa dimensão.",
+              "ability": "ego",
+              "attackTarget": "vig"
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "882fb16dc4a7430e",
+            "_key": "!items!66uas2LSVtRpd4Rj"
+          },
+          {
+            "_id": "zcQmiy8lj7W3DZif",
+            "name": "Dimensional Travel Together",
+            "type": "power",
+            "system": {
+              "description": "O personagem envia alguém para outra dimensão.",
+              "powerSet": "Omniversal Travel",
+              "prerequisites": "Dimensional Travel, Rank 3",
+              "action": "Standard, movement or reaction",
+              "trigger": "The target is grabbed",
+              "duration": "Instant",
+              "range": "",
+              "cost": "10 Focus",
+              "effect": "O personagem se move para uma dimensão diferente, levando qualquer pessoa que esteja tocando com ele. Se o alvo não desejar ir junto, o personagem deve agarrá-lo primeiro. Quando eles se movem para a outra dimensão, eles podem chegar a qualquer lugar em que já estiveram antes. Caso contrário, eles chegam à entrada mais comum para essa dimensão."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "882fb16dc4a7430e",
+            "_key": "!items!zcQmiy8lj7W3DZif"
+          },
+          {
+            "_id": "xts3noWzBFYlHzo2",
+            "name": "Grow 2",
+            "type": "power",
+            "system": {
+              "description": "O personagem fica ainda maior!",
+              "powerSet": "Resize",
+              "prerequisites": "",
+              "action": "Standard or reaction",
+              "trigger": "The character is attacked.",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem pode crescer até o tamanho enorme. Ele pode retornar ao seu tamanho normal à vontade.",
+              "numbered": 2
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "b74def8c3ea77646",
+            "_key": "!items!xts3noWzBFYlHzo2"
+          },
+          {
+            "_id": "rKtil3qVYx7o61lL",
+            "name": "Healing Factor",
+            "type": "power",
+            "system": {
+              "description": "O personagem se cura incrivelmente rápido.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "No final do turno do personagem, ele recupera Vida igual à sua Resiliência. (Isso também funciona fora de combate, trazendo-o rapidamente de volta à Vida total)"
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!rKtil3qVYx7o61lL"
+          },
+          {
+            "_id": "OIMOCbKEsXI9C8jD",
+            "name": "Levitation",
+            "type": "power",
+            "system": {
+              "description": "O personagem pode pairar e se mover.",
+              "powerSet": "Telekinesis",
+              "prerequisites": "",
+              "action": "Standard",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem pode se mover pelo ar em qualquer direção na sua Velocidade de Corrida."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bac06ccb5a9f2d39",
+            "_key": "!items!OIMOCbKEsXI9C8jD"
+          },
+          {
+            "_id": "CwnHlxORX50pOYsV",
+            "name": "Shrink 2",
+            "type": "power",
+            "system": {
+              "description": "O personagem fica ainda menor!",
+              "powerSet": "Resize",
+              "prerequisites": "Shrink 1",
+              "action": "Standard or reaction",
+              "trigger": "The character is attacked.",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem pode encolher até o tamanho minúsculo. Ele pode retornar ao seu tamanho normal à vontade.",
+              "numbered": 2
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "b74def8c3ea77646",
+            "_key": "!items!CwnHlxORX50pOYsV"
+          },
+          {
+            "_id": "8urZ4KiKpv89yDVY",
+            "name": "Sturdy 2",
+            "type": "power",
+            "system": {
+              "description": "O personagem está protegido como se fosse de aço.",
+              "powerSet": "Basic",
+              "prerequisites": "Sturdy 1, Rank 2",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem ganha Redução de Dano de Vida 2.",
+              "numbered": 2
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "Health Damage Reduction 2",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.8urZ4KiKpv89yDVY",
+                "_id": "9cfacc0270f59b4b",
+                "changes": [
+                  {
+                    "key": "system.healthDamageReduction",
+                    "mode": 4,
+                    "value": 2
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!8urZ4KiKpv89yDVY.9cfacc0270f59b4b"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!8urZ4KiKpv89yDVY"
+          },
+          {
+            "_id": "iZJrKmqSwU8vXqIS",
+            "name": "Uncanny 2",
+            "type": "power",
+            "system": {
+              "description": "A mente do personagem é protegida como se fosse de aço.",
+              "powerSet": "Basic",
+              "prerequisites": "Uncanny 1, Rank 2",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "Qualquer multiplicador de dano para ataques contra o Foco do personagem é reduzido em 2.",
+              "numbered": 2
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "Focus Damage Reduction 2",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.iZJrKmqSwU8vXqIS",
+                "_id": "0eb5de0042154018",
+                "changes": [
+                  {
+                    "key": "system.focusDamageReduction",
+                    "mode": 4,
+                    "value": 2
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!iZJrKmqSwU8vXqIS.0eb5de0042154018"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!iZJrKmqSwU8vXqIS"
+          }
+        ],
+        "minimumRank": 3,
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "OBDy15neuudbSGC6"
+    },
+    {
+      "name": "High Tech: Android",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é uma pessoa artificial. Seu corpo (quando tem um) é feito de plástico, metal e circuitos, em vez de carne e osso. Seus poderes vêm da tecnologia embutida em seu corpo artificial.",
+        "examples": "Tocha Humana (Jim Hammond), Jocasta, Homem-Máquina, Visão.",
+        "suggestedOccupation": "Forasteiro.",
+        "tags": [
+          {
+            "_id": "Df3ixqweXZ77mpg0",
+            "name": "A.I.",
+            "type": "tag",
+            "system": {
+              "description": "O personagem possui uma inteligência artificial em uma mente computadorizada. Sua natureza digital significa que cópias ou backups podem ser feitos de sua mente e podem até ser transferidos para outras formas compatíveis.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!Df3ixqweXZ77mpg0"
+          },
+          {
+            "_id": "cTYI0iDJwrB7t8Zq",
+            "name": "Extreme Appearance",
+            "type": "tag",
+            "system": {
+              "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode dar outras informações úteis, como se uma aparência extrema é comum.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cTYI0iDJwrB7t8Zq"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "FpFegyRxkuHv2Uf8",
+            "name": "Tech Reliance",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem depende da tecnologia para seus poderes. Quando ele sofre dano que o deixaria inconsciente, ele pode, em vez disso, escolher perder todos os seus poderes relacionados à tecnologia e permanecer consciente com 1 ponto de Vida restante. Supondo que o personagem tenha acesso a peças e ferramentas, os poderes perdidos podem ser reparados após uma batalha."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!FpFegyRxkuHv2Uf8"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "PWAaoZoUYYaAAIb1"
+    },
+    {
+      "name": "Mythic: Olympian",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é um membro do povo Olímpico, semelhante aos deuses da Grécia e Roma Antigas. Eles chamam o Olimpo de seu lar. O personagem pode ser um dos muitos deuses que foram nomeados ao longo da história, ou pode ser um dos deuses menos conhecidos do Olimpo. Eles devem escolher algo de que são o deus.",
+        "examples": "Ares, Atena, Hércules, Zeus.",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "6fBuya40ZqhFufiD",
+            "name": "Supernatural",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem poderes que são mágicos ou baseados em algo mágico.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!6fBuya40ZqhFufiD"
+          },
+          {
+            "_id": "KGrn2kq3aS5HdPKf",
+            "name": "Worshiped",
+            "type": "tag",
+            "system": {
+              "description": "O personagem é adorado por outros como um deus.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!KGrn2kq3aS5HdPKf"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "qXxLcIEUkPZbUG0L",
+            "name": "Enhanced Physique",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é mais forte que os humanos normais. Trate-os como um tamanho maior para levantar, carregar, balançar e arremessar coisas. (Isso não se acumula com outros fatores.)"
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!qXxLcIEUkPZbUG0L"
+          },
+          {
+            "_id": "WaV4TaJMTAODzfzf",
+            "name": "God Heritage",
+            "type": "trait",
+            "system": {
+              "restriction": "This trait can be selected only by characters with a mythic origin and an attachment to a particular pantheon, like Asgardian or Olympian.",
+              "description": "O personagem — ou pelo menos um de seus ancestrais — é um deus. Escolha algo de que ele seja o deus. Ele não precisa ser um deus que a maioria das pessoas já ouviu falar. Na verdade, ele pode ser o deus de algo totalmente novo. No entanto, ele geralmente não pode ser o deus de algo que já foi reivindicado por outra pessoa em seu panteão. Outros deuses costumam ter ciúmes de suas posições e se opõem a tais rivais. O personagem tem uma vantagem ao lidar com algo de que ele é o deus."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!WaV4TaJMTAODzfzf"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "QKzpM7RHuYAZKDhT"
+    },
+    {
+      "name": "Monstrous",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é algum tipo de monstro. Ele pode ter uma forma humana - ou pode ter sido humano uma vez - mas seus poderes vêm de sua monstruosidade não natural.",
+        "examples": "Cullen Bloodstone, Múmia Viva, Homem-Coisa.",
+        "suggestedOccupation": "",
+        "tags": [],
+        "traits": [
+          {
+            "_id": "c2B1oku7LKehKv2S",
+            "name": "Monster",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é algum tipo de monstro, muitas vezes de um tipo falado em lendas. Ele tem uma vantagem sempre que tenta intimidar alguém."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!c2B1oku7LKehKv2S"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "TIgxxSeSyVa5Wg4k"
+    },
+    {
+      "name": "Mythic: Asgardian",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é um membro do povo Asgardiano, semelhante aos deuses nórdicos. Eles chamam Asgard de seu lar. O personagem pode ser um dos muitos deuses que foram nomeados ao longo da história, ou pode ser um dos deuses menos conhecidos de Asgard. Eles devem escolher algo de que são o deus.",
+        "examples": "Hela, Heimdall, Loki, Sif, Thor (Odinson).",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "6fBuya40ZqhFufiD",
+            "name": "Supernatural",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem poderes que são mágicos ou baseados em algo mágico.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!6fBuya40ZqhFufiD"
+          },
+          {
+            "_id": "KGrn2kq3aS5HdPKf",
+            "name": "Worshiped",
+            "type": "tag",
+            "system": {
+              "description": "O personagem é adorado por outros como um deus.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!KGrn2kq3aS5HdPKf"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "qXxLcIEUkPZbUG0L",
+            "name": "Enhanced Physique",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é mais forte que os humanos normais. Trate-os como um tamanho maior para levantar, carregar, balançar e arremessar coisas. (Isso não se acumula com outros fatores.)"
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!qXxLcIEUkPZbUG0L"
+          },
+          {
+            "_id": "WaV4TaJMTAODzfzf",
+            "name": "God Heritage",
+            "type": "trait",
+            "system": {
+              "restriction": "This trait can be selected only by characters with a mythic origin and an attachment to a particular pantheon, like Asgardian or Olympian.",
+              "description": "O personagem — ou pelo menos um de seus ancestrais — é um deus. Escolha algo de que ele seja o deus. Ele não precisa ser um deus que a maioria das pessoas já ouviu falar. Na verdade, ele pode ser o deus de algo totalmente novo. No entanto, ele geralmente não pode ser o deus de algo que já foi reivindicado por outra pessoa em seu panteão. Outros deuses costumam ter ciúmes de suas posições e se opõem a tais rivais. O personagem tem uma vantagem ao lidar com algo de que ele é o deus."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!WaV4TaJMTAODzfzf"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "ToJVfbfeToTPWLZK"
+    },
+    {
+      "name": "Eternal",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é um membro do Homo immortalis, uma raça variante da humanidade criada pelos Celestiais. Eles estão espalhados pela Terra, mas sua sede fica na cidade de Olímpia, nas montanhas da Grécia e dobrada em uma dimensão eco. Alguns vivem em Titã (uma lua de Saturno). Os Eternos vivem por três princípios: Proteger os Celestiais. Proteger a Máquina (uma I.A. senciente profundamente conectada à Terra). Corrigir o desvio excessivo. Apenas cem Eternos foram criados originalmente, e apenas dois nasceram desde então: Thanos e Eros. O personagem é um dos cem menos conhecidos ou um novo Eterno trazido à vida por meios extraordinários. Através de um ritual geralmente iniciado pelo Primeiro Eterno (seu líder oficial), os Eternos podem ser chamados para fazer parte de um ser coletivo conhecido como a Uni-Mente.",
+        "examples": "Ikaris, Sersi, Sprite, Thanos, Thena.",
+        "suggestedOccupation": "Forasteiro.",
+        "tags": [
+          {
+            "_id": "iuMUcpODqA9hRHNA",
+            "name": "Eternally Immortal",
+            "type": "tag",
+            "system": {
+              "description": "O personagem não envelhece e teoricamente poderia viver para sempre. Se o personagem for morto, ele pode ser trazido de volta à vida na Câmara de Ativação encontrada na Exclusão, uma base Eterna localizada sob o Pólo Sul. Para que isso aconteça, a Câmara de Ativação sacrifica a vida de um humano aleatório em qualquer lugar da Terra.",
+              "restriction": "For Eternals only.",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!iuMUcpODqA9hRHNA"
+          },
+          {
+            "_id": "MP6QVO07MZF5M7sz",
+            "name": "Mahd Wy'ry",
+            "type": "tag",
+            "system": {
+              "description": "O personagem vive por tanto tempo que suas memórias acumuladas têm o potencial de levá-lo à loucura. A única cura para essa condição é morrer e depois renascer com a restauração de sua mente a partir de um backup limpo. Isso acontece raramente, mas a doença pode progredir rapidamente uma vez que começa.",
+              "restriction": "For Eternals only",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!MP6QVO07MZF5M7sz"
+          }
+        ],
+        "traits": [],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "URCb7rIQZwy9IsQI"
+    },
+    {
+      "name": "Atlantean",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é um membro do Homo mermanus, uma raça variante da humanidade. Os atlantes respiram água através de guelras em ambos os lados do pescoço e não conseguem respirar ar por mais de dez minutos. Se eles vivem no Oceano Atlântico, provavelmente têm pele azul e são de Atlântida. Se eles vêm do Oceano Pacífico, provavelmente têm pele verde e vivem em Lemúria.",
+        "examples": "Attuma, Namor, o Príncipe Submarino, Namora, Senhor da Guerra Krang.",
+        "suggestedOccupation": "Forasteiro.",
+        "tags": [
+          {
+            "_id": "dOtXmmN3Wrf6LBqV",
+            "name": "Amphibious",
+            "type": "tag",
+            "system": {
+              "description": "O personagem pode respirar muito bem debaixo d'água e também pode ver e ouvir bem nela.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!dOtXmmN3Wrf6LBqV"
+          },
+          {
+            "_id": "cTYI0iDJwrB7t8Zq",
+            "name": "Extreme Appearance",
+            "type": "tag",
+            "system": {
+              "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode dar outras informações úteis, como se uma aparência extrema é comum.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cTYI0iDJwrB7t8Zq"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "qXxLcIEUkPZbUG0L",
+            "name": "Enhanced Physique",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é mais forte que os humanos normais. Trate-os como um tamanho maior para levantar, carregar, balançar e arremessar coisas. (Isso não se acumula com outros fatores.)"
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!qXxLcIEUkPZbUG0L"
+          },
+          {
+            "_id": "IiJY4qZ22F9RmXxk",
+            "name": "Breathe Different",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem não consegue respirar o ar da Terra por muito tempo. Ele perde 1 ponto de Vida a cada minuto que não tiver algum tipo de assistência para respirar adequadamente."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!IiJY4qZ22F9RmXxk"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "amRv9k0Ia4W1g2em"
+    },
+    {
+      "name": "Special Training",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "Os poderes do personagem vêm de longas horas de prática. Seu foco intenso lhes concede habilidades que surpreenderiam a maioria das pessoas.",
+        "examples": "Gavião Arqueiro (Clint Barton), Gaviã Arqueira (Kate Bishop), Nick Fury Jr., Shang-Chi.",
+        "suggestedOccupation": "",
+        "tags": [],
+        "traits": [
+          {
+            "_id": "Yib2jS6Ultatnp2H",
+            "name": "Determination",
+            "type": "trait",
+            "system": {
+              "description": "O personagem nunca desiste, mesmo quando sente que está no seu pior. Enquanto desmoralizado, ele não ganha dificuldade em todas as ações, embora ainda não consiga manter a concentração ou gastar mais Foco.",
+              "restriction": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!Yib2jS6Ultatnp2H"
+          }
+        ],
+        "limitation": "A menos que o personagem tenha outra origem, ele não pode escolher poderes que lhe concedam habilidades sobre-humanas. Os conjuntos de poderes permitidos incluem Artes Marciais, Armas Corpo a Corpo, Armas de Longo Alcance, Portador de Escudo e Táticas. Eles também podem escolher poderes básicos que um humano comum poderia razoavelmente ter. Veja a lista de poderes Básicos na página 80.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": []
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "bXX11hIMAEe095et"
+    },
+    {
+      "name": "High Tech: Battle Suit",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem usa um traje de alta tecnologia que lhe concede poderes. Quando o traje de batalha é removido, o personagem não tem mais acesso aos poderes que ele concede. Eles são inteiramente - ou pelo menos em sua maioria - normais por baixo. A maioria dos personagens com essa origem tem a tag Aparência Extrema ao usar seu traje de batalha.",
+        "examples": "Homem de Ferro (Tony Stark), Coração de Ferro, Máquina de Combate.",
+        "suggestedOccupation": "",
+        "tags": [],
+        "traits": [
+          {
+            "_id": "FpFegyRxkuHv2Uf8",
+            "name": "Tech Reliance",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem depende da tecnologia para seus poderes. Quando ele sofre dano que o deixaria inconsciente, ele pode, em vez disso, escolher perder todos os seus poderes relacionados à tecnologia e permanecer consciente com 1 ponto de Vida restante. Supondo que o personagem tenha acesso a peças e ferramentas, os poderes perdidos podem ser reparados após uma batalha."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!FpFegyRxkuHv2Uf8"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "bgubMN6oofdPZVta"
+    },
+    {
+      "name": "Weird Science: Gamma Mutate",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem tem uma mutação genética que lhe deu poderes uma vez que foi exposto a radiação gama suficiente, transformando-o fisicamente. Isso muitas vezes lhes dá uma aparência monstruosa e muda drasticamente sua coloração, geralmente para verde, embora alguns se tornem vermelhos ou até azuis. Eles muitas vezes também podem se transformar de volta em sua forma original.",
+        "examples": "Doc Samson, Harpia (Betty Banner), Hulk (Bruce Banner), Hulk Vermelho (Thaddeus 'Thunderbolt' Ross).",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "cTYI0iDJwrB7t8Zq",
+            "name": "Extreme Appearance",
+            "type": "tag",
+            "system": {
+              "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode dar outras informações úteis, como se uma aparência extrema é comum.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cTYI0iDJwrB7t8Zq"
+          },
+          {
+            "_id": "YgPPXIuNu4P7SUK4",
+            "name": "Green Door",
+            "type": "tag",
+            "system": {
+              "description": "Depois de ser morto, o personagem pode voltar à vida passando pela Porta Verde, um portal que conecta uma parte da vida após a morte à Terra. Isso o torna efetivamente imortal.",
+              "restriction": "For gamma mutates only.",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!YgPPXIuNu4P7SUK4"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "HLRSFq7h3p5W6FYe",
+            "name": "Weird",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem tem algo estranho (ou até maravilhoso) nele. Isso faz com que as pessoas tenham reações fortes a ele, tanto boas quanto ruins. Ele tem uma vantagem em todos os testes de Ego para persuadir pessoas inclinadas a gostar dele e dificuldade em todos os testes de Ego contra pessoas inclinadas a não gostar dele."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!HLRSFq7h3p5W6FYe"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "f8ZWYUw3IdmJ5NGF"
+    },
+    {
+      "name": "Mythic",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é uma criatura ou pessoa de mito e lenda. Embora possa parecer humano, ele é outra coisa.",
+        "examples": "Angela (Aldrif Odinsdottir), Fadas, Malekith.",
+        "suggestedOccupation": "Forasteiro.",
+        "tags": [
+          {
+            "_id": "6fBuya40ZqhFufiD",
+            "name": "Supernatural",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem poderes que são mágicos ou baseados em algo mágico.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!6fBuya40ZqhFufiD"
+          }
+        ],
+        "traits": [],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "hdvXYz71CJZqpUfo"
+    },
+    {
+      "name": "Mutant",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "Os poderes do personagem surgem de ele ser um membro da subespécie Homo superior. Eles têm um Gene-X latente que lhes concede poderes, frequentemente acionado na adolescência.",
+        "examples": "Ciclope, Jean Grey, Tempestade, Wolverine (Logan).",
+        "suggestedOccupation": "Forasteiro",
+        "tags": [
+          {
+            "_id": "FLj25V9KsgBRGmdT",
+            "name": "Hounded",
+            "type": "tag",
+            "system": {
+              "description": "O personagem é membro de um grupo de pessoas que são perseguidas por simplesmente serem elas mesmas.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!FLj25V9KsgBRGmdT"
+          },
+          {
+            "_id": "v74c4tbt02uOrI8z",
+            "name": "X-Gene",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem genes mutantes que o fazem desenvolver superpoderes.",
+              "restriction": "For mutants only.",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!v74c4tbt02uOrI8z"
+          }
+        ],
+        "traits": [],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "j07KEBtsE7v9OIvi"
+    },
+    {
+      "name": "Alien: Kree",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é um membro dos Kree, uma raça humanoide do planeta Hala que formou o Império interestelar Kree na região do espaço conhecida como a Grande Nuvem de Magalhães. Eles se assemelham a humanos, mas são mais fortes e resistentes. Muitos deles têm pele azul, mas um bom número deles tem pele rosada. O ar em Hala tem muito mais nitrogênio, e os Kree que são criados nele (ou em algo semelhante) têm dificuldade em respirar o ar da Terra.",
+        "examples": "Capitão Marvel (Mar-Vell), Hulkling (meio Skrull e meio Kree), Magnitron (Yon-Rogg), Ronan, o Acusador.",
+        "suggestedOccupation": "Forasteiro.",
+        "tags": [
+          {
+            "_id": "q8ee046cEAITCKE0",
+            "name": "Alien Heritage",
+            "type": "tag",
+            "system": {
+              "description": "O personagem ou pelo menos um de seus ancestrais não é da Terra. Escolha uma raça alienígena à qual ele pertença. Se não foi criado na Terra, deve considerar pegar a ocupação de Forasteiro.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!q8ee046cEAITCKE0"
+          },
+          {
+            "_id": "cTYI0iDJwrB7t8Zq",
+            "name": "Extreme Appearance",
+            "type": "tag",
+            "system": {
+              "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode dar outras informações úteis, como se uma aparência extrema é comum.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cTYI0iDJwrB7t8Zq"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "IiJY4qZ22F9RmXxk",
+            "name": "Breathe Different",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem não consegue respirar o ar da Terra por muito tempo. Ele perde 1 ponto de Vida a cada minuto que não tiver algum tipo de assistência para respirar adequadamente."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!IiJY4qZ22F9RmXxk"
+          },
+          {
+            "_id": "qXxLcIEUkPZbUG0L",
+            "name": "Enhanced Physique",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é mais forte que os humanos normais. Trate-os como um tamanho maior para levantar, carregar, balançar e arremessar coisas. (Isso não se acumula com outros fatores.)"
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!qXxLcIEUkPZbUG0L"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "jqx3NALhjcSjBJ9y"
+    },
+    {
+      "name": "Alien: Brood",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é um membro da Ninhada, uma das espécies alienígenas mais temidas da galáxia. A Ninhada são criaturas insetoides supervisionadas por Rainhas da Ninhada que servem à Imperatriz da Ninhada. A Imperatriz governa toda a população da Ninhada através de uma mente coletiva que se estende por todo o universo. Apenas as Rainhas da Ninhada (incluindo a Imperatriz) podem implantar um embrião da Ninhada em criaturas de outras espécies, que é como a Ninhada se reproduz. As Rainhas preferem implantar embriões em um hospedeiro inconsciente para evitar que o hospedeiro saiba sobre isso. Elas geralmente envenenam o hospedeiro com seu ferrão da cauda e esperam que ele caia antes de implantar o embrião, o que neutraliza o veneno. Se um personagem for totalmente dominado por um embrião da Ninhada implantado nele, ele automaticamente ganha essa origem, junto com a característica Origem Extraordinária.",
+        "examples": "Ninhada, Zangão da Ninhada, Rainha da Ninhada, Imperatriz da Ninhada.",
+        "suggestedOccupation": "Militar.",
+        "tags": [
+          {
+            "_id": "q8ee046cEAITCKE0",
+            "name": "Alien Heritage",
+            "type": "tag",
+            "system": {
+              "description": "O personagem ou pelo menos um de seus ancestrais não é da Terra. Escolha uma raça alienígena à qual ele pertença. Se não foi criado na Terra, deve considerar pegar a ocupação de Forasteiro.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!q8ee046cEAITCKE0"
+          },
+          {
+            "_id": "cTYI0iDJwrB7t8Zq",
+            "name": "Extreme Appearance",
+            "type": "tag",
+            "system": {
+              "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode dar outras informações úteis, como se uma aparência extrema é comum.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cTYI0iDJwrB7t8Zq"
+          },
+          {
+            "_id": "Yzb2fTZrEvGCJeXt",
+            "name": "Villianous",
+            "type": "tag",
+            "system": {
+              "description": "O personagem é um vilão, alguém que pouco se importa com os direitos dos outros, até e incluindo o direito de viver",
+              "restriction": "The character cannot also be Heroic",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!Yzb2fTZrEvGCJeXt"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "pkQjwaw9nlxMuJYj",
+            "name": "Fearless",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é extremamente corajoso. Ele tem uma vantagem em quaisquer testes de ação necessários para lidar com o medo."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!pkQjwaw9nlxMuJYj"
+          },
+          {
+            "_id": "gJ219x3S9A3Laevq",
+            "name": "Hive Mind",
+            "type": "trait",
+            "system": {
+              "restriction": "For Brood only.",
+              "description": "O personagem tem alguma independência, mas está conectado a outros de sua espécie por uma rede telepática com alcance ilimitado e um número ilimitado de membros. Ao receber ordens do líder dessa rede, o personagem deve fazer um teste de ação Ego vs. ND 18 ou seguir essas ordens. Em um sucesso Fantástico, o personagem pode escolher se libertar permanentemente da rede."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!gJ219x3S9A3Laevq"
+          },
+          {
+            "_id": "9SkJ8HbHTTSP3c6v",
+            "name": "Infector",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem pode infectar um alvo com uma doença, que deve ser escolhida junto com a característica. Exemplos incluem: implantação de Brood, vírus Tecno-Orgânico, vírus Transmode. Veja a condição infectado para detalhes sobre como a infecção funciona, e a seção Infecções e Posses (p146) para os efeitos das doenças acima."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!9SkJ8HbHTTSP3c6v"
+          },
+          {
+            "_id": "kMmH30K2P2CauI3G",
+            "name": "Venomous",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "Quando o personagem usa poderes de Armas de Combate Corpo a Corpo afiadas e obtém um sucesso Fantástico, ele tem a opção de causar envenenamento em um alvo em vez de sangramento."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!kMmH30K2P2CauI3G"
+          }
+        ],
+        "powers": [
+          {
+            "_id": "7mzvjkPYY84TPfUG",
+            "name": "Additional Limbs",
+            "type": "power",
+            "system": {
+              "description": "O personagem tem membros extras que podem agarrar objetos e atacar inimigos.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem tem um apêndice preênsil adicional (como uma cauda) ou um par simétrico deles (como braços) que pode ser usado para levantar objetos, usar ferramentas ou realizar outras ações que normalmente exigem o uso de uma mão. Isso lhe concede uma vantagem em testes de Corpo a Corpo e Agilidade. Um personagem pode ter quantos membros adicionais quiser - dentro do razoável - mas não obtém vantagens adicionais por eles."
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "physical edge",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.7mzvjkPYY84TPfUG",
+                "_id": "a6eaf872deb07f00",
+                "changes": [
+                  {
+                    "key": "system.abilities.agl.edge",
+                    "mode": 2,
+                    "value": 1
+                  },
+                  {
+                    "key": "system.abilities.mle.edge",
+                    "mode": 2,
+                    "value": 1
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!7mzvjkPYY84TPfUG.a6eaf872deb07f00"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!7mzvjkPYY84TPfUG"
+          },
+          {
+            "_id": "v19LX4DaSGCbMfQX",
+            "name": "Flight 1",
+            "type": "power",
+            "system": {
+              "description": "O personagem pode voar para o céu.",
+              "powerSet": "Basic",
+              "prerequisites": "Rank 2",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem pode voar. Sua Velocidade de Voo de combate é igual ao seu rank vezes sua Velocidade de Corrida. Fora de combate, ele pode se mover três vezes sua Velocidade de Voo.",
+              "numbered": 1
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "Flight speed",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.v19LX4DaSGCbMfQX",
+                "_id": "8a3f551a15466854",
+                "changes": [
+                  {
+                    "key": "system.movement.flight.active",
+                    "mode": 5,
+                    "value": true
+                  },
+                  {
+                    "key": "system.movement.flight.calc",
+                    "mode": 5,
+                    "value": "runspeed"
+                  },
+                  {
+                    "key": "system.movement.flight.calc",
+                    "mode": 5,
+                    "value": "rank"
+                  },
+                  {
+                    "key": "system.movement.flight.noncom",
+                    "mode": 1,
+                    "value": 3
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!v19LX4DaSGCbMfQX.8a3f551a15466854"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!v19LX4DaSGCbMfQX"
+          },
+          {
+            "_id": "rJ3KMZQWpKUdheWX",
+            "name": "Mighty 1",
+            "type": "power",
+            "system": {
+              "description": "O personagem é sobre-humanamente forte.",
+              "powerSet": "Basic",
+              "prerequisites": "Mighty 1, Rank 2",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "Trate o personagem como um tamanho maior para levantar, carregar, balançar e arremessar coisas. Eles também adicionam +1 ao seu multiplicador de dano Corpo a Corpo, e ganham um bônus de +1 em testes de Corpo a Corpo que não sejam ataques.",
+              "numbered": 1
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "sizeUp",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.rJ3KMZQWpKUdheWX",
+                "_id": "86a0562a3464b7c1",
+                "changes": [
+                  {
+                    "key": "system.abilities.mle.damageMultiplier",
+                    "mode": 2,
+                    "value": 1
+                  },
+                  {
+                    "key": "system.abilities.mle.noncom",
+                    "mode": 2,
+                    "value": 1
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!rJ3KMZQWpKUdheWX.86a0562a3464b7c1"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!rJ3KMZQWpKUdheWX"
+          },
+          {
+            "_id": "vJ6EoOqSeRyh7WpD",
+            "name": "Sturdy 1",
+            "type": "power",
+            "system": {
+              "description": "O personagem tem proteção contra dano físico.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O corpo do personagem é tão resistente que ele tem Redução de Dano de Vida 1. Se este poder vier de armadura ou qualquer outra coisa removível - como a armadura do Homem de Ferro - o personagem deve aplicar a característica Dependência de Tecnologia a ele.",
+              "numbered": 1
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "Health Damage Reduction 1",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.vJ6EoOqSeRyh7WpD",
+                "_id": "88ddbaf40c7ed97b",
+                "changes": [
+                  {
+                    "key": "system.healthDamageReduction",
+                    "mode": 4,
+                    "value": 1
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!vJ6EoOqSeRyh7WpD.88ddbaf40c7ed97b"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!vJ6EoOqSeRyh7WpD"
+          }
+        ],
+        "minimumRank": 2,
+        "limitation": "A menos que a Ninhada seja uma Rainha, o personagem só pode escolher poderes adicionais como se tivesse a origem Treinamento Especial.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": []
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "kMmH30K2P2CauI3G"
+    },
+    {
+      "name": "High Tech",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "Os poderes do personagem surgem de dispositivos de alta tecnologia que estão muito além dos limites da engenharia moderna. Isso pode vir de muitas formas.",
+        "examples": "Doutor Octopus (Otto Octavius), Manopla (Joseph Green), Mysterio (Quentin Beck), o Trapaceiro.",
+        "suggestedOccupation": "",
+        "tags": [],
+        "traits": [
+          {
+            "_id": "FpFegyRxkuHv2Uf8",
+            "name": "Tech Reliance",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem depende da tecnologia para seus poderes. Quando ele sofre dano que o deixaria inconsciente, ele pode, em vez disso, escolher perder todos os seus poderes relacionados à tecnologia e permanecer consciente com 1 ponto de Vida restante. Supondo que o personagem tenha acesso a peças e ferramentas, os poderes perdidos podem ser reparados após uma batalha."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!FpFegyRxkuHv2Uf8"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "lav6rm8VKjnVcJ6j"
+    },
+    {
+      "name": "Symbiote: Venom",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem se uniu a um simbionte que é o simbionte Venom ou descendente dele. Quando um personagem se une a tal simbionte, ele sobe dois ranks e ganha as características e poderes listados, que devem ser escolhidos para os poderes que os ranks concedem.",
+        "examples": "Carnificina, Venom (Eddie Brock), Shriek.",
+        "suggestedOccupation": "",
+        "tags": [],
+        "traits": [
+          {
+            "_id": "ilcUJqW4kKC8Soul",
+            "name": "Anathema",
+            "type": "trait",
+            "system": {
+              "restriction": "Extreme Heat/Extreme Sonics/Anti-Venom",
+              "description": "O personagem sofre dano direto quando exposto a uma substância específica. Eles não podem entrar voluntariamente no mesmo espaço que ela. Se forem tocados por ela, eles sofrem instantaneamente o dano de um ataque de Rank 3 que acerta automaticamente. Isso continua a cada turno até que eles sejam separados da substância ou sejam mortos ou destruídos. O dano causado por Anátema ignora toda a redução de dano que o personagem possui e não pode ser curado pelo seu Fator de Cura."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!ilcUJqW4kKC8Soul"
+          },
+          {
+            "_id": "xGRaRAbxMRSIuPpv",
+            "name": "Berserker",
+            "type": "trait",
+            "img": "systems/marvel-multiverse/icons/trait.svg",
+            "system": {
+              "restriction": "",
+              "description": "O personagem frequentemente perde o controle de seu temperamento. A qualquer momento que ele sofra dano físico, ele deve fazer um teste de Ego com um ND igual à quantidade de dano sofrido. Se ele falhar, ele fica furioso e deve atacar com velocidade total em combate o inimigo que o feriu. Estar furioso dá ao personagem uma vantagem em todos os ataques corpo a corpo e adiciona +2 às suas defesas de Corpo a Corpo, Resiliência e Ego. No entanto, tira –2 de sua defesa de Agilidade, e ele não pode usar armas de longo alcance. Se o personagem derrotar o inimigo que o feriu, ele deve então atacar o inimigo mais próximo. No final do turno do personagem, ele perde 5 de Foco. Quando seu Foco é reduzido ao ponto em que o personagem não poderia gastar voluntariamente mais Foco - ou se não houver inimigos à vista - o estado de fúria termina automaticamente."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!xGRaRAbxMRSIuPpv"
+          },
+          {
+            "_id": "KnTzZJDC0n11CRjL",
+            "name": "Symbiotic Spider Blinder",
+            "type": "trait",
+            "img": "systems/marvel-multiverse/icons/trait.svg",
+            "system": {
+              "restriction": "",
+              "description": "Enquanto o personagem está ligado a um simbionte, ele não pode ser detectado pelo Sentido-Aranha de qualquer personagem que tenha sido previamente ligado ao mesmo simbionte. Este efeito também é passado para a prole do simbionte. A razão é que o Sentido-Aranha detecta o simbionte previamente ligado como parte de si mesmo e, portanto, não é uma ameaça. Testes de Vigilância para perceber o perigo de tal simbionte. Nem tais simbiontes têm dificuldade em testes de Agilidade contra a defesa de Vigilância do personagem."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!KnTzZJDC0n11CRjL"
+          }
+        ],
+        "powers": [
+          {
+            "_id": "ody1G0sSPcvPumiu",
+            "name": "Disguise",
+            "type": "power",
+            "img": "systems/marvel-multiverse/icons/super-powers.svg",
+            "system": {
+              "description": "O personagem parece ser outra pessoa,",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "Standard",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem altera instantaneamente sua aparência para que pareça ser outra pessoa. O número alvo para qualquer um que tente ver através do disfarce é a defesa de Ego do personagem. Se o personagem estiver se passando por alguém conhecido da outra pessoa, essa pessoa tem uma vantagem."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!ody1G0sSPcvPumiu"
+          },
+          {
+            "_id": "w0JXTcF5QKfGbpYA",
+            "name": "Healing Factor",
+            "type": "power",
+            "img": "systems/marvel-multiverse/icons/super-powers.svg",
+            "system": {
+              "description": "O personagem se cura incrivelmente rápido.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "No final do turno do personagem, ele recupera Vida igual à sua Resiliência. (Isso também funciona fora de combate, trazendo-o rapidamente de volta à Vida total)"
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!w0JXTcF5QKfGbpYA"
+          },
+          {
+            "_id": "55JFEkuCOICgpk8i",
+            "name": "Environmental Protection",
+            "type": "power",
+            "system": {
+              "description": "Efeitos ambientais não incomodam o personagem.",
+              "powerSet": "Basic",
+              "prerequisites": "",
+              "action": "Permanent",
+              "trigger": "The character takes Health damage.",
+              "duration": "Instant",
+              "range": "",
+              "cost": "15 Focus",
+              "effect": "O personagem não é prejudicado por frio ou calor intensos, pela pressão das profundezas do mar ou pela intensa radiação e vácuo do espaço. O jogador pode escolher qualquer uma ou todas essas proteções, conforme melhor se adequar ao conceito do personagem."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!55JFEkuCOICgpk8i"
+          },
+          {
+            "_id": "rJ3KMZQWpKUdheWX",
+            "name": "Mighty 1",
+            "type": "power",
+            "system": {
+              "description": "O personagem é sobre-humanamente forte.",
+              "powerSet": "Basic",
+              "prerequisites": "Mighty 1, Rank 2",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "Trate o personagem como um tamanho maior para levantar, carregar, balançar e arremessar coisas. Eles também adicionam +1 ao seu multiplicador de dano Corpo a Corpo, e ganham um bônus de +1 em testes de Corpo a Corpo que não sejam ataques."
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "sizeUp",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.rJ3KMZQWpKUdheWX",
+                "_id": "86a0562a3464b7c1",
+                "changes": [
+                  {
+                    "key": "system.abilities.mle.damageMultiplier",
+                    "mode": 2,
+                    "value": 1
+                  },
+                  {
+                    "key": "system.abilities.mle.noncom",
+                    "mode": 2,
+                    "value": 1
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!rJ3KMZQWpKUdheWX.86a0562a3464b7c1"
+              }
+            ],
+            "folder": "bbe663a787c7ec04",
+            "_key": "!items!rJ3KMZQWpKUdheWX"
+          },
+          {
+            "_id": "yKJfBUm62kFOAY2U",
+            "name": "Webcasting",
+            "type": "power",
+            "img": "systems/marvel-multiverse/icons/super-powers.svg",
+            "system": {
+              "description": "O personagem pode prender um alvo em uma teia.",
+              "powerSet": "Spider-Powers",
+              "prerequisites": "",
+              "action": "Standard",
+              "trigger": "",
+              "duration": "Instant",
+              "range": "10 spaces",
+              "cost": "",
+              "effect": "O personagem faz um ataque à distância contra um inimigo. Se o ataque for um sucesso, a teia paralisa o inimigo. Em um sucesso Fantástico, o inimigo também fica imobilizado. Libertar-se da teia requer um teste de Corpo a Corpo (número alvo 20).",
+              "ability": "agl",
+              "attackTarget": "agl",
+              "attackKind": "ranged"
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "a8b9ae895259d5bf",
+            "_key": "!items!yKJfBUm62kFOAY2U "
+          },
+          {
+            "_id": "lPOjxlvu0CXXalJ1",
+            "name": "Wallcrawling",
+            "type": "power",
+            "img": "systems/marvel-multiverse/icons/super-powers.svg",
+            "system": {
+              "description": "O personagem pode escalar como uma aranha.",
+              "powerSet": "Spider-Powers",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "Permanent",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem pode escalar a uma velocidade igual à sua velocidade normal. Em condições normais, ele nunca perde o controle, não importa o ângulo da superfície."
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "climb at runspeed",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.lPOjxlvu0CXXalJ1",
+                "_id": "7020b501aa8a4625",
+                "changes": [
+                  {
+                    "key": "system.movement.climb.calc",
+                    "mode": 5,
+                    "value": "runspeed"
+                  }
+                ],
+                "description": "<p><span style='font-family:Roboto Condensed'>A velocidade de movimento de escalada é igual à velocidade normal (corrida).</span></p>",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!lPOjxlvu0CXXalJ1.7020b501aa8a4625"
+              }
+            ],
+            "folder": "a8b9ae895259d5bf",
+            "_key": "!items!lPOjxlvu0CXXalJ1"
+          }
+        ],
+        "limitation": "Eles devem selecionar a maioria dos seus outros poderes dos conjuntos de Magia: Demoníaca e Controle Elemental: Fogo do Inferno. O personagem deve ser pelo menos de Rank 4. A menos que o personagem tenha outra origem, ele não pode escolher outros poderes.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "ngZFmKipxcmK7XI1"
+    },
+    {
+      "name": "Mutant: Artificial",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "Os poderes do personagem surgem da manipulação de DNA - ou de uma condição natural e inerente - que os faz parecer um verdadeiro mutante. Eles se acreditam ser um mutante, ou acreditaram por anos. No entanto, eles não nasceram com um Gene-X.",
+        "examples": "Deadpool, Senhor Sinistro, Mercúrio, Feiticeira Escarlate.",
+        "suggestedOccupation": "Forasteiro",
+        "tags": [
+          {
+            "_id": "FLj25V9KsgBRGmdT",
+            "name": "Hounded",
+            "type": "tag",
+            "system": {
+              "description": "O personagem é membro de um grupo de pessoas que são perseguidas por simplesmente serem elas mesmas.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!FLj25V9KsgBRGmdT"
+          },
+          {
+            "_id": "9Ru63HDUeq3hLqvs",
+            "name": "Mutant Associate",
+            "type": "tag",
+            "system": {
+              "description": "Grande parte do público acredita - ou acreditou - que o personagem é um mutante. Embora isso não seja tecnicamente verdade, o personagem é incluído com outros mutantes na mente da maioria das pessoas.",
+              "restriction": "For non-mutants or those with the Mutant: Artificial origin.",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!9Ru63HDUeq3hLqvs"
+          }
+        ],
+        "traits": [],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "qkCJzEcisvnXvjqt"
+    },
+    {
+      "name": "Monstrous: Mummudrai",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem é um monstro conhecido como Mummudrai, um espírito gêmeo maligno do Plano Astral que cada feto deve lutar e derrotar no útero para nascer. Poucos deles sobrevivem, mas aqueles que o fazem podem se tornar terrivelmente poderosos, pois podem copiar DNA e criar formas físicas para si mesmos.",
+        "examples": "Cassandra Nova.",
+        "traits": [
+          {
+            "_id": "c2B1oku7LKehKv2S",
+            "name": "Monster",
+            "type": "trait",
+            "system": {
+              "description": "O personagem é algum tipo de monstro, muitas vezes de um tipo falado em lendas. Ele tem uma vantagem sempre que tenta intimidar alguém."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!c2B1oku7LKehKv2S"
+          }
+        ],
+        "powers": [
+          {
+            "_id": "WKHcNDydpNdNoVSj",
+            "name": "DNA Manipulation",
+            "type": "power",
+            "system": {
+              "description": "O personagem é capaz de identificar, copiar e manipular DNA em si mesmo e nos outros.",
+              "powerSet": "Narrative",
+              "prerequisites": "",
+              "action": "",
+              "trigger": "",
+              "duration": "",
+              "range": "",
+              "cost": "",
+              "effect": "O personagem é capaz de identificar, copiar e manipular DNA em si mesmo e nos outros. Ele pode usar isso para criar um corpo do zero que pode então ocupar usando o poder Copiar Psique. Além disso, o personagem pode fazer com que poderes mutantes latentes se manifestem sob comando, tanto em seu próprio corpo quanto no de outros. Ele também pode copiar DNA de outras pessoas e inseri-lo em seu corpo para enganar os sistemas de segurança, fazendo-os pensar que são membros de um grupo genético ou linhagem familiar específica."
+            },
+            "flags": {},
+            "effects": [],
+            "folder": "26cb724b2bd54b2e",
+            "_key": "!items!WKHcNDydpNdNoVSj"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedOccupation": "",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "tags": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "rn5g2MzvovOqH2iO"
+    },
+    {
+      "name": "Magic: Demonic",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem explora (ou é amaldiçoado por) os poderes do Inferno. Ele pode ser um nativo de um dos Nove Círculos do Inferno, ou seus poderes podem simplesmente vir de uma fonte Infernal.",
+        "examples": "Belasco, Coração Negro, Daimon Hellstrom, Dormammu.",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "6fBuya40ZqhFufiD",
+            "name": "Supernatural",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem poderes que são mágicos ou baseados em algo mágico.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!6fBuya40ZqhFufiD"
+          },
+          {
+            "_id": "mfXxO2r53F9Ix6re",
+            "name": "Cursed",
+            "type": "tag",
+            "system": {
+              "description": "Querendo ou não, o personagem é afiliado ao Inferno. Isso pode expô-lo a todos os tipos de tramas e planos nefastos.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!mfXxO2r53F9Ix6re"
+          }
+        ],
+        "traits": [],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "stg9Bt3SeMZ4r7rW"
+    },
+    {
+      "name": "High Tech: Cybernetics",
+      "type": "origin",
+      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "system": {
+        "description": "O personagem tem implantes de alta tecnologia, cirurgicamente embutidos, que lhe concedem poderes. Estes não podem ser removidos sem muito cuidado ou dor. Se os implantes forem óbvios, o personagem recebe a tag Aparência Extrema. Caso contrário, os implantes foram escondidos dentro de seu corpo (como no revestimento do esqueleto de Wolverine com adamantium) e podem ser visíveis apenas quando em uso (como quando Wolverine usa suas garras), se tanto.",
+        "examples": "Deathlok (todos eles), Dentes-de-Sabre, Soldado Invernal, Wolverine (Logan).",
+        "suggestedOccupation": "",
+        "tags": [
+          {
+            "_id": "cTYI0iDJwrB7t8Zq",
+            "name": "Extreme Appearance",
+            "type": "tag",
+            "system": {
+              "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode dar outras informações úteis, como se uma aparência extrema é comum.",
+              "rarity": "common"
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cTYI0iDJwrB7t8Zq"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "FpFegyRxkuHv2Uf8",
+            "name": "Tech Reliance",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem depende da tecnologia para seus poderes. Quando ele sofre dano que o deixaria inconsciente, ele pode, em vez disso, escolher perder todos os seus poderes relacionados à tecnologia e permanecer consciente com 1 ponto de Vida restante. Supondo que o personagem tenha acesso a peças e ferramentas, os poderes perdidos podem ser reparados após uma batalha."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!FpFegyRxkuHv2Uf8"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "suggestedTags": [],
+        "minimumRank": 0,
+        "powers": [],
+        "limitation": ""
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480170677,
+        "modifiedTime": 1756480170677,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "xYwxxiS074bgs93S"
+    }
+  ],
+  "source": {
+    "world": "marvel-multiverse",
+    "system": "marvel-multiverse",
+    "version": {
+      "core": "13.346",
+      "system": "2.2.0"
+    }
+  },
+  "folders": [],
+  "folder": {
+    "id": "GMJbBokUYDgVYTCs",
+    "name": "Marvel Multiverse"
+  }
+}

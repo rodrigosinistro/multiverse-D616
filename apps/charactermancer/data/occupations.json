@@ -1,0 +1,1253 @@
+{
+  "package": "world.occupations",
+  "metadata": {
+    "name": "occupations",
+    "label": "Occupations",
+    "path": "worlds/marvel-multiverse/packs/occupations",
+    "type": "Item",
+    "system": "marvel-multiverse",
+    "ownership": {
+      "PLAYER": "OBSERVER",
+      "ASSISTANT": "OWNER"
+    },
+    "flags": {},
+    "packageType": "world",
+    "packageName": "marvel-multiverse",
+    "id": "world.occupations"
+  },
+  "type": "Item",
+  "items": [
+    {
+      "name": "Tycoon",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "<p>O personagem é extremamente rico e famoso. Não lhe falta nada e sua presença chama atenção por onde passa. Recebe convites para as melhores festas e tem acesso às áreas VIP.</p>",
+        "examples": "Iron Man (Tony Stark), Iron Monger (Obadiah Stane), Mandarin, Sunspot, Wasp (Janet Van Dyne).",
+        "tags": [
+          {
+            "_id": "sF1yUL7n9ewoWbAm",
+            "name": "Rich",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem acesso a muito dinheiro. Se deseja algo normalmente e legalmente disponível, pode simplesmente comprar.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!sF1yUL7n9ewoWbAm"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "1JaM7YojOn0H4TaF",
+            "name": "Connections: Police",
+            "type": "trait",
+            "system": {
+              "description": "O personagem possui um contato influente em uma área específica (repórter, policial, político, mafioso etc.). Com um teste de Ego, pode solicitar pistas, informações ou recursos; o TN depende do favor. Este traço pode ser escolhido várias vezes com tipos diferentes (Celebridades, Comunidade, Crime, Espionagem, Militar, Forças Policiais, Profissionais, Fontes, Super‑Heróis etc.).",
+              "restriction": "Police.",
+              "multiple": true
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!1JaM7YojOn0H4TaF"
+          },
+          {
+            "_id": "58PVeQda5zFxROcb",
+            "name": "Famous",
+            "type": "trait",
+            "system": {
+              "description": "O personagem é amplamente conhecido — ao menos por um grupo ou população. Pode ser amado ou odiado, mas é famoso. Tem vantagem em testes de Ego para convencer alguém que goste dele e encontra dificuldade ao tentar convencer quem não gosta. Se possuir identidade secreta, este traço vale apenas para uma das identidades (mas pode ser adquirido várias vezes, uma para cada identidade)."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!58PVeQda5zFxROcb"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756483559288,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "1STSVGcSdbeSMNx6"
+    },
+    {
+      "name": "Entertainer",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "O personagem vive de entreter outras pessoas (cantor, músico, escritor, cineasta, palestrante etc.). Todo artista precisa de público, e ele trabalha duro para conquistá‑lo e mantê‑lo engajado.",
+        "examples": "Dazzler, Echo, Mysterio, Wonder Man.",
+        "traits": [
+          {
+            "_id": "58PVeQda5zFxROcb",
+            "name": "Famous",
+            "type": "trait",
+            "system": {
+              "description": "O personagem é amplamente conhecido — ao menos por um grupo ou população. Pode ser amado ou odiado, mas é famoso. Tem vantagem em testes de Ego para convencer alguém que goste dele e encontra dificuldade ao tentar convencer quem não gosta. Se possuir identidade secreta, este traço vale apenas para uma das identidades (mas pode ser adquirido várias vezes, uma para cada identidade)."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!58PVeQda5zFxROcb"
+          },
+          {
+            "_id": "MQiwVKYeYAAa6zdm",
+            "name": "Public Speaking",
+            "type": "trait",
+            "system": {
+              "description": "O personagem sabe chamar a atenção de uma plateia — seja em palco, diante de um júri ou em sala de aula. Tem vantagem em testes de Ego ao tentar persuadir grupos."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!MQiwVKYeYAAa6zdm"
+          },
+          {
+            "_id": "pn4fS9TQYr8IELsd",
+            "name": "Presence",
+            "type": "trait",
+            "system": {
+              "description": "O personagem sabe comandar a atenção sob demanda. Tem facilidade em fazer com que as pessoas prestem atenção nele ou voluntariamente façam algo para ele."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!pn4fS9TQYr8IELsd"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "tags": []
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756480162389,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "1Y5Lr8dDiMFzSwPO"
+    },
+    {
+      "name": "Military",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "<p>O personagem serve (ou já serviu) em uma organização militar. Recebeu treinamento, segue disciplina e costuma obedecer ordens que nem sempre são suas. Pode, às vezes, pedir ajuda a outros soldados. Em geral o dever vem em primeiro lugar; por isso, deve receber a tag Obrigação: Dever.</p>",
+        "traits": [
+          {
+            "_id": "J9DayS2OSDi76nK3",
+            "name": "Battle Ready",
+            "type": "trait",
+            "system": {
+              "description": "O personagem está sempre mentalmente preparado para o início de qualquer problema. Adicione +30 de Foco."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!J9DayS2OSDi76nK3"
+          },
+          {
+            "_id": "GOkmd0KmGboRYqiX",
+            "name": "Connections: Military",
+            "type": "trait",
+            "system": {
+              "description": "O personagem possui um contato influente em uma área específica (repórter, policial, político, mafioso etc.). Com um teste de Ego, pode solicitar pistas, informações ou recursos; o TN depende do favor. Este traço pode ser escolhido várias vezes com tipos diferentes (Celebridades, Comunidade, Crime, Espionagem, Militar, Forças Policiais, Profissionais, Fontes, Super‑Heróis etc.).",
+              "restriction": "Military."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!GOkmd0KmGboRYqiX"
+          },
+          {
+            "_id": "IMbictrWg4k65rJY",
+            "name": "Situational Awareness",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem foi treinado para manter os olhos abertos para problemas. Tem vantagem nos testes de iniciativa."
+            },
+            "flags": {},
+            "effects": [
+              {
+                "name": "initiative edge",
+                "img": "icons/svg/aura.svg",
+                "duration": {
+                  "startTime": null,
+                  "seconds": null,
+                  "combat": null,
+                  "rounds": null,
+                  "turns": null,
+                  "startRound": null,
+                  "startTurn": null
+                },
+                "disabled": false,
+                "origin": "Item.IMbictrWg4k65rJY",
+                "_id": "80788f0993a845ac",
+                "changes": [
+                  {
+                    "key": "system.attributes.init.edge",
+                    "mode": 5,
+                    "value": true
+                  }
+                ],
+                "description": "",
+                "transfer": true,
+                "statuses": [],
+                "flags": {},
+                "tint": null,
+                "_key": "!items.effects!IMbictrWg4k65rJY.80788f0993a845ac"
+              }
+            ],
+            "_key": "!items!IMbictrWg4k65rJY"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "examples": "",
+        "tags": []
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756483575120,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "4gibd6cFrOtcvLeq"
+    },
+    {
+      "name": "Student",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "<p>O personagem estuda em tempo integral (escola ou faculdade). Suas responsabilidades estão ligadas a ele e à instituição de ensino. A maioria das pessoas começa com esta ocupação. Ao se formar, você pode selecionar uma nova ocupação para substituí‑la.</p>",
+        "examples": "Moon Girl, Ms. Marvel (Kamala Khan), Spider-Man (Miles Morales).",
+        "tags": [
+          {
+            "_id": "AsvzlKtmzuweDUrD",
+            "name": "Mentor",
+            "type": "tag",
+            "system": {
+              "description": "O personagem conhece uma pessoa mais velha a quem pode pedir conselhos — mesmo sobre super‑poderes. Esta tag pode ser selecionada várias vezes.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!AsvzlKtmzuweDUrD"
+          },
+          {
+            "_id": "BwSPq35eiRRhfTAi",
+            "name": "Obligation",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem obrigações com certas pessoas, lugares ou organizações (família, escola, sociedade, esporte, trabalho etc.). Esta tag pode ser selecionada várias vezes, usando muitas categorias diferentes.",
+              "restriction": "School",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!BwSPq35eiRRhfTAi"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "BwSPq35eiRRhfTAi",
+            "name": "Quick Learner",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "Se o personagem falhar em um teste de ação, ganha vantagem no teste se tentar a mesma ação novamente no próximo turno."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!BwSPq35eiRRhfTAi"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756483561903,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "BwSPq35eiRRhfTAi"
+    },
+    {
+      "name": "Journalist",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "O personagem trabalha como repórter ou editor em uma organização de notícias — de um jornal como o Daily Bugle a TNM (Threats and Menaces). Pode ser qualquer tipo de mídia: TV, rádio, jornal, revista ou online.",
+        "examples": "Silk, Spider-Man (Peter Parker), Venom (Eddie Brock).",
+        "traits": [
+          {
+            "_id": "NLlOYqvfd6DFU32p",
+            "name": "Audience",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "Muitas pessoas acompanham o trabalho do personagem e o tratam como celebridade. Com um teste de Ego, ele pode solicitar favores; o Narrador define o TN do teste conforme o pedido."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!NLlOYqvfd6DFU32p"
+          },
+          {
+            "_id": "STshmPa0RzoQ1pra",
+            "name": "Connections: Sources",
+            "type": "trait",
+            "system": {
+              "description": "O personagem possui um contato influente em uma área específica (repórter, policial, político, mafioso etc.). Com um teste de Ego, pode solicitar pistas, informações ou recursos; o TN depende do favor. Este traço pode ser escolhido várias vezes com tipos diferentes (Celebridades, Comunidade, Crime, Espionagem, Militar, Forças Policiais, Profissionais, Fontes, Super‑Heróis etc.).",
+              "restriction": "Sources.",
+              "multiple": true
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!STshmPa0RzoQ1pra"
+          },
+          {
+            "_id": "Enp0m1s92XgbRLfE",
+            "name": "Pundit",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem sabe publicar notícias e colocá‑las em contexto. Tem vantagem em testes de Ego ou Lógica ao expor sua opinião por meio da mídia."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!Enp0m1s92XgbRLfE"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "tags": []
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756480162389,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "CS3grYXkyhEsXa8W"
+    },
+    {
+      "name": "Adventurer",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "<p>O personagem vive em busca de aventuras. Talvez seja independente e não precise de outra ocupação, ou talvez ofereça seus serviços profissionalmente.</p>",
+        "examples": "Iron Fist (Danny Rand), Luke Cage, Hawkeye (Kate Bishop).",
+        "tags": [
+          {
+            "_id": "zWTQEAUOQsvcyNd7",
+            "name": "Black Market Access",
+            "type": "tag",
+            "system": {
+              "description": "O personagem sabe onde e como comprar e vender coisas raras — e potencialmente ilegais.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!zWTQEAUOQsvcyNd7"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "pkQjwaw9nlxMuJYj",
+            "name": "Fearless",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é extremamente corajoso. Tem vantagem em quaisquer testes exigidos para lidar com medo."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!pkQjwaw9nlxMuJYj"
+          },
+          {
+            "_id": "1C2neohcCRMXkpys",
+            "name": "Connections",
+            "type": "trait",
+            "system": {
+              "description": "O personagem possui um contato influente em uma área específica (repórter, policial, político, mafioso etc.). Com um teste de Ego, pode solicitar pistas, informações ou recursos; o TN depende do favor. Este traço pode ser escolhido várias vezes com tipos diferentes (Celebridades, Comunidade, Crime, Espionagem, Militar, Forças Policiais, Profissionais, Fontes, Super‑Heróis etc.).",
+              "restriction": "",
+              "multiple": true
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!1C2neohcCRMXkpys"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756483593880,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "GjNdUjutIj2toI1n"
+    },
+    {
+      "name": "Scientist",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "<p>O personagem resolve problemas por meio de pesquisa científica. Costuma estar entre os maiores especialistas do mundo, e outros heróis recorrem a ele em busca de conhecimento.</p>",
+        "examples": "Doctor Octopus (Otto Octavius), Hulk (Bruce Banner), Mister Fantastic, Moon Girl.",
+        "tags": [
+          {
+            "_id": "6OcqqaksN4HVGE4m",
+            "name": "Lab Access",
+            "type": "tag",
+            "system": {
+              "description": "O personagem possui — ou tem acesso — a um laboratório equipado, que pode variar de uma sala de aula do ensino médio a um laboratório forense ou uma instalação industrial.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!6OcqqaksN4HVGE4m"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "tOmOxAiCoVa8UnLP",
+            "name": "Scientific Expertise",
+            "type": "trait",
+            "system": {
+              "description": "O personagem tem treinamento científico extenso. Tem vantagem em testes de Lógica relacionados a ciência; se estiver em um laboratório apropriado, ganha uma segunda vantagem nesses testes."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!tOmOxAiCoVa8UnLP"
+          },
+          {
+            "_id": "Raclt6WYW5LMpHfP",
+            "name": "Inventor",
+            "type": "trait",
+            "system": {
+              "description": "O personagem é bom em encontrar soluções de improviso. Tem vantagem em testes de Lógica ao criar ou consertar coisas."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!Raclt6WYW5LMpHfP"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756483571450,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "Hnyaqj2Ki7Q4KVNb"
+    },
+    {
+      "name": "Educator",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "O personagem educa outras pessoas. Pode ser professor do ensino básico, universitário, treinador, orientador etc., e faz o possível para transmitir conhecimento.",
+        "examples": "Agatha Harkness, Blue Marvel, Professor X.",
+        "traits": [
+          {
+            "_id": "1C2neohcCRMXkpys",
+            "name": "Connections",
+            "type": "trait",
+            "system": {
+              "description": "O personagem possui um contato influente em uma área específica (repórter, policial, político, mafioso etc.). Com um teste de Ego, pode solicitar pistas, informações ou recursos; o TN depende do favor. Este traço pode ser escolhido várias vezes com tipos diferentes (Celebridades, Comunidade, Crime, Espionagem, Militar, Forças Policiais, Profissionais, Fontes, Super‑Heróis etc.).",
+              "restriction": "",
+              "multiple": true
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!1C2neohcCRMXkpys"
+          },
+          {
+            "_id": "QoW6vp4t518b0Cyg",
+            "name": "Font of Information",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem tem vantagem em testes de Lógica relacionados a conhecimento."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!QoW6vp4t518b0Cyg"
+          },
+          {
+            "_id": "pn4fS9TQYr8IELsd",
+            "name": "Presence",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem sabe comandar a atenção sob demanda. Tem facilidade em fazer com que as pessoas prestem atenção nele ou voluntariamente façam algo para ele."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!pn4fS9TQYr8IELsd"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "tags": []
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756480162389,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "IiCeEPSWlmGDXZXZ"
+    },
+    {
+      "name": "Leader",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "<p>O personagem é líder de uma cidade, região, estado ou nação — por exemplo, o prefeito eleito de Nova York ou o rei hereditário de um país.</p>",
+        "examples": "Black Bolt, Black Panther (T'Challa), Doctor Doom, Sub-Mariner (Namor), Thor (Odinson).",
+        "tags": [
+          {
+            "_id": "ZAyTxLpKuxalsoJf",
+            "name": "Authority",
+            "type": "tag",
+            "system": {
+              "description": "O personagem detém algum tipo de autoridade legal. Pode ser policial, juiz, promotor, agente de imigração, funcionário de trânsito etc. Esta tag pode ser selecionada várias vezes, se apropriado.",
+              "restriction": "",
+              "rarity": "",
+              "multiple": true
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!ZAyTxLpKuxalsoJf"
+          },
+          {
+            "_id": "7bggrQuRWLhuUXyW",
+            "name": "Powerful",
+            "type": "tag",
+            "system": {
+              "description": "O personagem tem acesso aos recursos de toda a sua comunidade. Deve tomar cuidado com o modo como os utiliza para não perder esse acesso.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!7bggrQuRWLhuUXyW"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "pn4fS9TQYr8IELsd",
+            "name": "Presence",
+            "type": "trait",
+            "system": {
+              "description": "O personagem sabe comandar a atenção sob demanda. Tem facilidade em fazer com que as pessoas prestem atenção nele ou voluntariamente façam algo para ele."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!pn4fS9TQYr8IELsd"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756483582903,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "LQftHVqNSojGjIoE"
+    },
+    {
+      "name": "Outsider",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "<p>O personagem vem de outro planeta, dimensão ou tempo e não está familiarizado com o funcionamento das coisas nesta Terra. Ele pode ter tido outra ocupação de onde veio, mas isso geralmente não se aplica aqui.</p>",
+        "traits": [
+          {
+            "_id": "UR4Kd3dH5xci8gQd",
+            "name": "Connections: Outsiders",
+            "type": "trait",
+            "system": {
+              "description": "O personagem possui um contato influente em uma área específica (repórter, policial, político, mafioso etc.). Com um teste de Ego, pode solicitar pistas, informações ou recursos; o TN depende do favor. Este traço pode ser escolhido várias vezes com tipos diferentes (Celebridades, Comunidade, Crime, Espionagem, Militar, Forças Policiais, Profissionais, Fontes, Super‑Heróis etc.).",
+              "restriction": "Outsiders.",
+              "multiple": true
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!UR4Kd3dH5xci8gQd"
+          },
+          {
+            "_id": "GbVoUmZQVxYlKLO9",
+            "name": "Fresh Eyes",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem tem um jeito muito próprio de fazer as coisas. Isso muitas vezes faz com que pareça excêntrico. Tem vantagem em testes de Lógica quando se depara com algo pela primeira vez."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!GbVoUmZQVxYlKLO9"
+          },
+          {
+            "_id": "J7IlAeQ4la6xCIBP",
+            "name": "Stranger",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "The character doesn't understand local customs. They have trouble on checks made when trying to decipher such things or when trying to pass themselves off as a local."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!J7IlAeQ4la6xCIBP"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "examples": "",
+        "tags": []
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756483542687,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "N9jAuPT6x5H1SfpU"
+    },
+    {
+      "name": "Engineer",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "O personagem projeta e constrói coisas para resolver problemas. Ele pega pesquisas científicas e as aplica a problemas do mundo real.",
+        "examples": "Ghost Rider (Robbie Reyes), Iron Man (Tony Stark), Whiplash.",
+        "traits": [
+          {
+            "_id": "GiErnbUbWz3uaaI1",
+            "name": "Gearhead",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem entende de máquinas. Tem vantagem em testes de Lógica para descobrir como qualquer máquina funciona."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!GiErnbUbWz3uaaI1"
+          },
+          {
+            "_id": "Raclt6WYW5LMpHfP",
+            "name": "Inventor",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é bom em encontrar soluções de improviso. Tem vantagem em testes de Lógica ao criar ou consertar coisas."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!Raclt6WYW5LMpHfP"
+          }
+        ],
+        "tags": [
+          {
+            "_id": "6OcqqaksN4HVGE4m",
+            "name": "Lab Access",
+            "type": "tag",
+            "system": {
+              "description": "O personagem possui — ou tem acesso — a um laboratório equipado, que pode variar de uma sala de aula do ensino médio a um laboratório forense ou uma instalação industrial.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!6OcqqaksN4HVGE4m"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756480162389,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "NIAIgfHjWjlqLsF8"
+    },
+    {
+      "name": "Criminal",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "O personagem fez algo que o colocou do lado errado da lei. Pode ter antecedentes ou ainda estar em liberdade condicional. Se cumpriu pena, deve também receber a tag Condenado.",
+        "examples": "Ant-Man (Scott Lang), Black Cat, Gambit.",
+        "tags": [
+          {
+            "_id": "sTOkQnuofMc4Skgd",
+            "name": "Streetwise",
+            "type": "tag",
+            "system": {
+              "description": "O personagem conhece as ruas: quem manda em qual área, como funcionam os diversos empreendimentos criminosos e como evitar problemas com eles.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!sTOkQnuofMc4Skgd"
+          },
+          {
+            "_id": "zWTQEAUOQsvcyNd7",
+            "name": "Black Market Access",
+            "type": "tag",
+            "system": {
+              "description": "O personagem sabe onde e como comprar e vender coisas raras — e potencialmente ilegais.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!zWTQEAUOQsvcyNd7"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "XMZ2HTZIlvVRKTSW",
+            "name": "Connections: Criminal",
+            "type": "trait",
+            "system": {
+              "description": "O personagem possui um contato influente em uma área específica (repórter, policial, político, mafioso etc.). Com um teste de Ego, pode solicitar pistas, informações ou recursos; o TN depende do favor. Este traço pode ser escolhido várias vezes com tipos diferentes (Celebridades, Comunidade, Crime, Espionagem, Militar, Forças Policiais, Profissionais, Fontes, Super‑Heróis etc.).",
+              "restriction": "Criminal."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!XMZ2HTZIlvVRKTSW"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756480162389,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "NT1q7oY8c9RhBMsA"
+    },
+    {
+      "name": "Health Care Worker",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "O personagem é médico, enfermeiro, terapeuta ou outro profissional dedicado à saúde. Na maioria das vezes tem acesso a um consultório onde exerce sua profissão.",
+        "examples": "Doc Samson, Doctor Strange, the Night Nurse (Linda Carter), Thor (Jane Foster).",
+        "traits": [
+          {
+            "_id": "rWPInpv8FBBqrMIs",
+            "name": "Clinician",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem tem vantagem em testes de Lógica para determinar o que há de errado com alguém que examina."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!rWPInpv8FBBqrMIs"
+          },
+          {
+            "_id": "xe0YGUDxiVWElpHE",
+            "name": "First Aid",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem sabe aplicar primeiros socorros. Tem vantagem em testes de Lógica para estancar sangramento."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!xe0YGUDxiVWElpHE"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "tags": []
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756480162389,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "UoP7BewebClZwREz"
+    },
+    {
+      "name": "Lawyer",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "<p>O personagem é formado em Direito e sabe como usar isso. Pode trabalhar para um grande escritório ou ter a própria prática.</p>",
+        "examples": "Daredevil (Matt Murdock), Foggy Nelson, She-Hulk.",
+        "tags": [],
+        "traits": [
+          {
+            "_id": "edm02ykRGyh00hhp",
+            "name": "Dealmaker",
+            "type": "trait",
+            "system": {
+              "description": "O personagem é habilidoso na arte da negociação. Tem vantagem em testes de ação relacionados a fechar acordos.",
+              "restriction": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!edm02ykRGyh00hhp"
+          },
+          {
+            "_id": "ayIaypfwQ8LSgZkb",
+            "name": "Legal Eagle",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem conhece as leis de sua terra e pode ajudar os outros com isso. Tem vantagem em testes de Lógica ao lidar com questões legais."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!ayIaypfwQ8LSgZkb"
+          },
+          {
+            "_id": "MQiwVKYeYAAa6zdm",
+            "name": "Public Speaking",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem sabe chamar a atenção de uma plateia — seja em palco, diante de um júri ou em sala de aula. Tem vantagem em testes de Ego ao tentar persuadir grupos."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!MQiwVKYeYAAa6zdm"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756483582404,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "V6eDb5ae5Dv5XJ6o"
+    },
+    {
+      "name": "Spy",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "<p>O personagem é perito em espionagem. Pode ter servido como espião para uma agência governamental ou organização criminosa. Sabe se infiltrar e encontrar informações sobre pessoas e organizações.</p>",
+        "examples": "Black Widow (Natasha Romanoff), Peggy Carter, Winter Soldier.",
+        "tags": [
+          {
+            "_id": "zWTQEAUOQsvcyNd7",
+            "name": "Black Market Access",
+            "type": "tag",
+            "system": {
+              "description": "O personagem sabe onde e como comprar e vender coisas raras — e potencialmente ilegais.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!zWTQEAUOQsvcyNd7"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "cknmApMLnvTjSZG2",
+            "name": "Connections: Espionage",
+            "type": "trait",
+            "system": {
+              "description": "O personagem possui um contato influente em uma área específica (repórter, policial, político, mafioso etc.). Com um teste de Ego, pode solicitar pistas, informações ou recursos; o TN depende do favor. Este traço pode ser escolhido várias vezes com tipos diferentes (Celebridades, Comunidade, Crime, Espionagem, Militar, Forças Policiais, Profissionais, Fontes, Super‑Heróis etc.).",
+              "restriction": "Espionage."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cknmApMLnvTjSZG2"
+          },
+          {
+            "_id": "cRnRO41P8rAFRtSq",
+            "name": "Leverage",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é bom em descobrir o que as pessoas querem e usar isso a seu favor. Tem vantagem em testes de Lógica para investigar pessoas e em testes de Ego para persuadi‑las."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!cRnRO41P8rAFRtSq"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756483567229,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "dI954QVUcbCiU4bG"
+    },
+    {
+      "name": "Law Enforcer",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "<p>O personagem trabalha na aplicação da lei — policial, xerife, delegado, agente da S.H.I.E.L.D., etc. Possui grande autoridade em sua jurisdição e costuma inspirar respeito fora dela também.</p>",
+        "examples": "Nick Fury Jr., Human Torch (Jim Hammond), Maria Hill, Photon (Monica Rambeau).",
+        "tags": [
+          {
+            "_id": "ZAyTxLpKuxalsoJf",
+            "name": "Authority",
+            "type": "tag",
+            "system": {
+              "description": "O personagem detém algum tipo de autoridade legal. Pode ser policial, juiz, promotor, agente de imigração, funcionário de trânsito etc. Esta tag pode ser selecionada várias vezes, se apropriado.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!ZAyTxLpKuxalsoJf"
+          },
+          {
+            "_id": "e72f1NrlBWR1BNsF",
+            "name": "Backup",
+            "type": "tag",
+            "system": {
+              "description": "O personagem integra uma organização — como uma força policial — à qual pode recorrer para obter reforços imediatos a qualquer momento.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!e72f1NrlBWR1BNsF"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "EFIY2oJioxXysG3S",
+            "name": "Interrogation",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem sabe fazer as perguntas certas, do jeito certo. Tem vantagem em testes de Ego ou Lógica ao fazer perguntas."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!EFIY2oJioxXysG3S"
+          },
+          {
+            "_id": "N1xbQL5LqE9Phb6E",
+            "name": "Investigation",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é um investigador perito, treinado nas artes da coleta e análise de evidências. Tem vantagem em Vigilância para encontrar pistas e em Lógica (investigação) para analisá‑las; se tiver acesso a um laboratório forense, pode adicionar +2 a esses testes."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!N1xbQL5LqE9Phb6E"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756483581893,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "e72f1NrlBWR1BNsF"
+    },
+    {
+      "name": "Investigator",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "O personagem é treinado para resolver mistérios. Pode atuar como detetive particular ou em órgãos oficiais de segurança — do FBI e da S.H.I.E.L.D. até a Tropa Nova.",
+        "examples": "Jessica Jones, Misty Knight.",
+        "traits": [
+          {
+            "_id": "1JaM7YojOn0H4TaF",
+            "name": "Connections",
+            "type": "trait",
+            "system": {
+              "description": "O personagem possui um contato influente em uma área específica (repórter, policial, político, mafioso etc.). Com um teste de Ego, pode solicitar pistas, informações ou recursos; o TN depende do favor. Este traço pode ser escolhido várias vezes com tipos diferentes (Celebridades, Comunidade, Crime, Espionagem, Militar, Forças Policiais, Profissionais, Fontes, Super‑Heróis etc.).",
+              "restriction": "Police.",
+              "multiple": true
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!1JaM7YojOn0H4TaF"
+          },
+          {
+            "_id": "EFIY2oJioxXysG3S",
+            "name": "Interrogation",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem sabe fazer as perguntas certas, do jeito certo. Tem vantagem em testes de Ego ou Lógica ao fazer perguntas."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!EFIY2oJioxXysG3S"
+          },
+          {
+            "_id": "N1xbQL5LqE9Phb6E",
+            "name": "Investigation",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é um investigador perito, treinado nas artes da coleta e análise de evidências. Tem vantagem em Vigilância para encontrar pistas e em Lógica (investigação) para analisá‑las; se tiver acesso a um laboratório forense, pode adicionar +2 a esses testes."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!N1xbQL5LqE9Phb6E"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "tags": []
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756480162389,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "v5Q1Gp1YKOHx01vk"
+    },
+    {
+      "name": "Assassin",
+      "type": "occupation",
+      "img": "systems/marvel-multiverse/icons/work.svg",
+      "system": {
+        "description": "The character is a hired killer. They might tell themselves that this is for the greater good. They might be picky about who they take on as clients or targets, but the core of their occupation is ending lives.",
+        "examples": "Arcade, Bullseye, Elektra, the Punisher.",
+        "tags": [
+          {
+            "_id": "sTOkQnuofMc4Skgd",
+            "name": "Streetwise",
+            "type": "tag",
+            "system": {
+              "description": "O personagem conhece as ruas: quem manda em qual área, como funcionam os diversos empreendimentos criminosos e como evitar problemas com eles.",
+              "restriction": "",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!sTOkQnuofMc4Skgd"
+          },
+          {
+            "_id": "Yzb2fTZrEvGCJeXt",
+            "name": "Villianous",
+            "type": "tag",
+            "system": {
+              "description": "O personagem é um vilão — alguém que dá pouca importância aos direitos alheios, inclusive ao direito à vida.",
+              "restriction": "The character cannot also be Heroic.",
+              "rarity": ""
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!Yzb2fTZrEvGCJeXt"
+          }
+        ],
+        "traits": [
+          {
+            "_id": "1C2neohcCRMXkpys",
+            "name": "Connections",
+            "type": "trait",
+            "system": {
+              "description": "O personagem possui um contato influente em uma área específica (repórter, policial, político, mafioso etc.). Com um teste de Ego, pode solicitar pistas, informações ou recursos; o TN depende do favor. Este traço pode ser escolhido várias vezes com tipos diferentes (Celebridades, Comunidade, Crime, Espionagem, Militar, Forças Policiais, Profissionais, Fontes, Super‑Heróis etc.).",
+              "restriction": "",
+              "multiple": true
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!1C2neohcCRMXkpys"
+          },
+          {
+            "_id": "FoqLWM0YsAJE3O9D",
+            "name": "Signature Attack",
+            "type": "trait",
+            "system": {
+              "restriction": "",
+              "description": "O personagem é conhecido por favorecer um tipo específico de arma ou poder de ataque. Tem vantagem ao atacar dessa forma. Este traço pode ser adquirido mais de uma vez, mas cada vez deve ser com um tipo diferente de arma ou poder."
+            },
+            "flags": {},
+            "effects": [],
+            "_key": "!items!FoqLWM0YsAJE3O9D"
+          }
+        ],
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480162389,
+        "modifiedTime": 1756480162389,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "z4vLSY6NsDC11AoE"
+    }
+  ],
+  "source": {
+    "world": "marvel-multiverse",
+    "system": "marvel-multiverse",
+    "version": {
+      "core": "13.346",
+      "system": "2.2.0"
+    }
+  },
+  "folders": [],
+  "folder": {
+    "id": "GMJbBokUYDgVYTCs",
+    "name": "Marvel Multiverse"
+  }
+}

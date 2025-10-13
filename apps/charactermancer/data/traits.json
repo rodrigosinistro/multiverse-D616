@@ -1,0 +1,2140 @@
+{
+  "package": "world.traits",
+  "metadata": {
+    "name": "traits",
+    "label": "Traits",
+    "path": "worlds/marvel-multiverse/packs/traits",
+    "type": "Item",
+    "system": "marvel-multiverse",
+    "ownership": {
+      "PLAYER": "OBSERVER",
+      "ASSISTANT": "OWNER"
+    },
+    "flags": {},
+    "packageType": "world",
+    "packageName": "marvel-multiverse",
+    "id": "world.traits"
+  },
+  "type": "Item",
+  "items": [
+    {
+      "name": "Connections: Police",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "description": "O personagem conhece alguém com acesso e conhecimento de uma área específica. A conexão pode ser um repórter, um policial, um político, um mafioso e assim por diante. Ao fazer um teste de Ego, o personagem pode chamar seu contato para fornecer ajuda na forma de pistas, informações ou recursos. O Narrador determina o ND do teste de Ego com base no favor solicitado. Esta característica pode ser selecionada várias vezes, usando muitos tipos diferentes. Estes incluem Celebridades, Comunidade, Criminal, Espionagem, Militar, Forasteiros, Polícia, Profissional, Fontes, Super-Heróis e assim por diante.",
+        "restriction": "Police.",
+        "multiple": true,
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "35I0bgCgJraUoUd3"
+    },
+    {
+      "name": "Connections: Espionage",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "description": "O personagem conhece alguém com acesso e conhecimento de uma área específica. A conexão pode ser um repórter, um policial, um político, um mafioso e assim por diante. Ao fazer um teste de Ego, o personagem pode chamar seu contato para fornecer ajuda na forma de pistas, informações ou recursos. O Narrador determina o ND do teste de Ego com base no favor solicitado. Esta característica pode ser selecionada várias vezes, usando muitos tipos diferentes. Estes incluem Celebridades, Comunidade, Criminal, Espionagem, Militar, Forasteiros, Polícia, Profissional, Fontes, Super-Heróis e assim por diante.",
+        "restriction": "Espionage.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "3A2rvhAUZyuzrBaq"
+    },
+    {
+      "name": "Quick Learner",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "Se o personagem falhar em um teste de ação, ele ganha uma vantagem no teste se tentar a mesma ação novamente em seu próximo turno.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "43wgROXu39ClMVUx"
+    },
+    {
+      "name": "Extra Occupation",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem tem uma vida agitada e já fez todo tipo de coisa. Eles podem escolher outra ocupação.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "4NjvHZjSPts4SVhj"
+    },
+    {
+      "name": "Anathema",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem sofre dano direto quando exposto a uma substância específica. Eles não podem entrar voluntariamente no mesmo espaço que ela. Se forem tocados por ela, sofrem instantaneamente o dano de um ataque de Rank 3 que acerta automaticamente. Isso continua a cada turno até que sejam separados da substância ou sejam mortos ou destruídos. O dano causado por Anátema ignora toda a redução de dano que o personagem possui e não pode ser curado pelo seu Fator de Cura.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "4RQK4fnKcgzqF0cE"
+    },
+    {
+      "name": "Unusual Size",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O tamanho normal do personagem está além dos tamanhos pequeno, médio ou grande, como mostrado na tabela de Efeitos de Redimensionamento (ver p. 73 do Livro de Regras Básico). Ao escolher esta característica, o jogador deve escolher o tamanho do personagem: microscópico, miniatura, ínfimo, pequeno, enorme, gigantesco, titânico ou colossal. Aplique os modificadores listados na tabela de Efeitos de Redimensionamento, como se o personagem tivesse crescido ou encolhido para aquele tamanho, mas permanentemente. A única exceção é a Velocidade de Voo de um personagem. Se eles forem microscópicos, miniatura, ínfimos ou pequenos, calcule sua Velocidade de Voo como se fossem de tamanho pequeno. Se forem enormes, gigantescos, titânicos ou colossais, calcule sua Velocidade de Voo como se fossem de tamanho grande.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "4fitpJDVM5hsU3jK"
+    },
+    {
+      "name": "Weakness",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem sofre uma quantidade incomum de dano de certas substâncias. Qualquer ataque feito com essa substância ignora toda a redução de dano inerente que o personagem possui e não pode ser curado pelo seu Fator de Cura.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "5JNBLhYvufnKKtch"
+    },
+    {
+      "name": "Venomous",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "Quando o personagem usa poderes de Armas Brancas afiadas e obtém um sucesso Fantástico, ele tem a opção de causar envenenamento em um alvo em vez de sangramento.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "5ptbrqFQibspcDBY"
+    },
+    {
+      "name": "Scientific Expertise",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem possui extenso treinamento científico. Ele tem uma vantagem em testes de Lógica feitos ao lidar com pesquisa científica. Se tiver acesso a um laboratório apropriado no momento, ele ganha uma segunda vantagem em tais testes.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "68HShhIZG6ucXTVB"
+    },
+    {
+      "name": "Fearless",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem é extremamente corajoso. Ele tem uma vantagem em quaisquer testes de ação necessários para lidar com o medo.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "6kjH0ktGRGF2OF7C"
+    },
+    {
+      "name": "Connections: Celebrities",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "description": "O personagem conhece alguém com acesso e conhecimento de uma área específica. A conexão pode ser um repórter, um policial, um político, um mafioso e assim por diante. Ao fazer um teste de Ego, o personagem pode chamar seu contato para fornecer ajuda na forma de pistas, informações ou recursos. O Narrador determina o ND do teste de Ego com base no favor solicitado. Esta característica pode ser selecionada várias vezes, usando muitos tipos diferentes. Estes incluem Celebridades, Comunidade, Criminal, Espionagem, Militar, Forasteiros, Polícia, Profissional, Fontes, Super-Heróis e assim por diante.",
+        "restriction": "Celebrities.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "79gfgXGGx2OqcLT1"
+    },
+    {
+      "name": "Stranger",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem não entende os costumes locais. Ele tem dificuldade em testes feitos ao tentar decifrar tais coisas ou ao tentar se passar por um local.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "7SvfwJnvsMRmcQyX"
+    },
+    {
+      "name": "Clueless",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem tende a ignorar coisas em que não está totalmente focado. Ele tem dificuldade em qualquer teste de Vigilância para detectar coisas escondidas ou invisíveis. Inimigos têm uma vantagem em testes de Agilidade para se esgueirar perto ou passar por eles.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "9GWZqxjpggP3Lzmr"
+    },
+    {
+      "name": "Battle Ready",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "<p>O personagem está sempre mentalmente preparado para qualquer tipo de problema que possa surgir. Adicione +30 de Foco.</p>",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [
+        {
+          "name": "Extra Focus",
+          "img": "icons/svg/aura.svg",
+          "duration": {
+            "startTime": null,
+            "seconds": null,
+            "combat": null,
+            "rounds": null,
+            "turns": null,
+            "startRound": null,
+            "startTurn": null
+          },
+          "disabled": false,
+          "origin": "Item.AlnpAp5Bl0hhT1T3",
+          "_id": "e2872ee882894756",
+          "changes": [
+            {
+              "key": "system.focus.max",
+              "mode": 2,
+              "value": "30",
+              "priority": null
+            }
+          ],
+          "description": "",
+          "transfer": true,
+          "statuses": [],
+          "flags": {},
+          "tint": "#ffffff",
+          "_stats": {
+            "coreVersion": "13.346",
+            "systemId": "marvel-multiverse",
+            "systemVersion": "2.2.0",
+            "lastModifiedBy": null
+          },
+          "type": "base",
+          "system": {},
+          "sort": 0
+        }
+      ],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480199849,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "AlnpAp5Bl0hhT1T3"
+    },
+    {
+      "name": "Monster",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem é algum tipo de monstro, muitas vezes de um tipo falado em lendas. Ele tem uma vantagem sempre que tenta intimidar alguém.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "BKp12pILPw2qbhoX"
+    },
+    {
+      "name": "Big",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O tamanho do personagem é grande, o que aplica –1 às suas defesas Corpo a Corpo e de Agilidade, adiciona +1 à sua Velocidade de Corrida e aumenta seu alcance para 2. Eles ainda ocupam um único espaço.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [
+        {
+          "_id": "9f6539800d0c702a",
+          "name": "Big Effects",
+          "img": "icons/svg/aura.svg",
+          "duration": {
+            "startTime": null,
+            "seconds": null,
+            "combat": null,
+            "rounds": null,
+            "turns": null,
+            "startRound": null,
+            "startTurn": null
+          },
+          "disabled": false,
+          "origin": "Item.ColdLRCBIrBcDuAm",
+          "changes": [
+            {
+              "key": "system.size",
+              "mode": 5,
+              "value": "big",
+              "priority": null
+            }
+          ],
+          "description": "",
+          "transfer": true,
+          "statuses": [],
+          "flags": {},
+          "tint": "#ffffff",
+          "_stats": {
+            "coreVersion": "13.346",
+            "systemId": "marvel-multiverse",
+            "systemVersion": "2.2.0",
+            "lastModifiedBy": null
+          },
+          "type": "base",
+          "system": {},
+          "sort": 0
+        }
+      ],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "ColdLRCBIrBcDuAm"
+    },
+    {
+      "name": "Combat Expert",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem sabe se virar melhor do que a maioria. Ele tem uma vantagem em ataques Corpo a Corpo contra inimigos de Rank 1.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "D7A8B7X3Mlm40GpG"
+    },
+    {
+      "name": "Legal Eagle",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem conhece as leis de sua terra natal e pode ajudar outros a navegá-las. Ele tem uma vantagem em testes de Lógica ao lidar com questões legais.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "E8el4oNHYddPdPZq"
+    },
+    {
+      "name": "Connections",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "description": "O personagem conhece alguém com acesso e conhecimento de uma área específica. A conexão pode ser um repórter, um policial, um político, um mafioso e assim por diante. Ao fazer um teste de Ego, o personagem pode chamar seu contato para fornecer ajuda na forma de pistas, informações ou recursos. O Narrador determina o ND do teste de Ego com base no favor solicitado. Esta característica pode ser selecionada várias vezes, usando muitos tipos diferentes. Estes incluem Celebridades, Comunidade, Criminal, Espionagem, Militar, Forasteiros, Polícia, Profissional, Fontes, Super-Heróis e assim por diante.",
+        "restriction": "",
+        "multiple": true,
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "EI0kSXAlebR3ce3J"
+    },
+    {
+      "name": "Piloting",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem sabe como operar veículos de todos os tipos. Ele tem uma vantagem em testes de Agilidade acionados ao pilotar ou dirigir um veículo durante uma ação de movimento. Isso se aplica a carros, barcos, aeronaves e assim por diante.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "FbEVj8NPPg4xVkU6"
+    },
+    {
+      "name": "Interrogation",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem sabe como fazer as perguntas certas da maneira certa. Ele tem uma vantagem em testes de Ego ou Lógica feitos ao fazer perguntas.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "GPE9Ug6YY95PFOgY"
+    },
+    {
+      "name": "Enhanced Physique",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem é mais forte que humanos normais. Trate-os como um tamanho maior para levantar, carregar, balançar e arremessar coisas. (Isso não se acumula com outros fatores.)",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "Hn1lp9yEFDW4iFRI"
+    },
+    {
+      "name": "Inventor",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem é bom em encontrar soluções de improviso. Ele tem uma vantagem em testes de Lógica ao criar ou consertar coisas.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "HzKjqusrtEMxniZx"
+    },
+    {
+      "name": "Out of Shape",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem está em má condição física. Ele é considerado um tamanho menor para fins de levantar, carregar, balançar e arremessar coisas.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "IhYx9NyLnjd2AyNO"
+    },
+    {
+      "name": "God Heritage",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "This trait can be selected only by characters with a mythic origin and an attachment to a particular pantheon, like Asgardian or Olympian.",
+        "description": "O personagem — ou pelo menos um de seus ancestrais — é um deus. Escolha algo do qual ele seja o deus. Ele não precisa ser um deus que a maioria das pessoas já ouviu falar. Na verdade, ele pode ser o deus de algo totalmente novo. No entanto, ele geralmente não pode ser o deus de algo que já foi reivindicado por outra pessoa em seu panteão. Outros deuses costumam ter ciúmes de suas posições e se opõem a tais rivais. O personagem tem uma vantagem ao lidar com algo do qual ele é o deus.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "JZuQb2P93toWi3Da"
+    },
+    {
+      "name": "Symbiotic Spider Blinder",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "Enquanto o personagem está ligado a um simbionte, ele não pode ser detectado pelo Sentido-Aranha de qualquer personagem que tenha sido previamente ligado ao mesmo simbionte. Este efeito também é passado para a prole do simbionte. A razão é que o Sentido-Aranha detecta o simbionte previamente ligado como parte de si mesmo e, portanto, não como uma ameaça. Testes de Vigilância para perceber o perigo de tal simbionte. Nem tais simbiontes têm dificuldade em testes de Agilidade contra a defesa de Vigilância do personagem.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "KnTzZJDC0n11CRjL"
+    },
+    {
+      "name": "Connections: Criminal",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "description": "O personagem conhece alguém com acesso e conhecimento de uma área específica. A conexão pode ser um repórter, um policial, um político, um mafioso e assim por diante. Ao fazer um teste de Ego, o personagem pode chamar seu contato para fornecer ajuda na forma de pistas, informações ou recursos. O Narrador determina o ND do teste de Ego com base no favor solicitado. Esta característica pode ser selecionada várias vezes, usando muitos tipos diferentes. Estes incluem Celebridades, Comunidade, Criminal, Espionagem, Militar, Forasteiros, Polícia, Profissional, Fontes, Super-Heróis e assim por diante.",
+        "restriction": "Criminal.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "KqvfksObvWvrHpir"
+    },
+    {
+      "name": "Skeptical",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem é difícil de enganar. Pessoas mentindo para ele têm dificuldade em seus testes de Ego para persuadir o personagem de algo.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "LE1gzW9SsUy8kGAt"
+    },
+    {
+      "name": "Iron Will",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "Inimigos têm dificuldade em ataques para controlar a mente do personagem ou influenciar seu comportamento. Além disso, o personagem ganha uma vantagem em testes para se libertar do controle mental ou outras compulsões.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "MTls8AkZ3lZgKHt8"
+    },
+    {
+      "name": "Audience",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "Muitas pessoas acompanham o trabalho do personagem e o tratam com o respeito que ele merece. Ao fazer um teste de Ego, o personagem pode persuadir sua audiência a fornecer ajuda na forma de informações ou recursos. O Narrador determina o ND do teste de Ego com base no favor solicitado.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "N0Fmujd7qZsnAwpR"
+    },
+    {
+      "name": "Connections: Outsiders",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "description": "O personagem conhece alguém com acesso e conhecimento de uma área específica. A conexão pode ser um repórter, um policial, um político, um mafioso e assim por diante. Ao fazer um teste de Ego, o personagem pode chamar seu contato para fornecer ajuda na forma de pistas, informações ou recursos. O Narrador determina o ND do teste de Ego com base no favor solicitado. Esta característica pode ser selecionada várias vezes, usando muitos tipos diferentes. Estes incluem Celebridades, Comunidade, Criminal, Espionagem, Militar, Forasteiros, Polícia, Profissional, Fontes, Super-Heróis e assim por diante.",
+        "restriction": "Outsiders.",
+        "multiple": true,
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "ORLWZBBeLtZtYwFl"
+    },
+    {
+      "name": "Presence",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem sabe como chamar a atenção quando quer. Ele tem uma vantagem em testes de Ego que envolvem fazer as pessoas prestarem atenção nele ou fazerem coisas voluntariamente por ele.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "PbaXSMbBtJNLMmHW"
+    },
+    {
+      "name": "Gullible",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem é fácil de enganar. Pessoas mentindo para ele têm uma vantagem em seus testes de Ego para persuadir o personagem de algo.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "PiFFqfQg3QeUGH9X"
+    },
+    {
+      "name": "Beguiling",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "<p>O personagem tem uma vantagem ao fazer um teste de Ego para persuadir alguém que poderia se sentir atraído por ele.</p>",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480194710,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "Q6dFOh8cRCtrX9MW"
+    },
+    {
+      "name": "Signature Attack",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem é conhecido por favorecer um tipo particular de arma ou poder de ataque. Ele tem uma vantagem ao fazer ataques dessa maneira. Esta característica pode ser adquirida mais de uma vez, mas cada vez deve ser com um tipo diferente de arma ou poder de ataque.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "Q8RsXNjgetmXsRT2"
+    },
+    {
+      "name": "Weakness: Admantium or Vibranium weapons",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem sofre uma quantidade incomum de dano de certas substâncias. Qualquer ataque feito com essa substância ignora toda a redução de dano inerente que o personagem possui e não pode ser curado pelo seu Fator de Cura.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "RNDaa9gxX39v57Ww"
+    },
+    {
+      "name": "Enduring Constitution",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem pode funcionar por até 48 horas sem dormir e tem uma vantagem em testes de Resiliência para superar a fadiga ou o cansaço.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "TcsqDjAPt4CjUFRJ"
+    },
+    {
+      "name": "Determination",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "description": "O personagem nunca desiste, mesmo quando sente que está no seu pior. Enquanto desmoralizado, ele não ganha dificuldade em todas as ações, embora ainda não consiga manter a concentração ou gastar mais Foco.",
+        "restriction": "",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "UF7CG8dZ8Oah6oJB"
+    },
+    {
+      "name": "Gearhead",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem entende de máquinas. Ele tem uma vantagem em testes de Lógica para descobrir como qualquer máquina funciona.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "UcsWaf8ZFzcLYVu0"
+    },
+    {
+      "name": "Weird",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem tem algo de estranho (ou até maravilhoso) nele. Isso faz com que as pessoas tenham reações fortes a ele, tanto boas quanto ruins. Ele tem uma vantagem em todos os testes de Ego para persuadir pessoas inclinadas a gostar dele e dificuldade em todos os testes de Ego contra pessoas inclinadas a não gostar dele.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "Y1tWNTnnTTZXwfvi"
+    },
+    {
+      "name": "External Awareness",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "For Externals only.",
+        "description": "O personagem tem um link telepático com todos os outros Externos. Isso permite que eles: Saibam onde outros Externos estão. Saibam quando outros Externos são mortos pela primeira vez. Saibam quando um Externo mata outro Externo. Chamem telepaticamente por outros Externos.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "YDUqy0L1b9U0kHGf"
+    },
+    {
+      "name": "Situational Awareness",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem é treinado para estar sempre atento a problemas. Ele tem uma vantagem em testes de iniciativa.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [
+        {
+          "name": "initiative edge",
+          "img": "icons/svg/aura.svg",
+          "duration": {
+            "startTime": null,
+            "seconds": null,
+            "combat": null,
+            "rounds": null,
+            "turns": null,
+            "startRound": null,
+            "startTurn": null
+          },
+          "disabled": false,
+          "origin": "Item.YX1AC9Ki6XF4xxx8",
+          "_id": "a625582e0569771a",
+          "changes": [
+            {
+              "key": "system.attributes.init.edge",
+              "mode": 5,
+              "value": "true",
+              "priority": null
+            }
+          ],
+          "description": "",
+          "transfer": true,
+          "statuses": [],
+          "flags": {},
+          "tint": "#ffffff",
+          "_stats": {
+            "coreVersion": "13.346",
+            "systemId": "marvel-multiverse",
+            "systemVersion": "2.2.0",
+            "lastModifiedBy": null
+          },
+          "type": "base",
+          "system": {},
+          "sort": 0
+        }
+      ],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "YX1AC9Ki6XF4xxx8"
+    },
+    {
+      "name": "Leverage",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem é bom em descobrir o que as pessoas querem e usar isso contra elas. Ele tem uma vantagem em testes de Lógica para investigar pessoas e em testes de Ego para persuadir pessoas que investigou.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "aUQYvm5YL4TIza2w"
+    },
+    {
+      "name": "Abrasive",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem irrita as pessoas. Isso lhe dá dificuldade ao tentar fazer testes de Ego para persuadir alguém a ajudá-lo. Isso lhe dá uma vantagem quando está tentando fazer testes de Ego para intimidar alguém.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "ajeId1iqaYcNIZ3z"
+    },
+    {
+      "name": "Loner",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem não se dá bem com os outros. Ele não pode receber uma vantagem por meio da ajuda de alguém que não seja um companheiro de equipe.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "bmyyrbPUhyY6rHo9"
+    },
+    {
+      "name": "Clinician",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem tem uma vantagem em testes de Lógica para determinar o que está medicamente errado com alguém que ele examina.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "crcCBrOFzJTYJVUh"
+    },
+    {
+      "name": "Infector",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem pode infectar um alvo com uma doença, que deve ser escolhida junto com a característica. Exemplos incluem: implantação Brood, vírus Tecno-Orgânico, vírus Transmode. Veja a condição infectado para detalhes sobre como a infecção funciona, e a seção Infecções e Possessões (p146) para os efeitos das doenças acima.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "dBadkfApSnp0sHaE"
+    },
+    {
+      "name": "Pundit",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem sabe como dar notícias e contextualizá-las para criar uma história em torno delas. Ele tem uma vantagem em rolagens de Ego ou Lógica feitas ao dar sua opinião através da mídia.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "dBixv7ID0RtVnLkV"
+    },
+    {
+      "name": "Eidetic Memory",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem raramente esquece alguma coisa. Se o jogador esquecer algo, ele pode pedir ao Narrador para lembrá-lo.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "eCktIsb2lyYYrfcJ"
+    },
+    {
+      "name": "Connections: Military",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "description": "O personagem conhece alguém com acesso e conhecimento de uma área específica. A conexão pode ser um repórter, um policial, um político, um mafioso e assim por diante. Ao fazer um teste de Ego, o personagem pode chamar seu contato para fornecer ajuda na forma de pistas, informações ou recursos. O Narrador determina o ND do teste de Ego com base no favor solicitado. Esta característica pode ser selecionada várias vezes, usando muitos tipos diferentes. Estes incluem Celebridades, Comunidade, Criminal, Espionagem, Militar, Forasteiros, Polícia, Profissional, Fontes, Super-Heróis e assim por diante.",
+        "restriction": "Military.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "etaBeEv5muJ9QoMu"
+    },
+    {
+      "name": "Investigation",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem é um investigador especialista, treinado nas artes da ciência forense. Ele tem uma vantagem em testes de Vigilância para encontrar pistas e em testes de Lógica (investigação). Se tiver acesso a um laboratório forense no momento, ele pode adicionar +2 a tais testes.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "fItNEyMq4qLfW4Ff"
+    },
+    {
+      "name": "Honest",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem é um péssimo mentiroso. Ele tem dificuldade sempre que faz um teste de Ego que envolve contar uma mentira. No entanto, ele tem uma vantagem em quaisquer testes amigáveis de Ego (persuasão) em que esteja sendo verdadeiro.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "fXLx0EYZoAJp4mHM"
+    },
+    {
+      "name": "Connections: Community",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "description": "O personagem conhece alguém com acesso e conhecimento de uma área específica. A conexão pode ser um repórter, um policial, um político, um mafioso e assim por diante. Ao fazer um teste de Ego, o personagem pode chamar seu contato para fornecer ajuda na forma de pistas, informações ou recursos. O Narrador determina o ND do teste de Ego com base no favor solicitado. Esta característica pode ser selecionada várias vezes, usando muitos tipos diferentes. Estes incluem Celebridades, Comunidade, Criminal, Espionagem, Militar, Forasteiros, Polícia, Profissional, Fontes, Super-Heróis e assim por diante.",
+        "restriction": "Community.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "flOJZo0Fz8g5fhKs"
+    },
+    {
+      "name": "Famous",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem é amplamente conhecido — pelo menos entre um certo grupo de pessoas ou uma população. Ele pode ser bem-quisto ou odiado, mas de qualquer forma, ele é famoso. Ele tem uma vantagem ao fazer um teste de Ego para persuadir alguém que pensa favoravelmente dele. Ele tem dificuldade ao fazer um teste de Ego para persuadir alguém que não gosta dele. Se o personagem tiver uma identidade secreta, esta característica funciona apenas para uma de suas identidades. No entanto, pode ser adquirida várias vezes para várias identidades.",
+        "multiple": true,
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "gEiUx17Pom794mwV"
+    },
+    {
+      "name": "Surprising Power",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem pode escolher um poder que normalmente não seria capaz de usar. O personagem ainda precisará ter quaisquer poderes de pré-requisito, mas pode ignorar os requisitos de rank e origem. Esta característica pode ser selecionada várias vezes.",
+        "multiple": true,
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "gL74VR2VDdgOhqtr"
+    },
+    {
+      "name": "Connections: Sources",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "description": "O personagem conhece alguém com acesso e conhecimento de uma área específica. A conexão pode ser um repórter, um policial, um político, um mafioso e assim por diante. Ao fazer um teste de Ego, o personagem pode chamar seu contato para fornecer ajuda na forma de pistas, informações ou recursos. O Narrador determina o ND do teste de Ego com base no favor solicitado. Esta característica pode ser selecionada várias vezes, usando muitos tipos diferentes. Estes incluem Celebridades, Comunidade, Criminal, Espionagem, Militar, Forasteiros, Polícia, Profissional, Fontes, Super-Heróis e assim por diante.",
+        "restriction": "Sources.",
+        "multiple": true,
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "gRZiQNeGvhjNGTdf"
+    },
+    {
+      "name": "Tech Reliance",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem depende da tecnologia para seus poderes. Quando sofre dano que o deixaria inconsciente, ele pode, em vez disso, escolher perder todos os seus poderes relacionados à tecnologia e permanecer consciente com 1 ponto de Vida restante. Supondo que o personagem tenha acesso a peças e ferramentas, os poderes perdidos podem ser reparados após uma batalha.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "hJUcH262GAV1NPqL"
+    },
+    {
+      "name": "Hive Mind",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "For Brood only.",
+        "description": "O personagem tem alguma independência, mas está conectado a outros de sua espécie por uma rede telepática com alcance ilimitado e um número ilimitado de membros. Ao receber ordens do líder dessa rede, o personagem deve fazer um teste de ação Ego vs. ND 18 ou seguir essas ordens. Em um sucesso Fantástico, o personagem pode escolher se libertar permanentemente da rede.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "hT90xmhrF62jjq5J"
+    },
+    {
+      "name": "Font of Information",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem tem uma vantagem em testes de Lógica relacionados ao conhecimento.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "iHw3uW7S0AIjQpxC"
+    },
+    {
+      "name": "Free Running",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem tem uma vantagem em testes de Agilidade feitos para realizar acrobacias durante uma ação de movimento.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "kFwhv43PEHWHjBXj"
+    },
+    {
+      "name": "Magic Item Reliance",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem depende de um item magicamente fortalecido para alguns ou todos os seus poderes. Quando sofre dano de Vida que o deixaria inconsciente, ele pode, em vez disso, escolher perder todos os seus poderes relacionados ao item mágico e permanecer consciente com 1 ponto de Vida restante. Da mesma forma, se sofrer dano de Foco que o deixaria desmoralizado, ele pode, em vez disso, escolher perder todos os seus poderes relacionados ao item mágico e ter 1 ponto de Foco restante. Itens mágicos são notoriamente difíceis de destruir. Eles não podem ser danificados pela maioria dos ataques. No entanto, podem ser tirados ou perdidos. Muitos personagens fariam grandes esforços para recuperar os itens mágicos que lhes concedem poderes.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "kfBXkaDZy2Zw92ND"
+    },
+    {
+      "name": "Fresh Eyes",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem tem sua própria maneira de fazer as coisas. Isso muitas vezes o faz parecer estranho para aqueles ao seu redor, mas significa que ele pode trazer novas perspectivas para questões existentes. Ele tem uma vantagem em testes de Lógica ao se deparar com algo pela primeira vez.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "nMCyu7rIkBAuIe2k"
+    },
+    {
+      "name": "Connections: Super Heroes",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "description": "O personagem conhece alguém com acesso e conhecimento de uma área específica. A conexão pode ser um repórter, um policial, um político, um mafioso e assim por diante. Ao fazer um teste de Ego, o personagem pode chamar seu contato para fornecer ajuda na forma de pistas, informações ou recursos. O Narrador determina o ND do teste de Ego com base no favor solicitado. Esta característica pode ser selecionada várias vezes, usando muitos tipos diferentes. Estes incluem Celebridades, Comunidade, Criminal, Espionagem, Militar, Forasteiros, Polícia, Profissional, Fontes, Super-Heróis e assim por diante.",
+        "restriction": "Super Heroes.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "p03NsTEeg92pZz63"
+    },
+    {
+      "name": "Extraordinary Origin",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem tem uma origem adicional. Esta característica pode ser selecionada várias vezes, mas cada vez deve ser autorizada pelo Narrador. Tome cuidado para garantir que as origens façam algum sentido quando combinadas.",
+        "multiple": true,
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}"
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "pQ7i5R14YO31pSbp"
+    },
+    {
+      "name": "Connections: Super Villians",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "description": "O personagem conhece alguém com acesso e conhecimento de uma área específica. A conexão pode ser um repórter, um policial, um político, um mafioso e assim por diante. Ao fazer um teste de Ego, o personagem pode chamar seu contato para fornecer ajuda na forma de pistas, informações ou recursos. O Narrador determina o ND do teste de Ego com base no favor solicitado. Esta característica pode ser selecionada várias vezes, usando muitos tipos diferentes. Estes incluem Celebridades, Comunidade, Criminal, Espionagem, Militar, Forasteiros, Polícia, Profissional, Fontes, Super-Heróis e assim por diante.",
+        "restriction": "Super Villians.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "qHOvj4cGk8MFrSe9"
+    },
+    {
+      "name": "Breathe Different",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem não consegue respirar o ar da Terra por muito tempo. Ele perde 1 ponto de Vida a cada minuto que não tiver algum tipo de assistência para respirar adequadamente.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "rVrtW5KJj6B7LPxi"
+    },
+    {
+      "name": "Small",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O tamanho do personagem é pequeno, o que adiciona +1 às suas defesas Corpo a Corpo e de Agilidade e subtrai –1 de sua Velocidade de Corrida.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [
+        {
+          "_id": "f90498223c234b0b",
+          "name": "Small Effects",
+          "img": "icons/svg/aura.svg",
+          "duration": {
+            "startTime": null,
+            "seconds": null,
+            "combat": null,
+            "rounds": null,
+            "turns": null,
+            "startRound": null,
+            "startTurn": null
+          },
+          "disabled": false,
+          "origin": "Item.rXC5qTqArGEOeEp7",
+          "changes": [
+            {
+              "key": "system.size",
+              "mode": 5,
+              "value": "small",
+              "priority": null
+            }
+          ],
+          "description": "",
+          "transfer": true,
+          "statuses": [],
+          "flags": {},
+          "tint": "#ffffff",
+          "_stats": {
+            "coreVersion": "13.346",
+            "systemId": "marvel-multiverse",
+            "systemVersion": "2.2.0",
+            "lastModifiedBy": null
+          },
+          "type": "base",
+          "system": {},
+          "sort": 0
+        }
+      ],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "rXC5qTqArGEOeEp7"
+    },
+    {
+      "name": "First Aid",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem sabe como administrar primeiros socorros. Ele tem uma vantagem em testes de Lógica para estancar sangramentos.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "tZGAriy9TdNt12Sb"
+    },
+    {
+      "name": "Sneaky",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem tem uma vantagem em testes de Agilidade ao se esgueirar. Inimigos têm dificuldade em testes de Vigilância para detectar o personagem quando ele está invisível ou escondido.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "tZJShexcdoW0K6pl"
+    },
+    {
+      "name": "Dealmaker",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "description": "O personagem é habilidoso na arte da negociação. Ele tem uma vantagem em testes de ação que têm a ver com fazer acordos.",
+        "restriction": "",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "vqOD3szNGG9gfsHz"
+    },
+    {
+      "name": "Berserker",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem frequentemente perde o controle de seu temperamento. Sempre que sofre dano físico, ele deve fazer um teste de Ego com um ND igual à quantidade de dano sofrido. Se falhar, ele entra em fúria e deve atacar com velocidade total o inimigo que o feriu. Estar em fúria dá ao personagem uma vantagem em todos os ataques corpo a corpo e adiciona +2 às suas defesas de Corpo a Corpo, Resiliência e Ego. No entanto, tira –2 de sua defesa de Agilidade, e ele não pode usar armas de longo alcance. Se o personagem derrotar o inimigo que o feriu, ele deve então atacar o inimigo mais próximo. No final do turno do personagem, ele perde 5 de Foco. Quando seu Foco é reduzido ao ponto em que o personagem não poderia gastar voluntariamente mais Foco — ou se não houver inimigos à vista — o estado de fúria termina automaticamente.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "xGRaRAbxMRSIuPpv"
+    },
+    {
+      "name": "BloodThirsty",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem gosta de machucar pessoas — até mesmo matá-las. Depois que ele deixa alguém inconsciente, ele deve fazer um teste de Ego Desafiador para não continuar a atacá-lo até que esteja morto. Um personagem com esta característica não pode ter a etiqueta Heroico.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "xJsPCGGDyz5MotZ5"
+    },
+    {
+      "name": "Glibness",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem consegue iniciar uma conversa com qualquer pessoa a qualquer momento e muitas vezes consegue convencê-la a dar uma mão. Ele tem uma vantagem em testes de Ego para persuadir personagens com quem está falando pela primeira vez.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "xhmfHDfLloWj09nU"
+    },
+    {
+      "name": "Combat Reflexes",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem pode reagir rapidamente em combate. Isso lhe concede uma reação adicional a cada rodada.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "yukMvCC0lkN9uFKd"
+    },
+    {
+      "name": "Public Speaking",
+      "type": "trait",
+      "img": "systems/marvel-multiverse/icons/trait.svg",
+      "system": {
+        "restriction": "",
+        "description": "O personagem sabe como chamar a atenção de uma multidão, seja em um comício político, na frente de um júri ou em uma sala de aula. Ele tem uma vantagem em testes de Ego ao tentar persuadir grupos.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "multiple": false
+      },
+      "flags": {},
+      "effects": [],
+      "_stats": {
+        "coreVersion": "13.346",
+        "systemId": "marvel-multiverse",
+        "systemVersion": "2.2.0",
+        "createdTime": 1756480188634,
+        "modifiedTime": 1756480188634,
+        "lastModifiedBy": "7HEATldsEyjiaswS"
+      },
+      "folder": null,
+      "_id": "ztVs16GkLXxLP1rG"
+    }
+  ],
+  "source": {
+    "world": "marvel-multiverse",
+    "system": "marvel-multiverse",
+    "version": {
+      "core": "13.346",
+      "system": "2.2.0"
+    }
+  },
+  "folders": [],
+  "folder": {
+    "id": "GMJbBokUYDgVYTCs",
+    "name": "Marvel Multiverse"
+  }
+}
