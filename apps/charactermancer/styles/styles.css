@@ -1,0 +1,250 @@
+
+/* Marvel Multiverse Charactermancer - High Contrast Theme (v0.6.4) */
+.mmc-app { font-size: 14px; color:#e6e6e6; }
+.mmc-app a, .mmc-app button, .mmc-app input, .mmc-app select, .mmc-app textarea { color:#e6e6e6; }
+
+/* Tokens */
+:root {
+  --mmc-bg: #1f1f23;
+  --mmc-elev: #26262b;
+  --mmc-elev-2: #2d2d33;
+  --mmc-border: #505059;
+  --mmc-soft: #8e8e9a;
+  --mmc-strong: #f0f0f5;
+  --mmc-accent: #c98b1f; /* dourado suave para combinar com o tema Marvel */
+  --mmc-accent-2: #8bc2ff; /* azul de destaque para inputs/seleção */
+  --mmc-danger: #e05d5d;
+}
+
+.mmc-app .mmc-header { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.mmc-steps { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+.mmc-step {
+  padding:6px 10px; border-radius:12px;
+  background: var(--mmc-elev);
+  color:#ddd; border:1px solid var(--mmc-border);
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,.25);
+}
+.mmc-step.active {
+  color: var(--mmc-strong);
+  background: linear-gradient(180deg, #3b3b42, #2b2b31);
+  border-color: var(--mmc-accent);
+  box-shadow: 0 0 0 1px var(--mmc-accent) inset, 0 2px 6px rgba(0,0,0,.35);
+}
+
+.mmc-body { display:grid; gap:12px; }
+.mmc-grid { display:grid; grid-template-columns: 1fr 2fr; gap:14px; }
+
+.mmc-card {
+  background: var(--mmc-bg);
+  border:1px solid var(--mmc-border);
+  border-radius:14px;
+  padding:12px;
+  box-shadow: 0 1px 0 rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.02);
+}
+.mmc-card h3 { margin:0 0 8px 0; font-size:16px; font-weight:800; color:var(--mmc-strong); letter-spacing:.2px; }
+
+.mmc-field { margin-bottom:10px; }
+.mmc-field label { display:block; font-weight:700; margin-bottom:4px; color:#f1f1f1; }
+
+/* Inputs */
+.mmc-app input[type="number"],
+.mmc-app input[type="text"],
+.mmc-app select,
+.mmc-app textarea {
+  width:100%; padding:8px 10px;
+  background:#2a2a2f;
+  color:#f3f3f3;
+  border:1px solid var(--mmc-border);
+  border-radius:8px;
+  outline:none;
+}
+.mmc-app input::placeholder, .mmc-search::placeholder { color:#bdbdc7; }
+.mmc-app input:focus, .mmc-app select:focus, .mmc-app textarea:focus {
+  border-color: var(--mmc-accent-2);
+  box-shadow: 0 0 0 2px rgba(139,194,255,.25);
+}
+
+/* Buttons */
+.mmc-btn {
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid var(--mmc-border);
+  background: linear-gradient(180deg, #3b3b42, #2b2b31);
+  color:#f7f7fb;
+  cursor:pointer;
+  font-weight:700;
+  letter-spacing:.2px;
+}
+.mmc-btn:hover { filter: brightness(1.08); border-color: var(--mmc-accent); }
+.mmc-btn:disabled { opacity:.5; cursor:not-allowed; }
+
+/* Lists and items */
+.mmc-list {
+  max-height: 420px; overflow:auto;
+  border:1px solid var(--mmc-border);
+  border-radius:12px;
+  padding:10px;
+  background: var(--mmc-elev);
+}
+.mmc-pwr { margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed #5a5a66; }
+.mmc-pwr .name { font-size:16px; font-weight:800; margin-bottom:6px; color:#ffffff; }
+.mmc-pwr .desc { margin-bottom:6px; color:#e0e0ea; }
+.mmc-pwr .effect { margin-bottom:6px; color:#cfe1ff; }
+
+/* Search */
+.mmc-search {
+  width:100%; padding:8px 10px;
+  border-radius:8px; border:1px solid var(--mmc-border);
+  background:#2a2a2f; color:#f3f3f3;
+  margin-bottom:8px;
+}
+
+/* Tags */
+.mmc-tags { display:flex; flex-wrap:wrap; gap:6px; }
+.mmc-tag {
+  padding:3px 8px; border-radius:999px;
+  background:#34343c; border:1px solid #5e5e6b;
+  color:#f1f1f1; font-weight:700;
+}
+
+/* Small helper text */
+.mmc-small { font-size:12px; color:#c7c7d1; }
+
+/* Footer nav */
+.mmc-nav { display:flex; justify-content:space-between; margin-top:12px; gap:12px; }
+
+/* v0.6.5 */
+.mmc-selected, .mmc-review { color:#ffffff !important; }
+
+/* Ensure selected panels and inputs are readable */
+.mmc-selected, .mmc-selected * { color: var(--mmc-strong); }
+.mmc-tags { display:flex; flex-wrap:wrap; gap:8px; width:100%; }
+.mmc-tag { background: var(--mmc-elev-2); border:1px solid var(--mmc-border); padding:4px 8px; border-radius:999px; }
+.mmc-tag .mmc-badge { margin-left:6px; font-size:.8em; opacity:.8; }
+.mmc-grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+@media (max-width: 1024px){ .mmc-grid { grid-template-columns: 1fr; } }
+.mmc-app input, .mmc-app select, .mmc-app textarea { background: var(--mmc-elev); border:1px solid var(--mmc-border); }
+
+.mmc-sub{margin-top:18px;}
+.mmc-gap16{height:12px;}
+
+
+/* v0.6.46 — Melhor espaço para valor selecionado e cores */
+.mmc-attr-select { width: 100%; color:#fff; font-weight:700; }
+.mmc-attr-select option { color:#000; background:#fff; }
+.mmc-card .mmc-field { display:grid; grid-template-columns: 1fr 160px; align-items:center; gap:8px; }
+
+
+/* v0.6.47 — visibilidade máxima do valor */
+.mmc-attr-select { 
+  width: 100%; 
+  color:#fff; 
+  font-weight:700; 
+  text-align: right;
+  padding-right: 28px; /* espaço para o caret nativo */
+  line-height: 1.2;
+}
+/* Algumas skins aplicam transform/filters no select; forço contraste */
+.mmc-attr-select:focus { outline: 2px solid var(--mmc-accent-2); }
+
+
+/* v0.6.47 — visibilidade máxima do valor (reforço) */
+.mmc-attr-select { 
+  width: 100%;
+  color:#fff;
+  font-weight:700;
+  text-align:right;
+  padding-right:28px;
+  line-height:1.2;
+}
+.mmc-attr-select option { color:#000; background:#fff; }
+
+
+/* v0.6.48 — altura maior para ver o número selecionado */
+.mmc-card .mmc-field { grid-template-columns: 1fr 200px; } /* um pouco mais largo ajuda a leitura */
+.mmc-attr-select {
+  height: 44px;             /* ~2x a altura padrão */
+  min-height: 44px;
+  line-height: 44px;        /* ajuda a centralizar verticalmente em alguns temas */
+  padding: 0 28px 0 10px;   /* espaço pro caret + respiro à esquerda */
+  font-size: 16px;          /* número mais legível */
+  color: #fff;              /* valor em branco (controle) */
+  font-weight: 700;
+}
+/* Em alguns temas o select ignora line-height; reforço com padding vertical */
+@supports not (line-height: 44px) {
+  .mmc-attr-select { padding-top: 8px; padding-bottom: 8px; }
+}
+
+
+/* v0.6.49 — Selecionados separados (Traços / Tags) */
+.mmc-selected h3 { margin-bottom: 6px; }
+.mmc-tags { display:flex; flex-wrap:wrap; gap:6px; }
+.mmc-tag { background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); padding:4px 8px; border-radius:999px; font-size:12px; }
+.mmc-tag a { margin-left:6px; color:#fff; text-decoration:none; font-weight:700; }
+.mmc-tag a:hover { text-decoration:underline; }
+.mmc-tag-granted { background: rgba(58,199,94,0.18); border-color: rgba(58,199,94,0.35); }
+
+
+/* v0.6.50 — Botão de remover como chip '×' sem navegação */
+.mmc-chip-x {
+  all: unset;
+  cursor: pointer;
+  font-weight: 900;
+  margin-left: 6px;
+  padding: 0 6px;
+  line-height: 1;
+}
+.mmc-chip-x:hover { text-decoration: underline; }
+
+
+.mmc-warn{background:rgba(255,200,0,.08); border:1px solid rgba(255,200,0,.4); padding:.5rem .75rem; border-radius:.5rem; margin:.5rem 0;}
+.mmc-chips{display:flex; flex-wrap:wrap; gap:.5rem;}
+.mmc-tag{background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); border-radius:999px; padding:.2rem .6rem; font-size:.9em; display:inline-flex; align-items:center; gap:.35rem;}
+.mmc-tag-granted{background:rgba(54,197,255,.12); border-color:rgba(54,197,255,.45);}
+.mmc-chip-x{background:transparent; border:none; font-weight:bold; cursor:pointer; color:inherit;}
+
+
+/* Power Sets select sizing + colors */
+.mmc-card .mmc-select{ width: 100%; display:block; }
+.mmc-card .mmc-select { color: #fff; }             /* value shown in the box: white */
+.mmc-card .mmc-select option { color:#000; }       /* dropdown options: black */
+
+.mmc-card .mmc-select option, .mmc-card .mmc-select optgroup{ color:#000 !important; background:#e8e1d0 !important; }
+
+.mmc-list{ max-height: 520px; overflow:auto; }
+
+.mmc-selected-panel{ margin-top:.5rem; border-top:1px solid rgba(255,255,255,.12); padding-top:.5rem; }
+
+/* Power Sets select: full width + same height as search (~38px) */
+.mmc-card .mmc-select{ width:100% !important; display:block; color:#fff !important; }
+.mmc-card .mmc-select.mmc-select-tall{ height:38px; line-height:38px; padding:0 .6rem; }
+.mmc-card .mmc-select option{ color:#000 !important; }
+/* Subcards and chips for bottom 'Selecionados' panel */
+.mmc-subcard{ background: rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); }
+.mmc-card h4{ margin:.25rem 0 .5rem; font-weight:600; font-size:1rem; opacity:.9; }
+.mmc-list{ max-height:420px; overflow:auto; }
+.mmc-chips{ display:flex; flex-wrap:wrap; gap:.5rem; }
+.mmc-tag{ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); border-radius:999px; padding:.2rem .6rem; font-size:.9em; display:inline-flex; align-items:center; gap:.35rem; }
+.mmc-tag-granted{ background:rgba(54,197,255,.12); border-color:rgba(54,197,255,.45); }
+.mmc-chip-x{ background:transparent; border:none; font-weight:bold; cursor:pointer; color:inherit; }
+
+.mmc-subcard, .mmc-subcard * { color: #fff !important; }
+.mmc-tag, .mmc-tag * { color: #fff !important; }
+
+/* Revisão: rank highlight */
+.mmc-rank-display{ font-size:1.15rem; color:#fff; font-weight:700; margin:-2px 0 6px; }
+/* Ensure dropdown in review uses same color scheme */
+.mmc-field .mmc-select{ color:#fff !important; }
+.mmc-field .mmc-select option{ color:#000 !important; }
+.mmc-field textarea{ min-height: 84px; }
+
+
+/* v0.6.63 — Step 6 polish */
+.mmc-review .mmc-field { grid-column: 1 / -1; display: block !important; }
+.mmc-review .mmc-field label { display:block !important; margin-bottom: 6px; }
+.mmc-review .mmc-field textarea { width:100% !important; min-height: 120px; } /* taller default */
+.mmc-review .mmc-field .mmc-select { min-height: 42px; padding-top: 6px; padding-bottom: 6px; } /* ~50% taller */
+
+/* guard: hide any leftover refresh attributes */
+[data-refresh-powers],[data-refresh-traits],[data-refresh-tags]{display:none!important}
