@@ -1,0 +1,51 @@
+{
+  "MMHT": {
+    "Settings": {
+      "Enable": "Ativar tooltips ao passar o mouse",
+      "SystemId": "ID do sistema alvo",
+      "TypesLabel": "Ativar tipos",
+      "Types": {
+        "Power": "Poderes",
+        "Trait": "Traços",
+        "Tag": "Tags",
+        "Occupation": "Ocupações",
+        "Origin": "Origens",
+        "Item": "Itens genéricos"
+      }
+    },
+    "Tooltip": {
+      "Title": "Detalhes",
+      "Cost": "Custo",
+      "Range": "Alcance",
+      "Action": "Ação",
+      "Trigger": "Gatilho",
+      "Duration": "Duração",
+      "Description": "Descrição",
+      "Effect": "Efeito"
+    }
+  },
+  "MMDR.Debug": "Ativar debug",
+  "MMC": {
+    "Open": "Abrir Charactermancer",
+    "Next": "Seguinte",
+    "Back": "Voltar",
+    "Apply": "Aplicar no Ator",
+    "Cancel": "Cancelar",
+    "Rank": "Rank",
+    "Abilities": "Atributos",
+    "Occupation": "Ocupação",
+    "Origin": "Origem",
+    "TraitsTags": "Traços & Tags",
+    "Powers": "Poderes",
+    "Review": "Revisão",
+    "Points": "Pontos",
+    "Max": "Máx.",
+    "Select": "Selecionar",
+    "Selected": "Selecionado",
+    "Remove": "Remover",
+    "BasicPowers": "Poderes Básicos",
+    "PowerSet": "Power Set",
+    "Search": "Buscar...",
+    "attrCapWarn": "Você atingiu o limite de atributo para este Rank."
+  }
+}
