@@ -1,0 +1,15 @@
+
+<section class="mmc-body">
+  <div class="mmc-card">
+    <h3>Revisão</h3>
+    <ul>
+      <li>Rank: {{rank}}</li>
+      <li>Atributos: M{{abilities.mle}} A{{abilities.agl}} R{{abilities.res}} V{{abilities.vig}} E{{abilities.ego}} L{{abilities.log}}</li>
+      <li>Ocupação: {{#if occupation}}{{occupation.name}}{{else}}—{{/if}}</li>
+      <li>Origem: {{#if origin}}{{origin.name}}{{else}}—{{/if}}</li>
+      <li>Traços: {{#each selectedTraits}}{{this.name}}{{#unless @last}}, {{/unless}}{{/each}}</li>
+      <li>Tags: {{#each selectedTags}}{{this.name}}{{#unless @last}}, {{/unless}}{{/each}}</li>
+      <li>Poderes ({{chosenPowers.length}}): {{#each chosenPowers}}{{this.name}}{{#unless @last}}, {{/unless}}{{/each}}</li>
+    </ul>
+  </div>
+</section>

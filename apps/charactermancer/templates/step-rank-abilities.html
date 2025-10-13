@@ -1,0 +1,33 @@
+
+<section class="mmc-body">
+  <div class="mmc-grid">
+    <div class="mmc-card">
+      <h3>Rank</h3>
+      <div class="mmc-field">
+        <label>Escolha o Rank</label>
+        <select name="rank">
+          {{#each ranks}}
+            <option value="{{this}}">Rank {{this}}</option>
+          {{/each}}
+        </select>
+      </div>
+      <div class="mmc-field">
+        <label>Resumo do Rank</label>
+        <div class="mmc-small">
+          <!-- Texto auto das regras (simplificado) -->
+          • Máx. atributo por Rank • Limites de poderes • Derivados
+        </div>
+      </div>
+    </div>
+    <div class="mmc-card">
+      <h3>Atributos (M.A.R.V.E.L.)</h3>
+      <div class="mmc-field"><label>Melee</label><input type="number" name="mle" min="-3" max="{{maxAbility}}" value="{{abilities.mle}}"></div>
+      <div class="mmc-field"><label>Agility</label><input type="number" name="agl" min="-3" max="{{maxAbility}}" value="{{abilities.agl}}"></div>
+      <div class="mmc-field"><label>Resilience</label><input type="number" name="res" min="-3" max="{{maxAbility}}" value="{{abilities.res}}"></div>
+      <div class="mmc-field"><label>Vigilance</label><input type="number" name="vig" min="-3" max="{{maxAbility}}" value="{{abilities.vig}}"></div>
+      <div class="mmc-field"><label>Ego</label><input type="number" name="ego" min="-3" max="{{maxAbility}}" value="{{abilities.ego}}"></div>
+      <div class="mmc-field"><label>Logic</label><input type="number" name="log" min="-3" max="{{maxAbility}}" value="{{abilities.log}}"></div>
+      <div class="mmc-small">Pontos restantes: {{pointsLeft}}</div>
+    </div>
+  </div>
+</section>

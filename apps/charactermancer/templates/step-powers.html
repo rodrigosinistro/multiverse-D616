@@ -1,0 +1,36 @@
+
+<section class="mmc-body">
+  <div class="mmc-grid">
+    <div class="mmc-card">
+      <h3>{{localize 'MMC.BasicPowers'}}</h3>
+      <div class="mmc-list">
+        {{#each basicPowers}}
+          <div class="mmc-pwr" data-id="{{_id}}">
+            <div class="name">{{name}}</div>
+            <div class="desc">{{{system.description}}}</div>
+            {{#if system.effect}}<div class="effect"><strong>Efeito:</strong> {{{system.effect}}}</div>{{/if}}
+            <button class="mmc-btn" data-add-power="{{_id}}">{{localize 'MMC.Select'}}</button>
+          </div>
+        {{/each}}
+      </div>
+    </div>
+    <div class="mmc-card">
+      <h3>{{localize 'MMC.PowerSet'}}</h3>
+      <select name="powerSet">
+        {{#each powerSets}}
+          <option value="{{this}}">{{this}}</option>
+        {{/each}}
+      </select>
+      <div class="mmc-list">
+        {{#each powerSetPowers}}
+          <div class="mmc-pwr" data-id="{{_id}}">
+            <div class="name">{{name}}</div>
+            <div class="desc">{{{system.description}}}</div>
+            {{#if system.effect}}<div class="effect"><strong>Efeito:</strong> {{{system.effect}}}</div>{{/if}}
+            <button class="mmc-btn" data-add-power="{{_id}}">{{localize 'MMC.Select'}}</button>
+          </div>
+        {{/each}}
+      </div>
+    </div>
+  </div>
+</section>

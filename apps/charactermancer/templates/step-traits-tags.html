@@ -1,0 +1,40 @@
+
+<section class="mmc-body">
+  <div class="mmc-grid">
+    <div class="mmc-card">
+      <h3>Traços</h3>
+      <div class="mmc-list">
+        {{#each traits}}
+          <div class="mmc-pwr">
+            <div class="name">{{name}}</div>
+            <div class="desc">{{{system.description}}}</div>
+            <button class="mmc-btn" data-add-trait="{{_id}}">{{localize 'MMC.Select'}}</button>
+          </div>
+        {{/each}}
+      </div>
+    </div>
+    <div class="mmc-card">
+      <h3>Tags</h3>
+      <div class="mmc-list">
+        {{#each tags}}
+          <div class="mmc-pwr">
+            <div class="name">{{name}}</div>
+            <div class="desc">{{{system.description}}}</div>
+            <button class="mmc-btn" data-add-tag="{{_id}}">{{localize 'MMC.Select'}}</button>
+          </div>
+        {{/each}}
+      </div>
+    </div>
+  </div>
+  <div class="mmc-card">
+    <h3>Selecionados</h3>
+    <div class="mmc-tags">
+      {{#each selectedTraits}}
+        <span class="mmc-tag">{{this.name}}</span>
+      {{/each}}
+      {{#each selectedTags}}
+        <span class="mmc-tag">{{this.name}}</span>
+      {{/each}}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,25 @@
+
+<section class="mmc-body">
+  <div class="mmc-card">
+    <h3>Ocupação</h3>
+    <input class="mmc-search" type="text" name="search" placeholder="{{localize 'MMC.Search'}}">
+    <div class="mmc-list">
+      {{#each occupations}}
+        <div class="mmc-pwr">
+          <div class="name">{{name}}</div>
+          <div class="desc">{{{system.description}}}</div>
+          <button class="mmc-btn" data-pick="{{_id}}">{{localize 'MMC.Select'}}</button>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+  <div class="mmc-card">
+    <h3>Selecionada</h3>
+    {{#if selectedOccupation}}
+      <div class="name">{{selectedOccupation.name}}</div>
+      {{{selectedOccupation.system.description}}}
+    {{else}}
+      <div class="mmc-small">Nenhuma.</div>
+    {{/if}}
+  </div>
+</section>
