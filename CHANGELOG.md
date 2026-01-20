@@ -1,3 +1,7 @@
+## v0.1.15 — 2026-01-20
+- **Fix (Trouble + Marvel Die):** Se o alvo tem **Trouble** e o dado **Marvel** é rolado novamente, o dano agora usa o **resultado mantido** (pós-reroll) e **só dobra** em caso de **Marvel Result ativo** (não mais por resultados descartados).
+- **Fix (Damage Type):** Quando `damagetype:` não está presente no flavor, assume **health** por padrão.
+
 ## v0.1.13 — 2025-10-13
 - **PDF Export:** Atualizado exportador embutido para **sheet-export-m616 v0.3.54**.
 - **Template(s):** Copiados de `sheet-export-m616/assets/templates/` para `systems/multiverse-d616/features/sheet-export-m616/assets/templates/`.

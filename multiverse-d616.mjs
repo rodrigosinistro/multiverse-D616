@@ -1413,15 +1413,11 @@ class ChatMessageMarvel extends ChatMessage {
     const eventTarget = event.currentTarget;
     const messageId =
       eventTarget.closest("[data-message-id]").dataset.messageId;
-    const fantastic = eventTarget.parentNode.querySelector(
-      "li.roll.marvel-roll.fantastic"
-    );
-
     const messageHeader = eventTarget.closest("li.chat-message");
     const flavorText =
       messageHeader.querySelector("span.flavor-text").innerHTML;
 
-    this._handleDamageChatButton(messageId, flavorText, fantastic);
+    this._handleDamageChatButton(messageId, flavorText);
   }
 
   /**
@@ -1430,20 +1426,69 @@ class ChatMessageMarvel extends ChatMessage {
    * @param {string} ability
    * @param {string} fantastic
    */
-  async _handleDamageChatButton(messageId, flavorText, fantastic) {
+
+  async _handleDamageChatButton(messageId, flavorText) {
     const re = /ability:\s(?<ability>\w*)/;
     const dmgTypeRe = /damagetype:\s(?<damageType>\w*)/;
     const ability = re.exec(flavorText).groups.ability;
-    const damageType = dmgTypeRe.exec(flavorText)?.groups?.damageType;
+    const damageType =
+      dmgTypeRe.exec(flavorText)?.groups?.damageType ?? "health";
     const abilityAbr = MULTIVERSE_D616.damageAbilityAbr[ability] ?? ability;
     const chatMessage = game.messages.get(messageId);
-    const sixOneSixPool = chatMessage.rolls[0].terms[0];
-    const marvelRoll = sixOneSixPool.rolls[1];
+
+    // Resolve the 616 pool term robustly (supports ParentheticalTerm wrappers)
+    const [roll] = chatMessage.rolls ?? [];
+    const firstRollTerm = roll?.terms?.[0];
+    let sixOneSixPool;
+
+    if (
+      firstRollTerm instanceof foundry.dice.terms.ParentheticalTerm &&
+      firstRollTerm.roll?.terms?.[0] instanceof foundry.dice.terms.PoolTerm
+    ) {
+      sixOneSixPool = firstRollTerm.roll.terms[0];
+    } else if (firstRollTerm instanceof foundry.dice.terms.PoolTerm) {
+      sixOneSixPool = firstRollTerm;
+    } else {
+      sixOneSixPool = firstRollTerm;
+    }
+
+    const marvelRoll = sixOneSixPool?.rolls?.[1];
+    const marvelDie =
+      marvelRoll?.dice?.find(
+        (d) => d instanceof game.MarvelMultiverse.dice.MarvelDie
+      ) ??
+      marvelRoll?.terms?.find?.(
+        (t) => t instanceof game.MarvelMultiverse.dice.MarvelDie
+      );
+
+    // Determine the kept Marvel Die result (after Edge/Trouble retro rolls)
+    const activeMarvelResults =
+      marvelDie?.results?.filter((r) => r.active && !r.discarded) ?? [];
+    let marvelTotal = 0;
+    let isFantastic = false;
+
+    if (activeMarvelResults.length) {
+      marvelTotal = activeMarvelResults.reduce((sum, r) => {
+        if (r.result === 1) {
+          isFantastic = true;
+          return sum + 6;
+        }
+        const v = r.count ?? r.result ?? 0;
+        return sum + v;
+      }, 0);
+    } else if (marvelDie) {
+      // Fallback for older messages: rely on term total
+      marvelTotal = marvelDie.total ?? 0;
+      isFantastic =
+        (marvelDie.results ?? []).some(
+          (r) => r.active && !r.discarded && r.result === 1
+        ) ?? false;
+    }
+
     const actor = game.actors.contents.find(
       (a) => a.name === chatMessage.alias
     );
 
-    const [marvelDie] = marvelRoll.dice;
     const damageMultiplier =
       actor.system.abilities[abilityAbr].damageMultiplier;
 
@@ -1462,35 +1507,32 @@ class ChatMessageMarvel extends ChatMessage {
           : t.system.healthDamageReduction;
       const dmgMultiplier = damageMultiplier - damageReduction;
       let dmg =
-        dmgMultiplier === 0
-          ? 0
-          : marvelDie.total * dmgMultiplier + abilityValue;
-      if (fantastic) {
+        dmgMultiplier === 0 ? 0 : marvelTotal * dmgMultiplier + abilityValue;
+      if (isFantastic) {
         dmg = dmg * 2;
       }
       return `<p><b>${t.name}</b> takes <b>${dmg} ${
-        fantastic ? "Fantastic" : ""
+        isFantastic ? "Fantastic" : ""
       } </b> ${damageType} damage.<br/> re: MarvelDie: ${
-        marvelDie.total
+        marvelTotal
       } &#42; damage multiplier: &#40; ${
         actor.system.abilities[abilityAbr].damageMultiplier
       } - damageReduction: ${damageReduction} &#61; ${dmgMultiplier} &#41; + ${ability} score ${abilityValue} of damage.</p>`;
     });
 
     if (damageContent.length === 0) {
-      let dmg = marvelDie.total * damageMultiplier + abilityValue;
-      if (fantastic) {
+      let dmg = marvelTotal * damageMultiplier + abilityValue;
+      if (isFantastic) {
         dmg = dmg * 2;
       }
       damageContent.push(
         `<p>target(s) take <b>${dmg} ${
-          fantastic ? "Fantastic" : ""
+          isFantastic ? "Fantastic" : ""
         } </b> ${damageType} damage.<br/> re: MarvelDie: ${
-          marvelDie.total
+          marvelTotal
         } &#42; damage multiplier: ${damageMultiplier} + ${ability} score ${abilityValue} of damage.</p>`
       );
     }
-    // const content = `<p>Delivers <b>${dmg}</b> points re: MarvelDie: ${marvelDie.total} &#42; damage multiplier: &#40; ${actor.system.abilities[abilityAbr].damageMultiplier} - damageReduction: ${damageReduction} &#61; ${damageMultiplier} &#41; + ${ability} score ${abilityValue} of damage.</p>`;
 
     const msgData = {
       speaker: ChatMessageMarvel.getSpeaker({ actor: actor }),
@@ -1500,6 +1542,7 @@ class ChatMessageMarvel extends ChatMessage {
     };
     ChatMessageMarvel.create(msgData);
   }
+
 
   /**
    * Handle clicking a retro button.
@@ -1620,6 +1663,23 @@ class ChatMessageMarvel extends ChatMessage {
     }
 
     targetDie.results.push(newRollResult);
+
+    // Recalculate the die total after retro Edge/Trouble so downstream logic (like damage) reflects the kept result.
+    const keptDieResults = targetDie.results.filter(
+      (r) => r.active && !r.discarded
+    );
+    const calcDieResults = keptDieResults.length
+      ? keptDieResults
+      : targetDie.results.filter((r) => r.active);
+    const dieResultsForTotal = calcDieResults.length
+      ? calcDieResults
+      : [targetDie.results[targetDie.results.length - 1]];
+    const computedDieTotal = dieResultsForTotal.reduce((sum, r) => {
+      if (targetIsMarvel && r.result === 1) return sum + 6;
+      const v = r.count ?? r.result ?? 0;
+      return sum + v;
+    }, 0);
+    targetDie._total = computedDieTotal;
 
     const re = /(\(?{)(\dd\d),(\ddm),(\dd\d)(}.*)/;
 
