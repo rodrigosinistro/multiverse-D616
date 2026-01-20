@@ -130,6 +130,42 @@
       "description": "+5 Focus ao custo de poderes por 24h sem dormir (pode ultrapassar limite); Trouble em todas as ações."
     },
     {
+      "id": "mmrpg.concentration.1",
+      "name": "Concentration 1 (Concentração 1)",
+      "icon": "icons/m.svg",
+      "description": "Se concentrando em 1 poder."
+    },
+    {
+      "id": "mmrpg.concentration.2",
+      "name": "Concentration 2 (Concentração 2)",
+      "icon": "icons/m.svg",
+      "description": "Se concentrando em 2 poderes."
+    },
+    {
+      "id": "mmrpg.concentration.3",
+      "name": "Concentration 3 (Concentração 3)",
+      "icon": "icons/m.svg",
+      "description": "Se concentrando em 3 poderes."
+    },
+    {
+      "id": "mmrpg.concentration.4",
+      "name": "Concentration 4 (Concentração 4)",
+      "icon": "icons/m.svg",
+      "description": "Se concentrando em 4 poderes."
+    },
+    {
+      "id": "mmrpg.concentration.5",
+      "name": "Concentration 5 (Concentração 5)",
+      "icon": "icons/m.svg",
+      "description": "Se concentrando em 5 poderes."
+    },
+    {
+      "id": "mmrpg.concentration.6",
+      "name": "Concentration 6 (Concentração 6)",
+      "icon": "icons/m.svg",
+      "description": "Se concentrando em 6 poderes."
+    },
+    {
       "id": "mmrpg.poisoned",
       "name": "Poisoned (Envenenado)",
       "icon": "icons/m.svg",
