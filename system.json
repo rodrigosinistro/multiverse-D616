@@ -11,7 +11,7 @@
   "url": "https://github.com/rodrigosinistro/multiverse-D616",
   "license": "LICENSE.txt",
   "readme": "README.md",
-  "bugs": "Replace this with a link to file issues or tickets",
+  "bugs": "https://github.com/rodrigosinistro/multiverse-D616/issues",
   "changelog": "CHANGELOG.md",
   "media": [
     {
@@ -25,10 +25,10 @@
       "thumbnail": "systems/multiverse-d616/ui/official/mmrpg-setup-thumbnail.png"
     }
   ],
-  "version": "0.1.15",
+  "version": "0.1.23",
   "compatibility": {
     "minimum": "13",
-    "verified": "13.341"
+    "verified": "13"
   },
   "esmodules": [
     "multiverse-d616.mjs",
@@ -134,7 +134,7 @@
   ],
   "socket": true,
   "manifest": "https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json",
-  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.1.15/multiverse-d616-v0.1.15.zip",
+  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.1.23/multiverse-d616-v0.1.23.zip",
   "background": "systems/multiverse-d616/ui/official/mmrpg-background.webp",
   "grid": {
     "distance": 5,

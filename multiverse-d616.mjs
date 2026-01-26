@@ -478,15 +478,50 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       // const result = await roll.evaluate();
       const modLabel = `${label}, [ability] ${this.system.ability}`;
 
-      roll.toMessage(
-        {
-          title: this.name,
-          speaker: speaker,
-          rollMode: rollMode,
-          flavor: modLabel,
-        },
-        { rollMode: rollMode, itemId: this._id }
-      );
+      // Capture current targets for attack rolls so the chat card can show HIT/MISS.
+      // We store token UUID + defense at the moment of the roll.
+      let msgFlags;
+      try {
+        const targetTokens = Array.from(game.user?.targets ?? []);
+
+        // Fallback for any modules that don't populate game.user.targets
+        if (!targetTokens.length && canvas?.tokens?.placeables) {
+          targetTokens.push(...canvas.tokens.placeables.filter((t) => t.isTargeted));
+        }
+
+        if (targetTokens.length) {
+          const abilityKey = this.system.ability;
+          const targets = targetTokens
+            .map((t) => {
+              const tokenDoc = t.document ?? t; // Token (placeable) or TokenDocument
+              const a = t.actor ?? tokenDoc?.actor;
+              const ac = abilityKey
+                ? a?.system?.abilities?.[abilityKey]?.defense ?? 0
+                : 0;
+              const img = tokenDoc?.texture?.src ?? a?.img ?? "";
+              const uuid = tokenDoc?.uuid ?? "";
+              const name = t.name ?? tokenDoc?.name ?? a?.name ?? "Target";
+              return { name, img, ac, uuid };
+            })
+            .filter((t) => t.uuid);
+
+          if (targets.length) {
+            msgFlags = { "multiverse-d616": { targets, ability: abilityKey } };
+          }
+        }
+      } catch (e) {
+        console.warn("[multiverse-d616] Failed to capture targets for roll message", e);
+      }
+
+const msgData = {
+        title: this.name,
+        speaker: speaker,
+        rollMode: rollMode,
+        flavor: modLabel,
+        ...(msgFlags ? { flags: msgFlags } : {}),
+      };
+
+      roll.toMessage(msgData, { rollMode: rollMode, itemId: this._id });
 
       if (this.system.attack) {
         Hooks.callAll("multiverse-d616.rollAttack", this, roll);
@@ -1173,6 +1208,86 @@ MULTIVERSE_D616.ASCII = `
         ''
 `;
 
+function mmStripHtml(value) {
+  return String(value ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function mmParseFocusCost(costText) {
+  const raw = String(costText ?? "").trim();
+  const lower = raw.toLowerCase();
+  if (!raw) return { hasFocus: false, raw };
+  if (!lower.includes("focus")) return { hasFocus: false, raw };
+  const m = lower.match(/(\d+)/);
+  const n = m ? Number.parseInt(m[1], 10) : 0;
+  const variable = /(or\s+more|ou\s+mais|\+|minimum|minimo|mínimo)/i.test(lower);
+  if (variable) {
+    return {
+      hasFocus: n > 0,
+      type: "variable",
+      min: Math.max(0, Number.isFinite(n) ? n : 0),
+      raw,
+    };
+  }
+  return {
+    hasFocus: n > 0,
+    type: "fixed",
+    fixed: Math.max(0, Number.isFinite(n) ? n : 0),
+    min: Math.max(0, Number.isFinite(n) ? n : 0),
+    raw,
+  };
+}
+
+function mmParseFocusScaling(effectHtml) {
+  const t = mmStripHtml(effectHtml);
+  if (!t) return null;
+
+  const patterns = [
+    // PT: Para cada X pontos de Focus gastos, adiciona +Y ao bônus de dano ...
+    /para\s+cada\s+(?<step>\d+)\s+pontos?\s+de\s+focus\s+gastos?,?\s*(?:ele\s*)?(?:adicione|adiciona|adicionar)\s*\+?\s*(?<per>\d+)\s+ao\s+b[oô]nus\s+de\s+dano(?:\s+de\s+(?<ability>[\wÀ-ÿ-]+))?/i,
+    // PT: Adicione +Y ao bônus de dano ... para cada X pontos de Focus gastos
+    /adicione\s*\+?\s*(?<per>\d+)\s+ao\s+b[oô]nus\s+de\s+dano(?:\s+de\s+(?<ability>[\wÀ-ÿ-]+))?[^.]{0,200}?para\s+cada\s+(?<step>\d+)\s+pontos?\s+de\s+focus\s+gastos?/i,
+    // EN: For every X Focus spent, add +Y to the damage bonus
+    /for\s+(?:each|every)\s+(?<step>\d+)\s+(?:points?\s+of\s+)?focus\s+(?:spent|used)[^.]{0,200}?(?:add|gain)\s*\+?\s*(?<per>\d+)\s+(?:to\s+)?(?:the\s+)?(?:damage\s+bonus|damage)/i,
+  ];
+
+  for (const re of patterns) {
+    const m = re.exec(t);
+    if (!m?.groups) continue;
+    const step = Number.parseInt(m.groups.step ?? "0", 10);
+    const per = Number.parseInt(m.groups.per ?? "0", 10);
+    const ability = (m.groups.ability ?? "").trim() || null;
+    if (Number.isFinite(step) && step > 0 && Number.isFinite(per) && per !== 0) {
+      return { step, per, ability };
+    }
+  }
+  return null;
+}
+
+function mmComputeFocusDamageBonus(effectHtml, totalFocus) {
+  const total = Number(totalFocus ?? 0);
+  if (!Number.isFinite(total) || total <= 0) {
+    return { bonus: 0, summary: "", rule: null };
+  }
+  const rule = mmParseFocusScaling(effectHtml);
+  if (!rule) return { bonus: 0, summary: "", rule: null };
+
+  const steps = Math.floor(total / rule.step);
+  const bonus = steps * rule.per;
+  const abilityText = rule.ability ? ` ${rule.ability}` : "";
+  const summary = `+${rule.per} bônus de dano${abilityText} a cada ${rule.step} Focus (gasto ${total} → +${bonus})`;
+  return { bonus, summary, rule };
+}
+
+function mmClampNumber(n, min, max) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return min;
+  return Math.min(max, Math.max(min, v));
+}
+
 class ChatMessageMarvel extends ChatMessage {
   /** @inheritDoc */
   _initialize(options = {}) {
@@ -1193,6 +1308,7 @@ class ChatMessageMarvel extends ChatMessage {
     this._displayChatActionButtons(html);
 
     this._enrichChatCard(html[0]);
+    this._enrichAttackTargets(html[0]);
 
     /**
      * A hook event that fires after multiverse-d616-specific chat message modifications have completed.
@@ -1338,6 +1454,58 @@ class ChatMessageMarvel extends ChatMessage {
       html
         .querySelector("button.damage")
         ?.addEventListener("click", this._onClickDamageButton.bind(this));
+
+      html
+        .querySelector("button.spend-focus")
+        ?.addEventListener("click", this._onClickSpendFocusButton.bind(this));
+
+      // Show/hide focus controls + render focus spend info (persists across re-renders).
+      this._enrichFocusControls(html);
+    }
+  }
+
+  /**
+   * Show/hide the spend focus button and render focus spend summary on the roll card.
+   * @param {HTMLLIElement} html
+   */
+  _enrichFocusControls(html) {
+    const focusBtn = html.querySelector("button.spend-focus");
+    const info = html.querySelector(".mm-focus-info");
+    if (!focusBtn || !info) return;
+
+    // Resolve actor and item (synchronously where possible).
+    const { scene: sceneId, token: tokenId, actor: actorId } = this.speaker;
+    const actor =
+      game.scenes.get(sceneId)?.tokens.get(tokenId)?.actor ??
+      game.actors.get(actorId);
+    const itemId = this.getFlag("multiverse-d616", "itemId");
+    const item = actor?.items?.get?.(itemId) ?? null;
+
+    const costText = item?.system?.cost ?? "";
+    const cost = mmParseFocusCost(costText);
+
+    // Default hidden unless the message is associated to an item with Focus cost.
+    const show = Boolean(item && cost.hasFocus && (cost.min ?? 0) > 0);
+    focusBtn.style.display = show ? "" : "none";
+
+    // Render info line when Focus has been spent.
+    const spent = Number(this.getFlag("multiverse-d616", "focusSpent") ?? 0);
+    const bonus = Number(
+      this.getFlag("multiverse-d616", "focusDamageBonus") ?? 0
+    );
+    const ruleSummary = String(
+      this.getFlag("multiverse-d616", "focusRule") ?? ""
+    ).trim();
+
+    if (spent > 0) {
+      info.style.display = "";
+      const parts = [`FOCUS: ${spent}`];
+      if (bonus) parts.push(`BÔNUS: +${bonus}`);
+      if (ruleSummary) parts.push(ruleSummary);
+      info.textContent = parts.join(" | ");
+    } else {
+      info.style.display = "none";
+      info.textContent = "";
     }
   }
 
@@ -1349,45 +1517,144 @@ class ChatMessageMarvel extends ChatMessage {
    * @protected
    */
   _enrichAttackTargets(html) {
-    const attackRoll = this.rolls[0];
-    const targets = this.getFlag("multiverse-d616", "targets");
-    if (
-      !game.user.isGM ||
-      !(attackRoll instanceof CONFIG.Dice.MarvelMultiverseRoll) ||
-      !targets?.length
-    )
-      return;
+    // Remove any prior evaluation block (re-renders happen after retro Edge/Trouble).
+    for (const el of html.querySelectorAll("ul.multiverse-d616.evaluation")) {
+      el.remove();
+    }
+
+    const [attackRoll] = this.rolls ?? [];
+    if (!attackRoll) return;
+
+    // Show only to GMs and to the author of the roll (avoids leaking defenses to other players).
+    if (!(game.user.isGM || this.user?.id === game.user.id)) return;
+
+    // Ability key used to fetch target defense
+    let abilityAbr = this.getFlag("multiverse-d616", "ability") ?? null;
+    const flavorText = this.flavor ?? "";
+
+    // Hidden marker we add in flavor for roll messages
+    if (!abilityAbr) {
+      const abbr = /\[ability\]\s(?<abbr>[\w-]+)/i.exec(flavorText)?.groups?.abbr;
+      if (abbr) abilityAbr = abbr;
+    }
+
+    // Visible label fallback: "ability: Agility"
+    if (!abilityAbr) {
+      const name = /ability:\s*(?<name>[^<\n,]+)/i
+        .exec(flavorText)
+        ?.groups?.name?.trim();
+      if (name) {
+        abilityAbr =
+          MULTIVERSE_D616?.damageAbilityAbr?.[name] ??
+          MULTIVERSE_D616?.damageAbilityAbr?.[name.toLowerCase()] ??
+          null;
+      }
+    }
+
+    // Determine targets: prefer stored targets (uuid, ac at time of roll). If missing, use current targets.
+    let targets = this.getFlag("multiverse-d616", "targets") ?? [];
+
+    const getTokenDoc = (t) => t?.document ?? t;
+    const collectCurrentTargets = () => {
+      const live = Array.from(game.user?.targets ?? []);
+      if (!live.length && canvas?.tokens?.placeables) {
+        live.push(...canvas.tokens.placeables.filter((t) => t.isTargeted));
+      }
+      return live;
+    };
+
+    if (!targets?.length) {
+      const liveTargets = collectCurrentTargets();
+      if (liveTargets.length) {
+        targets = liveTargets
+          .map((t) => {
+            const tokenDoc = getTokenDoc(t);
+            const a = t.actor ?? tokenDoc?.actor;
+            const ac = abilityAbr
+              ? a?.system?.abilities?.[abilityAbr]?.defense ?? 0
+              : 0;
+            const img = tokenDoc?.texture?.src ?? a?.img ?? "";
+            const uuid = tokenDoc?.uuid ?? "";
+            const name = t.name ?? tokenDoc?.name ?? a?.name ?? "Target";
+            return { name, img, ac, uuid };
+          })
+          .filter((t) => t.uuid);
+      }
+    }
+
+    if (!targets?.length) return;
+
+    // Determine whether the *kept* Marvel die result is Fantastic (after retro Edge/Trouble).
+    let isFantastic = false;
+    try {
+      const firstTerm = attackRoll?.terms?.[0];
+      let pool = null;
+      if (
+        firstTerm instanceof foundry.dice.terms.ParentheticalTerm &&
+        firstTerm.roll?.terms?.[0] instanceof foundry.dice.terms.PoolTerm
+      ) {
+        pool = firstTerm.roll.terms[0];
+      } else if (firstTerm instanceof foundry.dice.terms.PoolTerm) {
+        pool = firstTerm;
+      }
+      const marvelRoll = pool?.rolls?.[1];
+      const marvelDie =
+        marvelRoll?.dice?.find(
+          (d) => d instanceof game.MarvelMultiverse.dice.MarvelDie
+        ) ??
+        marvelRoll?.terms?.find?.(
+          (t) => t instanceof game.MarvelMultiverse.dice.MarvelDie
+        );
+
+      const activeResults =
+        marvelDie?.results?.filter((r) => r.active && !r.discarded) ?? [];
+      isFantastic = activeResults.some((r) => r.result === 1);
+    } catch (e) {
+      // If something goes wrong, fall back to the roll property.
+      isFantastic = !!attackRoll.isFantastic;
+    }
+
+    const total = Number.isFinite(attackRoll.total) ? attackRoll.total : 0;
+    const esc = foundry.utils.escapeHTML;
+    const hitText = game.i18n.localize("MULTIVERSE_D616.hit");
+    const missText = game.i18n.localize("MULTIVERSE_D616.miss");
     const evaluation = document.createElement("ul");
     evaluation.classList.add("multiverse-d616", "evaluation");
+
+    const resolveTokenFromUuid = (uuid) => {
+      if (!uuid || !canvas?.scene) return null;
+      const m = uuid.match(/\.Token\.([^.]+)$/);
+      if (!m) return null;
+      return canvas.tokens?.get(m[1]) ?? null;
+    };
+
     evaluation.innerHTML = targets
-      .map(({ name, img, ac, uuid }) => {
-        const isMiss = !attackRoll.isFantastic && attackRoll.total < ac;
-        return [
-          `
-        <li data-uuid="${uuid}" class="target ${isMiss ? "miss" : "hit"}">
-          <img src="${img}" alt="${name}">
+      .map((t) => {
+        const token = resolveTokenFromUuid(t.uuid);
+        const a = token?.actor;
+        const currentAc =
+          abilityAbr && a?.system?.abilities?.[abilityAbr]?.defense != null
+            ? a.system.abilities[abilityAbr].defense
+            : Number(t.ac ?? 0);
+
+        const name = token?.name ?? t.name ?? a?.name ?? "Target";
+        const img = token?.document?.texture?.src ?? t.img ?? a?.img ?? "";
+        const targetValue = Number(currentAc ?? 0);
+        const isHit = isFantastic || total >= targetValue;
+        const resultText = isHit ? hitText : missText;
+        return `
+        <li data-uuid="${esc(t.uuid ?? "")}" class="target ${
+          isHit ? "hit" : "miss"
+        }">
+          <img src="${esc(img ?? "")}" alt="${esc(name ?? "Target")}">
           <div class="name-stacked">
-            <span class="title">
-              ${name}
-              <i class="fas ${isMiss ? "fa-times" : "fa-check"}"></i>
-            </span>
+            <span class="title">${esc(name ?? "Target")}</span>
           </div>
-          <div class="ac">
-            <i class="fas fa-shield-halved"></i>
-            <span>${ac}</span>
-          </div>
-        </li>
-      `,
-          isMiss,
-        ];
+          <div class="result">${esc(resultText)}</div>
+        </li>`;
       })
-      .sort((a, b) => (a[1] === b[1] ? 0 : a[1] ? 1 : -1))
-      .reduce((str, [li]) => str + li, "");
-    for (const target of evaluation.querySelectorAll("li.target")) {
-      target.addEventListener("click", this._onTargetMouseDown.bind(this));
-      target.addEventListener("mouseover", this._onTargetHoverIn.bind(this));
-      target.addEventListener("mouseout", this._onTargetHoverOut.bind(this));
-    }
+      .join("");
+
     html.querySelector(".message-content")?.appendChild(evaluation);
   }
 
@@ -1421,6 +1688,179 @@ class ChatMessageMarvel extends ChatMessage {
   }
 
   /**
+   * Handle clicking the spend Focus button.
+   * @param {PointerEvent} event
+   */
+  _onClickSpendFocusButton(event) {
+    event.stopPropagation();
+    const eventTarget = event.currentTarget;
+    const messageId =
+      eventTarget.closest("[data-message-id]").dataset.messageId;
+
+    this._handleSpendFocusChatButton(messageId);
+  }
+
+  /**
+   * Spend Focus for a Power roll card (fixed or variable) and persist the result on the chat message.
+   * Rule: A character can spend up to 5×Rank Focus on a single power use.
+   *
+   * Stores:
+   * - flags.multiverse-d616.focusSpent
+   * - flags.multiverse-d616.focusDamageBonus
+   * - flags.multiverse-d616.focusRule
+   */
+  async _handleSpendFocusChatButton(messageId) {
+    const chatMessage = game.messages.get(messageId);
+    if (!chatMessage) return;
+
+    // Resolve actor (supports unlinked tokens).
+    const { scene: sceneId, token: tokenId, actor: actorId } = chatMessage.speaker;
+    let actor = game.scenes.get(sceneId)?.tokens.get(tokenId)?.actor;
+    if (!actor && sceneId && tokenId) {
+      try {
+        const tokenDoc = await fromUuid(`Scene.${sceneId}.Token.${tokenId}`);
+        actor = tokenDoc?.actor;
+      } catch (e) {
+        // ignore
+      }
+    }
+    actor ??= game.actors.get(actorId);
+    if (!actor) {
+      ui.notifications?.warn("Nenhum Actor encontrado para gastar Focus.");
+      return;
+    }
+
+    const itemId = chatMessage.getFlag("multiverse-d616", "itemId");
+    const item = actor.items?.get?.(itemId) ?? null;
+    if (!item) {
+      ui.notifications?.warn("Nenhum Poder associado a este card.");
+      return;
+    }
+
+    const cost = mmParseFocusCost(item.system?.cost ?? "");
+    if (!cost.hasFocus || (cost.min ?? 0) <= 0) {
+      ui.notifications?.info("Este poder não possui custo de Focus.");
+      return;
+    }
+
+    const rank = Number(actor.system?.attributes?.rank?.value ?? 1);
+    const maxSpend = Math.max(0, 5 * (Number.isFinite(rank) ? rank : 1));
+
+    const prevSpent = Number(chatMessage.getFlag("multiverse-d616", "focusSpent") ?? 0);
+    const actorFocus = Number(actor.system?.focus?.value ?? 0);
+    const available = actorFocus + (Number.isFinite(prevSpent) ? prevSpent : 0);
+
+    // Determine desired total spend.
+    let newSpent = 0;
+
+    if (cost.type === "fixed") {
+      newSpent = cost.fixed ?? cost.min ?? 0;
+    } else {
+      const min = cost.min ?? 0;
+      const maxTotal = Math.min(maxSpend, available);
+
+      if (maxTotal < min) {
+        ui.notifications?.warn(
+          `Focus insuficiente. Mínimo ${min}, disponível ${available}, limite ${maxSpend}.`
+        );
+        return;
+      }
+
+      const currentTotal = prevSpent > 0 ? mmClampNumber(prevSpent, min, maxTotal) : min;
+      const currentExtra = Math.max(0, currentTotal - min);
+      const maxExtra = Math.max(0, maxTotal - min);
+      const scaling = mmParseFocusScaling(item.system?.effect ?? "");
+      const scalingHelp = scaling
+        ? `Este poder escala: +${scaling.per} bônus de dano${scaling.ability ? ` ${scaling.ability}` : ""} a cada ${scaling.step} Focus gasto.`
+        : "Não consegui identificar automaticamente o escalonamento no campo EFEITO."
+      ;
+
+      // Ask "extra" beyond minimum.
+      newSpent = await new Promise((resolve) => {
+        new Dialog(
+          {
+            title: `Gastar Focus — ${item.name}`,
+            content: `
+              <form>
+                <p><strong>Custo mínimo:</strong> ${min} Focus</p>
+                <p><strong>Limite por uso:</strong> ${maxSpend} (5×Rank)</p>
+                <p><strong>Disponível:</strong> ${available} Focus</p>
+                <hr/>
+                <div class="form-group">
+                  <label>Quanto a mais você quer gastar além do mínimo? (0–${maxExtra})</label>
+                  <input type="number" name="extra" value="${currentExtra}" min="0" max="${maxExtra}" step="1"/>
+                </div>
+                <p style="margin-top:8px">${scalingHelp}</p>
+              </form>
+            `,
+            buttons: {
+              ok: {
+                label: "Aplicar",
+                callback: (html) => {
+                  const form = html[0].querySelector("form");
+                  const extra = Number.parseInt(form?.extra?.value ?? "0", 10);
+                  const extraClamped = mmClampNumber(extra, 0, maxExtra);
+                  resolve(min + extraClamped);
+                },
+              },
+              cancel: {
+                label: "Cancelar",
+                callback: () => resolve(null),
+              },
+            },
+            default: "ok",
+            close: () => resolve(null),
+          },
+          { width: 420 }
+        ).render(true);
+      });
+
+      if (newSpent === null) return;
+    }
+
+    newSpent = Math.max(0, Number(newSpent ?? 0));
+
+    // Enforce max spend.
+    if (newSpent > maxSpend) {
+      ui.notifications?.warn(
+        `Limite excedido: máximo ${maxSpend} Focus (5×Rank).`
+      );
+      return;
+    }
+
+    // Ensure available (considering possible previous spend).
+    if (newSpent > available) {
+      ui.notifications?.warn(
+        `Focus insuficiente: quer gastar ${newSpent}, mas só tem ${available} disponível.`
+      );
+      return;
+    }
+
+    // Apply delta (supports re-adjusting).
+    const delta = newSpent - (Number.isFinite(prevSpent) ? prevSpent : 0);
+    const newActorFocus = actorFocus - delta;
+    if (newActorFocus < 0) {
+      ui.notifications?.warn(
+        `Focus insuficiente: faltam ${Math.abs(newActorFocus)} Focus.`
+      );
+      return;
+    }
+
+    const { bonus, summary } = mmComputeFocusDamageBonus(item.system?.effect ?? "", newSpent);
+
+    await actor.update({ "system.focus.value": newActorFocus });
+    await chatMessage.update({
+      "flags.multiverse-d616.focusSpent": newSpent,
+      "flags.multiverse-d616.focusDamageBonus": bonus ?? 0,
+      "flags.multiverse-d616.focusRule": summary ?? "",
+    });
+
+    ui.notifications?.info(
+      `Focus aplicado: ${newSpent} (−${delta >= 0 ? delta : 0}${delta < 0 ? `, reembolsou ${Math.abs(delta)}` : ""}).`
+    );
+  }
+
+  /**
    * Handles the damage from the chat log
    * @param {string} messageId
    * @param {string} ability
@@ -1435,6 +1875,14 @@ class ChatMessageMarvel extends ChatMessage {
       dmgTypeRe.exec(flavorText)?.groups?.damageType ?? "health";
     const abilityAbr = MULTIVERSE_D616.damageAbilityAbr[ability] ?? ability;
     const chatMessage = game.messages.get(messageId);
+
+    // Focus spend (optional) recorded on the originating roll card.
+    const focusBonus = Number(
+      chatMessage.getFlag("multiverse-d616", "focusDamageBonus") ?? 0
+    );
+    const focusSpent = Number(
+      chatMessage.getFlag("multiverse-d616", "focusSpent") ?? 0
+    );
 
     // Resolve the 616 pool term robustly (supports ParentheticalTerm wrappers)
     const [roll] = chatMessage.rolls ?? [];
@@ -1485,16 +1933,38 @@ class ChatMessageMarvel extends ChatMessage {
         ) ?? false;
     }
 
-    const actor = game.actors.contents.find(
-      (a) => a.name === chatMessage.alias
-    );
+    // Resolve the attacker actor robustly.
+    // IMPORTANT: when rolling from an *unlinked token*, chatMessage.alias is the *token name*
+    // (often different from the Actor name). If we look up the Actor by alias, we can get undefined.
+    let actor;
+    if (chatMessage?.speaker?.scene && chatMessage?.speaker?.token) {
+      const tokenDoc = await fromUuid(
+        `Scene.${chatMessage.speaker.scene}.Token.${chatMessage.speaker.token}`
+      );
+      actor = tokenDoc?.actor;
+    }
+    actor ??= chatMessage?.speaker?.actor
+      ? game.actors.get(chatMessage.speaker.actor)
+      : null;
+    actor ??=
+      game.actors.getName?.(chatMessage.alias) ??
+      game.actors.contents.find((a) => a.name === chatMessage.alias);
 
-    const damageMultiplier =
-      actor.system.abilities[abilityAbr].damageMultiplier;
+    if (!actor) {
+      ui.notifications?.error(
+        `[multiverse-d616] Não foi possível localizar o Ator do atacante para calcular o dano (alias: ${chatMessage.alias}).`
+      );
+      return;
+    }
 
-    const targetTokens = canvas.tokens.objects.children.filter(
-      (t) => t.isTargeted
-    );
+    const damageMultiplier = actor.system.abilities[abilityAbr].damageMultiplier;
+
+    const targetTokens = Array.from(game.user?.targets ?? []);
+
+    // Fallback for any modules that don't populate game.user.targets
+    if (!targetTokens.length && canvas?.tokens?.placeables) {
+      targetTokens.push(...canvas.tokens.placeables.filter((t) => t.isTargeted));
+    }
 
     const abilityValue = actor.system.abilities[abilityAbr].value;
 
@@ -1507,35 +1977,46 @@ class ChatMessageMarvel extends ChatMessage {
           : t.system.healthDamageReduction;
       const dmgMultiplier = damageMultiplier - damageReduction;
       let dmg =
-        dmgMultiplier === 0 ? 0 : marvelTotal * dmgMultiplier + abilityValue;
+        dmgMultiplier === 0
+          ? 0
+          : marvelTotal * dmgMultiplier + abilityValue + focusBonus;
       if (isFantastic) {
         dmg = dmg * 2;
       }
+      const focusExplain =
+        focusSpent > 0
+          ? ` + Focus bonus ${focusBonus} (spent ${focusSpent})`
+          : "";
       return `<p><b>${t.name}</b> takes <b>${dmg} ${
         isFantastic ? "Fantastic" : ""
       } </b> ${damageType} damage.<br/> re: MarvelDie: ${
         marvelTotal
       } &#42; damage multiplier: &#40; ${
         actor.system.abilities[abilityAbr].damageMultiplier
-      } - damageReduction: ${damageReduction} &#61; ${dmgMultiplier} &#41; + ${ability} score ${abilityValue} of damage.</p>`;
+      } - damageReduction: ${damageReduction} &#61; ${dmgMultiplier} &#41; + ${ability} score ${abilityValue} of damage${focusExplain}.</p>`;
     });
 
     if (damageContent.length === 0) {
-      let dmg = marvelTotal * damageMultiplier + abilityValue;
+      let dmg = marvelTotal * damageMultiplier + abilityValue + focusBonus;
       if (isFantastic) {
         dmg = dmg * 2;
       }
+      const focusExplain =
+        focusSpent > 0
+          ? ` + Focus bonus ${focusBonus} (spent ${focusSpent})`
+          : "";
       damageContent.push(
         `<p>target(s) take <b>${dmg} ${
           isFantastic ? "Fantastic" : ""
         } </b> ${damageType} damage.<br/> re: MarvelDie: ${
           marvelTotal
-        } &#42; damage multiplier: ${damageMultiplier} + ${ability} score ${abilityValue} of damage.</p>`
+        } &#42; damage multiplier: ${damageMultiplier} + ${ability} score ${abilityValue} of damage${focusExplain}.</p>`
       );
     }
 
     const msgData = {
-      speaker: ChatMessageMarvel.getSpeaker({ actor: actor }),
+      // Keep the same speaker so the damage message matches the token/actor used to roll.
+      speaker: chatMessage.speaker ?? ChatMessageMarvel.getSpeaker({ actor: actor }),
       rollMode: game.settings.get("core", "rollMode"),
       flavor: flavorText,
       content: damageContent.join(""),

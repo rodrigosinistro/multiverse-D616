@@ -17,7 +17,7 @@ https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.js
 - PDF Export
 
 ## Compatibilidade
-- Foundry VTT v13 (minimum 13, verified 13.341).
+- Foundry VTT v13 (minimum 13, verified 13.351)..
 
 ## Créditos e Referências
 Este sistema foi **baseado** e **adaptado** a partir do código do **sistema Marvel Multiverse (D616) para Foundry VTT** e de módulos da comunidade.
