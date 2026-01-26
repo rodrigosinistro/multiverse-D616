@@ -4,12 +4,90 @@ const SYS_ID = (game?.system?.id) || "multiverse-d616";
 const SYS_PATH = `systems/${SYS_ID}`;
 let CONDITION_DATA = null;
 
+// ---- Custom Conditions Support (world setting) ----
+const CUSTOM_COND_SETTING = "customConditions";
+
+function __mmrpg_iconPath(icon) {
+  const fallback = `${SYS_PATH}/icons/m.svg`;
+  if (!icon || typeof icon !== "string") return fallback;
+  const v = icon.trim();
+  if (!v) return fallback;
+  // Allow absolute/known prefixes
+  if (
+    v.startsWith("systems/") ||
+    v.startsWith("modules/") ||
+    v.startsWith("http://") ||
+    v.startsWith("https://") ||
+    v.startsWith("/")
+  ) {
+    return v;
+  }
+  // Otherwise treat as relative to the system folder
+  return `${SYS_PATH}/${v}`;
+}
+
+function __mmrpg_parseCustomConditions(raw) {
+  if (!raw) return [];
+  let parsed;
+  try {
+    parsed = JSON.parse(String(raw));
+  } catch (_e) {
+    return [];
+  }
+  const arr = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.conditions) ? parsed.conditions : [];
+  const cleaned = [];
+  for (const c of arr) {
+    if (!c || typeof c !== "object") continue;
+    const id = String(c.id ?? "").trim();
+    const name = String(c.name ?? "").trim();
+    if (!id || !name) continue;
+    cleaned.push({
+      id,
+      name,
+      icon: String(c.icon ?? "icons/m.svg").trim() || "icons/m.svg",
+      description: c.description ?? "",
+      remove: c.remove ?? "",
+    });
+  }
+  return cleaned;
+}
+
+function __mmrpg_getCustomConditions() {
+  // Setting may not exist if script loaded before init in some edge cases
+  try {
+    const raw = game?.settings?.get?.(MODULE_ID, CUSTOM_COND_SETTING);
+    return __mmrpg_parseCustomConditions(raw);
+  } catch (_e) {
+    return [];
+  }
+}
+
+async function __mmrpg_refreshConditions() {
+  CONDITION_DATA = null;
+  await installConditions();
+  try { tray?.render?.(); } catch (_e) {}
+}
+
 async function installConditions() {
   if (CONDITION_DATA) return CONDITION_DATA;
   const url = `${SYS_PATH}/data/conditions.json`;
-  CONDITION_DATA = await fetch(url).then(r=>r.json());
+  const baseData = await fetch(url).then(r=>r.json());
+  const base = [...(baseData.conditions || [])];
+  const custom = __mmrpg_getCustomConditions();
+  // Merge (custom overrides by id)
+  const map = new Map();
+  for (const c of base) map.set(c.id, c);
+  for (const c of custom) map.set(c.id, c);
+  CONDITION_DATA = { conditions: Array.from(map.values()) };
+
   const sorted = [...(CONDITION_DATA.conditions||[])].sort((a,b)=> (a.name||"").localeCompare(b.name||"", navigator.language||"pt-BR", {sensitivity:"base"}));
-  const list = sorted.map(c => ({ id:c.id, name:c.name, label:c.name, img:`${SYS_PATH}/${c.icon}`, icon:`${SYS_PATH}/${c.icon}` }));
+  const list = sorted.map(c => ({
+    id: c.id,
+    name: c.name,
+    label: c.name,
+    img: __mmrpg_iconPath(c.icon),
+    icon: __mmrpg_iconPath(c.icon)
+  }));
   CONFIG.statusEffects = list;
   console.log(`[${MODULE_ID}] Installed ${list.length} Marvel conditions into CONFIG.statusEffects.`);
   return CONDITION_DATA;
@@ -55,7 +133,7 @@ class ConditionTray {
     for(const sid of statuses){ const c=byId[sid]; if(!c) continue;
       const pill=document.createElement("div"); pill.className="mmrpg-cond-pill";
       pill.innerHTML=`
-        <img src="${SYS_PATH}/${c.icon}" />
+        <img src="${__mmrpg_iconPath(c.icon)}" />
         <span class="name">${c.name}</span>
         ${game.user?.isGM ? `<button class="mmrpg-cond-remove" title="Remover (GM)">×</button>`:``}
         <div class="mmrpg-cond-tooltip">
@@ -79,10 +157,107 @@ class ConditionTray {
 }
 const tray = new ConditionTray();
 
+class MMRPGConditionsManager extends FormApplication {
+  static get defaultOptions() {
+    return foundry.utils.mergeObject(super.defaultOptions, {
+      id: "mmrpg-conditions-manager",
+      title: "Condições (D616) — Gerenciar",
+      template: `${SYS_PATH}/templates/apps/conditions-manager.hbs`,
+      width: 720,
+      height: "auto",
+      closeOnSubmit: true,
+      submitOnChange: false,
+      submitOnClose: false,
+      resizable: true,
+    });
+  }
+
+  async getData(options) {
+    const baseUrl = `${SYS_PATH}/data/conditions.json`;
+    let base = [];
+    try {
+      const baseData = await fetch(baseUrl).then(r=>r.json());
+      base = baseData?.conditions ?? [];
+    } catch (_e) {}
+    const customRaw = game.settings.get(MODULE_ID, CUSTOM_COND_SETTING) ?? "[]";
+    // Keep a cached example for the UI buttons
+    this._exampleJson = JSON.stringify([
+      {
+        id: "mmrpg.nova-condicao",
+        name: "Nova Condição",
+        icon: "icons/m.svg",
+        description: "Descreva o efeito.",
+        remove: "Como remover.",
+      }
+    ], null, 2);
+    return {
+      baseCount: base.length,
+      customJson: String(customRaw ?? "[]"),
+      exampleJson: this._exampleJson,
+    };
+  }
+
+  activateListeners(html) {
+    super.activateListeners(html);
+    html.find("button[data-action='reset']").on("click", (ev) => {
+      ev.preventDefault();
+      html.find("textarea[name='customJson']").val("[]");
+    });
+    html.find("button[data-action='insert-example']").on("click", (ev) => {
+      ev.preventDefault();
+      const ta = html.find("textarea[name='customJson']");
+      const cur = String(ta.val() ?? "").trim();
+      const ex = this._exampleJson ?? "[]";
+      if (!cur || cur === "[]") ta.val(ex);
+      else ta.val(cur + "\n\n" + ex);
+    });
+  }
+
+  async _updateObject(_event, formData) {
+    const raw = formData.customJson ?? "[]";
+    // Validate & normalize
+    let parsed;
+    try {
+      parsed = JSON.parse(String(raw));
+    } catch (e) {
+      ui.notifications.error("JSON inválido. Verifique vírgulas, aspas e chaves.");
+      throw e;
+    }
+    const arr = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.conditions) ? parsed.conditions : null;
+    if (!arr) {
+      ui.notifications.error("O JSON deve ser um Array de condições ([]) ou um objeto com {conditions: [...]}.");
+      return;
+    }
+    const cleaned = __mmrpg_parseCustomConditions(JSON.stringify(arr));
+    const normalized = JSON.stringify(cleaned, null, 2);
+    await game.settings.set(MODULE_ID, CUSTOM_COND_SETTING, normalized);
+    ui.notifications.info(`Condições custom salvas: ${cleaned.length}. Recarregando...`);
+    await __mmrpg_refreshConditions();
+  }
+}
+
 function registerSettings() {
   game.settings.register(MODULE_ID,"autoTurnDamage",{name:"Aplicar dano de condições automaticamente no fim do turno",scope:"world",config:true,type:Boolean,default:true});
   game.settings.register(MODULE_ID,"offsetX",{name:"Offset X do painel",scope:"client",config:true,type:Number,default:12});
   game.settings.register(MODULE_ID,"offsetY",{name:"Offset Y do painel",scope:"client",config:true,type:Number,default:6});
+
+  // Custom Conditions
+  game.settings.register(MODULE_ID, CUSTOM_COND_SETTING, {
+    name: "Condições custom (JSON)",
+    hint: "Armazenamento interno das condições custom. Use o botão 'Gerenciar Condições' para editar.",
+    scope: "world",
+    config: false,
+    type: String,
+    default: "[]",
+  });
+
+  game.settings.registerMenu(MODULE_ID, "conditionsManager", {
+    name: "Condições (D616)",
+    label: "Gerenciar Condições",
+    hint: "Crie/edite condições adicionais (além das nativas) e atualize os Status Effects.",
+    type: MMRPGConditionsManager,
+    restricted: true,
+  });
 }
 
 function hasStatus(target,id){
@@ -128,6 +303,14 @@ async function applyEndTurnDamageFromCombat(combat, reason="updateCombat"){
 
 Hooks.once("init", ()=>{
   registerSettings();
+  // Hot reload conditions when GM changes the custom list
+  Hooks.on("updateSetting", (setting, value) => {
+    try {
+      if (setting?.key === `${MODULE_ID}.${CUSTOM_COND_SETTING}`) {
+        __mmrpg_refreshConditions();
+      }
+    } catch (_e) {}
+  });
   const existing = document.querySelector("link[data-mmchud]");
 if(!existing){ const link = document.createElement("link"); link.rel="stylesheet"; link.href=`${SYS_PATH}/styles/conditions-hud.css`; link.dataset.mmchud="1"; document.head.appendChild(link);}
 });
