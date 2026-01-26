@@ -1,1 +1,44 @@
-rtr
+<form class="mmrpg-conditions-manager" autocomplete="off">
+  <p style="margin:0 0 10px 0;">
+    Aqui você pode adicionar <b>Condições custom</b> ao sistema. Elas serão somadas às condições nativas
+    (carregadas do arquivo <code>systems/multiverse-d616/data/conditions.json</code>) e aparecerão no TokenHUD.
+  </p>
+
+  <div class="form-group">
+    <label>Condições nativas</label>
+    <div class="form-fields">
+      <span style="opacity:.85;">Carregadas: <b>{{baseCount}}</b></span>
+    </div>
+    <p class="notes">Essas condições fazem parte do sistema. Use “Condições custom” para adicionar novas.</p>
+  </div>
+
+  <hr />
+
+  <div class="form-group" style="align-items:flex-start;">
+    <label>Condições custom (JSON)</label>
+    <div class="form-fields" style="flex-direction:column;align-items:stretch;gap:8px;">
+      <textarea name="customJson" rows="18" style="width:100%; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">{{customJson}}</textarea>
+      <p class="notes" style="margin:0;">
+        Formato aceito: <code>[{...}]</code> (Array) ou <code>{"conditions": [...]}</code>.
+        Campos mínimos: <code>id</code> e <code>name</code>. Campos opcionais: <code>icon</code>, <code>description</code>, <code>remove</code>.
+      </p>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Exemplo</label>
+    <div class="form-fields" style="flex-direction:column;align-items:stretch;gap:8px;">
+      <textarea rows="8" readonly style="width:100%; opacity:.9; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">{{exampleJson}}</textarea>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button type="button" data-action="insert-example"><i class="fas fa-plus"></i> Inserir exemplo no editor</button>
+        <button type="button" data-action="reset"><i class="fas fa-eraser"></i> Limpar custom</button>
+      </div>
+    </div>
+  </div>
+
+  <hr />
+
+  <footer class="sheet-footer flexrow" style="gap:10px;">
+    <button type="submit"><i class="far fa-save"></i> Salvar</button>
+  </footer>
+</form>
