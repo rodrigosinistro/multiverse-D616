@@ -1,3 +1,6 @@
+## v0.1.24 — 2026-01-26
+- **Fix (Condição aplicada no token errado):** ao chegar a 0 de **Health/Focus**, o auto-status (ex.: **Incapacitated**) agora é aplicado **somente ao token afetado** quando o dano foi recebido por um **token não-linkado** (minions/clones), evitando que outro token do mesmo ator-base receba a condição.
+
 ## v0.1.23 — 2026-01-26
 - **Novo (Botão de Focus no Chat):** quando a rolagem estiver associada a um **Poder** com custo de **Focus**, o card agora exibe um botão **FOCUS** ao lado de **DAMAGE**.
 - **Custo fixo:** ao clicar, o sistema desconta automaticamente o custo do Focus do personagem.
