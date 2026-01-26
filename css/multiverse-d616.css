@@ -325,6 +325,32 @@
   margin-block-start: 8px;
   padding: 8px;
 }
+
+/* Roll action buttons (Damage + Focus) */
+.marvel-roll .mm-roll-actions {
+  display: flex;
+  gap: 6px;
+  margin-block-start: 8px;
+}
+.marvel-roll .mm-roll-actions .damage,
+.marvel-roll .mm-roll-actions .spend-focus {
+  flex: 1 1 0;
+  margin-block-start: 0;
+}
+
+/* Focus info line below total */
+.marvel-roll .mm-focus-info {
+  background: #fff2ec;
+  border: 2px solid #e41d18;
+  box-shadow: inset 0 0 0 2px #e41d18, inset 0 0 0 3px white, 0 1px 2px 0 RGBA(0, 0, 0, 0.3);
+  color: #000101;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-block-start: 8px;
+  padding: 6px 8px;
+  text-transform: uppercase;
+}
 .marvel-roll .dice-tooltip {
   display: flex !important;
   gap: 4px;
@@ -1518,4 +1544,61 @@
 .multiverse-d616.sheet.item .window-content > form {
   display: flex;
   flex-direction: column;
+}
+
+/* -------------------------------------------- */
+/* Attack Hit/Miss evaluation (targets)          */
+/* -------------------------------------------- */
+
+.multiverse-d616.evaluation {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.multiverse-d616.evaluation .target {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+}
+
+.multiverse-d616.evaluation .target img {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.multiverse-d616.evaluation .target.hit {
+  border-color: rgba(46, 125, 50, 0.9);
+}
+
+.multiverse-d616.evaluation .target.miss {
+  border-color: rgba(198, 40, 40, 0.9);
+  opacity: 0.9;
+}
+
+.multiverse-d616.evaluation .target .name-stacked .title {
+  font-weight: 600;
+}
+
+.multiverse-d616.evaluation .target .result {
+  margin-left: auto;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.multiverse-d616.evaluation .target.hit .result {
+  color: rgba(46, 125, 50, 0.95);
+}
+
+.multiverse-d616.evaluation .target.miss .result {
+  color: rgba(198, 40, 40, 0.95);
 }
