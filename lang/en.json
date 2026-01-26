@@ -18,6 +18,8 @@
       "edge": "Edge",
       "normal": "Normal"
     },
+    "hit": "HIT",
+    "miss": "MISS",
     "Size": {
       "Microscopic": "Microscopic",
       "Miniature": "Minature",

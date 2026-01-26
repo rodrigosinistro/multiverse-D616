@@ -47,5 +47,9 @@
     "PowerSet": "Power Set",
     "Search": "Buscar...",
     "attrCapWarn": "Você atingiu o limite de atributo para este Rank."
+  },
+  "MULTIVERSE_D616": {
+    "hit": "ACERTOU",
+    "miss": "ERROU"
   }
 }
