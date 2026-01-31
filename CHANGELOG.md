@@ -1,3 +1,21 @@
+## v0.1.33 — 2026-01-31
+- **Fix (Hotbar: Tooltip MMHT):** corrigido o patch que injeta os dados do tooltip na **barra de atalhos**. Agora, ao passar o mouse por um macro de **Power/Trait/Tag** criado via arrastar da ficha, o tooltip detalhado (Description/Effect/Cost/Range/Action/Duration/Trigger) aparece corretamente.
+
+## v0.1.30 — 2026-01-31
+- **Fix (Charactermancer: botões i18n no Jogador):** corrigido o fallback de localização (Foundry retorna a *chave* quando não existe tradução). Agora, quando o idioma do cliente não tem as strings do MMC, os botões não exibem mais `MMC.Back`/`MMC.Next`/`MMC.Select`/`MMC.Open` — eles caem corretamente em **Voltar**, **Seguinte**, **Selecionar** e **Charactermancer**.
+
+## v0.1.29 — 2026-01-31
+- **Melhoria (LIMITADO: Arte grande):** ao abrir um ator com permissão **LIMITADO**, o sistema agora abre a arte do personagem em uma janela **ImagePopout** grande (estilo “mostrar imagem” do GM), em vez do retrato pequeno na ficha.
+
+## v0.1.28 — 2026-01-31
+- **Ajuste (Permissões/Propriedade de Atores):**
+  - **LIMITADO:** ao abrir a ficha, exibe apenas a **arte/portrait** do personagem.
+  - **OBSERVADOR:** pode ver a ficha, mas fica **view-only** (sem rolagens, sem criar/editar/deletar itens/efeitos).
+  - **NENHUM** e **DONO:** mantêm o comportamento padrão (sem mudanças).
+
+## v0.1.27 — 2026-01-31
+- **Fix (Hotbar: rolar Item/Poder):** ao arrastar um **Item/Poder/Arma** da ficha para a **barra de atalhos**, o macro criado agora **executa a rolagem** (`item.roll()`) — igual clicar no item na ficha — em vez de abrir a janela de edição. *(Macros antigos precisam ser removidos e recriados.)*
+
 ## v0.1.26 — 2026-01-30
 - **Fix (Weapon DM vs outros bônus):** o sistema agora calcula corretamente o **MAIOR** bônus de **Damage Multiplier** entre **arma** e **qualquer outro bônus** (sem somar), mesmo quando o ator possui modificadores via **Active Effects**/outras fontes. O card salva `base/other/weapon/effective/finalDM` em `flags` para o botão **DAMAGE** usar o mesmo contexto do ataque.
 

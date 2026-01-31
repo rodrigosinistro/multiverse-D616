@@ -4,6 +4,20 @@ import { loadTraitsAndTags } from "./utils/mmc-load-traits-tags.js";
 /* Marvel Multiverse — Charactermancer v0.6.7 */
 class MMCCharactermancer extends Application {
 
+  /**
+   * Localize a key with a safe fallback.
+   * Foundry returns the key itself when missing (truthy), so `|| fallback` doesn't work.
+   */
+  static mmcLocalize(key, fallback = "") {
+    try {
+      const t = game?.i18n?.localize?.(key);
+      if (!t || t === key) return fallback;
+      return t;
+    } catch (_e) {
+      return fallback;
+    }
+  }
+
   
   static _mmcDedupByName(arr){
     try{
@@ -404,12 +418,14 @@ for (const k of ["items","occupations","origins","traits","tags","powers"]) this
     nav.className = "mmc-nav";
     const back = document.createElement("button");
     back.className = "mmc-btn";
-    back.textContent = game.i18n.localize("MMC.Back")||"Voltar";
+	    back.textContent = MMCCharactermancer.mmcLocalize("MMC.Back", "Voltar");
     back.disabled = (this.step===0);
     back.addEventListener("click", ()=>{ this.step=Math.max(-3,this.step-1); this._refreshPowerChips(); });
     const next = document.createElement("button");
     next.className = "mmc-btn";
-    next.textContent = (this.step===this.steps.length-1) ? (game.i18n.localize("MMC.Apply")||"Aplicar no Ator") : (game.i18n.localize("MMC.Next")||"Seguinte");
+	    next.textContent = (this.step===this.steps.length-1)
+	      ? MMCCharactermancer.mmcLocalize("MMC.Apply", "Aplicar no Ator")
+	      : MMCCharactermancer.mmcLocalize("MMC.Next", "Seguinte");
     next.addEventListener("click", ()=> this._onNext());
     nav.appendChild(back); nav.appendChild(next);
     wrap.appendChild(nav);
@@ -707,7 +723,7 @@ async _preloadKindFromPacks(kind){
       src.filter(o=> keyOf(o).includes(q) || (o.system?.description||"").toLowerCase().includes(q)).forEach(o=>{
         const row = document.createElement("div"); row.className="mmc-pwr";
         const pickKey = keyOf(o);
-        row.innerHTML = `<div class="name">${o.name}</div><div class="desc">${o.system?.description||""}</div><div><button class="mmc-btn" data-pick="${pickKey}">${game.i18n.localize("MMC.Select")||"Selecionar"}</button></div>`;
+	    row.innerHTML = `<div class="name">${o.name}</div><div class="desc">${o.system?.description||""}</div><div><button class="mmc-btn" data-pick="${pickKey}">${MMCCharactermancer.mmcLocalize("MMC.Select", "Selecionar")}</button></div>`;
         list.appendChild(row);
       });
       list.querySelectorAll("[data-pick]").forEach(btn=> btn.addEventListener("click", (ev)=>{
@@ -1347,7 +1363,7 @@ Hooks.on("renderActorDirectory", (app, htmlOrElement, data)=>{
     if (!root?.querySelector) return;
     let actions = root.querySelector(".directory-header .header-actions"); if (!actions) actions = root.querySelector(".directory-header .action-buttons"); if (!actions) return;
     const btn = document.createElement("button");
-    btn.className="mmc-btn"; btn.innerHTML = `<i class="fas fa-magic"></i> ${game.i18n.localize("MMC.Open")||"Charactermancer"}`;
+    btn.className="mmc-btn"; btn.innerHTML = `<i class="fas fa-magic"></i> ${MMCCharactermancer.mmcLocalize("MMC.Open", "Charactermancer")}`;
     btn.addEventListener("click", ()=> new MMCCharactermancer().render(true));
     actions.appendChild(btn);
   } catch(e){ console.error("MMC renderActorDirectory", e); }

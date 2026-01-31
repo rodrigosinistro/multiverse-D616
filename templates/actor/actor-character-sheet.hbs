@@ -7,7 +7,7 @@
           {{!-- Portrait --}}
           <div class="mm-hero-portrait-block">
             <div class="mm-hero-portrait">
-              <img src="{{actor.img}}" data-edit="img" title="{{actor.name}}"/>
+              <img src="{{actor.img}}" {{#if editable}}data-edit="img"{{/if}} title="{{actor.name}}"/>
             </div>
             {{!-- Rank & Karma --}}
             <div class="mm-rank-block">
@@ -148,7 +148,7 @@
                   {{/each}}
                 </div>
               </div>
-              <div class="mm-stat-corner-block rollable roll-initiative" data-action="rollInitiative">
+              <div class="mm-stat-corner-block {{#if editable}}rollable roll-initiative{{/if}}" {{#if editable}}data-action="rollInitiative"{{/if}}>
                 <label class="mm-label -sm">Initative</label>
                 <div class="mm-input">
                   {{system.attributes.init.value}} {{#if system.attributes.init.edge }}<span>E</span>{{/if}}
@@ -168,7 +168,7 @@
               </li>
               {{#each system.abilities as |ability key|}}
                 <li>
-                  <div class="mm-ability-name rollable" data-formula="{1d6,1dm,1d6}+@abilities.{{key}}.value" data-label="{{ability.label}}">
+                  <div class="mm-ability-name {{#if @root.editable}}rollable{{/if}}" {{#if @root.editable}}data-formula="{1d6,1dm,1d6}+@abilities.{{key}}.value" data-label="{{ability.label}}"{{/if}}>
                     {{#if (eq key "mle")}}
                       Melee
                     {{else if (eq key "agl")}}
@@ -190,7 +190,7 @@
                     <div>{{ability.defense}}</div>
                   </div>
                   <div>
-                    <span class="rollable" data-formula="{1d6,1dm,1d6}+@abilities.{{key}}.noncom" data-label="{{ability.label}}">{{numberFormat ability.noncom decimals=0 sign=true}}</span>
+                    <span class="{{#if @root.editable}}rollable{{/if}}" {{#if @root.editable}}data-formula="{1d6,1dm,1d6}+@abilities.{{key}}.noncom" data-label="{{ability.label}}"{{/if}}>{{numberFormat ability.noncom decimals=0 sign=true}}</span>
                   </div>
                 </li>
               {{/each}}

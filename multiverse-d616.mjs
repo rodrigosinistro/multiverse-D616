@@ -2404,8 +2404,54 @@ class MarvelMultiverseCharacterSheet extends ActorSheet {
 
   /** @override */
   get template() {
+    const ownership = this.actor?.ownership ?? {};
+    const level =
+      ownership[game.userId] ??
+      ownership[game.user?.id] ??
+      ownership.default ??
+      CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE;
+
+    // LIMITED: show only portrait art.
+    if (!game.user.isGM && level === CONST.DOCUMENT_OWNERSHIP_LEVELS.LIMITED) {
+      return "systems/multiverse-d616/templates/actor/actor-limited-sheet.hbs";
+    }
+
     return "systems/multiverse-d616/templates/actor/actor-character-sheet.hbs";
   }
+
+
+/** @override */
+render(force = false, options = {}) {
+  const ownership = this.actor?.ownership ?? {};
+  const level =
+    ownership[game.userId] ??
+    ownership[game.user?.id] ??
+    ownership.default ??
+    CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE;
+
+  // LIMITED: show large portrait in an ImagePopout (like "Show Players" image).
+  if (!game.user.isGM && level === CONST.DOCUMENT_OWNERSHIP_LEVELS.LIMITED) {
+    if (force) {
+      const src = this.actor?.img;
+      if (src) {
+        if (this._mmLimitedArtPopout?.rendered) {
+          this._mmLimitedArtPopout.bringToTop();
+        } else {
+          this._mmLimitedArtPopout = new ImagePopout(src, {
+            title: this.actor.name,
+            shareable: false,
+          });
+          this._mmLimitedArtPopout.render(true);
+        }
+      } else {
+        ui.notifications?.warn?.("Imagem do personagem não encontrada.");
+      }
+    }
+    return this;
+  }
+
+  return super.render(force, options);
+}
 
   /* -------------------------------------------- */
 
@@ -2550,6 +2596,9 @@ class MarvelMultiverseCharacterSheet extends ActorSheet {
   /** @override */
   activateListeners(html) {
     super.activateListeners(html);
+
+    // OBSERVADOR (e abaixo): visualiza apenas. Sem edicao, sem rolagens, sem acoes.
+    if (!this.isEditable) return;
 
     // Render the item sheet for viewing/editing prior to the editable check.
     html.on("click", ".item-edit", (ev) => {
@@ -2832,8 +2881,54 @@ class MarvelMultiverseNPCSheet extends ActorSheet {
 
   /** @override */
   get template() {
+    const ownership = this.actor?.ownership ?? {};
+    const level =
+      ownership[game.userId] ??
+      ownership[game.user?.id] ??
+      ownership.default ??
+      CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE;
+
+    // LIMITED: show only portrait art.
+    if (!game.user.isGM && level === CONST.DOCUMENT_OWNERSHIP_LEVELS.LIMITED) {
+      return "systems/multiverse-d616/templates/actor/actor-limited-sheet.hbs";
+    }
+
     return "systems/multiverse-d616/templates/actor/actor-npc-sheet.hbs";
   }
+
+
+/** @override */
+render(force = false, options = {}) {
+  const ownership = this.actor?.ownership ?? {};
+  const level =
+    ownership[game.userId] ??
+    ownership[game.user?.id] ??
+    ownership.default ??
+    CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE;
+
+  // LIMITED: show large portrait in an ImagePopout (like "Show Players" image).
+  if (!game.user.isGM && level === CONST.DOCUMENT_OWNERSHIP_LEVELS.LIMITED) {
+    if (force) {
+      const src = this.actor?.img;
+      if (src) {
+        if (this._mmLimitedArtPopout?.rendered) {
+          this._mmLimitedArtPopout.bringToTop();
+        } else {
+          this._mmLimitedArtPopout = new ImagePopout(src, {
+            title: this.actor.name,
+            shareable: false,
+          });
+          this._mmLimitedArtPopout.render(true);
+        }
+      } else {
+        ui.notifications?.warn?.("Imagem do personagem não encontrada.");
+      }
+    }
+    return this;
+  }
+
+  return super.render(force, options);
+}
 
   /* -------------------------------------------- */
 
@@ -2990,6 +3085,9 @@ class MarvelMultiverseNPCSheet extends ActorSheet {
   /** @override */
   activateListeners(html) {
     super.activateListeners(html);
+
+    // OBSERVADOR (e abaixo): visualiza apenas. Sem edicao, sem rolagens, sem acoes.
+    if (!this.isEditable) return;
 
     // Render the item sheet for viewing/editing prior to the editable check.
     html.on("click", ".item-edit", (ev) => {
@@ -3364,6 +3462,7 @@ const preloadHandlebarsTemplates = async () =>
     "systems/multiverse-d616/templates/actor/parts/actor-tags.hbs",
     "systems/multiverse-d616/templates/actor/parts/actor-traits.hbs",
     "systems/multiverse-d616/templates/actor/parts/actor-weapons.hbs",
+    "systems/multiverse-d616/templates/actor/actor-limited-sheet.hbs",
     // Item partials
     "systems/multiverse-d616/templates/item/parts/item-effects.hbs",
   ]);
@@ -4174,7 +4273,17 @@ function _configureFonts() {
 
 Hooks.once("ready", () => {
   // Wait to register hotbar drop hook on ready so that modules could register earlier if they want to
-  Hooks.on("hotbarDrop", (bar, data, slot) => createItemMacro(data, slot));
+  Hooks.on("hotbarDrop", (bar, data, slot) => {
+    const uuid = data?.uuid;
+    const isOwnedItem =
+      data?.type === "Item" &&
+      typeof uuid === "string" &&
+      (uuid.includes("Actor.") || uuid.includes("Token."));
+    if (!isOwnedItem) return;
+    // Create the macro asynchronously but block the default Foundry behavior immediately.
+    void createItemMacro(data, slot);
+    return false;
+  });
 });
 /* -------------------------------------------- */
 /*  Render Settings Hook                                  */
@@ -4258,16 +4367,17 @@ Hooks.once("diceSoNiceReady", (dice3d) => {
  */
 async function createItemMacro(data, slot) {
   // First, determine if this is a valid owned item.
-  if (data.type !== "Item" || data.type !== "Weapon") return;
-  if (!data.uuid.includes("Actor.") && !data.uuid.includes("Token.")) {
+  if (!data || data.type !== "Item") return;
+  const uuid = data.uuid;
+  if (typeof uuid !== "string") return;
+  if (!uuid.includes("Actor.") && !uuid.includes("Token.")) {
     return ui.notifications.warn(
       "You can only create macro buttons for owned Items"
     );
   }
   // If it is, retrieve it based on the uuid.
   const item = await Item.fromDropData(data);
-
-  // Create the macro command using the uuid.
+// Create the macro command using the uuid.
   const command = `game.MarvelMultiverse.rollItemMacro("${data.uuid}");`;
   let macro = game.macros.find(
     (m) => m.name === item.name && m.command === command
@@ -4278,7 +4388,7 @@ async function createItemMacro(data, slot) {
       type: "script",
       img: item.img,
       command: command,
-      flags: { "multiverse-d616.itemMacro": true },
+      flags: { "multiverse-d616": { itemMacro: true, itemUuid: data.uuid }, "multiverse-d616.itemMacro": true },
     });
   }
   game.user.assignHotbarMacro(macro, slot);

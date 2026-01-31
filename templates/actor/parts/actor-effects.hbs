@@ -6,11 +6,13 @@
           <div><span class="item-name effect-name">{{localize section.label}}</span></div>
           <div><span>{{localize "MULTIVERSE_D616.Effect.Source"}}</span></div>
           <div><span>{{localize "EFFECT.TabDuration"}}</span></div>
-          <div class="item-controls effect-controls">
-            <a class="effect-control item-control" data-action="create" title="{{localize 'DOCUMENT.Create' type="Effect"}}">
-              <i class="fas fa-plus"></i>
-            </a>
-          </div>
+          {{#if @root.editable}}
+            <div class="item-controls effect-controls">
+              <a class="effect-control item-control" data-action="create" title="{{localize 'DOCUMENT.Create' type="Effect"}}">
+                <i class="fas fa-plus"></i>
+              </a>
+            </div>
+          {{/if}}
         </li>
 
         <ol class="item-list mm-item-list">
@@ -22,17 +24,19 @@
             </div>
             <div class="effect-source">{{effect.sourceName}}</div>
             <div class="effect-duration">{{effect.duration.label}}</div>
-            <div class="item-controls effect-controls flexrow">
-              <a class="effect-control item-control" data-action="toggle" title="{{localize 'MULTIVERSE_D616.Effect.Toggle'}}">
-                <i class="fas {{#if effect.disabled}}fa-check{{else}}fa-times{{/if}}"></i>
-              </a>
-              <a class="effect-control item-control" data-action="edit" title="{{localize 'DOCUMENT.Update' type="Effect"}}">
-                <i class="fas fa-edit"></i>
-              </a>
-              <a class="effect-control item-control" data-action="delete" title="{{localize 'DOCUMENT.Delete' type="Effect"}}">
-                <i class="fas fa-trash"></i>
-              </a>
-            </div>
+            {{#if @root.editable}}
+              <div class="item-controls effect-controls flexrow">
+                <a class="effect-control item-control" data-action="toggle" title="{{localize 'MULTIVERSE_D616.Effect.Toggle'}}">
+                  <i class="fas {{#if effect.disabled}}fa-check{{else}}fa-times{{/if}}"></i>
+                </a>
+                <a class="effect-control item-control" data-action="edit" title="{{localize 'DOCUMENT.Update' type="Effect"}}">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a class="effect-control item-control" data-action="delete" title="{{localize 'DOCUMENT.Delete' type="Effect"}}">
+                  <i class="fas fa-trash"></i>
+                </a>
+              </div>
+            {{/if}}
           </li>
         {{/each}}
         </ol>

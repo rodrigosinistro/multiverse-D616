@@ -15,7 +15,7 @@
             {{!-- Portrait --}}
             <div class="mm-npc-portrait-block">
               <div class="mm-hero-portrait">
-                <img src="{{actor.img}}" data-edit="img" title="{{actor.name}}"/>
+                <img src="{{actor.img}}" {{#if editable}}data-edit="img"{{/if}} title="{{actor.name}}"/>
               </div>
               {{!-- Rank, Health & Focus --}}
               <div class="mm-rank-block">
@@ -64,7 +64,7 @@
                   </li>
                   {{#each system.abilities as |ability key|}}
                     <li>
-                      <div class="mm-npc-ability-name rollable" data-formula="{1d6,1dm,1d6}+@abilities.{{key}}.value" data-label="{{ability.label}}">
+                      <div class="mm-npc-ability-name {{#if @root.editable}}rollable{{/if}}" {{#if @root.editable}}data-formula="{1d6,1dm,1d6}+@abilities.{{key}}.value" data-label="{{ability.label}}"{{/if}}>
                         {{#if (eq key "mle")}}
                           Melee
                         {{else if (eq key "agl")}}

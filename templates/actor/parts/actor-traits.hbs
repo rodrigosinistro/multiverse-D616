@@ -2,35 +2,43 @@
   <li class="flexrow item mm-item-header">
     <span>Traits</span>
     <hr />
-    <div class="item-controls">
-      <a
-        class="item-control item-create"
-        title="Create item"
-        data-type="trait"
-      >
-        <i class="fas fa-plus"></i>
-      </a>
-    </div>
+    {{#if @root.editable}}
+      <div class="item-controls">
+        <a
+          class="item-control item-create"
+          title="Create item"
+          data-type="trait"
+        >
+          <i class="fas fa-plus"></i>
+        </a>
+      </div>
+    {{/if}}
   </li>
   {{#each traits as |item id|}}
     <li class="flexrow item mm-item" data-item-id='{{item._id}}'>
       <div class="item-name mm-item-name">
-        <a class="rollable" data-roll-type="item">{{item.name}}</a>
+        {{#if @root.editable}}
+          <a class="rollable" data-roll-type="item">{{item.name}}</a>
+        {{else}}
+          <span>{{item.name}}</span>
+        {{/if}}
       </div>
-      <div class="item-controls">
-        <a
-          class="item-control item-edit"
-          title="{{localize 'DOCUMENT.Edit' type="trait"}}"
-        >
-          <i class="fas fa-edit"></i>
-        </a>
-        <a
-          class="item-control item-delete"
-          title="{{localize 'DOCUMENT.Delete' type="trait"}}"
-        >
-          <i class="fas fa-trash"></i>
-        </a>
-      </div>
+      {{#if @root.editable}}
+        <div class="item-controls">
+          <a
+            class="item-control item-edit"
+            title="{{localize 'DOCUMENT.Edit' type="trait"}}"
+          >
+            <i class="fas fa-edit"></i>
+          </a>
+          <a
+            class="item-control item-delete"
+            title="{{localize 'DOCUMENT.Delete' type="trait"}}"
+          >
+            <i class="fas fa-trash"></i>
+          </a>
+        </div>
+      {{/if}}
     </li>
   {{/each}}
 </ol>

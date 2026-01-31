@@ -328,8 +328,266 @@ Hooks.once("ready", async()=>{
 
 // Key change: only updateCombat; use combat.previous.turn safely
 Hooks.on("updateCombat",(combat, changed)=>{
-  if(("turn" in changed) || ("round" in changed)) applyEndTurnDamageFromCombat(combat, "updateCombat");
+  if(("turn" in changed) || ("round" in changed)) {
+    applyEndTurnDamageFromCombat(combat, "updateCombat");
+    maybePromptRecoveryOnTurnStart(combat, changed);
+  }
 });
+
+/* =========================
+ * Recovery prompt (KARMA)
+ *  - If the active combatant is INCAPACITATED or DEMORALIZED, prompt to spend 1 KARMA
+ *    to attempt a recovery roll.
+ *  - INCAPACITATED: RESILIENCE check. On success, set HEALTH to 1.
+ *  - DEMORALIZED: VIGILANCE check. On success, set FOCUS to 1.
+ *  - If both are present, INCAPACITATED is prompted first.
+ *  - If no KARMA, a chat message informs that recovery can't be attempted.
+ *
+ * NOTE: Only the GM creates the prompt to avoid duplicates.
+ * Owners can still click the buttons (whispered to owners + GM).
+ * ========================= */
+
+const RECOVERY_STATUS = {
+  incapacitated: "mmrpg.incapacitated",
+  demoralized: "mmrpg.demoralized",
+};
+
+const RECOVERY_ABILITY = {
+  incapacitated: "res", // Resilience
+  demoralized: "vig",   // Vigilance
+};
+
+function _mmrpgHasStatus(actorOrToken, statusId){
+  try {
+    if (!actorOrToken) return false;
+    // TokenDocument/Token exposes .actor and .document; Actor exposes .statuses.
+    const a = actorOrToken instanceof Actor ? actorOrToken : (actorOrToken.actor || actorOrToken.document?.actor);
+    const statuses = a?.statuses;
+    if (statuses && typeof statuses.has === "function") return statuses.has(statusId);
+
+    // Fallback: search active effects.
+    const effects = a?.effects?.contents || a?.effects || [];
+    for (const ef of effects) {
+      const st = ef?.statuses;
+      if (st && typeof st.has === "function" && st.has(statusId)) return true;
+      const flags = ef?.flags || {};
+      const core = flags?.core;
+      if (core?.statusId === statusId) return true;
+    }
+  } catch(_e){ /* ignore */ }
+  return false;
+}
+
+function _mmrpgRecoveryWhisperRecipients(actor){
+  const recips = new Set();
+  try {
+    for (const id of (ChatMessage.getWhisperRecipients?.("GM") || [])) recips.add(id);
+  } catch(_e){ /* ignore */ }
+  try {
+    const OWNER = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
+    for (const u of (game.users || [])) {
+      if (!u || u.isGM) continue;
+      if (actor?.testUserPermission?.(u, OWNER)) recips.add(u.id);
+    }
+  } catch(_e){ /* ignore */ }
+  return Array.from(recips);
+}
+
+function _mmrpgRecoveryKey(combat){
+  const c = combat;
+  const comb = c?.combatant;
+  if (!c || !comb) return null;
+  return `${c.id || c._id}:${c.round}:${c.turn}:${comb.id || comb._id}`;
+}
+
+async function maybePromptRecoveryOnTurnStart(combat, changed){
+  try {
+    if (!game.user?.isGM) return;
+    if (!combat?.started) return;
+    const comb = combat.combatant;
+    if (!comb) return;
+
+    const key = _mmrpgRecoveryKey(combat);
+    if (!key) return;
+    if (globalThis.__MMRPG_RECOVERY_PROMPT_KEY === key) return;
+    globalThis.__MMRPG_RECOVERY_PROMPT_KEY = key;
+
+    // Resolve actor
+    const token = comb.token ? comb.token.object : canvas?.tokens?.get?.(comb.tokenId);
+    const actor = token?.actor || comb.actor;
+    if (!actor) return;
+
+    // Only prompt for player-owned actors OR GM-controlled actors with KARMA.
+    const OWNER = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
+    const isPlayerOwned = (game.users || []).some(u => !u.isGM && actor.testUserPermission?.(u, OWNER));
+    const karma = Number(actor.system?.karma?.value ?? 0) || 0;
+    if (!isPlayerOwned && karma <= 0) return;
+
+    const subject = token?.document || token || actor;
+    const hasIncap = _mmrpgHasStatus(subject, RECOVERY_STATUS.incapacitated) || _mmrpgHasStatus(actor, RECOVERY_STATUS.incapacitated);
+    const hasDemo  = _mmrpgHasStatus(subject, RECOVERY_STATUS.demoralized) || _mmrpgHasStatus(actor, RECOVERY_STATUS.demoralized);
+    if (!hasIncap && !hasDemo) return;
+
+    // Decide which condition to prompt first
+    const mode = hasIncap ? "incapacitated" : "demoralized";
+    const labelPt = mode === "incapacitated" ? "INCAPACITADO" : "DESMORALIZADO";
+    const abilityLabelPt = mode === "incapacitated" ? "RESILIÊNCIA" : "VIGILÂNCIA";
+
+    const whisper = _mmrpgRecoveryWhisperRecipients(actor);
+
+    if (karma <= 0) {
+      await ChatMessage.create({
+        whisper,
+        content: `<div class="mmrpg-recovery mmrpg-recovery--no-karma" data-actor-uuid="${actor.uuid}" data-mode="${mode}">
+          <p><b>${actor.name}</b> está <b>${labelPt}</b>, mas não tem <b>KARMA</b> para realizar uma jogada de Recuperação.</p>
+        </div>`
+      });
+      return;
+    }
+
+    await ChatMessage.create({
+      whisper,
+      content: `<div class="mmrpg-recovery" data-actor-uuid="${actor.uuid}" data-mode="${mode}">
+        <p><b>${actor.name}</b> está <b>${labelPt}</b>. Gastar <b>1 KARMA</b> para tentar Recuperação? (Teste de <b>${abilityLabelPt}</b>)</p>
+        <div class="mmrpg-recovery__buttons" style="display:flex; gap:6px; margin-top:6px;">
+          <button type="button" class="mmrpg-recovery-btn" data-action="yes">SIM</button>
+          <button type="button" class="mmrpg-recovery-btn" data-action="no">NÃO</button>
+        </div>
+      </div>`
+    });
+  } catch(e){
+    console.warn("[multiverse-d616] recovery prompt error", e);
+  }
+}
+
+async function _mmrpgSpendKarma(actor, amount=1){
+  const cur = Number(actor.system?.karma?.value ?? 0) || 0;
+  const next = Math.max(cur - amount, 0);
+  await actor.update({ "system.karma.value": next });
+  return { cur, next };
+}
+
+async function _mmrpgRecoveryRoll(actor, mode){
+  const abilityKey = RECOVERY_ABILITY[mode];
+  if (!abilityKey) throw new Error(`Unknown recovery mode: ${mode}`);
+
+  const formula = `{1d6,1dm,1d6}+@abilities.${abilityKey}.value`;
+  const label = (mode === "incapacitated") ? "Recuperação (Incapacitado)" : "Recuperação (Desmoralizado)";
+
+  const roll = new CONFIG.Dice.MarvelMultiverseRoll(formula, actor.getRollData());
+  await roll.evaluate({ async: true });
+  await roll.toMessage({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    flavor: label,
+    title: label,
+    rollMode: game.settings.get("core","rollMode")
+  }, { rollMode: game.settings.get("core","rollMode") });
+  return roll;
+}
+
+async function _mmrpgApplyRecoverySuccess(actor, mode, amount){
+  const amt = Math.max(Number(amount ?? 0) || 0, 0);
+  if (!amt) return 0;
+
+  if (mode === "incapacitated") {
+    const cur = Number(actor.system?.health?.value ?? 0) || 0;
+    const max = Number(actor.system?.health?.max ?? cur) || 0;
+    const next = Math.min(cur + amt, max || (cur + amt));
+    await actor.update({ "system.health.value": next });
+    return next - cur;
+  }
+
+  if (mode === "demoralized") {
+    const cur = Number(actor.system?.focus?.value ?? 0) || 0;
+    const max = Number(actor.system?.focus?.max ?? cur) || 0;
+    const next = Math.min(cur + amt, max || (cur + amt));
+    await actor.update({ "system.focus.value": next });
+    return next - cur;
+  }
+
+  return 0;
+}
+
+document.addEventListener("click", async (ev) => {
+  const btn = ev.target?.closest?.(".mmrpg-recovery-btn");
+  if (!btn) return;
+
+  const root = btn.closest?.(".mmrpg-recovery");
+  if (!root) return;
+
+  const action = btn.getAttribute("data-action") || "";
+  const actorUuid = root.getAttribute("data-actor-uuid") || "";
+  const mode = root.getAttribute("data-mode") || "";
+  if (!actorUuid || !mode) return;
+
+  // Disable buttons immediately to avoid double clicks
+  try {
+    for (const b of root.querySelectorAll?.(".mmrpg-recovery-btn") || []) b.disabled = true;
+  } catch(_e){ /* ignore */ }
+
+  try {
+    const actor = await fromUuid(actorUuid);
+    if (!actor) throw new Error("Actor not found");
+
+    // Permission: owners or GM only
+    const OWNER = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
+    const hasOwner = actor.testUserPermission?.(game.user, OWNER);
+    if (!hasOwner && !game.user.isGM) {
+      ui.notifications?.warn?.(
+        game.i18n?.localize?.("MULTIVERSE_D616.PermissionDenied") ||
+          "You do not have permission to perform this action."
+      );
+      return;
+    }
+
+    if (action === "no") {
+      // Re-enable for GM/owner in case they clicked by mistake? Keep disabled to avoid spam.
+      return;
+    }
+
+    const karma = Number(actor.system?.karma?.value ?? 0) || 0;
+    if (karma <= 0) {
+      ui.notifications?.warn?.("Sem KARMA para Recuperação.");
+      return;
+    }
+
+    await _mmrpgSpendKarma(actor, 1);
+    const roll = await _mmrpgRecoveryRoll(actor, mode);
+
+    const whisper = _mmrpgRecoveryWhisperRecipients(actor);
+
+    const total = Number(roll?.total ?? 0) || 0;
+    const success = total >= 10;
+
+    if (success) {
+      // Recovery amount rule:
+      // If total >= 10, recover (Marvel Die value) × (Rank).
+      // On Fantastic, the Marvel die counts as 6 (roll.dice[1].total).
+      const marvelDie = Number(roll?.dice?.[1]?.total ?? roll?.dice?.[1]?.result ?? 0) || 0;
+      const rank = Number(actor.system?.attributes?.rank?.value ?? 1) || 1;
+      const amount = Math.max(marvelDie, 0) * Math.max(rank, 1);
+
+      const recovered = await _mmrpgApplyRecoverySuccess(actor, mode, amount);
+      const poolLabel = (mode === "incapacitated") ? "Vida" : "Focus";
+
+      const extra = recovered > 0
+        ? `Recuperou <b>${recovered}</b> de ${poolLabel}.` 
+        : `Nenhuma recuperação (já está no máximo).`;
+
+      await ChatMessage.create({
+        whisper,
+        content: `<div class="mmrpg-recovery-result"><b>${actor.name}</b>: <b>SUCESSO</b> na Recuperação. ${extra} <span style="opacity:0.8">(M=${marvelDie} × Rank=${rank})</span></div>`
+      });
+    } else {
+      await ChatMessage.create({
+        whisper,
+        content: `<div class="mmrpg-recovery-result"><b>${actor.name}</b>: falhou na Recuperação.</div>`
+      });
+    }
+  } catch(e){
+    console.error("[multiverse-d616] recovery click error", e);
+  }
+}, false);
 
 // ===== Marvel Multiverse Conditions HUD v0.3.2 additions (auto-apply & v13-safe) =====
 const __MMRPG_FU2 = globalThis.foundry?.utils ?? { getProperty: (o,p)=>p.split(".").reduce((a,k)=>a?.[k],o) };
