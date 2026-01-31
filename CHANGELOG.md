@@ -1,3 +1,9 @@
+## v0.1.26 — 2026-01-30
+- **Fix (Weapon DM vs outros bônus):** o sistema agora calcula corretamente o **MAIOR** bônus de **Damage Multiplier** entre **arma** e **qualquer outro bônus** (sem somar), mesmo quando o ator possui modificadores via **Active Effects**/outras fontes. O card salva `base/other/weapon/effective/finalDM` em `flags` para o botão **DAMAGE** usar o mesmo contexto do ataque.
+
+## v0.1.25 — 2026-01-28
+- **Novo (Weapon Damage Multiplier Bonus):** bônus de **Damage Multiplier** de armas (`system.damageMultiplierBonus`) agora é aplicado **somente** quando o item **weapon** é **usado** e está `equipped=true` — **não é passivo**. Se houver outro bônus de DM no mesmo ataque, o sistema usa o **maior** (não soma). O contexto fica salvo no próprio card via `flags`.
+
 ## v0.1.24 — 2026-01-26
 - **Fix (Condição aplicada no token errado):** ao chegar a 0 de **Health/Focus**, o auto-status (ex.: **Incapacitated**) agora é aplicado **somente ao token afetado** quando o dano foi recebido por um **token não-linkado** (minions/clones), evitando que outro token do mesmo ator-base receba a condição.
 

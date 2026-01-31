@@ -478,19 +478,49 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       // const result = await roll.evaluate();
       const modLabel = `${label}, [ability] ${this.system.ability}`;
 
+      // Damage Multiplier context.
+      // IMPORTANT (book rule): weapon Damage Multiplier bonuses DO NOT STACK with any other DM *bonus*.
+      // We use the GREATER of (weapon bonus) and (other bonus). Penalties (negative deltas) still apply.
+      // IMPORTANT (system rule): weapon bonus applies ONLY when rolling THIS weapon AND it is equipped.
+      const abilityKey = this.system.ability;
+      const dmgCtx = mmGetDamageMultiplierContext(this.actor, abilityKey);
+      const weaponBonus =
+        this.type === "weapon" && this.system.equipped
+          ? Number(this.system.damageMultiplierBonus ?? 0) || 0
+          : 0;
+      const otherBonus = Number(dmgCtx.otherBonus ?? 0) || 0;
+      const otherPenalty = Number(dmgCtx.otherPenalty ?? 0) || 0;
+      const effectiveBonus = Math.max(weaponBonus, otherBonus);
+      const baseDamageMultiplier = Number(dmgCtx.base ?? 0) || 0;
+      const finalDamageMultiplier = baseDamageMultiplier + otherPenalty + effectiveBonus;
+
       // Capture current targets for attack rolls so the chat card can show HIT/MISS.
       // We store token UUID + defense at the moment of the roll.
-      let msgFlags;
+      const systemFlags = {
+        actorId: this.actor?.id ?? null,
+        itemId: this._id,
+        ability: abilityKey,
+        damageMultiplier: {
+          base: baseDamageMultiplier,
+          otherBonus,
+          otherPenalty,
+          weaponBonus,
+          effectiveBonus,
+          finalDM: finalDamageMultiplier,
+        },
+      };
+
       try {
         const targetTokens = Array.from(game.user?.targets ?? []);
 
         // Fallback for any modules that don't populate game.user.targets
         if (!targetTokens.length && canvas?.tokens?.placeables) {
-          targetTokens.push(...canvas.tokens.placeables.filter((t) => t.isTargeted));
+          targetTokens.push(
+            ...canvas.tokens.placeables.filter((t) => t.isTargeted)
+          );
         }
 
         if (targetTokens.length) {
-          const abilityKey = this.system.ability;
           const targets = targetTokens
             .map((t) => {
               const tokenDoc = t.document ?? t; // Token (placeable) or TokenDocument
@@ -506,19 +536,22 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
             .filter((t) => t.uuid);
 
           if (targets.length) {
-            msgFlags = { "multiverse-d616": { targets, ability: abilityKey } };
+            systemFlags.targets = targets;
           }
         }
       } catch (e) {
-        console.warn("[multiverse-d616] Failed to capture targets for roll message", e);
+        console.warn(
+          "[multiverse-d616] Failed to capture targets for roll message",
+          e
+        );
       }
 
-const msgData = {
+	const msgData = {
         title: this.name,
         speaker: speaker,
         rollMode: rollMode,
         flavor: modLabel,
-        ...(msgFlags ? { flags: msgFlags } : {}),
+	        flags: { "multiverse-d616": systemFlags },
       };
 
       roll.toMessage(msgData, { rollMode: rollMode, itemId: this._id });
@@ -1288,6 +1321,32 @@ function mmClampNumber(n, min, max) {
   return Math.min(max, Math.max(min, v));
 }
 
+/**
+ * Compute Damage Multiplier context for an ability.
+ *
+ * NOTE:
+ * - `actor.system.abilities[abilityKey].damageMultiplier` can include modifiers from Active Effects.
+ * - The weapon bonus must NOT stack with any other *bonus* to damage multiplier.
+ * - Penalties (negative deltas) should still apply.
+ */
+function mmGetDamageMultiplierContext(actor, abilityKey) {
+  const rank = Number(actor?.system?.attributes?.rank?.value ?? 0);
+  const raw = foundry.utils.getProperty(
+    actor?._source,
+    `system.abilities.${abilityKey}.damageMultiplier`
+  );
+  const base = (Number(raw ?? 0) || 0) + (Number.isFinite(rank) ? rank : 0);
+
+  const derived = Number(
+    actor?.system?.abilities?.[abilityKey]?.damageMultiplier ?? base
+  );
+  const delta = (Number.isFinite(derived) ? derived : base) - base;
+  const otherBonus = Math.max(0, delta);
+  const otherPenalty = Math.min(0, delta);
+
+  return { base, derived, delta, otherBonus, otherPenalty };
+}
+
 class ChatMessageMarvel extends ChatMessage {
   /** @inheritDoc */
   _initialize(options = {}) {
@@ -1957,7 +2016,41 @@ class ChatMessageMarvel extends ChatMessage {
       return;
     }
 
-    const damageMultiplier = actor.system.abilities[abilityAbr].damageMultiplier;
+
+
+	    // Damage Multiplier context (stored on the originating roll card).
+	    // Weapon bonuses MUST NOT apply passively; they only apply to the attack/item that created this chat message.
+	    // Book rule: Weapon DM bonus does NOT stack with any other DM *bonus*. Use the GREATER. Penalties still apply.
+	    const dmFlags = chatMessage.getFlag("multiverse-d616", "damageMultiplier") ?? {};
+	    const itemId = chatMessage.getFlag("multiverse-d616", "itemId");
+	    const item = itemId ? actor.items?.get?.(itemId) ?? null : null;
+	    const weaponBonusFromItem =
+	      item?.type === "weapon" && item.system?.equipped
+	        ? Number(item.system?.damageMultiplierBonus ?? 0) || 0
+	        : 0;
+
+	    let baseDamageMultiplier = Number(dmFlags.base ?? NaN);
+	    let otherBonus = Number(dmFlags.otherBonus ?? NaN);
+	    let otherPenalty = Number(dmFlags.otherPenalty ?? 0);
+	    let weaponBonus = Number(dmFlags.weaponBonus ?? NaN);
+	
+	    // Backward/forward compatible fallback (older cards or missing flags)
+	    if (!Number.isFinite(baseDamageMultiplier)) {
+	      const ctx = mmGetDamageMultiplierContext(actor, abilityAbr);
+	      baseDamageMultiplier = Number(ctx.base ?? 0) || 0;
+	      otherBonus = Number(ctx.otherBonus ?? 0) || 0;
+	      otherPenalty = Number(ctx.otherPenalty ?? 0) || 0;
+	    }
+	    if (!Number.isFinite(otherBonus)) otherBonus = 0;
+	    if (!Number.isFinite(weaponBonus)) weaponBonus = weaponBonusFromItem;
+
+	    const effectiveBonus = Number.isFinite(Number(dmFlags.effectiveBonus))
+	      ? Number(dmFlags.effectiveBonus)
+	      : Math.max(weaponBonus, otherBonus);
+	
+	    const damageMultiplier = Number.isFinite(Number(dmFlags.finalDM))
+	      ? Number(dmFlags.finalDM)
+	      : baseDamageMultiplier + otherPenalty + effectiveBonus;
 
     const targetTokens = Array.from(game.user?.targets ?? []);
 
@@ -1991,9 +2084,7 @@ class ChatMessageMarvel extends ChatMessage {
         isFantastic ? "Fantastic" : ""
       } </b> ${damageType} damage.<br/> re: MarvelDie: ${
         marvelTotal
-      } &#42; damage multiplier: &#40; ${
-        actor.system.abilities[abilityAbr].damageMultiplier
-      } - damageReduction: ${damageReduction} &#61; ${dmgMultiplier} &#41; + ${ability} score ${abilityValue} of damage${focusExplain}.</p>`;
+	      } &#42; damage multiplier: &#40; ${baseDamageMultiplier} + bonus: ${effectiveBonus} &#61; ${damageMultiplier} - damageReduction: ${damageReduction} &#61; ${dmgMultiplier} &#41; + ${ability} score ${abilityValue} of damage${focusExplain}.</p>`;
     });
 
     if (damageContent.length === 0) {

@@ -335,7 +335,33 @@ Hooks.on("updateCombat",(combat, changed)=>{
 const __MMRPG_FU2 = globalThis.foundry?.utils ?? { getProperty: (o,p)=>p.split(".").reduce((a,k)=>a?.[k],o) };
 
 function __mmrpg_tokensForActor2(actor) {
+  // IMPORTANT (Foundry v13): when an *unlinked* token takes damage, the Actor
+  // being updated is a *synthetic* Token Actor (actor.isToken === true) which
+  // still shares the same actor.id as its source Actor.
+  //
+  // If we resolve tokens by actor.id we may accidentally match *other tokens*
+  // created from the same source Actor (e.g. "Android (1)" and "Android (2)"),
+  // applying statuses to the wrong token.
+  //
+  // Therefore: for synthetic Token Actors, resolve ONLY the specific token.
   try {
+    if (!actor) return [];
+
+    // Synthetic token actor → only its own token
+    if (actor.isToken) {
+      const tokDoc = actor.token;
+      const tokId = tokDoc?.id ?? tokDoc?._id;
+      const tokObj = tokDoc?.object ?? (tokId ? canvas?.tokens?.get(tokId) : null);
+      if (tokObj) return [tokObj];
+      // If we can't resolve the token object, do NOT fall back to actor.id matching.
+      // Returning [] is safer than risking applying statuses to the wrong token.
+      return [];
+    }
+
+    // World Actor → all active tokens on the current scene
+    const active = actor.getActiveTokens?.(true) ?? null;
+    if (Array.isArray(active) && active.length) return active;
+
     const list = canvas?.tokens?.placeables ?? [];
     return list.filter(t => t?.actor?.id === actor?.id);
   } catch (err) {
