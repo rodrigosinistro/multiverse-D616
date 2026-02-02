@@ -3350,6 +3350,20 @@ class MarvelMultiverseItemSheet extends ItemSheet {
   }
 
   /** @override */
+  async _onDrop(event) {
+    // Occupation: handle Trait/Tag drops specifically for our drop zones.
+    if (this.item?.type === "occupation") {
+      const dropZone = event?.target?.closest?.(".mm-occ-drop");
+      if (dropZone) {
+        // Provide a wrapper compatible with our internal handler.
+        return this._onOccupationDrop({ originalEvent: event, currentTarget: dropZone });
+      }
+    }
+
+    return super._onDrop(event);
+  }
+
+  /** @override */
   get template() {
     const path = "systems/multiverse-d616/templates/item";
     // Return a single sheet for all item types.
@@ -3438,6 +3452,39 @@ class MarvelMultiverseItemSheet extends ItemSheet {
   activateListeners(html) {
     super.activateListeners(html);
 
+    // -------------------------------------------------------------
+    // Occupation: Traits & Tags helpers (view, remove, drag & drop)
+    // NOTE: We register dragover/drop even on read-only sheets so the
+    // browser cursor isn't "prohibited". The drop handler itself still
+    // enforces edit permission and will warn if not editable.
+    if (this.item.type === "occupation") {
+      html.on("click", ".mm-occ-view", (ev) => this._onOccupationView(ev));
+      html.on("click", ".mm-occ-add", (ev) => this._onOccupationAdd(ev));
+
+      // Ensure browser drop is permitted over our custom drop zones.
+      html.on("dragenter dragover", ".mm-occ-drop", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const e = ev.originalEvent ?? ev;
+        try {
+          if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+        } catch (_err) {}
+      });
+
+      // Handle drop directly on the drop zones to avoid bubbling into
+      // Foundry's generic drop handler.
+      html.on("drop", ".mm-occ-drop", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const e = ev.originalEvent ?? ev;
+        return this._onOccupationDrop({ originalEvent: e, currentTarget: ev.currentTarget });
+      });
+
+      if (this.isEditable) {
+        html.on("click", ".mm-occ-remove", (ev) => this._onOccupationRemove(ev));
+      }
+    }
+
     // Everything below here is only needed if the sheet is editable
     if (!this.isEditable) return;
 
@@ -3447,6 +3494,379 @@ class MarvelMultiverseItemSheet extends ItemSheet {
     html.on("click", ".effect-control", (ev) =>
       onManageActiveEffect(ev, this.item)
     );
+
+  }
+
+  /**
+   * Handle dragging a Trait/Tag onto an Occupation item sheet.
+   * We store a *copy* of the dropped Item data into the Occupation system.
+   */
+  async _onOccupationDrop(ev) {
+    const event = ev?.originalEvent ?? ev;
+    event.preventDefault();
+
+    // Identify which list the user dropped onto (traits/tags)
+    const dropZone = ev.currentTarget ?? event.currentTarget;
+    const listKind = dropZone?.dataset?.kind; // "traits" | "tags"
+    if (!listKind || !["traits", "tags"].includes(listKind)) return;
+
+    if (!this.isEditable) {
+      ui.notifications?.warn?.(
+        "This Occupation is not editable. Unlock the compendium pack or import the entry to the world before editing Traits/Tags."
+      );
+      return;
+    }
+
+    // Parse drag data (robust across v13 sources and modules)
+    let data;
+    try {
+      data = TextEditor.getDragEventData(event);
+    } catch (_err) {
+      data = null;
+    }
+
+    // Fallbacks for cases where the drag source provides raw text or a UUID link
+    if (!data) {
+      const raw =
+        event?.dataTransfer?.getData?.("text/plain") ||
+        event?.dataTransfer?.getData?.("application/json") ||
+        "";
+
+      if (raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch (_err) {
+          const m = raw.match(/@UUID\[([^\]]+)\]/);
+          if (m?.[1]) data = { uuid: m[1] };
+        }
+      }
+    }
+
+    if (!data) return;
+
+    // Resolve dropped document
+    let dropped = null;
+    try {
+      // Foundry v13+ convenience
+      if (Item?.implementation?.fromDropData) {
+        dropped = await Item.implementation.fromDropData(data);
+      }
+    } catch (_err) {
+      dropped = null;
+    }
+
+    if (!dropped && data?.uuid) {
+      dropped = await fromUuid(data.uuid);
+    }
+    if (!dropped && data?.type === "Item" && data?.id) {
+      // World Items
+      dropped = game.items.get(data.id) ?? null;
+      // Compendium Items
+      if (!dropped && data?.pack) {
+        try {
+          const pack = game.packs.get(data.pack);
+          dropped = (await pack?.getDocument?.(data.id)) ?? null;
+        } catch (_err) {
+          dropped = null;
+        }
+      }
+    }
+
+    if (!dropped || dropped.documentName !== "Item") return;
+    if (!dropped.isOwner && dropped.pack) {
+      // Compendium items are fine; permission checks are handled by Foundry
+    }
+
+    // Only Trait/Tag items can be attached
+    const expectedType = listKind === "traits" ? "trait" : "tag";
+    if (dropped.type !== expectedType) {
+      ui.notifications?.warn?.(
+        `Drop a ${expectedType} item here (you dropped: ${dropped.type}).`
+      );
+      return;
+    }
+
+    const current = foundry.utils.duplicate(this.item.system?.[listKind] ?? []);
+    const multiple = !!dropped.system?.multiple;
+
+    // De-duplicate by uuid (preferred) or name
+    const droppedUuid = dropped.uuid;
+    const alreadyHas = current.some((e) => {
+      if (droppedUuid && e?.uuid) return e.uuid === droppedUuid;
+      return (e?.name ?? "").trim() === (dropped.name ?? "").trim();
+    });
+
+    if (alreadyHas && !multiple) {
+      ui.notifications?.info?.(`${dropped.name} is already in this list.`);
+      return;
+    }
+
+    // Store a copy, but also keep a uuid pointer when possible
+    const stored = dropped.toObject();
+    stored.uuid = droppedUuid;
+    current.push(stored);
+
+    await this.item.update({ [`system.${listKind}`]: current });
+  }
+
+  /**
+   * Open a picker dialog to add Traits/Tags to an Occupation.
+   * This is a reliable alternative to drag & drop (some module stacks block native DnD).
+   */
+  async _onOccupationAdd(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    const kind = ev.currentTarget?.dataset?.kind;
+    if (!kind || !["traits", "tags"].includes(kind)) return;
+
+    if (!this.isEditable) {
+      ui.notifications?.warn?.(
+        "This Occupation is not editable. Unlock the compendium pack or import the entry to the world before editing Traits/Tags."
+      );
+      return;
+    }
+
+    const expectedType = kind === "traits" ? "trait" : "tag";
+    const kindLabel = kind === "traits" ? "Trait" : "Tag";
+
+    // Collect candidates from World + any Item compendiums (system or world)
+    const candidates = [];
+    const seen = new Set();
+
+    const isTypeMatch = (t, expected) => {
+      if (!t) return false;
+      if (t === expected) return true;
+      if (t === `${expected}s`) return true; // tolerate plural
+      // extra tolerance
+      if (expected === "trait" && t === "traits") return true;
+      if (expected === "tag" && t === "tags") return true;
+      return false;
+    };
+
+    const addCandidate = (name, uuid, source) => {
+      if (!name || !uuid) return;
+      if (seen.has(uuid)) return;
+      seen.add(uuid);
+      candidates.push({ name, uuid, source });
+    };
+
+    // World items
+    for (const it of game.items) {
+      if (!isTypeMatch(it?.type, expectedType)) continue;
+      addCandidate(
+        it.name,
+        it.uuid,
+        game.i18n?.localize?.("DOCUMENT.World") ??
+          game.i18n?.localize?.("WORLD") ??
+          "World"
+      );
+    }
+
+    // Any compendium packs that contain Items
+    for (const pack of game.packs) {
+      try {
+        if (pack?.documentName !== "Item") continue;
+        // Index only what we need for filtering and display
+        const index = await pack.getIndex({ fields: ["type", "name"] });
+        for (const e of index) {
+          if (!isTypeMatch(e?.type, expectedType)) continue;
+          const uuid =
+            e?.uuid ?? `Compendium.${pack.collection}.${e._id ?? e.id}`;
+          addCandidate(
+            e.name,
+            uuid,
+            pack.metadata?.label ?? pack.collection
+          );
+        }
+      } catch (_err) {
+        // ignore pack indexing errors
+      }
+    }
+
+    if (!candidates.length) {
+      ui.notifications?.warn?.(`No ${expectedType} items found in the World or any Item compendium packs.`);
+      return;
+    }
+
+    candidates.sort((a, b) =>
+      (a.name ?? "").localeCompare(b.name ?? "", undefined, { sensitivity: "base" })
+    );
+
+    // Foundry v13: TextEditor.encodeHTML is no longer available.
+    // Use the supported helper under foundry.utils.
+    const esc = foundry?.utils?.escapeHTML ?? ((s) => {
+      const str = String(s ?? "");
+      return str
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    });
+
+    const rows = candidates
+      .map((c) => {
+        const safeName = esc(c.name ?? "");
+        const safeSource = esc(c.source ?? "");
+        return `
+          <label class="mm-occ-picker-row" style="display:flex; align-items:center; gap:8px; padding:4px 2px;">
+            <input class="mm-occ-pick" type="checkbox" data-uuid="${c.uuid}" />
+            <span style="flex:1;">${safeName}</span>
+            <span style="opacity:.7; font-size:11px;">${safeSource}</span>
+          </label>
+        `;
+      })
+      .join("");
+
+    const content = `
+      <div class="flexcol" style="gap:.5rem;">
+        <p style="margin:0; opacity:.85;">Select one or more <strong>${kindLabel}</strong> entries to add.</p>
+        <input class="mm-occ-picker-search" type="text" placeholder="Search..." style="width:100%;" />
+        <div class="mm-occ-picker-list" style="max-height: 320px; overflow:auto; border:1px solid rgba(255,255,255,.15); padding:6px; border-radius:6px;">
+          ${rows}
+        </div>
+        <p style="margin:0; opacity:.7; font-size: 11px;">Tip: You can still try drag & drop — this picker is here because some module stacks block DnD.</p>
+      </div>
+    `;
+
+    const dlg = new Dialog(
+      {
+        title: `Add ${kindLabel}(s)`,
+        content,
+        buttons: {
+          add: {
+            icon: '<i class="fas fa-plus"></i>',
+            label: "Add Selected",
+            callback: async (html) => {
+              const picked = Array.from(html[0].querySelectorAll("input.mm-occ-pick:checked"))
+                .map((i) => i.getAttribute("data-uuid"))
+                .filter(Boolean);
+
+              if (!picked.length) {
+                ui.notifications?.info?.("Nothing selected.");
+                return;
+              }
+
+              const current = foundry.utils.duplicate(this.item.system?.[kind] ?? []);
+              const added = [];
+              const skipped = [];
+
+              for (const uuid of picked) {
+                let doc = null;
+                try {
+                  doc = await fromUuid(uuid);
+                } catch (_err) {
+                  doc = null;
+                }
+                if (!doc || doc.documentName !== "Item") continue;
+                if (doc.type !== expectedType) continue;
+
+                const multiple = !!doc.system?.multiple;
+                const alreadyHas = current.some((e) => {
+                  if (uuid && e?.uuid) return e.uuid === uuid;
+                  return (e?.name ?? "").trim() === (doc.name ?? "").trim();
+                });
+
+                if (alreadyHas && !multiple) {
+                  skipped.push(doc.name);
+                  continue;
+                }
+
+                const stored = doc.toObject();
+                stored.uuid = uuid;
+                current.push(stored);
+                added.push(doc.name);
+              }
+
+              await this.item.update({ [`system.${kind}`]: current });
+              if (added.length) ui.notifications?.info?.(`Added: ${added.join(", ")}`);
+              if (skipped.length) ui.notifications?.info?.(`Skipped (already present): ${skipped.join(", ")}`);
+            },
+          },
+          cancel: {
+            icon: '<i class="fas fa-times"></i>',
+            label: "Cancel",
+          },
+        },
+        default: "add",
+      },
+      { width: 520 }
+    );
+
+    dlg.render(true);
+
+    // Wire up search filtering after render
+    setTimeout(() => {
+      const root = dlg.element?.[0];
+      if (!root) return;
+      const input = root.querySelector("input.mm-occ-picker-search");
+      const rows = Array.from(root.querySelectorAll("label.mm-occ-picker-row"));
+      if (!input || !rows.length) return;
+
+      input.addEventListener("input", () => {
+        const q = (input.value ?? "").toLowerCase().trim();
+        for (const r of rows) {
+          const text = (r.textContent ?? "").toLowerCase();
+          r.style.display = !q || text.includes(q) ? "flex" : "none";
+        }
+      });
+    }, 0);
+  }
+
+  async _onOccupationRemove(ev) {
+    ev.preventDefault();
+    const kind = ev.currentTarget?.dataset?.kind;
+    const index = Number(ev.currentTarget?.dataset?.index ?? -1);
+    if (!kind || !["traits", "tags"].includes(kind) || !Number.isFinite(index) || index < 0) return;
+
+    const current = foundry.utils.duplicate(this.item.system?.[kind] ?? []);
+    if (index >= current.length) return;
+    current.splice(index, 1);
+    await this.item.update({ [`system.${kind}`]: current });
+  }
+
+  _onOccupationView(ev) {
+    ev.preventDefault();
+    const kind = ev.currentTarget?.dataset?.kind;
+    const index = Number(ev.currentTarget?.dataset?.index ?? -1);
+    if (!kind || !["traits", "tags"].includes(kind) || !Number.isFinite(index) || index < 0) return;
+
+    const entry = (this.item.system?.[kind] ?? [])[index];
+    if (!entry) return;
+
+    const title = entry.name ?? "";
+    const description = entry.system?.description ?? entry.description ?? "";
+    const restriction = entry.system?.restriction ?? "";
+    const rarity = entry.system?.rarity ?? "";
+
+    const esc = foundry?.utils?.escapeHTML ?? ((s) => {
+      const str = String(s ?? "");
+      return str
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    });
+
+    const content = `
+      <div class="flexcol" style="gap: .5rem;">
+        ${restriction ? `<p><strong>Restriction:</strong> ${esc(restriction)}</p>` : ""}
+        ${rarity ? `<p><strong>Rarity:</strong> ${esc(rarity)}</p>` : ""}
+        <hr />
+        <div>${description || "<em>No description.</em>"}</div>
+      </div>
+    `;
+
+    new Dialog({
+      title,
+      content,
+      buttons: {
+        ok: { icon: '<i class="fas fa-check"></i>', label: "OK" },
+      },
+      default: "ok",
+    }).render(true);
   }
 }
 

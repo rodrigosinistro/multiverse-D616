@@ -1,4 +1,22 @@
+## 0.1.44 (2026-02-02)
+- Fix: Occupation Traits/Tags picker no longer crashes on Foundry v13 (replaced removed `TextEditor.encodeHTML` with `foundry.utils.escapeHTML`).
+
+## 0.1.43 (2026-02-02)
+- Occupation Traits/Tags picker now searches ALL Item compendiums (system + world), not only the system packs.
+
 ## v0.1.33 — 2026-01-31
+
+## 0.1.39
+- **Occupation Sheet:** agora exibe e permite **gerenciar** os **Traits** e **Tags** associados (aba **Traits & Tags**), incluindo **drag & drop** de itens do tipo Trait/Tag para adicionar e botão de lixeira para remover.
+
+## 0.1.40
+- **Fix (Occupation Sheet: Drag & Drop):** corrigido o **arrastar/soltar** de **Traits** e **Tags** para a aba **Traits & Tags**. Agora o drop funciona de forma robusta no Foundry v13 (inclui fallback para UUID links) e mostra aviso se a entrada não estiver editável.
+
+## 0.1.41
+- **Fix (Occupation Sheet: Drag & Drop não permitido):** corrigido o caso em que o cursor ficava como **"proibido"** e o drop não disparava. Agora a aba **Traits & Tags** registra `dragover/drop` diretamente nas áreas de drop para garantir que o navegador permita o arrastar/soltar.
+
+## 0.1.42
+- **Occupation Sheet (Traits & Tags):** adicionados botões **"+"** para **inserir Traits/Tags** via um **seletor** (lista + busca), como alternativa ao **drag & drop** quando algum stack de módulos bloqueia o DnD.
 
 ## 0.1.38
 - Concentração aparece no Token como condição (mmrpg.concentration.X) e ao remover limpa o controle.

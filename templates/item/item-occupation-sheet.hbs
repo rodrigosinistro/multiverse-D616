@@ -9,20 +9,107 @@
   </header>
 
   {{!-- Sheet Tab Navigation --}}
-  <nav class="sheet-tabs tabs mm-tabs -two" data-group="primary">
+  <nav class="sheet-tabs tabs mm-tabs -three" data-group="primary">
     <a class="item" data-tab="description">Description</a>
+    <a class="item" data-tab="traits-tags">Traits & Tags</a>
     <a class="item" data-tab="effects">Effects</a>
   </nav>
 
   {{!-- Sheet Body --}}
   <section class="sheet-body">
     {{!-- Description Tab --}}
-    <div class="tab" data-group="primary" data-tab="description">
+    <div class="tab flexcol -gap-sm" data-group="primary" data-tab="description">
       <div class="mm-styled-field -fill">
         <label class="mm-styled-label -align-left rollable" for="system.description" data-label="description"><span>Description</span></label>
         <div class="mm-styled-input">
-          {{editor system.description target="system.description" button=false engine="prosemirror" collaborate=false}}
+          {{editor system.description target="system.description" button=false engine="prosemirror" collaborate=false editable=editable}}
         </div>
+      </div>
+
+      <div class="mm-styled-field -fill">
+        <label class="mm-styled-label -align-left"><span>Examples</span></label>
+        <div class="mm-styled-input">
+          <textarea name="system.examples" rows="3" data-dtype="String">{{system.examples}}</textarea>
+        </div>
+      </div>
+    </div>
+
+    {{!-- Traits & Tags Tab --}}
+    <div class="tab flexcol -gap-sm" data-group="primary" data-tab="traits-tags">
+      <div class="flexrow -gap-sm" style="align-items:flex-start;">
+
+        {{!-- Traits --}}
+        <ol class="mm-item-list mm-occ-drop" data-kind="traits" style="flex:1; min-width: 0;">
+          <li class="flexrow item mm-item-header">
+            <span>Traits</span>
+            {{#if @root.editable}}
+              <div class="item-controls">
+                <a class="item-control mm-occ-add" data-kind="traits" title="Add Trait">
+                  <i class="fas fa-plus"></i>
+                </a>
+              </div>
+            {{/if}}
+            <hr />
+            <span style="font-size: 11px; opacity: .8;">Drag & drop or click +</span>
+          </li>
+          {{#if system.traits.length}}
+            {{#each system.traits as |t idx|}}
+              <li class="flexrow item mm-item" data-index="{{idx}}">
+                <div class="item-name mm-item-name">
+                  <a class="mm-occ-view" data-kind="traits" data-index="{{idx}}">{{t.name}}</a>
+                </div>
+                {{#if @root.editable}}
+                  <div class="item-controls">
+                    <a class="mm-occ-remove" data-kind="traits" data-index="{{idx}}" title="Remove">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                {{/if}}
+              </li>
+            {{/each}}
+          {{else}}
+            <li class="flexrow item" style="opacity:.8; font-size: 12px; padding: 6px;">
+              <em>No traits yet.</em>
+            </li>
+          {{/if}}
+        </ol>
+
+        {{!-- Tags --}}
+        <ol class="mm-item-list mm-occ-drop" data-kind="tags" style="flex:1; min-width: 0;">
+          <li class="flexrow item mm-item-header">
+            <span>Tags</span>
+            {{#if @root.editable}}
+              <div class="item-controls">
+                <a class="item-control mm-occ-add" data-kind="tags" title="Add Tag">
+                  <i class="fas fa-plus"></i>
+                </a>
+              </div>
+            {{/if}}
+            <hr />
+            <span style="font-size: 11px; opacity: .8;">Drag & drop or click +</span>
+          </li>
+          {{#if system.tags.length}}
+            {{#each system.tags as |t idx|}}
+              <li class="flexrow item mm-item" data-index="{{idx}}">
+                <div class="item-name mm-item-name">
+                  <a class="mm-occ-view" data-kind="tags" data-index="{{idx}}">{{t.name}}</a>
+                </div>
+                {{#if @root.editable}}
+                  <div class="item-controls">
+                    <a class="mm-occ-remove" data-kind="tags" data-index="{{idx}}" title="Remove">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                {{/if}}
+              </li>
+            {{/each}}
+          {{else}}
+            <li class="flexrow item" style="opacity:.8; font-size: 12px; padding: 6px;">
+              <em>No tags yet.</em>
+            </li>
+          {{/if}}
+        </ol>
+
       </div>
     </div>
 
