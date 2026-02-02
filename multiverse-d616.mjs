@@ -11,6 +11,8 @@
  * @param {(number)} [options.targetValue]       Assign a target value against which the result of this roll should be
  *
  */
+import { handleConcentrationOnUse } from "./scripts/concentration.js";
+
 class MarvelMultiverseRoll extends Roll {
   constructor(formula, data, options) {
     super(formula, data, options);
@@ -443,6 +445,10 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
    * @private
    */
   async roll() {
+    // Concentração: incrementa condição no token até o Rank (mmrpg.concentration.X)
+    const __okConc = await handleConcentrationOnUse(this.actor, this);
+    if (!__okConc) return;
+
     // Initialize chat data.
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get("core", "rollMode");

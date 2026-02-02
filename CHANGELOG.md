@@ -1,4 +1,8 @@
 ## v0.1.33 — 2026-01-31
+
+## 0.1.38
+- Concentração aparece no Token como condição (mmrpg.concentration.X) e ao remover limpa o controle.
+- Ajuste do hook de chat para renderChatMessageHTML (Foundry v13).
 - **Fix (Hotbar: Tooltip MMHT):** corrigido o patch que injeta os dados do tooltip na **barra de atalhos**. Agora, ao passar o mouse por um macro de **Power/Trait/Tag** criado via arrastar da ficha, o tooltip detalhado (Description/Effect/Cost/Range/Action/Duration/Trigger) aparece corretamente.
 
 ## v0.1.30 — 2026-01-31
