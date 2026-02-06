@@ -1,3 +1,14 @@
+## 0.1.49 (2026-02-06)
+- Fix (Chat — Alvos): a lista agora é **sempre** baseada nos alvos marcados pelo **autor da rolagem** (GM ou jogador) e aparece para **todos**. O sistema captura os alvos locais **no momento da rolagem** e salva no ChatMessage (`flags`); se uma mensagem antiga/não padronizada não tiver isso, o **autor** auto-sincroniza na primeira renderização.
+- Fix (Chat/Damage — Vazamento de alvos): removidos fallbacks que usavam `Token.isTargeted` (que podia incluir alvos de outros usuários). Agora o fallback considera apenas alvos marcados pelo **usuário atual**.
+
+## 0.1.48 (2026-02-06)
+- Fix (Chat — Alvos): cada ataque lista SOMENTE os alvos marcados pelo usuário que rolou (GM ou jogador). Ainda assim, a lista aparece para TODOS; GM vê ACERTOU/ERROU e jogadores veem ALVO.
+
+## 0.1.47 (2026-02-06)
+- Fix (Chat — Alvos): A lista de alvos agora é **visível para TODOS**. O sistema coleta e salva os alvos (via socket) no ChatMessage, então independe de **quem rolou** ou de **quem marcou**.
+- Regra: o **GM** vê **ACERTOU/ERROU**; jogadores veem sempre **ALVO** (preto).
+
 ## 0.1.44 (2026-02-02)
 - Fix: Occupation Traits/Tags picker no longer crashes on Foundry v13 (replaced removed `TextEditor.encodeHTML` with `foundry.utils.escapeHTML`).
 

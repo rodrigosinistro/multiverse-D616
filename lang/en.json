@@ -106,7 +106,8 @@
     "Formula": "Formula",
     "AbilityModifier": "Ability Modifier",
     "RollSituationalBonus": "Situational Bonus?",
-    "RollMode": "Roll Mode"
+    "RollMode": "Roll Mode",
+    "target": "TARGET"
   },
   "MMHT": {
     "Settings": {

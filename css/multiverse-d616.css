@@ -1595,6 +1595,10 @@
   text-transform: uppercase;
 }
 
+
+.multiverse-d616.evaluation .target:not(.hit):not(.miss) .result {
+  color: #000;
+}
 .multiverse-d616.evaluation .target.hit .result {
   color: rgba(46, 125, 50, 0.95);
 }

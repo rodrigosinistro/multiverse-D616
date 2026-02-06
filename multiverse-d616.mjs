@@ -198,6 +198,31 @@ class MarvelMultiverseRoll extends Roll {
       );
     }
 
+
+    // Capture local targets on the author client so EVERYONE can see which targets were used for this roll.
+    // Records ONLY the targets marked by the rolling user at the moment the message is created.
+    try {
+      const existingTargets = foundry.utils.getProperty(
+        messageData,
+        "flags.multiverse-d616.targets"
+      );
+      if (!existingTargets?.length) {
+        const localTargets = mmD616CollectLocalTargets();
+        if (localTargets?.length) {
+          foundry.utils.setProperty(
+            messageData,
+            "flags.multiverse-d616.targets",
+            localTargets
+          );
+        }
+      }
+    } catch (e) {
+      console.warn(
+        "[multiverse-d616] Failed to capture targets for roll message",
+        e
+      );
+    }
+
     if (this.hasEdge)
       messageData.flavor += ` (${game.i18n.localize(
         "MULTIVERSE_D616.edge"
@@ -516,38 +541,14 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         },
       };
 
-      try {
-        const targetTokens = Array.from(game.user?.targets ?? []);
-
-        // Fallback for any modules that don't populate game.user.targets
-        if (!targetTokens.length && canvas?.tokens?.placeables) {
-          targetTokens.push(
-            ...canvas.tokens.placeables.filter((t) => t.isTargeted)
-          );
-        }
-
-        if (targetTokens.length) {
-          const targets = targetTokens
-            .map((t) => {
-              const tokenDoc = t.document ?? t; // Token (placeable) or TokenDocument
-              const a = t.actor ?? tokenDoc?.actor;
-              const ac = abilityKey
-                ? a?.system?.abilities?.[abilityKey]?.defense ?? 0
-                : 0;
-              const img = tokenDoc?.texture?.src ?? a?.img ?? "";
-              const uuid = tokenDoc?.uuid ?? "";
-              const name = t.name ?? tokenDoc?.name ?? a?.name ?? "Target";
-              return { name, img, ac, uuid };
-            })
-            .filter((t) => t.uuid);
-
-          if (targets.length) {
-            systemFlags.targets = targets;
-          }
-        }
+            try {
+        const targets = mmD616CollectLocalTargets();
+        // Store lightweight target refs so EVERY client can render the target list.
+        // IMPORTANT: We only store the targets marked by THE ROLLING USER.
+        if (targets?.length) systemFlags.targets = targets;
       } catch (e) {
         console.warn(
-          "[multiverse-d616] Failed to capture targets for roll message",
+          "[multiverse-d616] Failed to capture local targets for roll message",
           e
         );
       }
@@ -1353,6 +1354,154 @@ function mmGetDamageMultiplierContext(actor, abilityKey) {
   return { base, derived, delta, otherBonus, otherPenalty };
 }
 
+// ---------------------------------------------------------------------------
+// Shared Targets Collection (Socket) — makes target list visible to ALL users.
+// Rule: GM sees HIT/MISS; Players see only "ALVO".
+// ---------------------------------------------------------------------------
+
+const MM_D616_SOCKET = "system.multiverse-d616";
+const MM_D616_TARGET_SCOPE = "mm-d616-targets";
+const MM_D616_TARGET_REQUESTS = new Map();
+
+/**
+ * Register socket listeners (idempotent).
+ */
+function mmD616RegisterTargetsSocket() {
+  const g = (game.multiverseD616 = game.multiverseD616 || {});
+  if (g._targetsSocketRegistered) return;
+  g._targetsSocketRegistered = true;
+
+  game.socket.on(MM_D616_SOCKET, (data) => {
+    try {
+      if (!data || data.scope !== MM_D616_TARGET_SCOPE) return;
+
+      if (data.type === "REQUEST_TARGETS") {
+        const targets = mmD616CollectLocalTargets();
+        game.socket.emit(MM_D616_SOCKET, {
+          scope: MM_D616_TARGET_SCOPE,
+          type: "TARGETS_RESPONSE",
+          requestId: data.requestId,
+          from: game.user?.id,
+          targets,
+        });
+        return;
+      }
+
+      if (data.type === "TARGETS_RESPONSE") {
+        const req = MM_D616_TARGET_REQUESTS.get(data.requestId);
+        if (!req) return;
+        if (data?.from) req.from.add(data.from);
+        if (Array.isArray(data.targets)) req.targets.push(...data.targets);
+      }
+    } catch (err) {
+      console.warn("[multiverse-d616] Targets socket handler error", err);
+    }
+  });
+}
+
+/**
+ * Collect targets for the CURRENT user only.
+ * Returns lightweight target refs (uuid, name, img).
+ */
+
+/**
+ * Check if a Token is targeted by a specific User (without leaking other users' targets).
+ * Token.targeted can be a Set of Users or User IDs depending on Foundry version/modules.
+ */
+function mmD616IsTargetedByUser(token, user) {
+  try {
+    if (!token || !user) return false;
+    const targeted = token.targeted;
+    if (!targeted) return false;
+
+    if (typeof targeted.has === "function") {
+      if (targeted.has(user)) return true;
+      if (targeted.has(user.id)) return true;
+    }
+
+    for (const u of targeted) {
+      if (u === user) return true;
+      if (typeof u === "string" && u === user.id) return true;
+      if (u?.id && u.id === user.id) return true;
+    }
+  } catch (e) {
+    // ignore
+  }
+  return false;
+}
+
+function mmD616CollectLocalTargets() {
+  const out = [];
+  try {
+    const tokens = Array.from(game.user?.targets ?? []);
+
+    // Fallback: some modules may not populate game.user.targets consistently.
+    if (!tokens.length && canvas?.tokens?.placeables) {
+      tokens.push(...canvas.tokens.placeables.filter((t) => mmD616IsTargetedByUser(t, game.user)));
+    }
+
+    for (const t of tokens) {
+      const tokenDoc = t.document ?? t;
+      const a = t.actor ?? tokenDoc?.actor;
+      const uuid = tokenDoc?.uuid ?? "";
+      if (!uuid) continue;
+      const name = t.name ?? tokenDoc?.name ?? a?.name ?? "Target";
+      const img = tokenDoc?.texture?.src ?? a?.img ?? "";
+      out.push({ uuid, name, img });
+    }
+  } catch (e) {
+    console.warn("[multiverse-d616] Failed to collect local targets", e);
+  }
+
+  // Deduplicate by uuid
+  const map = new Map();
+  for (const t of out) if (t?.uuid && !map.has(t.uuid)) map.set(t.uuid, t);
+  return Array.from(map.values());
+}
+
+/**
+ * Collect targets from ALL connected clients (best-effort).
+ * We request each client to report their local targets and union them.
+ */
+async function mmD616CollectSharedTargets({ timeoutMs = 250 } = {}) {
+  mmD616RegisterTargetsSocket();
+
+  const requestId =
+    typeof foundry?.utils?.randomID === "function"
+      ? foundry.utils.randomID()
+      : randomID();
+
+  const req = { targets: [], from: new Set() };
+  MM_D616_TARGET_REQUESTS.set(requestId, req);
+
+  // Include our own targets immediately
+  req.targets.push(...mmD616CollectLocalTargets());
+  req.from.add(game.user?.id);
+
+  try {
+    game.socket.emit(MM_D616_SOCKET, {
+      scope: MM_D616_TARGET_SCOPE,
+      type: "REQUEST_TARGETS",
+      requestId,
+      from: game.user?.id,
+    });
+  } catch (e) {
+    console.warn("[multiverse-d616] Failed to emit REQUEST_TARGETS", e);
+  }
+
+  await new Promise((r) => setTimeout(r, timeoutMs));
+  MM_D616_TARGET_REQUESTS.delete(requestId);
+
+  // Deduplicate by uuid
+  const map = new Map();
+  for (const t of req.targets) {
+    if (!t?.uuid) continue;
+    if (!map.has(t.uuid)) map.set(t.uuid, t);
+  }
+  return Array.from(map.values());
+}
+
+
 class ChatMessageMarvel extends ChatMessage {
   /** @inheritDoc */
   _initialize(options = {}) {
@@ -1373,7 +1522,7 @@ class ChatMessageMarvel extends ChatMessage {
     this._displayChatActionButtons(html);
 
     this._enrichChatCard(html[0]);
-    this._enrichAttackTargets(html[0]);
+    await this._enrichAttackTargets(html[0]);
 
     /**
      * A hook event that fires after multiverse-d616-specific chat message modifications have completed.
@@ -1581,7 +1730,7 @@ class ChatMessageMarvel extends ChatMessage {
    * @param {HTMLLIElement} html   The chat card.
    * @protected
    */
-  _enrichAttackTargets(html) {
+  async _enrichAttackTargets(html) {
     // Remove any prior evaluation block (re-renders happen after retro Edge/Trouble).
     for (const el of html.querySelectorAll("ul.multiverse-d616.evaluation")) {
       el.remove();
@@ -1589,9 +1738,6 @@ class ChatMessageMarvel extends ChatMessage {
 
     const [attackRoll] = this.rolls ?? [];
     if (!attackRoll) return;
-
-    // Show only to GMs and to the author of the roll (avoids leaking defenses to other players).
-    if (!(game.user.isGM || this.user?.id === game.user.id)) return;
 
     // Ability key used to fetch target defense
     let abilityAbr = this.getFlag("multiverse-d616", "ability") ?? null;
@@ -1616,34 +1762,26 @@ class ChatMessageMarvel extends ChatMessage {
       }
     }
 
-    // Determine targets: prefer stored targets (uuid, ac at time of roll). If missing, use current targets.
+    // Determine targets: always use the targets saved on the message (set at roll time by the rolling user).
+    // If missing, ONLY the message author will auto-capture their current local targets and persist them,
+    // so every client sees the same target list.
     let targets = this.getFlag("multiverse-d616", "targets") ?? [];
 
-    const getTokenDoc = (t) => t?.document ?? t;
-    const collectCurrentTargets = () => {
-      const live = Array.from(game.user?.targets ?? []);
-      if (!live.length && canvas?.tokens?.placeables) {
-        live.push(...canvas.tokens.placeables.filter((t) => t.isTargeted));
-      }
-      return live;
-    };
-
     if (!targets?.length) {
-      const liveTargets = collectCurrentTargets();
-      if (liveTargets.length) {
-        targets = liveTargets
-          .map((t) => {
-            const tokenDoc = getTokenDoc(t);
-            const a = t.actor ?? tokenDoc?.actor;
-            const ac = abilityAbr
-              ? a?.system?.abilities?.[abilityAbr]?.defense ?? 0
-              : 0;
-            const img = tokenDoc?.texture?.src ?? a?.img ?? "";
-            const uuid = tokenDoc?.uuid ?? "";
-            const name = t.name ?? tokenDoc?.name ?? a?.name ?? "Target";
-            return { name, img, ac, uuid };
-          })
-          .filter((t) => t.uuid);
+      const authorId = this.author?.id ?? this.user?.id ?? null;
+      if (authorId && game.user?.id === authorId) {
+        const localTargets = mmD616CollectLocalTargets();
+        if (localTargets?.length) {
+          try {
+            await this.setFlag("multiverse-d616", "targets", localTargets);
+          } catch (e) {
+            console.warn(
+              "[multiverse-d616] Failed to persist targets on chat message",
+              e
+            );
+          }
+          targets = localTargets;
+        }
       }
     }
 
@@ -1681,36 +1819,45 @@ class ChatMessageMarvel extends ChatMessage {
 
     const total = Number.isFinite(attackRoll.total) ? attackRoll.total : 0;
     const esc = foundry.utils.escapeHTML;
+    const isGM = !!game.user?.isGM;
     const hitText = game.i18n.localize("MULTIVERSE_D616.hit");
     const missText = game.i18n.localize("MULTIVERSE_D616.miss");
+    const targetText = "ALVO";
     const evaluation = document.createElement("ul");
     evaluation.classList.add("multiverse-d616", "evaluation");
 
-    const resolveTokenFromUuid = (uuid) => {
-      if (!uuid || !canvas?.scene) return null;
-      const m = uuid.match(/\.Token\.([^.]+)$/);
-      if (!m) return null;
-      return canvas.tokens?.get(m[1]) ?? null;
+    const resolveTokenDocFromUuid = async (uuid) => {
+      try {
+        if (!uuid) return null;
+        const doc = await fromUuid(uuid);
+        // TokenDocument has documentName "Token"
+        return doc?.documentName === "Token" ? doc : null;
+      } catch (e) {
+        return null;
+      }
     };
 
-    evaluation.innerHTML = targets
-      .map((t) => {
-        const token = resolveTokenFromUuid(t.uuid);
-        const a = token?.actor;
-        const currentAc =
-          abilityAbr && a?.system?.abilities?.[abilityAbr]?.defense != null
-            ? a.system.abilities[abilityAbr].defense
-            : Number(t.ac ?? 0);
+        const resolved = await Promise.all(
+      targets.map(async (t) => {
+        const tokenDoc = await resolveTokenDocFromUuid(t.uuid);
+        const a = tokenDoc?.actor ?? null;
 
-        const name = token?.name ?? t.name ?? a?.name ?? "Target";
-        const img = token?.document?.texture?.src ?? t.img ?? a?.img ?? "";
+        // Defense value is only computed for GM to avoid leaking defenses.
+        const currentAc =
+          isGM && abilityAbr && a?.system?.abilities?.[abilityAbr]?.defense != null
+            ? a.system.abilities[abilityAbr].defense
+            : null;
+
+        const name = tokenDoc?.name ?? t.name ?? a?.name ?? "Target";
+        const img = tokenDoc?.texture?.src ?? t.img ?? a?.img ?? "";
         const targetValue = Number(currentAc ?? 0);
-        const isHit = isFantastic || total >= targetValue;
-        const resultText = isHit ? hitText : missText;
+        const isHit = isGM ? (isFantastic || total >= targetValue) : false;
+
+        const resultText = isGM ? (isHit ? hitText : missText) : targetText;
+        const outcomeClass = isGM ? (isHit ? "hit" : "miss") : "";
+
         return `
-        <li data-uuid="${esc(t.uuid ?? "")}" class="target ${
-          isHit ? "hit" : "miss"
-        }">
+        <li data-uuid="${esc(t.uuid ?? "")}" class="target ${outcomeClass}">
           <img src="${esc(img ?? "")}" alt="${esc(name ?? "Target")}">
           <div class="name-stacked">
             <span class="title">${esc(name ?? "Target")}</span>
@@ -1718,7 +1865,9 @@ class ChatMessageMarvel extends ChatMessage {
           <div class="result">${esc(resultText)}</div>
         </li>`;
       })
-      .join("");
+    );
+
+    evaluation.innerHTML = resolved.join("");
 
     html.querySelector(".message-content")?.appendChild(evaluation);
   }
@@ -2062,7 +2211,7 @@ class ChatMessageMarvel extends ChatMessage {
 
     // Fallback for any modules that don't populate game.user.targets
     if (!targetTokens.length && canvas?.tokens?.placeables) {
-      targetTokens.push(...canvas.tokens.placeables.filter((t) => t.isTargeted));
+      targetTokens.push(...canvas.tokens.placeables.filter((t) => mmD616IsTargetedByUser(t, game.user)));
     }
 
     const abilityValue = actor.system.abilities[abilityAbr].value;

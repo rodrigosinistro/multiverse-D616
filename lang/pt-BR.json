@@ -50,6 +50,7 @@
   },
   "MULTIVERSE_D616": {
     "hit": "ACERTOU",
-    "miss": "ERROU"
+    "miss": "ERROU",
+    "target": "ALVO"
   }
 }
