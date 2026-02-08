@@ -1837,16 +1837,51 @@ class ChatMessageMarvel extends ChatMessage {
       }
     };
 
+
+    // Trait-based defense swaps (Marvel Multiverse rules) applied on the *target*.
+    // Brawling: Agility attacks are defended with Melee.
+    // Evasion: Melee attacks are defended with Agility.
+    // Wisdom: Logic attacks are defended with Ego.
+    // Integrity: Ego attacks are defended with Logic.
+    const mmD616Norm = (s) => String(s ?? "").trim().toLowerCase();
+
+    const mmD616HasNamedTrait = (actor, traitName) => {
+      const want = mmD616Norm(traitName);
+      const items = actor?.items?.contents ?? (actor?.items ? Array.from(actor.items) : []);
+      for (const it of items) {
+        if (!it) continue;
+        const t = it.type ?? "";
+        if (t && !["trait", "power"].includes(t)) continue;
+        const n = mmD616Norm(it.name);
+        if (n === want || n.startsWith(`${want} `) || n.startsWith(`${want} (`)) return true;
+      }
+      return false;
+    };
+
+    const mmD616ResolveDefenseAbility = (attackAbr, actor) => {
+      let def = attackAbr;
+      if (!actor || !attackAbr) return def;
+      if (attackAbr === "agl" && mmD616HasNamedTrait(actor, "Brawling")) def = "mle";
+      else if (attackAbr === "mle" && mmD616HasNamedTrait(actor, "Evasion")) def = "agl";
+      else if (attackAbr === "log" && mmD616HasNamedTrait(actor, "Wisdom")) def = "ego";
+      else if (attackAbr === "ego" && mmD616HasNamedTrait(actor, "Integrity")) def = "log";
+      return def;
+    };
+
         const resolved = await Promise.all(
       targets.map(async (t) => {
         const tokenDoc = await resolveTokenDocFromUuid(t.uuid);
         const a = tokenDoc?.actor ?? null;
 
         // Defense value is only computed for GM to avoid leaking defenses.
+        // Apply trait-based defense swaps (Brawling/Evasion/Wisdom/Integrity) on the target.
+        const defenseAbr = isGM && abilityAbr ? mmD616ResolveDefenseAbility(abilityAbr, a) : null;
         const currentAc =
-          isGM && abilityAbr && a?.system?.abilities?.[abilityAbr]?.defense != null
-            ? a.system.abilities[abilityAbr].defense
-            : null;
+          isGM && defenseAbr && a?.system?.abilities?.[defenseAbr]?.defense != null
+            ? a.system.abilities[defenseAbr].defense
+            : isGM && abilityAbr && a?.system?.abilities?.[abilityAbr]?.defense != null
+              ? a.system.abilities[abilityAbr].defense
+              : null;
 
         const name = tokenDoc?.name ?? t.name ?? a?.name ?? "Target";
         const img = tokenDoc?.texture?.src ?? t.img ?? a?.img ?? "";
