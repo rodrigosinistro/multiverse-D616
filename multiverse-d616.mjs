@@ -4309,8 +4309,13 @@ class MarvelMultiverseActorBase extends foundry.abstract
           this.movement[key].value = this.movement.run.value;
           break;
         case "rank": {
-          const val =
-            this.movement[key].value === 0 ? 1 : this.movement[key].value;
+          // Flight in MMRPG is based on current Run Speed (which can itself be modified),
+          // then scaled by character Rank.
+          // This also keeps backward compatibility with older content that attempted to set
+          // flight.calc twice (runspeed then rank) via Active Effects.
+          const base =
+            key === "flight" ? this.movement.run.value : this.movement[key].value;
+          const val = base === 0 ? 1 : base;
           this.movement[key].value = val * this.attributes.rank.value;
           break;
         }
@@ -4374,8 +4379,13 @@ class MarvelMultiverseNPC extends MarvelMultiverseActorBase {
           this.movement[key].value = this.movement.run.value;
           break;
         case "rank": {
-          const val =
-            this.movement[key].value === 0 ? 1 : this.movement[key].value;
+          // Flight in MMRPG is based on current Run Speed (which can itself be modified),
+          // then scaled by character Rank.
+          // This also keeps backward compatibility with older content that attempted to set
+          // flight.calc twice (runspeed then rank) via Active Effects.
+          const base =
+            key === "flight" ? this.movement.run.value : this.movement[key].value;
+          const val = base === 0 ? 1 : base;
           this.movement[key].value = val * this.attributes.rank.value;
           break;
         }

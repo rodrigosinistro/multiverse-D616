@@ -1,3 +1,6 @@
+## 0.1.51 (2026-02-17)
+- Fix (Movement — Flight): Flight Speed agora segue corretamente a regra **Run Speed atual × Rank** (inclui modificadores que alterem a Run Speed). Isso também corrige conteúdo legado que tentava aplicar `flight.calc` como `runspeed` e depois `rank` via Active Effects.
+
 ## 0.1.50 (2026-02-07)
 - Fix (Chat — Acerto/Erro): ao avaliar acertos de ataque, considera Traits do alvo que trocam a defesa usada: **Brawling** (Agility→Melee), **Evasion** (Melee→Agility), **Wisdom** (Logic→Ego), **Integrity** (Ego→Logic).
 
