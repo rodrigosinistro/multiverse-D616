@@ -16,9 +16,12 @@ https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.js
 - Charactermancer (assistente de criação)
 - PDF Export
 - Power Sets custom (suporte a Power Sets novos sem crash na ficha)
+- Focus em Powers (custo automático):
+  - custo fixo (ex.: `5 Focus`) é deduzido automaticamente ao usar o poder
+  - custo variável (ex.: `5 ou mais Focus`) abre automaticamente um diálogo para escolher o gasto
 
 ## Compatibilidade
-- Foundry VTT v13 (minimum 13, verified 13.351)..
+- Foundry VTT v13 (minimum 13, verified 13.351).
 
 ## Créditos e Referências
 Este sistema foi **baseado** e **adaptado** a partir do código do **sistema Marvel Multiverse (D616) para Foundry VTT** e de módulos da comunidade.

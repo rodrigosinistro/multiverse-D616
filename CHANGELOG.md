@@ -1,3 +1,10 @@
+## 0.1.53 (2026-02-22)
+- Fix (Chat — EDGE/TROUBLE): rolagens retroativas (EDGE/TROUBLE) não sobrescrevem mais `flags` do sistema no ChatMessage. Isso evita regressões como o botão/estado de Focus “sumir” após um reroll.
+- Melhoria (Focus — custo automático em Powers):
+  - **Custo fixo** (ex.: `5 Focus`): agora é **deduzido automaticamente** do Focus do personagem ao usar o Poder.
+  - **Custo variável** (ex.: `5 or more Focus` / `5 ou mais Focus`): ao usar o Poder, abre automaticamente para o usuário que rolou um diálogo para escolher o total a gastar (mínimo + extra), mantendo as regras já existentes (limite **5×Rank**, validação de Focus disponível, bônus por escalonamento quando detectável no EFFECT).
+  - O gasto fica salvo no próprio card via `flags` e aparece na linha de info (FOCUS/BÔNUS) — sem depender de um botão no card.
+
 ## 0.1.52 (2026-02-21)
 - Fix (Sheet/Charactermancer — Power Sets custom): a ficha não trava mais ao abrir quando existir Power com `system.powerSet` novo/não listado (ex.: **"Animal Control"**). O agrupamento de Powers agora cria buckets dinamicamente (e ignora com segurança quando o DataModel não permite chaves novas).
 

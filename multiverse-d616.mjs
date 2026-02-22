@@ -474,6 +474,13 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
     const __okConc = await handleConcentrationOnUse(this.actor, this);
     if (!__okConc) return;
 
+    // Focus cost handling (Power only):
+    // - Fixed cost: auto-deduct.
+    // - Variable cost ("X or more Focus"): prompt immediately for the rolling user.
+    // If the user cancels or doesn't have enough Focus, abort the use (no chat message).
+    const preFocus = await mmPreSpendFocusForPowerUse(this.actor, this);
+    if (preFocus === null) return;
+
     // Initialize chat data.
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get("core", "rollMode");
@@ -541,6 +548,15 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         },
       };
 
+      // Persist Focus spending on the roll card so it survives Edge/Trouble retro rolls.
+      // Also hides the old "Focus" button (auto workflow).
+      if (preFocus && Number(preFocus.spent ?? 0) > 0) {
+        systemFlags.focusAuto = true;
+        systemFlags.focusSpent = Number(preFocus.spent ?? 0);
+        systemFlags.focusDamageBonus = Number(preFocus.bonus ?? 0);
+        systemFlags.focusRule = String(preFocus.summary ?? "").trim();
+      }
+
             try {
         const targets = mmD616CollectLocalTargets();
         // Store lightweight target refs so EVERY client can render the target list.
@@ -561,7 +577,8 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
 	        flags: { "multiverse-d616": systemFlags },
       };
 
-      roll.toMessage(msgData, { rollMode: rollMode, itemId: this._id });
+      // Await message creation so any downstream code that depends on flags can rely on it.
+      await roll.toMessage(msgData, { rollMode: rollMode, itemId: this._id });
 
       if (this.system.attack) {
         Hooks.callAll("multiverse-d616.rollAttack", this, roll);
@@ -1281,6 +1298,130 @@ function mmParseFocusCost(costText) {
   };
 }
 
+/**
+ * Spend Focus for a Power use BEFORE rolling.
+ * - Fixed cost: auto-deduct.
+ * - Variable cost ("X or more Focus"): prompt the rolling user for the total spend.
+ *
+ * Returns { spent, bonus, summary } or null if the use is cancelled/invalid.
+ */
+async function mmPreSpendFocusForPowerUse(actor, item) {
+  try {
+    if (!actor || !item) return { spent: 0, bonus: 0, summary: "" };
+    if ((item.type ?? "").toLowerCase() !== "power") return { spent: 0, bonus: 0, summary: "" };
+
+    const cost = mmParseFocusCost(item.system?.cost ?? "");
+    if (!cost.hasFocus || (cost.min ?? 0) <= 0) return { spent: 0, bonus: 0, summary: "" };
+
+    const rank = Number(actor.system?.attributes?.rank?.value ?? 1);
+    const maxSpend = Math.max(0, 5 * (Number.isFinite(rank) ? rank : 1));
+    const actorFocus = Number(actor.system?.focus?.value ?? 0);
+    const available = Number.isFinite(actorFocus) ? actorFocus : 0;
+
+    if (maxSpend <= 0) {
+      ui.notifications?.warn?.("Rank inválido para calcular o limite de gasto de Focus.");
+      return null;
+    }
+
+    // FIXED
+    if (cost.type === "fixed") {
+      const spend = Math.max(0, Number(cost.fixed ?? cost.min ?? 0) || 0);
+      if (spend <= 0) return { spent: 0, bonus: 0, summary: "" };
+      if (spend > maxSpend) {
+        ui.notifications?.warn?.(
+          `Este poder exige ${spend} Focus, mas o limite por uso é ${maxSpend} (5×Rank).`
+        );
+        return null;
+      }
+      if (available < spend) {
+        ui.notifications?.warn?.(`Focus insuficiente: precisa de ${spend}, mas tem ${available}.`);
+        return null;
+      }
+      const { bonus, summary } = mmComputeFocusDamageBonus(item.system?.effect ?? "", spend);
+      await actor.update({ "system.focus.value": available - spend });
+      return { spent: spend, bonus: bonus ?? 0, summary: summary ?? "" };
+    }
+
+    // VARIABLE ("X or more Focus")
+    const min = Math.max(0, Number(cost.min ?? 0) || 0);
+    const maxTotal = Math.min(maxSpend, available);
+    if (maxTotal < min) {
+      ui.notifications?.warn?.(
+        `Focus insuficiente. Mínimo ${min}, disponível ${available}, limite ${maxSpend}.`
+      );
+      return null;
+    }
+
+    const maxExtra = Math.max(0, maxTotal - min);
+    const scaling = mmParseFocusScaling(item.system?.effect ?? "");
+    const scalingHelp = scaling
+      ? `Este poder escala: +${scaling.per} bônus de dano${scaling.ability ? ` ${scaling.ability}` : ""} a cada ${scaling.step} Focus gasto.`
+      : "Não consegui identificar automaticamente o escalonamento no campo EFEITO.";
+
+    const chosen = await new Promise((resolve) => {
+      new Dialog(
+        {
+          title: `Gastar Focus — ${item.name}`,
+          content: `
+            <form>
+              <p><strong>Custo mínimo:</strong> ${min} Focus</p>
+              <p><strong>Limite por uso:</strong> ${maxSpend} (5×Rank)</p>
+              <p><strong>Disponível:</strong> ${available} Focus</p>
+              <hr/>
+              <div class="form-group">
+                <label>Quanto a mais você quer gastar além do mínimo? (0–${maxExtra})</label>
+                <input type="number" name="extra" value="0" min="0" max="${maxExtra}" step="1"/>
+              </div>
+              <p style="margin-top:8px">${scalingHelp}</p>
+            </form>
+          `,
+          buttons: {
+            ok: {
+              label: "Aplicar",
+              callback: (html) => {
+                const form = html[0].querySelector("form");
+                const extra = Number.parseInt(form?.extra?.value ?? "0", 10);
+                const extraClamped = mmClampNumber(extra, 0, maxExtra);
+                resolve(min + extraClamped);
+              },
+            },
+            cancel: {
+              label: "Cancelar",
+              callback: () => resolve(null),
+            },
+          },
+          default: "ok",
+          close: () => resolve(null),
+        },
+        { width: 420 }
+      ).render(true);
+    });
+
+    if (chosen === null) return null;
+
+    const spend = Math.max(0, Number(chosen ?? 0) || 0);
+    if (spend < min) {
+      ui.notifications?.warn?.(`Você deve gastar pelo menos ${min} Focus para usar este poder.`);
+      return null;
+    }
+    if (spend > maxSpend) {
+      ui.notifications?.warn?.(`Limite excedido: máximo ${maxSpend} Focus (5×Rank).`);
+      return null;
+    }
+    if (spend > available) {
+      ui.notifications?.warn?.(`Focus insuficiente: quer gastar ${spend}, mas só tem ${available}.`);
+      return null;
+    }
+
+    const { bonus, summary } = mmComputeFocusDamageBonus(item.system?.effect ?? "", spend);
+    await actor.update({ "system.focus.value": available - spend });
+    return { spent: spend, bonus: bonus ?? 0, summary: summary ?? "" };
+  } catch (e) {
+    console.error("[multiverse-d616] mmPreSpendFocusForPowerUse error", e);
+    return null;
+  }
+}
+
 function mmParseFocusScaling(effectHtml) {
   const t = mmStripHtml(effectHtml);
   if (!t) return null;
@@ -1698,8 +1839,11 @@ class ChatMessageMarvel extends ChatMessage {
     const costText = item?.system?.cost ?? "";
     const cost = mmParseFocusCost(costText);
 
+    // New workflow: when the power auto-spends Focus on use, hide the button.
+    const focusAuto = Boolean(this.getFlag("multiverse-d616", "focusAuto"));
+
     // Default hidden unless the message is associated to an item with Focus cost.
-    const show = Boolean(item && cost.hasFocus && (cost.min ?? 0) > 0);
+    const show = Boolean(item && cost.hasFocus && (cost.min ?? 0) > 0 && !focusAuto);
     focusBtn.style.display = show ? "" : "none";
 
     // Render info line when Focus has been spent.
@@ -2476,8 +2620,11 @@ class ChatMessageMarvel extends ChatMessage {
       roll._total = roll.total - oldResult + newResult;
     }
 
-    let update = await roll.toMessage({ flavor: flavor }, { create: false });
-    update = foundry.utils.mergeObject(chatMessage.toJSON(), update);
+    // IMPORTANT:
+    // Updating via a full merge can clobber custom system flags (ex.: itemId/focusSpent),
+    // which breaks Focus controls and other enrichments after retro Edge/Trouble.
+    // Only update the roll payload + rendered content/flavor, preserving flags.
+    const update = await roll.toMessage({ flavor: flavor }, { create: false });
 
     if (isInit) {
       const actorId = game.actors.contents.find(
@@ -2489,7 +2636,11 @@ class ChatMessageMarvel extends ChatMessage {
       await combatant.update({ initiative: roll.total });
     }
 
-    return chatMessage.update(update);
+    return chatMessage.update({
+      content: update?.content ?? chatMessage.content,
+      flavor: update?.flavor ?? flavor ?? chatMessage.flavor,
+      rolls: update?.rolls ?? chatMessage.rolls,
+    });
   }
 
   /* -------------------------------------------- */
