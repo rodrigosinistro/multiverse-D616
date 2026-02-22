@@ -15,6 +15,7 @@ https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.js
 - Conditions HUD
 - Charactermancer (assistente de criação)
 - PDF Export
+- Power Sets custom (suporte a Power Sets novos sem crash na ficha)
 
 ## Compatibilidade
 - Foundry VTT v13 (minimum 13, verified 13.351)..

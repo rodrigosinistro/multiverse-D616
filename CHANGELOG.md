@@ -1,3 +1,6 @@
+## 0.1.52 (2026-02-21)
+- Fix (Sheet/Charactermancer — Power Sets custom): a ficha não trava mais ao abrir quando existir Power com `system.powerSet` novo/não listado (ex.: **"Animal Control"**). O agrupamento de Powers agora cria buckets dinamicamente (e ignora com segurança quando o DataModel não permite chaves novas).
+
 ## 0.1.51 (2026-02-17)
 - Fix (Movement — Flight): Flight Speed agora segue corretamente a regra **Run Speed atual × Rank** (inclui modificadores que alterem a Run Speed). Isso também corrige conteúdo legado que tentava aplicar `flight.calc` como `runspeed` e depois `rank` via Active Effects.
 

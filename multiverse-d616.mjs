@@ -2742,8 +2742,10 @@ render(force = false, options = {}) {
       } else if (i.type === "tag") {
         tags.push(i);
       } else if (i.type === "power") {
-        const powersets = i.system.powerSet.split(",");
-        powers[powersets[0].trim()].push(i);
+        const powersets = (i.system.powerSet ?? "Basic").split(",");
+        const powerSetLabel = (powersets[0] ?? "Basic").trim() || "Basic";
+        if (!powers[powerSetLabel]) powers[powerSetLabel] = [];
+        powers[powerSetLabel].push(i);
       }
 
       // Assign and return
@@ -2771,10 +2773,24 @@ render(force = false, options = {}) {
     }
 
     for (const i of context.items.filter((item) => item.type === "power")) {
-      const mappedPowersets = i.system.powerSet
-        .split(",")
-        .map((ps) => CONFIG.MULTIVERSE_D616.reverseSetList[ps.trim()]);
-      context.system.powers[mappedPowersets[0]].push(i);
+      const powersets = (i.system.powerSet ?? "Basic").split(",");
+      const powerSetLabel = (powersets[0] ?? "Basic").trim() || "Basic";
+      const powerSetKey =
+        CONFIG.MULTIVERSE_D616.reverseSetList[powerSetLabel] ??
+        (foundry.utils?.camelize
+          ? foundry.utils.camelize(powerSetLabel)
+          : powerSetLabel
+              .toLowerCase()
+              .replace(/[^a-z0-9]+(.)/g, (_m, chr) => chr.toUpperCase())
+              .replace(/[^a-z0-9]/g, ""));
+      try {
+        if (!Array.isArray(context.system.powers[powerSetKey])) {
+          context.system.powers[powerSetKey] = [];
+        }
+        context.system.powers[powerSetKey].push(i);
+      } catch (_err) {
+        // If the system data model is strict and doesn't allow dynamic keys, just skip.
+      }
     }
 
     for (const i of context.items.filter((item) => item.type === "origin")) {
@@ -3226,8 +3242,10 @@ render(force = false, options = {}) {
       }
       // Append to  power.
       else if (i.type === "power") {
-        const powersets = i.system.powerSet.split(",");
-        powers[powersets[0].trim()].push(i);
+        const powersets = (i.system.powerSet ?? "Basic").split(",");
+        const powerSetLabel = (powersets[0] ?? "Basic").trim() || "Basic";
+        if (!powers[powerSetLabel]) powers[powerSetLabel] = [];
+        powers[powerSetLabel].push(i);
       } else if (i.type === "item") {
         gear.push(i);
       } else if (i.type === "weapon") {
@@ -3259,10 +3277,24 @@ render(force = false, options = {}) {
     }
 
     for (const i of context.items.filter((item) => item.type === "power")) {
-      const mappedPowersets = i.system.powerSet
-        .split(",")
-        .map((ps) => CONFIG.MULTIVERSE_D616.reverseSetList[ps.trim()]);
-      context.system.powers[mappedPowersets[0]].push(i);
+      const powersets = (i.system.powerSet ?? "Basic").split(",");
+      const powerSetLabel = (powersets[0] ?? "Basic").trim() || "Basic";
+      const powerSetKey =
+        CONFIG.MULTIVERSE_D616.reverseSetList[powerSetLabel] ??
+        (foundry.utils?.camelize
+          ? foundry.utils.camelize(powerSetLabel)
+          : powerSetLabel
+              .toLowerCase()
+              .replace(/[^a-z0-9]+(.)/g, (_m, chr) => chr.toUpperCase())
+              .replace(/[^a-z0-9]/g, ""));
+      try {
+        if (!Array.isArray(context.system.powers[powerSetKey])) {
+          context.system.powers[powerSetKey] = [];
+        }
+        context.system.powers[powerSetKey].push(i);
+      } catch (_err) {
+        // If the system data model is strict and doesn't allow dynamic keys, just skip.
+      }
     }
 
     for (const i of context.items.filter((item) => item.type === "origin")) {
