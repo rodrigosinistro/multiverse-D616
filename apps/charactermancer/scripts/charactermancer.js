@@ -292,7 +292,7 @@ static async _mmcEnsureType(stub, fallback){
       selectedTags: [],
       powerSet: "Basic",
       chosenPowers: [],
-      powerLimitMatrix: {1:{'<=1':4}, 2:{'1':9,'2+':8}, 3:{'1':14,'2':13,'3+':12}, 4:{'1':19,'2':18,'3':17,'4+':16}, 5:{'1':24,'2':23,'3':22,'4':21,'5+':20}},
+      powerLimitMatrix: {1:{'<=1':4}, 2:{'1':9,'2+':8}, 3:{'1':14,'2':13,'3+':12}, 4:{'1':19,'2':18,'3':17,'4+':16}, 5:{'1':24,'2':23,'3':22,'4':21,'5+':20}, 6:{'1':29,'2':28,'3':27,'4':26,'5':25,'6+':24}},
       data: {items:[], occupations:[], origins:[], traits:[], tags:[], powers:[]},
       search: {occupation:"", origin:"", traits:"", tags:"", powers:""},
       bio: { codename:"", realname:"", gender:"", size:"average", height:"", weight:"", eyes:"", hair:"", teams:"", base:"", history:"", personality:"" }
@@ -462,7 +462,7 @@ for (const k of ["items","occupations","origins","traits","tags","powers"]) this
     3:{maxAbility:this._getMaxAttributeForRank(3), powerLimit:"14 (1) • 13 (2) • 12 (3+)", note:""},
     4:{maxAbility:this._getMaxAttributeForRank(4), powerLimit:"19 (1) • 18 (2) • 17 (3) • 16 (4+)", note:""},
     5:{maxAbility:this._getMaxAttributeForRank(5), powerLimit:"24 (1) • 23 (2) • 22 (3) • 21 (4) • 20 (5+)", note:""},
-    6:{maxAbility:this._getMaxAttributeForRank(6), powerLimit:"26 (1) • 25 (2) • 24 (3) • 23 (4) • 22 (5) • 21 (6+)", note:""}
+    6:{maxAbility:this._getMaxAttributeForRank(6), powerLimit:"29 (1) • 28 (2) • 27 (3) • 26 (4) • 25 (5) • 24 (6+)", note:""}
   };}
 
 
