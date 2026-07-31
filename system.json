@@ -16,6 +16,8 @@
   "media": [
     {
       "type": "cover",
+      "url": "systems/multiverse-d616/ui/official/mmrpg-repo.jpg",
+      "thumbnail": "systems/multiverse-d616/ui/official/mmrpg-badge-32.webp",
       "loop": false,
       "flags": {}
     },
@@ -25,13 +27,15 @@
       "thumbnail": "systems/multiverse-d616/ui/official/mmrpg-setup-thumbnail.png"
     }
   ],
-  "version": "0.1.54",
+  "version": "0.1.68",
   "compatibility": {
-    "minimum": "13",
-    "verified": "13"
+    "minimum": "14",
+    "verified": "14"
   },
   "esmodules": [
     "multiverse-d616.mjs",
+    "scripts/combat/turn-tracker.mjs",
+    "scripts/migrations/v0162-world-paths.mjs",
     "scripts/hover-tooltips.js",
     "scripts/hotbar-extensions.js",
     "scripts/chat-power-details.js",
@@ -48,6 +52,7 @@
     "styles/chat-power-details.css",
     "styles/damage-reduction-helper.css",
     "styles/conditions-hud.css",
+    "styles/turn-tracker.css",
     "apps/charactermancer/styles/styles.css"
   ],
   "languages": [
@@ -67,7 +72,7 @@
       "name": "tags",
       "label": "Tags",
       "system": "multiverse-d616",
-      "path": "packs/tags",
+      "path": "packs/mmc-tags-v0159.db",
       "type": "Item",
       "private": false,
       "flags": {}
@@ -76,7 +81,7 @@
       "name": "traits",
       "label": "Traits",
       "system": "multiverse-d616",
-      "path": "packs/traits",
+      "path": "packs/mmc-traits-v0159.db",
       "type": "Item",
       "private": false,
       "flags": {}
@@ -85,7 +90,7 @@
       "name": "powers",
       "label": "Powers",
       "system": "multiverse-d616",
-      "path": "packs/powers",
+      "path": "packs/mmc-powers-v0160",
       "type": "Item",
       "private": false,
       "flags": {}
@@ -94,7 +99,7 @@
       "name": "origins",
       "label": "Origins",
       "system": "multiverse-d616",
-      "path": "packs/origins",
+      "path": "packs/mmc-origins-v0159.db",
       "type": "Item",
       "private": false,
       "flags": {}
@@ -103,7 +108,7 @@
       "name": "occupations",
       "label": "Occupations",
       "system": "multiverse-d616",
-      "path": "packs/occupations",
+      "path": "packs/mmc-occupations-v0159.db",
       "type": "Item",
       "private": false,
       "flags": {}
@@ -112,7 +117,7 @@
       "name": "items",
       "label": "Items",
       "system": "multiverse-d616",
-      "path": "packs/items",
+      "path": "packs/mmc-items-v0159.db",
       "type": "Item",
       "private": false,
       "flags": {}
@@ -135,7 +140,7 @@
   ],
   "socket": true,
   "manifest": "https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json",
-  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.1.54/multiverse-d616-v0.1.54.zip",
+  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.1.68/multiverse-d616-v0.1.68.zip",
   "background": "systems/multiverse-d616/ui/official/mmrpg-background.webp",
   "grid": {
     "distance": 5,
@@ -145,5 +150,61 @@
   "secondaryTokenAttribute": "focus",
   "flags": {
     "hotReload": false
+  },
+  "documentTypes": {
+    "Actor": {
+      "character": {
+        "htmlFields": [
+          "history",
+          "personality",
+          "distinguishingFeatures"
+        ]
+      },
+      "npc": {
+        "htmlFields": [
+          "history",
+          "personality",
+          "distinguishingFeatures"
+        ]
+      }
+    },
+    "Item": {
+      "item": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "weapon": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "trait": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "tag": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "origin": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "occupation": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "power": {
+        "htmlFields": [
+          "description",
+          "effect"
+        ]
+      }
+    }
   }
 }

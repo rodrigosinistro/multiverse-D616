@@ -1,8 +1,8 @@
 
 import { loadTraitsAndTags } from "./utils/mmc-load-traits-tags.js";
 
-/* Marvel Multiverse — Charactermancer v0.6.7 */
-class MMCCharactermancer extends Application {
+/* Marvel Multiverse — Charactermancer v0.6.8 */
+class MMCCharactermancer extends foundry.appv1.api.Application {
 
   /**
    * Localize a key with a safe fallback.
@@ -91,6 +91,10 @@ static async _mmcEnsureType(stub, fallback){
         delete cleaned.uuid;
         delete cleaned.pack;
         delete cleaned.mmcKind;
+        delete cleaned.folder;
+        delete cleaned._stats;
+        delete cleaned.sort;
+        delete cleaned.ownership;
         if (!cleaned.type && fallback) cleaned.type = fallback;
         if (!cleaned.system) cleaned.system = {};
         return cleaned;
@@ -299,11 +303,15 @@ static async _mmcEnsureType(stub, fallback){
     };
   }
 
-  async _loadJSON(path) { const r = await fetch(path); return await r.json(); }
+  async _loadJSON(path) {
+    const response = await fetch(path);
+    if (!response.ok) throw new Error(`MMC data load failed (${response.status}): ${path}`);
+    return response.json();
+  }
 
   async _ensureData() {
     if (this._loaded) return;
-    const base = "modules/marvel-multiverse-charactermancer/data/";
+    const base = `systems/${game.system?.id ?? "multiverse-d616"}/apps/charactermancer/data/`;
     const [items, occupations, origins, traits, tags, powers, actorModel] = await Promise.all([
       this._loadJSON(base+"items.json").catch(()=>({items:[]})),
       this._loadJSON(base+"occupations.json").catch(()=>({items:[]})),
@@ -430,7 +438,7 @@ for (const k of ["items","occupations","origins","traits","tags","powers"]) this
     nav.appendChild(back); nav.appendChild(next);
     wrap.appendChild(nav);
 
-    return wrap;
+    return $(wrap);
   }
 
   _refreshPowerChips(){
@@ -1353,7 +1361,11 @@ ui.notifications?.info("Personagem criado com sucesso via Charactermancer.");
   }
 }
 
-Hooks.once("init", ()=> console.log(`Marvel Multiverse Charactermancer | init v${game.modules.get("marvel-multiverse-charactermancer")?.version}`));
+Hooks.once("init", () =>
+  console.log(
+    `Marvel Multiverse Charactermancer | integrado ao sistema v${game.system?.version ?? "?"}`
+  )
+);
 
 Hooks.on("renderActorDirectory", (app, htmlOrElement, data)=>{
   try {

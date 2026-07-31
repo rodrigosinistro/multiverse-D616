@@ -1,530 +1,671 @@
+import { calculateD616Damage } from "./damage-calculation.js";
+
 const MODULE_ID = "multiverse-d616";
-const MMDR_VER  = "0.9.83";
+const MMDR_VER = "1.0.0";
 
 /* ---------------- Settings / Debug ---------------- */
 Hooks.once("init", () => {
-  try {
-    game.settings.register(MODULE_ID, "debug", {
-      name: "Enable debug logs",
-      hint: "Prints [MMDR] logs to the console.",
-      scope: "client", config: true, type: Boolean, default: false
-    });
-  } catch(e) { console.error("[MMDR] settings error", e); }
-});
-Hooks.once("ready", () => { console.log(`[MMDR] v${MMDR_VER} ready`); });
-
-function dbg(...args){ try { if (game.settings.get(MODULE_ID, "debug")) console.log("[MMDR]", ...args); } catch(e){} }
-
-/* ---------------- Stamp authoritative targets on message creation ---------------- */
-Hooks.on("preCreateChatMessage", (doc, data, options, userId) => {
-  try {
-    if (game.user?.id !== userId) return; // only the author stamps
-    const tgts = Array.from(game.user?.targets || []);
-    const ids = tgts.map(t => t?.document?.uuid || t?.document?.id || t?.id).filter(Boolean);
-    if (!ids.length) return;
-    data.flags = data.flags || {};
-    data.flags[MODULE_ID] = Object.assign({}, data.flags[MODULE_ID], {
-      authorUserId: userId,
-      authorTargets: ids
-    });
-    dbg("stamped targets", ids);
-  } catch(e){ console.warn("[MMDR] preCreateChatMessage error", e); }
+  game.settings.register(MODULE_ID, "debug", {
+    name: "Enable debug logs",
+    hint: "Prints [MMDR] logs to the console.",
+    scope: "client",
+    config: true,
+    type: Boolean,
+    default: false,
+  });
 });
 
-/* ---------------- Utilities ---------------- */
-function gp(obj, path){
+Hooks.once("ready", () => {
+  console.log(`[MMDR] v${MMDR_VER} ready`);
+});
+
+function dbg(...args) {
   try {
-    const getProperty = (foundry?.utils?.getProperty) ? foundry.utils.getProperty : (window.getProperty || null);
-    return getProperty ? getProperty(obj, path) : path.split(".").reduce((o,k)=>o?.[k], obj);
-  } catch(e){ return undefined; }
-}
-function sp(obj, path, value){
-  try {
-    const setProperty = (foundry?.utils?.setProperty) ? foundry.utils.setProperty : (window.setProperty || null);
-    if (setProperty) return setProperty(obj, path, value);
-    const parts = path.split(".");
-    let o = obj;
-    while (parts.length > 1) {
-      const k = parts.shift();
-      if (!(k in o)) o[k] = {};
-      o = o[k];
+    if (game.settings.get(MODULE_ID, "debug")) {
+      console.debug("[MMDR]", ...args);
     }
-    o[parts[0]] = value;
-    return value;
-  } catch(e){ return undefined; }
-}
-
-/* --- Ability parsing helpers (for direct attribute rolls) --- */
-function parseAbilityFrom(text){
-  try {
-    const m = /ability:\s*([A-Za-zÀ-ÿ]+)/i.exec(text||"");
-    if (!m) return null;
-    return String(m[1]||"").trim().toLowerCase();
-  } catch(e){ return null; }
-}
-function isLikelyDirectAttributeRoll(text){
-  try {
-    const t = (text||"").toLowerCase();
-    const mentionsPower = /\b(power|poder|weapon|arma)\b/i.test(text||"");
-    const undefinedPair = /undefined\s*:\s*undefined/i.test(text||"");
-    const hasAbility = /\bability\s*:/i.test(t);
-    const hasExplicitDamageType = /damage\s*type|damagetype/i.test(t);
-    // Direct attribute roll if it shows the "undefined: undefined" pair OR
-    // it shows an ability line but no Power/Weapon markers and no explicit DamageType.
-    return undefinedPair || (hasAbility && !mentionsPower && !hasExplicitDamageType);
-  } catch(e){ return false; }
-}
-
-function categoryFromText(text){
-  const t = (text||"").toLowerCase();
-  // explicit tag wins
-  if (t.includes("damagetype: focus") || t.includes("damage type: focus") || t.includes("focus damage")) return "focus";
-  if (t.includes("damagetype: health") || t.includes("damage type: health") || t.includes("health damage")) return "health";
-  // infer by ability on direct attribute rolls
-  const ab = parseAbilityFrom(text);
-  if (ab && isLikelyDirectAttributeRoll(text)) {
-    if (/(ego|logic)/i.test(ab))   return "focus";
-    if (/(melee|agility)/i.test(ab)) return "health";
+  } catch (_error) {
+    // Ignore logging failures.
   }
-  // default
+}
+
+/* ---------------- Target persistence ---------------- */
+
+function normalizeTargetRefs(rawTargets) {
+  const targets = Array.isArray(rawTargets) ? rawTargets : [];
+  const refs = targets
+    .map((target) =>
+      typeof target === "string" ? { uuid: target } : { ...target }
+    )
+    .filter((target) => target?.uuid);
+
+  const byUuid = new Map();
+  for (const ref of refs) {
+    if (!byUuid.has(ref.uuid)) byUuid.set(ref.uuid, ref);
+  }
+  return Array.from(byUuid.values());
+}
+
+function targetRefsFromFlags(flags = {}) {
+  const structuredEntries = Array.isArray(
+    flags.damageApplication?.entries
+  )
+    ? flags.damageApplication.entries
+    : [];
+  const structuredRefs = structuredEntries
+    .map((entry) => ({
+      uuid: entry?.targetUuid,
+      actorUuid: entry?.actorUuid ?? "",
+      name: entry?.name ?? "",
+    }))
+    .filter((target) => target.uuid);
+  if (structuredRefs.length) return normalizeTargetRefs(structuredRefs);
+
+  const savedRefs = normalizeTargetRefs(flags.targets);
+  if (savedRefs.length) return savedRefs;
+
+  return normalizeTargetRefs(flags.authorTargets);
+}
+
+/**
+ * Preserve an authoritative target list on messages created by the local user.
+ * Foundry v14 requires changing the pending Document through updateSource.
+ */
+Hooks.on("preCreateChatMessage", (doc, data, _options, userId) => {
+  try {
+    if (game.user?.id !== userId) return;
+
+    const scopedFlags = foundry.utils.deepClone(
+      doc?.flags?.[MODULE_ID] ?? data?.flags?.[MODULE_ID] ?? {}
+    );
+    let refs = targetRefsFromFlags(scopedFlags);
+
+    if (!refs.length) {
+      refs = normalizeTargetRefs(
+        Array.from(game.user?.targets ?? []).map((target) => {
+          const tokenDocument = target?.document ?? target;
+          const actor = target?.actor ?? tokenDocument?.actor;
+          return {
+            uuid: tokenDocument?.uuid ?? "",
+            actorUuid: actor?.uuid ?? "",
+            name:
+              target?.name ??
+              tokenDocument?.name ??
+              actor?.name ??
+              "Target",
+          };
+        })
+      );
+    }
+
+    if (!refs.length) return;
+
+    scopedFlags.authorUserId ??= userId;
+    scopedFlags.authorTargets = refs.map((target) => target.uuid);
+    doc.updateSource({
+      flags: {
+        [MODULE_ID]: scopedFlags,
+      },
+    });
+    dbg("stamped targets", scopedFlags.authorTargets);
+  } catch (error) {
+    console.warn("[MMDR] preCreateChatMessage error", error);
+  }
+});
+
+/* ---------------- Data helpers ---------------- */
+
+function getProperty(object, path) {
+  return foundry.utils.getProperty(object, path);
+}
+
+function setProperty(object, path, value) {
+  return foundry.utils.setProperty(object, path, value);
+}
+
+function escapeHtml(value) {
+  return foundry.utils.escapeHTML(String(value ?? ""));
+}
+
+function normalizeName(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\([^)]*\)|\[[^\]]*\]/g, " ")
+    .replace(/[^\p{L}\p{N}' -]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function categoryFromText(text) {
+  const value = String(text ?? "").toLowerCase();
+  if (
+    value.includes("damagetype: focus") ||
+    value.includes("damage type: focus") ||
+    value.includes("focus damage")
+  ) {
+    return "focus";
+  }
   return "health";
 }
 
-function readDR(actor, category){
-  try { return Number(actor?.system?.[category === "focus" ? "focusDamageReduction" : "healthDamageReduction"] ?? 0) || 0; }
-  catch(e){ return 0; }
+function readDamageReduction(actor, category) {
+  const field =
+    category === "focus"
+      ? "focusDamageReduction"
+      : "healthDamageReduction";
+  return Math.abs(Number(actor?.system?.[field] ?? 0) || 0);
 }
-function statPaths(category){
+
+function statPaths(category) {
   return category === "focus"
-    ? { cur:"system.focus.value", max:"system.focus.max" }
-    : { cur:"system.health.value", max:"system.health.max" };
+    ? { current: "system.focus.value", maximum: "system.focus.max" }
+    : { current: "system.health.value", maximum: "system.health.max" };
 }
-async function applyDelta({ actor, category, delta, heal }){
+
+async function applyDelta({ actor, category, delta, heal }) {
   const paths = statPaths(category);
-  const cur = Number(gp(actor, paths.cur) ?? 0) || 0;
-  const max = Number(gp(actor, paths.max) ?? 0) || 0;
-  const next = heal ? Math.min(max || Number.MAX_SAFE_INTEGER, cur + Math.max(0, delta))
-                    : Math.max(0, cur - Math.max(0, delta));
-  const patch = {}; sp(patch, paths.cur, next);
-  await actor.update(patch);
+  const current = Number(getProperty(actor, paths.current) ?? 0) || 0;
+  const maximum = Number(getProperty(actor, paths.maximum) ?? 0) || 0;
+  const amount = Math.max(0, Number(delta) || 0);
+  const next = heal
+    ? Math.min(maximum || Number.MAX_SAFE_INTEGER, current + amount)
+    : Math.max(0, current - amount);
+  const update = {};
+  setProperty(update, paths.current, next);
+  await actor.update(update);
 }
 
-function isSystemDamageMessage(rootEl){
-  try {
-    const t = (rootEl?.textContent || "").toLowerCase();
-    if (rootEl?.querySelector?.(".mmdr-rollline")) return false; // already processed
-    return t.includes("damage multiplier") || t.includes("multiplicador de dano");
-  } catch(e){ return false; }
+async function resolveActor(targetUuid, actorUuid = "") {
+  for (const uuid of [targetUuid, actorUuid]) {
+    if (!uuid) continue;
+    try {
+      const document = await fromUuid(uuid);
+      const actor =
+        document?.actor ??
+        (document?.documentName === "Actor" ? document : null);
+      if (actor) return actor;
+    } catch (error) {
+      console.warn("[MMDR] Could not resolve UUID", uuid, error);
+    }
+  }
+  return null;
 }
 
-/* --- Parse numbers from system text (including printed DR & total) --- */
-function parseNumbersFrom(rootEl){
-  const textAll = rootEl?.textContent || "";
-  let md = 0, X = 0, AB = 0, isFant = false, parsedDR = null, printedTotal = null;
-  try { const m = /MarvelDie:\s*(\d+)/i.exec(textAll); if (m) md = parseInt(m[1],10); } catch(e){}
-  try {
-    const m = /\(\s*(\d+)\s*-\s*damageReduction\s*:\s*(-?\d+)\s*=\s*(-?\d+)\s*\)/i.exec(textAll);
-    if (m) { X = parseInt(m[1],10); parsedDR = parseInt(m[2],10); }
-  } catch(e){}
-  if (!X) { try { const m = /\(\s*(\d+)[^\)]*damageReduction/i.exec(textAll); if (m) X = parseInt(m[1],10); } catch(e){} }
-  try { const m = /\+\s*[A-Za-zÀ-ÿ]+\s+score\s*(-?\d+)/i.exec(textAll); if (m) AB = parseInt(m[1],10); } catch(e){}
-  isFant = /\bFantastic\b/i.test(textAll) || /\bFantástico\b/i.test(textAll);
-  try {
-    const m = /\btakes\s+(\d+)\s+(?:Fantastic\s+)?(?:health|focus)\s+damage\b/i.exec(textAll);
-    if (m) printedTotal = parseInt(m[1], 10);
-  } catch(e){}
-  return { md, X, AB, isFant, parsedDR, printedTotal };
+function getStructuredEntries(message) {
+  const entries =
+    message?.flags?.[MODULE_ID]?.damageApplication?.entries ?? [];
+  if (!Array.isArray(entries)) return [];
+
+  return entries
+    .map((entry) => ({
+      targetUuid: String(entry?.targetUuid ?? ""),
+      actorUuid: String(entry?.actorUuid ?? ""),
+      name: String(entry?.name ?? "Target"),
+      category:
+        String(entry?.category ?? "").toLowerCase() === "focus"
+          ? "focus"
+          : "health",
+      damage: Math.max(0, Number(entry?.damage ?? 0) || 0),
+      damageReduction: Math.abs(
+        Number(entry?.damageReduction ?? 0) || 0
+      ),
+      effectiveDamageMultiplier: Math.max(
+        0,
+        Number(entry?.effectiveDamageMultiplier ?? 0) || 0
+      ),
+    }))
+    .filter((entry) => entry.targetUuid || entry.actorUuid);
 }
 
-/* --- Extract target names from message --- */
-function extractTargetNames(rootEl){
-  const names = new Set();
-  try {
-    const content = rootEl.querySelector?.(".message-content") || rootEl;
-    content.querySelectorAll?.("strong")?.forEach(s => {
-      const n = s.textContent?.trim(); if (n) names.add(n);
+/* ---------------- Legacy card support ---------------- */
+
+function resolveTokenUuidsFromNames(names) {
+  const sceneTokens = canvas?.tokens?.placeables ?? [];
+  const result = [];
+
+  for (const rawName of names) {
+    const name = normalizeName(rawName);
+    if (!name) continue;
+
+    let matches = sceneTokens.filter(
+      (token) =>
+        normalizeName(token?.document?.name ?? token?.name) === name ||
+        normalizeName(token?.actor?.name) === name
+    );
+
+    if (!matches.length) {
+      const fuzzy = sceneTokens.filter((token) => {
+        const tokenName = normalizeName(
+          token?.document?.name ?? token?.name
+        );
+        const actorName = normalizeName(token?.actor?.name);
+        return tokenName.includes(name) || actorName.includes(name);
+      });
+      if (fuzzy.length === 1) matches = fuzzy;
+    }
+
+    for (const token of matches) {
+      const uuid = token?.document?.uuid;
+      if (uuid && !result.includes(uuid)) result.push(uuid);
+    }
+  }
+  return result;
+}
+
+function getLegacyEntries(message, rootElement) {
+  const flags = message?.flags?.[MODULE_ID] ?? {};
+  const savedRefs = targetRefsFromFlags(flags);
+  const paragraphs = Array.from(
+    rootElement?.querySelectorAll?.(".message-content p") ?? []
+  );
+  const entries = [];
+
+  for (const [index, paragraph] of paragraphs.entries()) {
+    const text = paragraph.textContent ?? "";
+    const match =
+      /takes\s+(?<damage>\d+)\s+(?:Fantastic\s+)?(?<category>health|focus)\s+damage/i.exec(
+        text
+      );
+    if (!match?.groups) continue;
+
+    const firstBold = paragraph.querySelector("b, strong");
+    const name = firstBold?.textContent?.trim() ?? "";
+    const normalized = normalizeName(name);
+    const matchedRef =
+      savedRefs.find(
+        (ref) =>
+          normalized &&
+          normalizeName(ref.name) === normalized
+      ) ??
+      savedRefs[index] ??
+      null;
+    const resolvedByName = matchedRef
+      ? []
+      : resolveTokenUuidsFromNames([name]);
+    const targetUuid = matchedRef?.uuid ?? resolvedByName[0] ?? "";
+    if (!targetUuid && !matchedRef?.actorUuid) continue;
+
+    entries.push({
+      targetUuid,
+      actorUuid: matchedRef?.actorUuid ?? "",
+      name: name || matchedRef?.name || "Target",
+      category:
+        match.groups.category.toLowerCase() === "focus"
+          ? "focus"
+          : "health",
+      damage: Math.max(0, Number(match.groups.damage) || 0),
+      damageReduction: 0,
+      effectiveDamageMultiplier: 0,
     });
-    if (!names.size) {
-      const p = content.querySelector?.("p");
-      if (p) {
-        const s = p.querySelector?.("strong");
-        if (s?.textContent) names.add(s.textContent.trim());
+  }
+
+  return entries;
+}
+
+function parseLegacyFormula(rootElement) {
+  const text = rootElement?.textContent ?? "";
+  const marvelDie =
+    Number(/MarvelDie:\s*(-?\d+)/i.exec(text)?.[1] ?? 0) || 0;
+  const multiplierMatch =
+    /\(\s*(-?\d+)\s*-\s*damageReduction\s*:\s*(-?\d+)\s*=\s*(-?\d+)\s*\)/i.exec(
+      text
+    ) ??
+    /\(\s*(-?\d+)[^)]*damageReduction/i.exec(text);
+  const damageMultiplier =
+    Number(multiplierMatch?.[1] ?? 0) || 0;
+  const ability =
+    Number(
+      /\+\s*[A-Za-zÀ-ÿ]+\s+score\s*(-?\d+)/i.exec(text)?.[1] ?? 0
+    ) || 0;
+  const isFantastic =
+    /\bFantastic\b/i.test(text) || /\bFantástico\b/i.test(text);
+
+  return {
+    marvelDie,
+    damageMultiplier,
+    ability,
+    isFantastic,
+  };
+}
+
+function getLegacyTargetRefs(message, rootElement) {
+  const flags = message?.flags?.[MODULE_ID] ?? {};
+  const savedRefs = targetRefsFromFlags(flags);
+  if (savedRefs.length) return savedRefs;
+
+  const names = Array.from(
+    rootElement?.querySelectorAll?.(".message-content p") ?? []
+  )
+    .map((paragraph) =>
+      paragraph.querySelector("b, strong")?.textContent?.trim()
+    )
+    .filter((name) => name && !/^-?\d+(?:\.\d+)?$/.test(name));
+
+  return resolveTokenUuidsFromNames(names).map((uuid) => ({ uuid }));
+}
+
+/* ---------------- Rendering ---------------- */
+
+function isDamageMessage(message, rootElement) {
+  if (getStructuredEntries(message).length) return true;
+  const text = String(rootElement?.textContent ?? "").toLowerCase();
+  return (
+    text.includes("damage multiplier") ||
+    text.includes("multiplicador de dano") ||
+    /\btakes\s+\d+\s+(?:fantastic\s+)?(?:health|focus)\s+damage\b/i.test(
+      text
+    )
+  );
+}
+
+function renderTargetTable(entries) {
+  if (!entries.length) return "";
+  const rows = entries
+    .map(
+      (entry) => `
+        <div class="mmdr-row">
+          <span>${escapeHtml(entry.name)}</span>
+          <span>DR ${entry.damageReduction}</span>
+          <span class="tt">${entry.damage}</span>
+        </div>`
+    )
+    .join("");
+
+  return `
+    <div class="mmdr-multi">
+      <div class="hdrrow">
+        <span>ALVO</span><span>REDUÇÃO</span><span>DANO</span>
+      </div>
+      <div class="tbl">${rows}</div>
+    </div>`;
+}
+
+function appendUi(message, rootElement) {
+  if (rootElement.querySelector(".mmdr-wrapper")) return;
+
+  const structuredEntries = getStructuredEntries(message);
+  const legacyEntries = structuredEntries.length
+    ? []
+    : getLegacyEntries(message, rootElement);
+  const exactEntries = structuredEntries.length
+    ? structuredEntries
+    : legacyEntries;
+
+  let category =
+    exactEntries[0]?.category ??
+    categoryFromText(rootElement.textContent);
+  let displayValue = "";
+  let formulaText = "";
+  let targetRefs = [];
+  let formula = null;
+
+  if (exactEntries.length) {
+    const values = new Set(exactEntries.map((entry) => entry.damage));
+    displayValue = values.size === 1 ? String(values.values().next().value) : "—";
+    formulaText =
+      exactEntries.length === 1 ? "DANO DO ALVO" : "DANO POR ALVO";
+    targetRefs = exactEntries.map((entry) => ({
+      uuid: entry.targetUuid,
+      actorUuid: entry.actorUuid,
+    }));
+  } else {
+    formula = parseLegacyFormula(rootElement);
+    if (!formula.marvelDie) return;
+    targetRefs = getLegacyTargetRefs(message, rootElement);
+    formulaText = `${formula.marvelDie} × DM + atributo`;
+
+    if (targetRefs.length) {
+      const firstUuid = targetRefs[0]?.uuid;
+      let firstActor = null;
+      try {
+        const document = firstUuid ? fromUuidSync(firstUuid) : null;
+        firstActor =
+          document?.actor ??
+          (document?.documentName === "Actor" ? document : null);
+      } catch (_error) {
+        // Preview only; the async click path resolves again.
       }
+      const reduction = readDamageReduction(firstActor, category);
+      const { damage } = calculateD616Damage({
+        marvelDie: formula.marvelDie,
+        damageMultiplier: formula.damageMultiplier,
+        damageReduction: reduction,
+        ability: formula.ability,
+        fantastic: formula.isFantastic,
+      });
+      displayValue = String(damage);
+    } else {
+      displayValue = "?";
     }
-    if (!names.size) {
-      const t = (content.textContent || "").trim();
-      const m = /^([\wÀ-ÿ' -]+)\s+(takes|recebe|sofre)\b/i.exec(t);
-      if (m) names.add(m[1].trim());
-    }
-  } catch(e){}
-  return Array.from(names);
-}
-function resolveTokenUUIDsFromNames(names){
-  const uuids = new Set();
-  try {
-    const toks = (canvas?.tokens?.placeables || []);
-    const norm = s => String(s||"").trim().toLowerCase();
-    for (const nmRaw of names) {
-      const nm = norm(nmRaw);
-      // 1) tokens whose displayed name contains nm
-      toks.filter(t => norm(t?.name).includes(nm)).forEach(t => { if (t?.document?.uuid) uuids.add(t.document.uuid); });
-      // 2) tokens by actor name contains nm
-      toks.filter(t => norm(t?.actor?.name).includes(nm)).forEach(t => { if (t?.document?.uuid) uuids.add(t.document.uuid); });
-      // 3) actor exact/fuzzy -> tokens of that actor
-      const act = game.actors?.find(a => norm(a?.name) === nm) || game.actors?.find(a => norm(a?.name).includes(nm));
-      if (act) toks.filter(t => t?.actor?.id === act.id).forEach(t => { if (t?.document?.uuid) uuids.add(t.document.uuid); });
-    }
-  } catch(e){}
-  return Array.from(uuids);
-}
-
-/* --- Build UI --- */
-function appendUI(message, rootEl){
-  const nums = parseNumbersFrom(rootEl);
-  const category = categoryFromText(rootEl?.textContent || "");
-  if (!(nums.md && nums.X)) return;
-
-  const authorTargets = message?.flags?.[MODULE_ID]?.authorTargets || [];
-  let targetUUIDs = Array.isArray(authorTargets) ? authorTargets.slice() : [];
-  if (!targetUUIDs.length) {
-    const names = extractTargetNames(rootEl);
-    targetUUIDs = resolveTokenUUIDsFromNames(names);
   }
 
-  let displayTotal = nums.printedTotal;
-  if (displayTotal == null) {
-    let previewDR = 0;
-    if (targetUUIDs.length) {
-      try { const doc = fromUuidSync(targetUUIDs[0]); previewDR = Math.abs(readDR(doc?.actor, category)); } catch(e){}
-    } else if (nums.parsedDR !== null) previewDR = Math.abs(Number(nums.parsedDR)||0);
-    const Z = Math.max(nums.X - previewDR, 0);
-    let tot = Z > 0 ? (nums.md * Z) + nums.AB : 0;
-    if (nums.isFant) tot *= 2;
-    displayTotal = tot;
-  }
+  const isFantastic =
+    message?.flags?.[MODULE_ID]?.damageApplication?.isFantastic ??
+    formula?.isFantastic ??
+    false;
+  const badge = category.toUpperCase();
+  const canApply =
+    Boolean(game.user?.isGM) &&
+    targetRefs.some((target) => target.uuid || target.actorUuid);
 
-  const abilityName = category === "focus" ? "Ego/Logic" : "Melee/Agility";
-  const badgeCat = category.toUpperCase();
-  const $content = rootEl.querySelector(".message-content") || rootEl;
+  const actions = canApply
+    ? `
+      <div class="mmdr-actions">
+        <button type="button" class="mmdr-apply-btn ${category}" data-action="full">DANO</button>
+        <button type="button" class="mmdr-apply-btn ${category}" data-action="half">1/2 DANO</button>
+        <button type="button" class="mmdr-apply-btn ${category}" data-action="heal">CURA</button>
+      </div>`
+    : "";
 
-  const wrap = document.createElement("div");
-  wrap.className = "mmdr-wrapper";
-
-  wrap.innerHTML = `
-    <div class="mmdr-rollline ${category} ${nums.isFant ? 'fantastic' : ''}">
+  const wrapper = document.createElement("div");
+  wrapper.className = "mmdr-wrapper";
+  wrapper.innerHTML = `
+    <div class="mmdr-rollline ${category} ${
+      isFantastic ? "fantastic" : ""
+    }">
       <div class="mmdr-rollline-left">
-        <div class="mmdr-badge">${badgeCat}</div>
-        ${nums.isFant ? '<div class="mmdr-badge alt">FANTASTIC</div>' : ''}
+        <div class="mmdr-badge">${badge}</div>
+        ${
+          isFantastic
+            ? '<div class="mmdr-badge alt">FANTASTIC</div>'
+            : ""
+        }
       </div>
       <div class="mmdr-rollline-main">
-        <div class="value">${displayTotal}</div>
-        <div class="formula">${nums.md} × ? + ${abilityName} ${nums.AB >= 0 ? '+'+nums.AB : nums.AB}</div>
+        <div class="value">${escapeHtml(displayValue)}</div>
+        <div class="formula">${escapeHtml(formulaText)}</div>
       </div>
     </div>
-    <div class="mmdr-actions">
-      <button type="button" class="mmdr-apply-btn ${category}" data-action="full"
-        data-category="${category}" data-md="${nums.md}" data-x="${nums.X}" data-ab="${nums.AB}"
-        data-fant="${nums.isFant?1:0}" data-targets="${targetUUIDs.join(',')}">DANO</button>
-      <button type="button" class="mmdr-apply-btn ${category}" data-action="half"
-        data-category="${category}" data-md="${nums.md}" data-x="${nums.X}" data-ab="${nums.AB}"
-        data-fant="${nums.isFant?1:0}" data-targets="${targetUUIDs.join(',')}">1/2 DANO</button>
-      <button type="button" class="mmdr-apply-btn ${category}" data-action="heal"
-        data-category="${category}" data-md="${nums.md}" data-x="${nums.X}" data-ab="${nums.AB}"
-        data-fant="${nums.isFant?1:0}" data-targets="${targetUUIDs.join(',')}">CURA</button>
-    </div>
+    ${renderTargetTable(exactEntries)}
+    ${actions}
   `;
 
-  $content.appendChild(wrap);
+  const content =
+    rootElement.querySelector(".message-content") ?? rootElement;
+  content.appendChild(wrapper);
 }
 
-/* --- Hook handlers --- */
-function handleRender(message, htmlOrEl){
+Hooks.on("renderChatMessageHTML", (message, html) => {
   try {
-    const rootEl = (htmlOrEl instanceof HTMLElement) ? htmlOrEl : (htmlOrEl?.[0] || null);
-    if (!rootEl) return;
-    if (!isSystemDamageMessage(rootEl)) return;
-    appendUI(message, rootEl);
-  } catch(e){ console.warn("[MMDR] render error", e); }
-}
-Hooks.on("renderChatMessageHTML", handleRender);
-Hooks.on("renderChatMessage", handleRender);
-
-/* --- Clicks (robust target resolution) --- */
-document.addEventListener("click", async (ev) => {
-  const btn = ev.target?.closest?.(".mmdr-apply-btn");
-  if (!btn) return;
-  try {
-    const md    = Number(btn.getAttribute("data-md"))   || 0;
-    const X     = Number(btn.getAttribute("data-x"))    || 0;
-    const AB    = Number(btn.getAttribute("data-ab"))   || 0;
-    const isFant= Number(btn.getAttribute("data-fant")) === 1;
-    let category = btn.getAttribute("data-category") || "health";
-    const action   = btn.getAttribute("data-action")   || "full";
-    let targetsStr = btn.getAttribute("data-targets") || "";
-    let uuids = targetsStr.split(",").map(s=>s.trim()).filter(Boolean);
-
-    const msgEl = btn.closest(".chat-message, li.message, [data-message-id]") || document;
-    const mid = msgEl?.dataset?.messageId;
-    const msg = (mid && (game.messages?.get?.(mid) || (game.messages?.contents||[]).find(m=>m.id===mid))) || null;
-
-    // Union with stamped targets if present
-    const flagged = msg?.flags?.[MODULE_ID]?.authorTargets;
-    if (Array.isArray(flagged)) {
-      flagged.forEach(u => { if (u) uuids.push(u); });
-    }
-
-    // Late name-based resolution
-    if (!uuids.length) {
-      category = categoryFromText(msgEl?.textContent || category);
-      const names = extractTargetNames(msgEl);
-      const fromNames = resolveTokenUUIDsFromNames(names);
-      uuids = uuids.concat(fromNames);
-    }
-
-    // Deduplicate
-    uuids = Array.from(new Set(uuids.filter(Boolean)));
-
-    dbg("click resolved", { mid, category, uuids });
-
-    if (!uuids.length) { ui.notifications?.warn?.("MMDR: nenhum alvo encontrado."); return; }
-
-    const results = [];
-    for (const uuid of uuids) {
-      try {
-        const doc = await fromUuid(uuid);
-        const actor = doc?.actor;
-        if (!actor) continue;
-        const DR = Math.abs(readDR(actor, category));
-        const Z  = Math.max(X - DR, 0);
-        let total = Z > 0 ? (md * Z) + AB : 0;
-        if (isFant) total *= 2;
-        let delta = total;
-        let heal = false;
-        if (action === "half") delta = Math.ceil(total/2);
-        else if (action === "heal") heal = true;
-
-        await applyDelta({ actor, category, delta, heal });
-        results.push({ name: actor.name, delta, heal });
-      } catch(err){
-        console.error("[MMDR] Apply error (per target)", uuid, err);
-      }
-    }
-
-    if (results.length){
-      const CAT = String(category).toUpperCase();
-      const verb = (action==="half") ? "½" : (results[0].heal ? "Heal" : "Apply");
-      const human = results.map(r => `${r.name} ${r.heal?"+":"-"}${r.delta}`).join(", ");
-      try { await ChatMessage.create({ content: `<div class="mmdr-report">MMDR ${verb} [${CAT}]: ${human}</div>` }); } catch(e){}
-      ui.notifications?.info?.(`MMDR ${verb} [${CAT}]: ${human}`);
-      // persist uuids on the element to speed up next clicks
-      btn.setAttribute("data-targets", uuids.join(","));
-    } else {
-      ui.notifications?.warn?.("MMDR: nenhum alvo encontrado.");
-    }
-  } catch(e){ console.error("[MMDR] click handler error", e); }
-}, false);
-
-
-/* === MMDR Augment v0.9.78: fix regex + robust norm + per-target mapping (GM-only) === */
-(() => {
-  "use strict";
-  const PT_CAT = { "saúde":"health", "foco":"focus", "vigor":"stamina", "resistência":"stamina" };
-
-  function colorFor(cat){
-    const c = String(cat||"").toLowerCase();
-    if (c === "health" || c === "saúde") return "#b40000";
-    if (c === "focus"  || c === "foco")  return "#0e7d2c";
-    return "#444";
+    if (!(html instanceof HTMLElement)) return;
+    if (!isDamageMessage(message, html)) return;
+    appendUi(message, html);
+  } catch (error) {
+    console.warn("[MMDR] render error", error);
   }
-  function confirmHTML({label, category, entries}){
-    const bg = colorFor(category);
-    const text = (entries||[]).map(e => `${e.name} ${e.heal?"+":"-"}${e.delta}`).join(", ");
-    const safeLabel = label || "CONFIRMAÇÃO";
-    return `<div class="mmdr-confirm" style="background:${bg};color:#fff;padding:6px 10px;border-radius:6px;font-weight:600;">
-      <div style="font-size:14px;">${safeLabel}</div>
-      <div style="opacity:.9;font-weight:500;">${text}</div>
-    </div>`;
-  }
+});
 
-  // ---- parsing helpers ----
-  
-function parseMultiFromText(t){
-  const out = [];
-  try{
-    // EN/PT: "<Name> takes/recebe/sofre/leva/toma N (Fantastic )?(health|focus|stamina|saúde|foco|vigor|resistência) damage/dano"
-    const rx = /(?:^|\s)([A-Za-zÀ-ÖØ-öø-ÿ0-9'`\- ]{1,40})\s+(?:takes|recebe|sofre|leva|toma)\s+(\d+)\s+(?:Fantastic\s+)?(health|focus|stamina|saúde|foco|vigor|resistência)\s+(?:damage|dano)/gi;
-    let m;
-    while ((m = rx.exec(t))){
-      let cat = (m[3]||"health").toLowerCase();
-      const PT_CAT = { "saúde":"health","foco":"focus","vigor":"stamina","resistência":"stamina" };
-      cat = PT_CAT[cat] || cat;
-      const name = (m[1]||"").trim();
-      out.push({ name, total: Number(m[2]||0), category: cat });
-    }
-  }catch(e){}
-  return out;
-}
+/* ---------------- Application ---------------- */
 
-  
-function parsePillFallback(msgEl){
-  try{
-    // 1) Prefer the MMDR pill value we render
-    const pillValEl = msgEl.querySelector(".mmdr-rollline .value");
-    let total = 0;
-    if (pillValEl) {
-      const n = parseInt((pillValEl.textContent||"").trim(), 10);
-      if (!isNaN(n)) total = n;
-    }
-    // 2) Find category by presence of our pill or text
-    const text = (msgEl.textContent||"").toLowerCase();
-    let cat = /\bfocus\b|\bfoco\b/.test(text) ? "focus"
-           : /\bstamina\b|\bvigor\b|resistência/.test(text) ? "stamina"
-           : /\bhealth\b|\bsaúde\b/.test(text) ? "health" : null;
-    // 3) Fallbacks if value not found (last numeric chunk)
-    if (!total) {
-      const nums = Array.from(msgEl.querySelectorAll("*")).map(e => (e.textContent||"").trim()).filter(t => /^\d+$/.test(t));
-      total = nums.length ? Number(nums[nums.length-1]) : 0;
-    }
-    if (cat && total) return [{ name: null, total, category: cat }];
-    return [];
-  }catch(e){ return []; }
-}
+async function applyExactEntries(entries, action) {
+  const results = [];
 
-  function parseMulti(msgEl){
-    const t = (msgEl.innerText || msgEl.textContent || "").replace(/\\s+/g," ").trim();
-    const list = parseMultiFromText(t);
-    if (list.length) return list;
-    return parsePillFallback(msgEl);
-  }
-
-  // Só card de resultado
-  function isResultCard(el){
-    const text = (el.innerText || el.textContent || "").toLowerCase();
-    if (text.includes("re: marveldie")) return true;
-    const hasPill = !!el.querySelector("span,div,small,strong,b");
-    return hasPill && /\\b(health|saúde|focus|foco|stamina|vigor|resist)/.test(text) && /\\b\\d+\\b/.test(text);
-  }
-
-  // Normalização robusta de nomes (sem acentos, sem parênteses/sufixos, minúsculas, hífen tratado no fim da classe)
-  function normName(s){
-    let v = String(s||"");
-    v = v.replace(/\\([^)]*\\)/g, " ");
-    v = v.replace(/\\[[^\\]]*\\]/g, " ");
-    if (v.normalize) v = v.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
-    v = v.toLowerCase();
-    // IMPORTANT: hyphen is placed at the END of class to avoid "range out of order"
-    v = v.replace(/[^a-z0-9'` ]+-?/g, " "); // remove unusual chars; keep letters, digits, apostrophe, backtick, space, and trailing hyphen as literal
-    v = v.replace(/[^a-z0-9'` \-]+/g, " "); // second pass to be safe (hyphen at end)
-    v = v.replace(/\\s+/g, " ").trim();
-    return v;
-  }
-
-  function resolveTokensForEntries(entries){
-    const sceneTokens = canvas?.tokens?.placeables ?? [];
-    const selected    = Array.from(game.user?.targets ?? []);
-    const controlled  = canvas?.tokens?.controlled ?? [];
-    const usedIds     = new Set();
-    const results     = [];
-
-    // Index by normalized name
-    const index = new Map();
-    for (const t of sceneTokens){
-      const key = normName(t.document?.name);
-      if (!key) continue;
-      if (!index.has(key)) index.set(key, []);
-      index.get(key).push(t);
+  for (const entry of entries) {
+    const actor = await resolveActor(
+      entry.targetUuid,
+      entry.actorUuid
+    );
+    if (!actor) {
+      console.warn("[MMDR] Saved target no longer resolves", entry);
+      continue;
     }
 
-    function pickOne(cands){
-      const arr = cands.filter(t => !usedIds.has(t.id));
-      if (!arr.length) return null;
-      const pick = arr[0];
-      usedIds.add(pick.id);
-      return pick;
-    }
-
-    for (const e of entries){
-      if (!e.name){
-        const pool = selected.length ? selected : (controlled.length ? controlled : []);
-        for (const t of pool){
-          const tok = pickOne([t]);
-          if (tok) results.push({ token: tok, entry: e });
-        }
-        continue;
-      }
-      const key = normName(e.name);
-      let tok = null;
-
-      if (!tok && selected.length)   tok = pickOne(selected.filter(t => normName(t.document?.name) === key));
-      if (!tok && controlled.length) tok = pickOne(controlled.filter(t => normName(t.document?.name) === key));
-      if (!tok && index.has(key))    tok = pickOne(index.get(key));
-      if (!tok)                      tok = pickOne(sceneTokens.filter(t => normName(t.document?.name).startsWith(key)));
-      if (!tok)                      tok = pickOne(sceneTokens.filter(t => normName(t.document?.name).includes(key)));
-
-      if (tok) results.push({ token: tok, entry: e });
-    }
-
-    return results;
-  }
-
-  async function gmApplyAndConfirm({msgEl, label}){
-    const parsed = parseMulti(msgEl);
-    if (!parsed.length){ ui.notifications?.warn?.("MMDR: não consegui identificar os valores por alvo."); return; }
-
-    const pairs = resolveTokensForEntries(parsed);
-    if (!pairs.length){ ui.notifications?.warn?.("MMDR: nenhum alvo correspondente (verifique os nomes/seleção)."); return; }
-
-    const isHalf = /½|1\/2/i.test(label);
-    const isHeal = /cura|heal/i.test(label);
-
-    const entries = [];
-    const cats = new Set();
-
-    for (const { token, entry } of pairs){
-      const total = Number(entry.total||0);
-      const delta = isHalf ? Math.ceil(total/2) : total;
-      const cat   = entry.category || "health";
-      cats.add(cat);
-      try{
-        const actor = token.document?.actor;
-        if (!actor) continue;
-        await applyDelta({ actor, category: cat, delta, heal: isHeal });
-        entries.push({ name: token.document?.name || actor?.name || "?", delta, heal: isHeal });
-      }catch(e){ console.error("[MMDR] GM apply error", e); }
-    }
-
-    if (entries.length){
-      const categoryForColor = (cats.size === 1) ? [...cats][0] : null;
-      await ChatMessage.create({ content: confirmHTML({label, category: categoryForColor, entries}) });
-    }else{
-      ui.notifications?.warn?.("MMDR: nenhum alvo aplicado.");
-    }
-  }
-
-  function handleRender(_message, html){
-    const el = html instanceof HTMLElement ? html : html?.[0];
-    if (!el) return;
-    if (!isResultCard(el)) return; // UI apenas no card de resultado
-    const btns = el.querySelectorAll("button, .button, a");
-    const isGM = !!game.user?.isGM;
-    btns.forEach(btn => {
-      const t = (btn.textContent||"").replace(/\\s+/g," ").trim().toLowerCase();
-      const isOur = (t === "dano" || t === "cura" || t === "1/2 dano" || t === "½ dano" || t === "1⁄2 dano");
-      if (!isOur) return;
-      if (!isGM){
-        btn.style.display = "none";
-      } else {
-        btn.addEventListener("click", (ev) => {
-          ev.preventDefault(); ev.stopImmediatePropagation();
-          const label = (btn.textContent||"").replace(/\\s+/g," ").trim();
-          gmApplyAndConfirm({ msgEl: el, label });
-        }, { capture: true });
-      }
+    const heal = action === "heal";
+    const delta =
+      action === "half"
+        ? Math.ceil(Math.max(0, Number(entry.damage) || 0) / 2)
+        : Math.max(0, Number(entry.damage) || 0);
+    await applyDelta({
+      actor,
+      category: entry.category,
+      delta,
+      heal,
+    });
+    results.push({
+      name: entry.name || actor.name,
+      category: entry.category,
+      delta,
+      heal,
     });
   }
-  Hooks.on("renderChatMessageHTML", handleRender);
-  Hooks.on("renderChatMessage", handleRender);
-  Hooks.once("ready", () => console.log("[MMDR] v0.9.83 ready"));
-})();
-/* === end augment v0.9.78 === */
 
+  return results;
+}
+
+async function applyLegacyFormula(message, rootElement, action) {
+  const formula = parseLegacyFormula(rootElement);
+  const category = categoryFromText(rootElement.textContent);
+  const targets = getLegacyTargetRefs(message, rootElement);
+  const results = [];
+
+  for (const target of targets) {
+    const actor = await resolveActor(target.uuid, target.actorUuid);
+    if (!actor) continue;
+
+    const reduction = readDamageReduction(actor, category);
+    const { damage } = calculateD616Damage({
+      marvelDie: formula.marvelDie,
+      damageMultiplier: formula.damageMultiplier,
+      damageReduction: reduction,
+      ability: formula.ability,
+      fantastic: formula.isFantastic,
+    });
+
+    const heal = action === "heal";
+    const delta =
+      action === "half" ? Math.ceil(damage / 2) : damage;
+    await applyDelta({ actor, category, delta, heal });
+    results.push({
+      name: target.name || actor.name,
+      category,
+      delta,
+      heal,
+    });
+  }
+
+  return results;
+}
+
+async function postConfirmation(results, action) {
+  if (!results.length) return;
+  const label =
+    action === "half" ? "1/2 DANO" : action === "heal" ? "CURA" : "DANO";
+  const text = results
+    .map(
+      (result) =>
+        `${escapeHtml(result.name)} ${
+          result.heal ? "+" : "-"
+        }${result.delta}`
+    )
+    .join(", ");
+  const categories = new Set(results.map((result) => result.category));
+  const category =
+    categories.size === 1 ? Array.from(categories)[0] : "mixed";
+  const background =
+    category === "focus"
+      ? "#0e7d2c"
+      : category === "health"
+        ? "#b40000"
+        : "#444";
+
+  await ChatMessage.create({
+    content: `
+      <div class="mmdr-confirm" style="background:${background};color:#fff;padding:6px 10px;border-radius:6px;font-weight:600;">
+        <div style="font-size:14px;">${label}</div>
+        <div style="opacity:.9;font-weight:500;">${text}</div>
+      </div>`,
+  });
+}
+
+document.addEventListener(
+  "click",
+  async (event) => {
+    const button = event.target?.closest?.(".mmdr-apply-btn");
+    if (!button) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    if (!game.user?.isGM) {
+      ui.notifications?.warn(
+        "Somente o Mestre pode aplicar dano ou cura por este card."
+      );
+      return;
+    }
+
+    const messageElement = button.closest("[data-message-id]");
+    const messageId = messageElement?.dataset?.messageId;
+    const message = messageId ? game.messages?.get?.(messageId) : null;
+    if (!message) {
+      ui.notifications?.warn("MMDR: card de dano não encontrado.");
+      return;
+    }
+
+    const action = button.dataset.action ?? "full";
+    button.disabled = true;
+
+    try {
+      const structuredEntries = getStructuredEntries(message);
+      const legacyEntries = structuredEntries.length
+        ? []
+        : getLegacyEntries(message, messageElement);
+      const exactEntries = structuredEntries.length
+        ? structuredEntries
+        : legacyEntries;
+      const results = exactEntries.length
+        ? await applyExactEntries(exactEntries, action)
+        : await applyLegacyFormula(
+            message,
+            messageElement,
+            action
+          );
+
+      if (!results.length) {
+        ui.notifications?.warn(
+          "MMDR: nenhum alvo salvo pôde ser encontrado. O dano não foi aplicado."
+        );
+        return;
+      }
+
+      await postConfirmation(results, action);
+      const summary = results
+        .map(
+          (result) =>
+            `${result.name} ${result.heal ? "+" : "-"}${result.delta}`
+        )
+        .join(", ");
+      ui.notifications?.info(`MMDR: ${summary}`);
+      dbg("applied", { messageId, action, results });
+    } catch (error) {
+      console.error("[MMDR] apply error", error);
+      ui.notifications?.error(
+        "MMDR: ocorreu um erro ao aplicar o dano. Veja o console."
+      );
+    } finally {
+      button.disabled = false;
+    }
+  },
+  true
+);

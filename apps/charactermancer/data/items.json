@@ -20,7 +20,7 @@
     {
       "name": "Bow",
       "type": "weapon",
-      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "img": "systems/multiverse-d616/icons/weapons.svg",
       "system": {
         "description": "Um arco é uma arma de longo alcance que dispara flechas usando a elasticidade da madeira ou do material. É uma arma simples que pode ser utilizada por qualquer pessoa.",
         "range": "15",
@@ -41,9 +41,9 @@
       "effects": [],
       "folder": "8b60348af8f8d703",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150597,
         "modifiedTime": 1756480150597,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -53,7 +53,7 @@
     {
       "name": "Pistol",
       "type": "weapon",
-      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "img": "systems/multiverse-d616/icons/weapons.svg",
       "system": {
         "description": "Uma pequena arma de fogo, fácil de ocultar.",
         "range": "10",
@@ -74,9 +74,9 @@
       "effects": [],
       "folder": "8b60348af8f8d703",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150597,
         "modifiedTime": 1756480150597,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -86,7 +86,7 @@
     {
       "name": "Shotgun",
       "type": "weapon",
-      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "img": "systems/multiverse-d616/icons/weapons.svg",
       "system": {
         "description": "Ataques com esta arma contra alvos a até 5 espaços de distância sofrem desvantagem. A espingarda é uma arma de fogo projetada para ser disparada do ombro, que usa a energia de um cartucho para disparar diversos projéteis esféricos chamados chumbo, ou um projétil sólido chamado slug. Existem espingardas em variados calibres e mecanismos de operação, incluindo de cano único, cano duplo, ação por bomba, ferrolho, alavanca, semiautomáticas e até totalmente automáticas.",
         "range": "6",
@@ -108,9 +108,9 @@
       "effects": [],
       "folder": "8b60348af8f8d703",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150597,
         "modifiedTime": 1756480150597,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -120,7 +120,7 @@
     {
       "name": "Knife",
       "type": "weapon",
-      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "img": "systems/multiverse-d616/icons/weapons.svg",
       "system": {
         "description": "Uma faca é uma pequena lâmina afiada usada para cortar ou como arma. É uma arma simples, fácil de esconder e pode ser usada para diversos propósitos.",
         "range": "Reach",
@@ -141,9 +141,9 @@
       "effects": [],
       "folder": "8b60348af8f8d703",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150597,
         "modifiedTime": 1756480150597,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -153,7 +153,7 @@
     {
       "name": "Rifle",
       "type": "weapon",
-      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "img": "systems/multiverse-d616/icons/weapons.svg",
       "system": {
         "description": "Um rifle é uma arma de fogo projetada para ser disparada do ombro, com um cano que possui ranhuras helicoidais internas chamadas raiamento. As áreas elevadas chamadas campos entram em contato com o projétil (a bala), imprimindo rotação em torno de seu eixo. Isso dá estabilidade giroscópica e evita que o projétil tombe em voo, permitindo o uso de balas pontiagudas aerodinamicamente eficientes e melhorando o alcance e a precisão.",
         "range": "20",
@@ -175,9 +175,9 @@
       "effects": [],
       "folder": "8b60348af8f8d703",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150597,
         "modifiedTime": 1756480150597,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -187,7 +187,7 @@
     {
       "name": "Sniper Rifle",
       "type": "weapon",
-      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "img": "systems/multiverse-d616/icons/weapons.svg",
       "system": {
         "description": "Um rifle de alta potência capaz de atingir alvos a longa distância.",
         "range": "40",
@@ -208,9 +208,9 @@
       "effects": [],
       "folder": "8b60348af8f8d703",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150597,
         "modifiedTime": 1756480150597,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -220,7 +220,7 @@
     {
       "name": "Submachine Gun",
       "type": "weapon",
-      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "img": "systems/multiverse-d616/icons/weapons.svg",
       "system": {
         "description": "A submetralhadora é uma carabina automática alimentada por carregador, projetada para disparar cartuchos de pistola. O termo foi cunhado por John T. Thompson, inventor da Thompson.",
         "range": "10",
@@ -242,9 +242,9 @@
       "effects": [],
       "folder": "8b60348af8f8d703",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150597,
         "modifiedTime": 1756480150597,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -254,7 +254,7 @@
     {
       "name": "Frag Grenade",
       "type": "weapon",
-      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "img": "systems/multiverse-d616/icons/weapons.svg",
       "system": {
         "description": "Uma granada que explode ao impacto, causando dano a todos os inimigos em um raio de 3 metros.",
         "range": "10",
@@ -276,9 +276,9 @@
       "effects": [],
       "folder": "8b60348af8f8d703",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150597,
         "modifiedTime": 1756480150597,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -288,7 +288,7 @@
     {
       "name": "Sword",
       "type": "weapon",
-      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "img": "systems/multiverse-d616/icons/weapons.svg",
       "system": {
         "description": "Uma espada é uma longa peça de metal com fio usada para cortar, perfurar ou golpear. A lâmina mede normalmente entre 90 e 115 cm, com um punho de 15 a 20 cm. Pode ser de duplo fio ou fio único. É uma arma versátil usada em diversas culturas, estilos de luta e períodos históricos, exigindo habilidade e treinamento para ser eficaz.",
         "range": "Reach",
@@ -309,9 +309,9 @@
       "effects": [],
       "folder": "8b60348af8f8d703",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150597,
         "modifiedTime": 1756480150597,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -321,7 +321,7 @@
     {
       "name": "Fist",
       "type": "weapon",
-      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "img": "systems/multiverse-d616/icons/weapons.svg",
       "system": {
         "description": "A mão de uma pessoa com os dedos fechados contra a palma, usada para desferir um golpe.",
         "range": "Reach",
@@ -342,9 +342,9 @@
       "effects": [],
       "folder": "8b60348af8f8d703",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150597,
         "modifiedTime": 1756480150597,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -354,7 +354,7 @@
     {
       "name": "Flash Bang Grenade",
       "type": "weapon",
-      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "img": "systems/multiverse-d616/icons/weapons.svg",
       "system": {
         "description": "Uma granada que emite um clarão ofuscante e um estrondo alto.",
         "range": "10",
@@ -376,9 +376,9 @@
       "effects": [],
       "folder": "8b60348af8f8d703",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150597,
         "modifiedTime": 1756480150597,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -388,7 +388,7 @@
     {
       "name": "Club",
       "type": "weapon",
-      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "img": "systems/multiverse-d616/icons/weapons.svg",
       "system": {
         "description": "Um porrete é uma arma curta e robusta feita de madeira ou metal. É uma arma simples, fácil de usar, encontrada nas mãos de muitos combatentes.",
         "range": "Reach",
@@ -409,9 +409,9 @@
       "effects": [],
       "folder": "8b60348af8f8d703",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150597,
         "modifiedTime": 1756480150597,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -421,7 +421,7 @@
     {
       "name": "Knife Thrown",
       "type": "weapon",
-      "img": "systems/marvel-multiverse/icons/weapons.svg",
+      "img": "systems/multiverse-d616/icons/weapons.svg",
       "system": {
         "description": "Uma faca é uma pequena lâmina afiada usada para cortar ou como arma. É uma arma simples, fácil de esconder e pode ser usada para diversos propósitos.",
         "range": "5",
@@ -442,9 +442,9 @@
       "effects": [],
       "folder": "8b60348af8f8d703",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150597,
         "modifiedTime": 1756480150597,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -470,9 +470,9 @@
       "description": "",
       "sorting": "a",
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480150578,
         "modifiedTime": 1756480150578,
         "lastModifiedBy": "7HEATldsEyjiaswS"

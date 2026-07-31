@@ -102,7 +102,10 @@ async function toggleStatus(actor, statusId, active) {
       return;
     }
     // active=true
-    const se = (CONFIG.statusEffects || []).find((x) => x.id === statusId);
+    const statuses = CONFIG.statusEffects ?? {};
+    const se = Array.isArray(statuses)
+      ? statuses.find((entry) => entry?.id === statusId)
+      : statuses[statusId];
     const name = se?.label ?? statusId;
     const icon = se?.icon ?? se?.img ?? "icons/svg/aura.svg";
     return await actor.createEmbeddedDocuments("ActiveEffect", [{

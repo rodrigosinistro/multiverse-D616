@@ -20,7 +20,7 @@
     {
       "name": "Tycoon",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "<p>O personagem é extremamente rico e famoso. Não lhe falta nada e sua presença chama atenção por onde passa. Recebe convites para as melhores festas e tem acesso às áreas VIP.</p>",
         "examples": "Iron Man (Tony Stark), Iron Monger (Obadiah Stane), Mandarin, Sunspot, Wasp (Janet Van Dyne).",
@@ -73,9 +73,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756483559288,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -86,7 +86,7 @@
     {
       "name": "Entertainer",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "O personagem vive de entreter outras pessoas (cantor, músico, escritor, cineasta, palestrante etc.). Todo artista precisa de público, e ele trabalha duro para conquistá‑lo e mantê‑lo engajado.",
         "examples": "Dazzler, Echo, Mysterio, Wonder Man.",
@@ -134,9 +134,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756480162389,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -147,7 +147,7 @@
     {
       "name": "Military",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "<p>O personagem serve (ou já serviu) em uma organização militar. Recebeu treinamento, segue disciplina e costuma obedecer ordens que nem sempre são suas. Pode, às vezes, pedir ajuda a outros soldados. Em geral o dever vem em primeiro lugar; por isso, deve receber a tag Obrigação: Dever.</p>",
         "traits": [
@@ -227,9 +227,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756483575120,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -240,7 +240,7 @@
     {
       "name": "Student",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "<p>O personagem estuda em tempo integral (escola ou faculdade). Suas responsabilidades estão ligadas a ele e à instituição de ensino. A maioria das pessoas começa com esta ocupação. Ao se formar, você pode selecionar uma nova ocupação para substituí‑la.</p>",
         "examples": "Moon Girl, Ms. Marvel (Kamala Khan), Spider-Man (Miles Morales).",
@@ -294,9 +294,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756483561903,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -307,7 +307,7 @@
     {
       "name": "Journalist",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "O personagem trabalha como repórter ou editor em uma organização de notícias — de um jornal como o Daily Bugle a TNM (Threats and Menaces). Pode ser qualquer tipo de mídia: TV, rádio, jornal, revista ou online.",
         "examples": "Silk, Spider-Man (Peter Parker), Venom (Eddie Brock).",
@@ -359,9 +359,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756480162389,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -372,7 +372,7 @@
     {
       "name": "Adventurer",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "<p>O personagem vive em busca de aventuras. Talvez seja independente e não precise de outra ocupação, ou talvez ofereça seus serviços profissionalmente.</p>",
         "examples": "Iron Fist (Danny Rand), Luke Cage, Hawkeye (Kate Bishop).",
@@ -426,9 +426,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756483593880,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -439,7 +439,7 @@
     {
       "name": "Scientist",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "<p>O personagem resolve problemas por meio de pesquisa científica. Costuma estar entre os maiores especialistas do mundo, e outros heróis recorrem a ele em busca de conhecimento.</p>",
         "examples": "Doctor Octopus (Otto Octavius), Hulk (Bruce Banner), Mister Fantastic, Moon Girl.",
@@ -490,9 +490,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756483571450,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -503,7 +503,7 @@
     {
       "name": "Educator",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "O personagem educa outras pessoas. Pode ser professor do ensino básico, universitário, treinador, orientador etc., e faz o possível para transmitir conhecimento.",
         "examples": "Agatha Harkness, Blue Marvel, Professor X.",
@@ -555,9 +555,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756480162389,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -568,7 +568,7 @@
     {
       "name": "Leader",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "<p>O personagem é líder de uma cidade, região, estado ou nação — por exemplo, o prefeito eleito de Nova York ou o rei hereditário de um país.</p>",
         "examples": "Black Bolt, Black Panther (T'Challa), Doctor Doom, Sub-Mariner (Namor), Thor (Odinson).",
@@ -622,9 +622,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756483582903,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -635,7 +635,7 @@
     {
       "name": "Outsider",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "<p>O personagem vem de outro planeta, dimensão ou tempo e não está familiarizado com o funcionamento das coisas nesta Terra. Ele pode ter tido outra ocupação de onde veio, mas isso geralmente não se aplica aqui.</p>",
         "traits": [
@@ -687,9 +687,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756483542687,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -700,7 +700,7 @@
     {
       "name": "Engineer",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "O personagem projeta e constrói coisas para resolver problemas. Ele pega pesquisas científicas e as aplica a problemas do mundo real.",
         "examples": "Ghost Rider (Robbie Reyes), Iron Man (Tony Stark), Whiplash.",
@@ -753,9 +753,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756480162389,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -766,7 +766,7 @@
     {
       "name": "Criminal",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "O personagem fez algo que o colocou do lado errado da lei. Pode ter antecedentes ou ainda estar em liberdade condicional. Se cumpriu pena, deve também receber a tag Condenado.",
         "examples": "Ant-Man (Scott Lang), Black Cat, Gambit.",
@@ -820,9 +820,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756480162389,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -833,7 +833,7 @@
     {
       "name": "Health Care Worker",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "O personagem é médico, enfermeiro, terapeuta ou outro profissional dedicado à saúde. Na maioria das vezes tem acesso a um consultório onde exerce sua profissão.",
         "examples": "Doc Samson, Doctor Strange, the Night Nurse (Linda Carter), Thor (Jane Foster).",
@@ -872,9 +872,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756480162389,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -885,7 +885,7 @@
     {
       "name": "Lawyer",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "<p>O personagem é formado em Direito e sabe como usar isso. Pode trabalhar para um grande escritório ou ter a própria prática.</p>",
         "examples": "Daredevil (Matt Murdock), Foggy Nelson, She-Hulk.",
@@ -936,9 +936,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756483582404,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -949,7 +949,7 @@
     {
       "name": "Spy",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "<p>O personagem é perito em espionagem. Pode ter servido como espião para uma agência governamental ou organização criminosa. Sabe se infiltrar e encontrar informações sobre pessoas e organizações.</p>",
         "examples": "Black Widow (Natasha Romanoff), Peggy Carter, Winter Soldier.",
@@ -1002,9 +1002,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756483567229,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1015,7 +1015,7 @@
     {
       "name": "Law Enforcer",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "<p>O personagem trabalha na aplicação da lei — policial, xerife, delegado, agente da S.H.I.E.L.D., etc. Possui grande autoridade em sua jurisdição e costuma inspirar respeito fora dela também.</p>",
         "examples": "Nick Fury Jr., Human Torch (Jim Hammond), Maria Hill, Photon (Monica Rambeau).",
@@ -1081,9 +1081,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756483581893,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1094,7 +1094,7 @@
     {
       "name": "Investigator",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "O personagem é treinado para resolver mistérios. Pode atuar como detetive particular ou em órgãos oficiais de segurança — do FBI e da S.H.I.E.L.D. até a Tropa Nova.",
         "examples": "Jessica Jones, Misty Knight.",
@@ -1146,9 +1146,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756480162389,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1159,7 +1159,7 @@
     {
       "name": "Assassin",
       "type": "occupation",
-      "img": "systems/marvel-multiverse/icons/work.svg",
+      "img": "systems/multiverse-d616/icons/work.svg",
       "system": {
         "description": "The character is a hired killer. They might tell themselves that this is for the greater good. They might be picky about who they take on as clients or targets, but the core of their occupation is ending lives.",
         "examples": "Arcade, Bullseye, Elektra, the Punisher.",
@@ -1226,9 +1226,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480162389,
         "modifiedTime": 1756480162389,
         "lastModifiedBy": "7HEATldsEyjiaswS"

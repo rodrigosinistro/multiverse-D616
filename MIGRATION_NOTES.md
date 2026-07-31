@@ -1,27 +1,7 @@
-# Multiverse-D616 — v13 Compatibility Update
+# Migração 0.1.68
 
-This package adapts the system **Multiverse-D616 (D616)** for **Foundry VTT v13**.
+Esta versão não altera dados de Actors, Items, Combats ou compêndios.
 
-## What changed
-- `system.json`: switched to the v10+ manifest schema and set package compatibility for v13:
-  ```json
-  "compatibility": { "minimum": "13", "verified": "13.341" }
-  ```
-- Bumped version to `2.2.0-v13-compat` to avoid collision with upstream 2.2.0.
-- No code changes were required after a quick static scan for common v13 removals (`TokenConfig`, `TextEditor.enrichHTML` changes, deprecated coreVersion fields, etc.).
+A mudança é somente de interface: o botão **DAMAGE** é removido dos cards de iniciativa durante a renderização do chat. Cards antigos também recebem o ajuste quando forem renderizados novamente.
 
-## Manual test checklist (v13)
-1. Create a world on v13.341+ and install this zip locally.
-2. Create an Actor (character) and an Item (power/trait). Ensure item sheets open and save.
-3. Roll: Checks, Challenges and Attacks from the character sheet; verify chat cards, edge/trouble, fantastic results.
-4. Targeting: select a token, target another, roll an Attack > verify GM sees damage prompt and auto-apply (if system supports it).
-5. Effects: add/remove an Active Effect and confirm toggles work on items and actor.
-6. Packs: import a compendium entry (if the system ships packs).
-
-## Known / To watch
-- If you use custom modules which hook into this system, verify they’re v13-ready.
-- If you see a console warning about old manifest fields, clear any cached `minimumCoreVersion`/`compatibleCoreVersion` (we removed them here).
-
----
-
-*This local update was produced for testing and is not affiliated with the upstream repository.*
+Para instalação manual, feche o Foundry VTT, substitua integralmente a pasta `Data/systems/multiverse-d616` e abra o mundo novamente.

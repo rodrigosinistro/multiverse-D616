@@ -36,7 +36,10 @@ Hooks.once("ready", () => console.log(`[${M616.ID}] ready`));
 Hooks.on("getActorSheetHeaderButtons", (sheet, buttons) => {
   try{
     if (!sheet?.actor) return;
-    const isMM = game.system?.id?.startsWith?.("marvel-multiverse"); if (!isMM) return;
+    const isMM =
+      game.system?.id === "multiverse-d616" ||
+      game.system?.id?.startsWith?.("marvel-multiverse");
+    if (!isMM) return;
     if (!buttons.some(b => b?.class === "m616-export")) {
       buttons.unshift({
         label: "PDF (M616)",

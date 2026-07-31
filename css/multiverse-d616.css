@@ -333,9 +333,32 @@
   margin-block-start: 8px;
 }
 .marvel-roll .mm-roll-actions .damage,
-.marvel-roll .mm-roll-actions .spend-focus {
+.marvel-roll .mm-roll-actions .spend-focus,
+.marvel-roll .mm-roll-actions .m616-initiative-keep {
   flex: 1 1 0;
   margin-block-start: 0;
+}
+
+.marvel-roll .m616-initiative-keep {
+  background: #e41d18;
+  border: 2px solid #e41d18;
+  border-radius: 2px;
+  box-shadow: none;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 8px;
+  text-transform: uppercase;
+}
+
+.marvel-roll .m616-initiative-keep:hover {
+  background: #8b0502;
+}
+
+.marvel-roll .m616-initiative-keep:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 /* Focus info line below total */

@@ -1,5 +1,5 @@
 /**
- * Multiverse-D616 (Foundry VTT v13)
+ * Multiverse-D616 (Foundry VTT v14)
  * Hotbar improvements:
  *  - Show MMHT tooltips on hotbar item macros (Powers / Traits / Tags).
  *  - Allow dragging Abilities (Melee, Agility, Resilience, Vigilance, Ego, Logic) to the hotbar.
@@ -132,17 +132,16 @@ async function rollAbilityMacro(actorUuid, abilityKey, mode = "value") {
   const label = ABILITY_LABELS[key];
 
   const speaker = ChatMessage.getSpeaker({ actor });
-  const rollMode = game.settings.get("core", "rollMode");
+  const messageMode = game.settings.get("core", "messageMode");
 
   const roll = new CONFIG.Dice.MarvelMultiverseRoll(formula, actor.getRollData());
-  roll.toMessage(
+  await roll.toMessage(
     {
       speaker,
       flavor: `ability: ${label}`,
-      rollMode,
       title: safeMode === "noncom" ? `${label} (Non-Combat)` : label,
     },
-    { rollMode }
+    { messageMode }
   );
 
   return roll;

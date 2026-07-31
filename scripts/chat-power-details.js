@@ -1,15 +1,16 @@
 
 const MODULE_ID = "multiverse-d616";
-const VERSION = "1.7.2";
+const VERSION = "1.7.4";
+const DEBUG = false;
 
 const FIELDS = ["action","duration","cost","trigger","range"];
 const lastPowerByActor = new Map(); // actorId -> {itemId, uuid, at}
 const processed = new Set(); // message ids já tratados
 
-const log  = (...a)=>console.log(`[${MODULE_ID}]`, ...a);
+const log  = (...a)=>{ if (DEBUG) console.log(`[${MODULE_ID}]`, ...a); };
 const err  = (...a)=>console.error(`[${MODULE_ID}]`, ...a);
 
-Hooks.once("ready", ()=> log(`v${VERSION} ready`));
+Hooks.once("ready", ()=> console.log(`[${MODULE_ID}] v${VERSION} ready`));
 
 /** Utils **/
 const now = ()=> Date.now();
@@ -153,76 +154,8 @@ if (
   }catch(e){ err(e); }
 });
 
-
-/** libWrapper injection on ChatMessage#getHTML: runs for all clients (v13 still calls it) */
-Hooks.once("ready", () => {
-  try {
-    if (!globalThis.libWrapper) {
-      console.warn(`[${MODULE_ID}] libWrapper not found; fallback to renderChatMessageHTML hook only.`);
-      return;
-    }
-    libWrapper.register(MODULE_ID, "ChatMessage.prototype.getHTML", async function (wrapped, ...args) {
-      // Call original
-      const result = await wrapped(...args);
-      try {
-        const html = result?.[0] ?? result; // jQuery or HTMLElement
-        const message = this;
-        // Only description cards (not rolls/results)
-        if (!html || !(html instanceof Element)) return result;
-        const contentEl = html.querySelector(".message-content") || html;
-        if (!contentEl) return result;
-        if (contentEl.querySelector(".mcpd-card")) return result;
-
-        // Abort if this looks like a roll/result or DR helper card
-        if (html.querySelector(".dice-roll, .dice-result, .dice-total, .dice-tooltip, .mm-dr-buttons, .mm-dr, .mmdr, [data-mmdr]")) return result;
-        const rawText = String(contentEl?.innerText || "");
-        const text = rawText
-          .replace(/damagetype\s*:\s*\w+/ig, "")
-          .replace(/tipo\s+de\s+dano\s*:\s*\w+/ig, "")
-          .trim();
-        const isDamageText =
-          /\btakes\s+\d+\s+\w*\s*health\s+damage\b/i.test(text) ||
-          /\bsofre\s+\d+\s+(de\s+)?dano\b/i.test(text) ||
-          /\bre:\s*marveldie\b/i.test(text) ||
-          /\bdamage\s*multiplier\b/i.test(text) ||
-          /\bdamageReduction\b/.test(text) ||
-          /\bheal(?:ed|s)?\b|\bcura\b/i.test(text);
-        if (isDamageText) return result;
-    
-
-        // Detect "power:" line and resolve item on the speaker actor
-        const flavor = String(message.flavor ?? "");
-        const contentText = String(contentEl.innerText ?? "");
-        const m = (flavor + "\n" + contentText).match(/(?:power|poder)\s*:\s*([^\n\r<]+)/i);
-        const powerName = m?.[1]?.trim();
-        const actorId = message.speaker?.actor;
-        if (!powerName || !actorId) return result;
-
-        const actor = game.actors?.get(actorId);
-        if (!actor) return result;
-        const target = norm(powerName);
-        const item = actor.items?.find(it => (it.type||"").toLowerCase()==="power" && norm(it.name)===target) ?? null;
-        if (!item) return result;
-
-        const fields = collectFieldsFromItem(item);
-        if (!fields) return result;
-        const boxHTML = buildMetaBox(fields);
-        const ps = contentEl.querySelectorAll("p");
-        if (ps.length) ps[ps.length-1].insertAdjacentHTML("afterend", boxHTML);
-        else contentEl.insertAdjacentHTML("beforeend", boxHTML);
-
-        console.log(`[${MODULE_ID}] injected via libWrapper/getHTML`, { id: message.id, power: item.name });
-      } catch (e) {
-        console.error(`[${MODULE_ID}] libWrapper injection error`, e);
-      }
-      return result;
-    }, "WRAPPER");
-  } catch (e) {
-    console.error(`[${MODULE_ID}] libWrapper register error`, e);
-  }
-});
-
-// Fallback: still attempt via renderChatMessageHTML for environments where getHTML isn't wrapped
+// Foundry v14: ChatMessage renders through renderHTML and exposes the
+// renderChatMessageHTML hook with a native HTMLElement.
 Hooks.on("renderChatMessageHTML", async (message, html) => {
   try {
     const el = html;
@@ -232,7 +165,9 @@ Hooks.on("renderChatMessageHTML", async (message, html) => {
 
     const flavor = String(message.flavor ?? "");
     const contentText = String(contentEl.innerText ?? "");
-    const m = (flavor + "\\n" + contentText).match(/(?:power|poder)\\s*:\\s*([^\\n\\r<]+)/i);
+    const m = (flavor + "\n" + contentText).match(
+      /(?:power|poder)\s*:\s*([^\n\r<]+)/i
+    );
     const powerName = m?.[1]?.trim();
     const actorId = message.speaker?.actor;
     if (!powerName || !actorId) return;
@@ -248,7 +183,7 @@ Hooks.on("renderChatMessageHTML", async (message, html) => {
     const ps = contentEl.querySelectorAll?.("p");
     if (ps?.length) ps[ps.length-1].insertAdjacentHTML("afterend", boxHTML);
     else contentEl.insertAdjacentHTML?.("beforeend", boxHTML);
-    console.log(`[${MODULE_ID}] injected via renderChatMessageHTML`, { id: message.id, power: item.name });
+    log("injected via renderChatMessageHTML", { id: message.id, power: item.name });
   } catch (e) {
     console.error(`[${MODULE_ID}] fallback render error`, e);
   }

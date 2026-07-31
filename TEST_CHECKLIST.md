@@ -1,0 +1,130 @@
+# Checklist de teste — v0.1.68
+
+Use uma cópia do mundo no Foundry VTT v14 antes de substituir a versão usada na campanha.
+
+## Instalação
+
+1. Feche o mundo.
+2. Faça backup de `Data/worlds` e da pasta atual `Data/systems/multiverse-d616`.
+3. Substitua a pasta do sistema pela pasta `multiverse-d616` deste ZIP.
+4. Reinicie o Foundry VTT e confirme a versão **0.1.68**.
+
+## Compêndio Powers e pastas de Power Set
+
+1. Entre no mundo como Mestre e aguarde o carregamento completo do mundo.
+2. Abra **Compêndios → MMRPG Content → Powers**.
+3. Confirme que existem **27 pastas** de Power Set.
+4. Confirme exemplos: **Basic**, **Magic**, **Martial Arts**, **Telepathy**, **Teleportation** e **Weather Control**.
+5. Confirme que os 392 Powers aparecem dentro de suas respectivas pastas, sem entradas soltas na raiz.
+6. Feche e reabra o mundo; confirme que não há duplicação de pastas.
+7. Confirme que nenhum Power aparece solto por perda de referência à pasta.
+
+## Active Effects e Sturdy
+
+1. Abra um ator com **Sturdy 2** e confirme `Health Damage Reduction = 2` na ficha.
+2. Abra o Active Effect transferido pelo poder e confirme que continua habilitado.
+3. Ataque esse ator e clique em **DAMAGE**.
+4. Confirme que o card mostra `DR 2` e reduz o Damage Multiplier em 2.
+5. Desabilite o efeito de Sturdy e repita; a ficha e o card devem voltar para `DR 0`.
+6. Repita com um Trait/Origin que altere habilidade, defesa ou movimento.
+7. Confirme no console que não surgem mensagens `ActiveEffect application phase ... has already completed`.
+
+## Condições
+
+1. Abra o Token HUD e confirme que as condições padrão do Foundry não aparecem.
+2. Confirme que aparecem somente as condições nativas do D616 e condições customizadas.
+3. Com D616 Extempore Effects ativo, crie uma condição e confirme que ela também aparece no Token HUD.
+4. Leve Health a 0 e confirme **Incapacitated** somente no token atingido.
+5. Leve Focus a 0 e confirme **Demoralized**.
+6. Use dois tokens não vinculados do mesmo ator-base e confirme que o status não passa para a outra cópia.
+7. Aplique Ablaze/Bleeding/Corroding, encerre o turno e confirme o dano uma única vez.
+8. Com Health Damage Reduction, confirme a redução do dano contínuo.
+9. Teste uma condição custom pelo menu de configurações.
+
+## Controle de Turno
+
+1. Entre como Mestre e confirme que a janela **Controle de Turno** pode ser aberta pelo cronômetro nas ferramentas de Token.
+2. Entre como jogador e confirme que o mesmo cronômetro aparece e abre uma janela própria, arrastável, redimensionável, minimizável e fechável.
+3. Confirme que combatentes ocultos pelo Mestre não aparecem no quadro do jogador.
+4. Antes de começar o encontro, confirme que somente o Mestre vê os quatro controles de combate.
+5. Clique em **Iniciar Combate** e confirme que cada jogador recebe um popup com apenas os personagens sob seu controle.
+6. Confirme que o Mestre recebe um popup com os combatentes sem jogador ativo responsável.
+7. Role a iniciativa de um personagem sem Edge/Trouble e confirme que o card não oferece modificadores indevidos.
+8. Role a iniciativa de um personagem com **E** e confirme que somente os três botões **EDGE** e o botão **Manter iniciativa** ficam disponíveis.
+9. Use EDGE em um dos dados e confirme que o total do card, o valor do Combatant e a ordem de iniciativa são atualizados.
+10. Repita escolhendo **Manter iniciativa** e confirme que o resultado original é preservado.
+11. Confirme que o mesmo Edge/Trouble não pode ser usado uma segunda vez no mesmo card.
+12. Confirme que o combate somente começa automaticamente após todos os Edge/Trouble pendentes serem resolvidos.
+13. Teste **Avançar Turno**, **Retroceder Turno** e **Finalizar Combate**; o último deve pedir confirmação.
+14. Feche um popup de iniciativa sem rolar e clique novamente em **Iniciar Combate** para confirmar o reenvio dos pedidos pendentes.
+15. Confirme que os recursos mostram somente `0`, sem frações como `0/1` ou `0/5`.
+16. Use Ação Padrão, Reação e Movimento e confirme que cada número sobe para `1`, `2` etc., sempre com fundo vermelho e número branco em negrito.
+17. Confirme que o jogador vê os números sendo atualizados, mas não consegue alterar manualmente os controles nem zerar combatentes.
+18. Confirme que o Mestre ainda pode clicar para acrescentar, usar clique direito para desfazer, usar `Shift + Movimento` e zerar a linha do combatente.
+19. Em uma cena quadrada/hexagonal, mova um Token combatente e confirme a soma de espaços.
+20. Em uma cena sem grade, mova um Token combatente e confirme que a distância é convertida conforme a escala da cena.
+21. Mova um Combatant que não está no turno ativo e confirme que o movimento é registrado na linha correta.
+22. Durante o turno de outro combatente, use uma Reação com `Standard, movement or reaction`; confirme que o diálogo abre para o jogador e que o recurso escolhido é marcado no combatente correto.
+23. Passe o turno e confirme que Ação, Reação e Movimento do novo combatente começam zerados conforme a regra implementada.
+24. Feche e reabra a janela em contas diferentes e confirme que posição, tamanho e estado são preservados separadamente em cada navegador.
+25. Confirme que abrir o quadro não troca a ferramenta ativa, não bloqueia o canvas e não causa atualização contínua da interface.
+## Integrações
+
+1. Com Token Action HUD Core 2.1.x e o módulo D616 v0.1.13, use um Power com custo de Focus.
+2. Confirme o desconto de Focus, Concentração, rolagem, alvo salvo e Controle de Turno.
+3. Com D616 Extempore Effects v0.1.10, abra o menu de contexto de uma mensagem.
+4. Crie e remova um efeito, confirmando o ícone no token e a descrição na bandeja de condições.
+
+## Alvo preservado
+
+1. Coloque dois tokens na cena: **Alvo A** e **Alvo B**.
+2. Marque apenas **Alvo A** e faça um ataque.
+3. Depois da rolagem, desmarque A e marque B.
+4. Clique em **DAMAGE** no card original.
+5. Confirme que o card de dano cita **Alvo A**, e não B.
+6. Mude ou limpe novamente a seleção do Mestre.
+7. Clique em **DANO**.
+8. Confirme que somente a Health ou Focus de **Alvo A** foi alterada.
+
+## Múltiplos alvos e redução
+
+1. Marque dois alvos com valores diferentes de Damage Reduction.
+2. Faça o ataque e clique em **DAMAGE**.
+3. Confirme que o card mostra uma linha e um dano final para cada alvo.
+4. Clique em **DANO** e confira os dois recursos individualmente.
+
+## Meio dano e cura
+
+1. Gere um novo card de dano contra um alvo.
+2. Clique em **1/2 DANO** e confirme arredondamento para cima.
+3. Em outro teste, reduza o recurso do alvo e clique em **CURA**.
+4. Confirme que a cura não ultrapassa o valor máximo.
+
+## Token não vinculado
+
+1. Use dois tokens não vinculados criados a partir do mesmo Actor-base.
+2. Ataque somente um deles.
+3. Mude a seleção antes de gerar e antes de aplicar o dano.
+4. Confirme que somente a cópia originalmente atacada é alterada.
+
+## Regra de dano mínimo
+
+1. Use um alvo cuja Damage Reduction seja igual ou maior que o Damage Multiplier.
+2. Confirme que o dano final é **0**, nunca negativo.
+3. Repita com Fantastic e confirme que o resultado continua **0**.
+
+## Regressão do travamento do canvas — v0.1.64
+
+1. Selecione as ferramentas de Token e clique no cronômetro.
+2. Confirme que a janela abre sem trocar a ferramenta ativa.
+3. Selecione, arraste e mova um Token imediatamente após abrir a janela.
+4. Avance e recue turnos no Combat Tracker.
+5. Confirme que o console registra movimento e que não há repetição contínua de 404 da janela para o mesmo retrato inválido.
+
+## Card de iniciativa sem DAMAGE
+
+1. Crie ou abra um encontro com pelo menos um combatente.
+2. Role a iniciativa pelo Controle de Turno.
+3. Confirme que o card de iniciativa não possui o botão **DAMAGE**.
+4. Role um ataque comum e confirme que o botão **DAMAGE** continua aparecendo nesse card.
+5. Teste uma mensagem antiga com o texto `Iniciativa` ou `Initiative` e confirme que o botão também é removido ao renderizar.

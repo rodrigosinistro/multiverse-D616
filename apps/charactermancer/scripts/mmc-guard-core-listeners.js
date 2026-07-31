@@ -4,12 +4,12 @@ Hooks.once('init', () => {
   const register = () => {
     try {
       if (globalThis.libWrapper) {
-        libWrapper.register('marvel-multiverse-charactermancer',
+        libWrapper.register('multiverse-d616',
           'Application.prototype._activateCoreListeners',
           function (wrapped, html) {
             try {
               if (this?.constructor?.name === "MMCCharactermancer" && (!html?.[0] || !html[0]?.parentElement)) {
-                console.warn('[mmc] guard: skip _activateCoreListeners (no parentElement)');
+                console.debug('[mmc] guard: skipped incomplete V1 render');
                 return; // avoid crash
               }
             } catch (e) { /* ignore */ }
@@ -21,12 +21,12 @@ Hooks.once('init', () => {
       }
     } catch (e) {}
     // Fallback without libWrapper
-    const proto = (globalThis.Application || foundry.applications?.ApplicationV2 || foundry.applications?.Application)?.prototype || Application.prototype;
+    const proto = foundry.appv1.api.Application.prototype;
     const _orig = proto._activateCoreListeners;
     proto._activateCoreListeners = function(html) {
       try {
         if (this?.constructor?.name === "MMCCharactermancer" && (!html?.[0] || !html[0]?.parentElement)) {
-          console.warn('[mmc] guard(fallback): skip _activateCoreListeners (no parentElement)');
+          console.debug('[mmc] guard(fallback): skipped incomplete V1 render');
           return;
         }
       } catch (e) {}

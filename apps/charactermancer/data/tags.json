@@ -20,7 +20,7 @@
     {
       "name": "Headquarters",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem uma base, caverna ou covil que pode usar para se recuperar de ferimentos, consertar ou armazenar equipamentos, trabalhar em invenções e assim por diante. O local pode ser público ou secreto, e pode ser tão humilde quanto um galpão de ferramentas ou tão elaborado quanto um complexo subterrâneo ou um arranha-céu de Manhattan.",
         "restriction": "",
@@ -34,9 +34,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -47,7 +47,7 @@
     {
       "name": "Externally Immortal",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é quase impossível de ser morto permanentemente. Se morrer, ele é de alguma forma revivido ou reencarnado com suas memórias completas, e então envelhece rapidamente até atingir a idade de sua primeira morte, momento em que para de envelhecer completamente. A única maneira de um Externo morrer permanentemente é que outro Externo mate todos os outros dentro de um certo período de tempo e drene suas energias vitais ou coma seus corações, o que concede ao assassino os poderes da vítima. Caso contrário, eles voltam novamente.",
         "restriction": "For Externals only.",
@@ -61,9 +61,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -74,7 +74,7 @@
     {
       "name": "Dependents",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem filhos pequenos, parentes idosos ou outros que dependem dele. Ele não pode simplesmente abandonar essas pessoas e deve visitá-las e ajudar a cuidar delas regularmente.",
         "restriction": "",
@@ -88,9 +88,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -101,7 +101,7 @@
     {
       "name": "Backup",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem faz parte de uma organização - como uma força policial - que ele pode chamar para apoio imediato a qualquer momento.",
         "restriction": "",
@@ -115,9 +115,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -128,7 +128,7 @@
     {
       "name": "Secondary Mutation",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "<p>Em casos raros, um mutante pode experimentar uma mutação secundária em algum momento após sua mutação original. Um bom exemplo é Emma Frost, que começou como uma telepata bastante direta, mas depois ganhou uma mutação secundária que lhe permitiu se transformar em diamante vivo.</p><p>Esta não é uma nova origem, mas uma nova tag que serve como uma extensão da origem Mutante regular. Apenas personagens com a origem Mutante podem ter uma mutação secundária.</p><p>Se um personagem tiver esta tag, significa que ele já teve um limite de rank mais baixo e o ultrapassou. Por exemplo, ele pode ter estado no Rank 3 por anos e depois ganhou uma mutação secundária que o permitiu eventualmente subir para o Rank 5.</p><p>Quando um personagem existente ganha esta tag, ele avança para o próximo rank. Assim, um personagem só pode pegá-la depois de ter tido aventuras suficientes para que normalmente pudesse subir de rank, mas não pode por causa de seu limite de rank. Pegar esta tag significa que ele pode adicionar um único rank, e se seu novo limite de rank permitir um maior crescimento, ele pode jogar para ganhar mais ranks normalmente.</p><p>Se o jogador de um personagem existente quiser pegar esta tag para seu personagem, ele deve conversar com seu Narrador sobre o limite de rank. Isso deve abranger: <ul><li>O limite de rank atual do personagem e as razões pelas quais foi escolhido.</li><li>Os ranks e limites de rank dos outros personagens da equipe.</li><li>Qual deve ser o novo limite de rank.</li></ul>Alternativamente, o Narrador pode sugerir a tag Mutação Secundária para um ou mais jogadores. Se o Narrador quiser expandir os horizontes para as aventuras da equipe, ele pode propor isso para ajudar a garantir que os personagens sejam poderosos o suficiente para enfrentar os novos desafios que o jogo reserva para eles.</p><p>Às vezes, isso é tão simples quanto permitir que o personagem alcance os mesmos ranks de outros membros da equipe que são de um rank mais alto. Inicialmente, o jogador pode ter pensado que seria divertido jogar em um rank mais baixo (como o Gavião Arqueiro nos Vingadores), mas agora quer que seu personagem esteja em pé de igualdade com seus companheiros de equipe.</p><p>No entanto, se o jogador quiser que seu personagem alcance um rank mais alto do que o resto da equipe, isso pode causar atrito. Nesses casos, é melhor incluir toda a equipe na conversa para garantir que todos estejam confortáveis com a decisão. Caso contrário, os personagens podem se encontrar em uma corrida para alcançar o Rank 6. Tudo bem se é isso que todos querem, mas pode mudar a natureza do jogo e os desafios que os personagens enfrentam em suas aventuras.</p>",
         "restriction": "For mutants only.",
@@ -142,9 +142,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -155,7 +155,7 @@
     {
       "name": "Imageless",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem não projeta reflexo e sua imagem não pode ser capturada por câmeras.",
         "restriction": "",
@@ -169,9 +169,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -182,7 +182,7 @@
     {
       "name": "Hounded",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é membro de um grupo de pessoas que são perseguidas por simplesmente serem quem são.",
         "restriction": "",
@@ -196,9 +196,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -209,7 +209,7 @@
     {
       "name": "Convict",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem foi condenado por um crime, o que está refletido em seu registro.",
         "restriction": "",
@@ -223,9 +223,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -236,7 +236,7 @@
     {
       "name": "A.I.",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem possui uma inteligência artificial em uma mente computadorizada. Sua natureza digital significa que cópias ou backups podem ser feitos de sua mente e podem até ser transferidos para outras formas compatíveis.",
         "restriction": "",
@@ -250,9 +250,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -263,7 +263,7 @@
     {
       "name": "Linguist",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é fluente em um idioma diferente de sua língua nativa. Esta tag pode ser selecionada várias vezes, uma para cada idioma.",
         "restriction": "",
@@ -277,9 +277,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -290,7 +290,7 @@
     {
       "name": "Clone",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é um clone de outro personagem. Veja a seção Clones da Expansão do Aranhaverso a partir da p. 118 para mais informações sobre como isso pode afetá-los.",
         "restriction": "",
@@ -304,9 +304,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -317,7 +317,7 @@
     {
       "name": "Public Identity",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "A verdadeira identidade do personagem é conhecida pelo público. Isso pode facilitar para ele pedir ajuda a seus amigos e familiares - e até mesmo a estranhos. Infelizmente, também torna mais fácil para seus inimigos encontrá-lo e até mesmo ameaçar esses mesmos amigos e familiares.",
         "restriction": "",
@@ -331,9 +331,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -344,7 +344,7 @@
     {
       "name": "Mutant Associate",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "Grande parte do público acredita - ou acreditou - que o personagem é um mutante. Embora isso não seja tecnicamente verdade, o personagem é incluído com outros mutantes na mente da maioria das pessoas.",
         "restriction": "For non-mutants or those with the Mutant: Artificial origin.",
@@ -358,9 +358,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -371,7 +371,7 @@
     {
       "name": "Alternate Form",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem pode mudar de sua forma humana regular para outra forma e vice-versa. Quando em qualquer uma das formas, o personagem só pode acessar os poderes atribuídos a essa forma. Na maioria dos casos, isso significa que o personagem só pode usar poderes quando está em sua forma alternativa. Esta tag se aplica a personagens que mudam de uma forma humanoide para outra, como Colossus, Emma Frost e muitos dos Hulks. Também se aplica a personagens que têm formas inumanas, como lobisomens e vampiros.",
         "restriction": "",
@@ -385,9 +385,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -398,7 +398,7 @@
     {
       "name": "Rich",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem acesso a muito dinheiro. Se ele quiser algo normalmente e legalmente disponível para as pessoas, ele pode simplesmente comprá-lo.",
         "restriction": "",
@@ -412,9 +412,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -425,7 +425,7 @@
     {
       "name": "Streetwise",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem sabe como as coisas são resolvidas nas ruas, quem está no comando de várias empresas criminosas e como evitar problemas com elas.",
         "restriction": "",
@@ -439,9 +439,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -452,7 +452,7 @@
     {
       "name": "Lab Access",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem possui ou tem acesso a um laboratório cheio de equipamentos técnicos, suprimentos e ferramentas de que precisa para seu trabalho. Isso pode ser qualquer coisa, desde uma sala de aula de ensino médio bem equipada a um laboratório forense ou a um local industrial.",
         "restriction": "",
@@ -466,9 +466,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -479,7 +479,7 @@
     {
       "name": "Villainous",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é um vilão, alguém que pouco se importa com os direitos dos outros, incluindo o direito de viver.",
         "restriction": "The character cannot also be Heroic.",
@@ -493,9 +493,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -506,7 +506,7 @@
     {
       "name": "Krakoan",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é um cidadão da nação mutante de Krakoa. Com a fundação de Krakoa como nação, a cidadania foi concedida automaticamente a todos os mutantes nascidos na Terra. No auge do poder dessa nação, se um Krakoano fosse morto, os Cinco - um grupo de mutantes poderosos - poderiam trabalhar juntos para ressuscitar aquele mutante em um corpo clonado, com a maioria de suas memórias intactas. Se morto no Outromundo, o personagem ainda poderia ser ressuscitado, mas seria mudado de maneiras imprevisíveis. Como isso pode afetar o personagem fica a critério do Narrador. No status quo atual, Krakoa caiu. Os mutantes não têm mais acesso automático aos portões de Krakoa ou à ressurreição pelos Cinco. Personagens que viveram em Krakoa podem manter esta tag, no entanto, para representar seu apego à pátria mutante.",
         "restriction": "For mutants only.",
@@ -520,9 +520,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -533,7 +533,7 @@
     {
       "name": "Worshiped",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é adorado por outros como um deus.",
         "restriction": "",
@@ -547,9 +547,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -560,7 +560,7 @@
     {
       "name": "Auditory Issues",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem problemas de audição que podem variar de surdez parcial a total.",
         "restriction": "",
@@ -574,9 +574,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -587,7 +587,7 @@
     {
       "name": "Alien Heritage",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem ou pelo menos um de seus ancestrais não é da Terra. Escolha uma raça alienígena à qual ele pertença. Se ele não foi criado na Terra, deve considerar pegar a ocupação de Forasteiro.",
         "restriction": "",
@@ -601,9 +601,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -614,7 +614,7 @@
     {
       "name": "Inhuman Genes",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem genes Inumanos latentes que o fazem desenvolver superpoderes quando exposto à Névoa Terrígena.",
         "restriction": "For Inhumans only.",
@@ -628,9 +628,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -641,7 +641,7 @@
     {
       "name": "Extreme Appearance",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem parece muito diferente da pessoa comum (onde quer que esteja) e não pode esconder facilmente sua identidade. Quando esta tag aparece nas origens neste capítulo, pode fornecer outras informações úteis, como se uma aparência extrema é comum.",
         "restriction": "",
@@ -655,9 +655,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -668,7 +668,7 @@
     {
       "name": "Mobility Issues",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem problemas de mobilidade. Isso pode variar de usar uma bengala a usar uma cadeira de rodas.",
         "restriction": "",
@@ -682,9 +682,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -695,7 +695,7 @@
     {
       "name": "Cursed",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "Voluntariamente ou não, o personagem é afiliado ao Inferno. Isso pode expô-lo a todos os tipos de tramas e planos nefastos.",
         "restriction": "",
@@ -709,9 +709,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -722,7 +722,7 @@
     {
       "name": "Enemy",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "Há alguém por aí que jurou derrotar o personagem. O inimigo é de pelo menos o mesmo rank do personagem e está obcecado em derrubá-lo. Esta tag pode ser adquirida várias vezes, mas deve ser reservada para inimigos verdadeiramente obcecados.",
         "restriction": "",
@@ -736,9 +736,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -749,7 +749,7 @@
     {
       "name": "Poor",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem pouco acesso a dinheiro e luta para sobreviver. Isso pode lhe causar todo tipo de problema.",
         "restriction": "",
@@ -763,9 +763,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -776,7 +776,7 @@
     {
       "name": "Patron",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem um benfeitor rico a quem pode pedir para comprar qualquer coisa dentro do razoável. O patrono pode ser um indivíduo, uma organização ou até mesmo um governo. O acesso do personagem aos recursos que o patrono fornece depende de seu relacionamento com o patrono. Se ele irritar ou envergonhar seu patrono, ele pode ser cortado e ter que remover esta tag. Isso é semelhante à tag Rico, mas o personagem está contando com a riqueza de outra pessoa. Um exemplo disso aconteceu recentemente quando Peter Parker trabalhou para um Norman Osborn arrependido. Parker teve acesso aos recursos de Osborn enquanto continuou a trabalhar com ele.",
         "restriction": "",
@@ -790,9 +790,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -803,7 +803,7 @@
     {
       "name": "Radioactive",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem emite constantemente baixos níveis de algum tipo de radiação. Isso pode ser detectado por um contador Geiger.",
         "restriction": "",
@@ -817,9 +817,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -830,7 +830,7 @@
     {
       "name": "Supernatural",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem poderes que são mágicos ou baseados em algo mágico.",
         "restriction": "",
@@ -844,9 +844,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -857,7 +857,7 @@
     {
       "name": "Obligation",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é responsável por certas pessoas, lugares ou organizações que dependem dele. Esta tag pode ser selecionada várias vezes, usando muitas categorias diferentes. Estas incluem família, escola, sociedade, esportes, trabalho e assim por diante.",
         "restriction": "",
@@ -871,9 +871,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -884,7 +884,7 @@
     {
       "name": "Deceased",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem está tecnicamente morto - embora presumivelmente ainda seja capaz de interagir com o resto do mundo de alguma forma. Ele pode ser um vampiro, um fantasma, um zumbi ou até mesmo um cérebro flutuando em um pote.",
         "restriction": "",
@@ -898,9 +898,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -911,7 +911,7 @@
     {
       "name": "Authority",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem algum tipo de autoridade legal. Ele pode ser um oficial comissionado, corsário, caçador de recompensas, médico, negociante de armas de fogo, advogado, farmacêutico, policial, investigador particular, prefeito, governador e assim por diante. Esta tag pode ser selecionada várias vezes, se apropriado.",
         "restriction": "",
@@ -925,9 +925,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -938,7 +938,7 @@
     {
       "name": "Eternally Immortal",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem não envelhece e teoricamente poderia viver para sempre. Se o personagem for morto, ele pode ser trazido de volta à vida na Câmara de Ativação encontrada na Exclusão, uma base Eterna localizada sob o Pólo Sul. Para que isso aconteça, a Câmara de Ativação sacrifica a vida de um humano aleatório em qualquer lugar da Terra.",
         "restriction": "For Eternals only.",
@@ -952,9 +952,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -965,7 +965,7 @@
     {
       "name": "Mute",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem não pode falar. A menos que especificado de outra forma, ele pode usar outros meios para se comunicar.",
         "restriction": "",
@@ -979,9 +979,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -992,7 +992,7 @@
     {
       "name": "Immunity",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é imune aos efeitos usuais de algo. Isso pode ser selecionado várias vezes.",
         "restriction": "",
@@ -1006,9 +1006,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1019,7 +1019,7 @@
     {
       "name": "Amphibious",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem consegue respirar muito bem debaixo d'água e também consegue ver e ouvir bem nela.",
         "restriction": "",
@@ -1033,9 +1033,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1046,7 +1046,7 @@
     {
       "name": "Lunar Transformation",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "Nas três noites em que a lua está mais cheia e enquanto a lua está acima do horizonte, o personagem deve se transformar em um lobisomem e é governado por sua natureza animal. Ele não pode deixar de caçar e atacar qualquer pessoa ou criatura que encontrar, não importa se é amigo ou inimigo.",
         "restriction": "For werewolves only.",
@@ -1060,9 +1060,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1073,7 +1073,7 @@
     {
       "name": "Chaotic",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem foi afetado pelo senhor do caos Chthon.",
         "restriction": "",
@@ -1087,9 +1087,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1100,7 +1100,7 @@
     {
       "name": "Heroic",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem age heroicamente. Ele ajuda as pessoas necessitadas e faz o possível para não matar - mesmo com pessoas que possam merecer.",
         "restriction": "The character cannot also be Villainous.",
@@ -1114,9 +1114,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1127,7 +1127,7 @@
     {
       "name": "Hunted",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é procurado pela lei por crimes que supostamente (ou de fato) cometeu. Se capturado pela polícia, ele pode ser preso, julgado por seus crimes e potencialmente enviado para a prisão.",
         "restriction": "",
@@ -1141,9 +1141,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1154,7 +1154,7 @@
     {
       "name": "Arokkii",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é de Arakko, que já foi parte da mesma ilha que Krakoa antes de ser separada e enviada para a dimensão sombria de Amenth. Arakko desde então retornou ao mundo regular e foi transplantada para um Marte terraformado. A sociedade Arakkii enfatiza a independência. Os Arakkii não aceitam ajuda de outros e muitas vezes resolvem disputas por meio de duelos formais. Eles se recusam a permitir que os Cinco os ressuscitem.",
         "restriction": "For mutants only.",
@@ -1168,9 +1168,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1181,7 +1181,7 @@
     {
       "name": "Green Door",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "Depois de ser morto, o personagem pode voltar à vida passando pela Porta Verde, um portal que conecta uma parte da vida após a morte à Terra. Isso o torna efetivamente imortal.",
         "restriction": "For gamma mutates only.",
@@ -1195,9 +1195,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1208,7 +1208,7 @@
     {
       "name": "Sorcerous",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem se dedicou ao estudo da magia tradicional, também conhecida como feitiçaria.",
         "restriction": "",
@@ -1222,9 +1222,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1235,7 +1235,7 @@
     {
       "name": "Mysterious",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem não entende totalmente como ou por que tem poderes. Isso pode ser perturbador e talvez até perigoso, ou ele pode simplesmente aceitar isso com naturalidade.",
         "restriction": "",
@@ -1249,9 +1249,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1262,7 +1262,7 @@
     {
       "name": "X-Gene",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem genes mutantes que o fazem desenvolver superpoderes.",
         "restriction": "For mutants only.",
@@ -1276,9 +1276,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1289,7 +1289,7 @@
     {
       "name": "Signature Weapon",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é conhecido por possuir e usar um tipo específico de arma, como o arco do Gavião Arqueiro ou os sai da Elektra. Esta tag pode ser adquirida mais de uma vez, mas cada vez deve ser com uma arma diferente.",
         "restriction": "",
@@ -1303,9 +1303,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1316,7 +1316,7 @@
     {
       "name": "Mahd Wy'ry",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem vive por tanto tempo que suas memórias acumuladas têm o potencial de levá-lo à loucura. A única cura para essa condição é morrer e depois renascer com a restauração de sua mente a partir de um backup limpo. Isso acontece raramente, mas a doença pode progredir rapidamente uma vez que começa.",
         "restriction": "For Eternals only.",
@@ -1330,9 +1330,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1343,7 +1343,7 @@
     {
       "name": "Young",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é menor de idade, com menos de 18 anos. Se possível, ele deve se apresentar a seus pais ou responsáveis regularmente.",
         "restriction": "",
@@ -1357,9 +1357,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1370,7 +1370,7 @@
     {
       "name": "Early Bloomer",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem é um tipo raro de mutante primitivo que ganhou seus poderes ao nascer. Na maioria dos casos, isso significa que seus pais esconderam seus poderes o máximo que puderam - ou que as autoridades se encarregaram deles desde cedo, supostamente para a proteção de todos.",
         "restriction": "",
@@ -1384,9 +1384,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1397,7 +1397,7 @@
     {
       "name": "Secret Identity",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "A verdadeira identidade do personagem é um segredo para o público, e ele deve tomar precauções para manter esse status. Isso pode ajudar a manter as pessoas de quem ele gosta a salvo de seus inimigos, mas também pode causar tensão nesses mesmos relacionamentos.",
         "restriction": "",
@@ -1411,9 +1411,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1424,7 +1424,7 @@
     {
       "name": "Mental Health Conditions",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem condições de saúde mental. Estas podem incluir ansiedade, depressão, transtorno dissociativo de identidade ou outras condições.",
         "restriction": "",
@@ -1438,9 +1438,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1451,7 +1451,7 @@
     {
       "name": "Black Market Access",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem sabe como e onde pode comprar e vender coisas difíceis de encontrar e potencialmente ilegais.",
         "restriction": "",
@@ -1465,9 +1465,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1478,7 +1478,7 @@
     {
       "name": "Powerful",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem acesso aos recursos de toda a sua comunidade. Na maioria dos casos, ele deve ter cuidado com a forma como usa tais recursos para não perder esse acesso.",
         "restriction": "",
@@ -1492,9 +1492,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1505,7 +1505,7 @@
     {
       "name": "Vision Issues",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem tem problemas de visão que podem variar de cegueira parcial a total. Isso também pode incluir daltonismo, astigmatismo e ser míope ou hipermétrope.",
         "restriction": "",
@@ -1519,9 +1519,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1532,7 +1532,7 @@
     {
       "name": "Mentor",
       "type": "tag",
-      "img": "systems/marvel-multiverse/icons/tags.svg",
+      "img": "systems/multiverse-d616/icons/tags.svg",
       "system": {
         "description": "O personagem conhece uma pessoa mais velha a quem pode pedir conselhos, mesmo quando se trata de ter superpoderes. Esta tag pode ser selecionada várias vezes.",
         "restriction": "",
@@ -1546,9 +1546,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480182542,
         "modifiedTime": 1756480182542,
         "lastModifiedBy": "7HEATldsEyjiaswS"

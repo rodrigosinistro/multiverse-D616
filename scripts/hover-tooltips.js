@@ -1,5 +1,5 @@
 const MODULE_ID = "multiverse-d616";
-const MODULE_VER = "1.0.18";
+const MODULE_VER = "1.0.19";
 const SETTINGS = { ENABLE:"enable", SYSTEM_ID:"systemId", TYPES:"types" };
 
 const DEFAULT_TYPES = { Power:true, Trait:true, Tag:true, Occupation:true, Origin:true, Item:true };
@@ -86,13 +86,13 @@ class MMHT {
       } catch (e) { MMHT.warn("renderActorSheet patch failed", e); }
     });
 
-    Hooks.on("renderChatMessage", (message, html) => {
+    Hooks.on("renderChatMessageHTML", (message, html) => {
       try {
-        html.find("[data-item-id]").each((i, el) => {
+        for (const el of html.querySelectorAll("[data-item-id]")) {
           const id = el.dataset.itemId;
           const actor = message.speaker?.actor ? game.actors?.get(message.speaker.actor) : null;
           const item = actor?.items?.get?.(id);
-          if (!item) return;
+          if (!item) continue;
 
           const sys = item.system ?? {};
           const type = upFirst(item.type || "Item");
@@ -114,8 +114,8 @@ class MMHT {
           if (duration) el.dataset.mmhtDuration = String(duration);
           if (desc) el.dataset.mmhtDesc = String(desc);
           if (effect) el.dataset.mmhtEffect = (typeof effect === "string") ? effect : JSON.stringify(effect);
-        });
-      } catch (e) { MMHT.warn("renderChatMessage patch failed", e); }
+        }
+      } catch (e) { MMHT.warn("renderChatMessageHTML patch failed", e); }
     });
   }
 

@@ -1,3 +1,164 @@
+# v0.1.68
+
+- Removido o botão **DAMAGE** dos cards de rolagem de iniciativa.
+- A remoção usa as referências explícitas de iniciativa da v0.1.67 e mantém compatibilidade com mensagens antigas identificadas por `Initiative` ou `Iniciativa`.
+- Cards de ataques, Powers e demais testes continuam exibindo o botão **DAMAGE** normalmente.
+
+# v0.1.67
+
+- Corrigida a atualização da ordem de iniciativa após usar **Edge** ou **Trouble** em uma rolagem de iniciativa.
+- As mensagens de iniciativa agora carregam referências explícitas ao Combat e ao Combatant, sem depender do nome exibido no chat.
+- Corrigida a detecção de iniciativa em português; o código anterior procurava apenas a palavra inglesa `Initiative`, por isso `Iniciativa` não atualizava o Combatant.
+- O resultado ajustado passa a ser aplicado com `Combat.setInitiative`, que reordena o encontro e preserva corretamente o combatente do turno atual.
+- Combatentes com **E** ou **Trouble** na iniciativa ficam pendentes até escolherem um dado ou clicarem em **Manter iniciativa**.
+- O combate só começa automaticamente quando todas as iniciativas e todos os Edge/Trouble pendentes forem resolvidos.
+- Em rolagens de iniciativa, o sistema exibe somente o modificador autorizado: Edge para personagens com E, Trouble para personagens com Trouble e nenhum botão para personagens sem modificador.
+- Cada Edge/Trouble de iniciativa pode ser usado somente uma vez; após a resolução, os botões são removidos do card.
+- Adicionado fallback por Token, Actor e alias para mensagens de iniciativa antigas que não possuem as novas flags.
+
+# v0.1.66
+
+- Adicionados ao Quadro de Controle de Turno os botões de Mestre **Iniciar Combate**, **Retroceder Turno**, **Avançar Turno** e **Finalizar Combate**.
+- **Iniciar Combate** agora abre uma fase de iniciativa: cada jogador ativo recebe um popup para lançar a iniciativa dos personagens que controla.
+- O Mestre recebe um popup separado para lançar a iniciativa dos combatentes sem jogador ativo responsável, incluindo NPCs, combatentes ocultos e personagens cujo dono esteja desconectado.
+- Quando todos os combatentes possuem iniciativa, o encontro começa automaticamente na Rodada 1.
+- Se alguém fechar o popup sem rolar, o Mestre pode clicar novamente em **Iniciar Combate** para reenviar os pedidos pendentes, sem apagar iniciativas já lançadas.
+- As solicitações de iniciativa são validadas pelo proprietário do Actor; caso a permissão do jogador impeça a atualização direta, o Mestre primário executa a rolagem por socket.
+- **Finalizar Combate** exige confirmação para evitar encerramentos acidentais.
+- Os quatro controles são exclusivos do Mestre; jogadores continuam vendo o quadro e os contadores em modo somente leitura.
+
+# v0.1.65
+
+- O Quadro de Controle de Turno agora está disponível para Mestres e jogadores; cada usuário pode abrir, fechar, minimizar, arrastar e redimensionar sua própria janela.
+- O ícone de cronômetro nas ferramentas de Token agora aparece para todos os usuários e reabre o quadro sem alterar a ferramenta ativa do canvas.
+- Adicionado o botão **Iniciar Combate** dentro do quadro, visível e utilizável somente pelo Mestre, quando o encontro ainda não começou.
+- Jogadores recebem uma visualização somente de leitura; controles manuais e reset individual continuam exclusivos do Mestre.
+- Combatentes ocultos continuam invisíveis para jogadores no quadro.
+- Os recursos exibem somente a quantidade utilizada (`0`, `1`, `2`...), sem a fração de máximo (`0/1`).
+- Ação Padrão, Reação e Movimento agora mantêm fundo vermelho fixo, com o número de usos em branco e negrito, sem mudança de cor ao atingir ou ultrapassar o limite.
+- Otimizada a janela Controle de Turno para não reconstruir toda a interface a cada atualização irrelevante do combate.
+- Adicionado limite de atualização, agrupamento por frame e assinatura de estado; renders idênticos agora são descartados.
+- A janela não é atualizada enquanto estiver fechada ou minimizada e preserva a posição de rolagem da lista.
+- Atualizações de Combatant e Combat agora só redesenham a janela quando alteram turno, rodada, iniciativa, derrota ou os recursos rastreados.
+- Retratos dos combatentes são validados uma única vez antes de serem usados, evitando tempestades de requisições 404 durante a abertura do combate.
+- O ResizeObserver da janela passou a salvar geometria com debounce e apenas quando tamanho ou posição realmente mudam.
+- O painel de condições deixou de reconstruir o DOM em todo update de Token/Actor; agora reage apenas a seleção e mudanças de Active Effects/status.
+- A paleta exclusiva de condições é reaplicada somente quando necessário, em vez de ser recriada em cada render do painel.
+- A verificação automática de Incapacitated/Demoralized agora roda somente quando Health ou Focus mudam.
+- Reduzido o log de diagnóstico repetitivo do Chat Power Details durante rerenders do chat.
+
+# v0.1.64
+
+- Corrigido o travamento aparente do canvas ao abrir o Controle de Turno pela barra lateral.
+- O cronômetro deixou de ser registrado como um grupo de Scene Controls vazio e passou a ser um botão verdadeiro dentro das ferramentas de Token, preservando seleção, arraste, alvo e demais interações do canvas.
+- O botão do Controle de Turno não se torna uma ferramenta ativa e apenas abre a janela do Mestre.
+- O rastreamento de movimento agora é consolidado somente pelo Mestre primário, evitando solicitações duplicadas entre clientes.
+- O fallback por `preUpdateToken`/`updateToken` também é executado pelo Mestre primário e continua cobrindo movimentos por atualização direta de coordenadas.
+- Imagens inválidas dos combatentes são memorizadas pela janela e não voltam a gerar requisições 404 em cada atualização do combate.
+
+# v0.1.63
+
+- Corrigido o contador de movimento em cenas sem grade: quando o Foundry retorna `spaces = 0`, a distância da operação é convertida para espaços usando a escala configurada na cena.
+- O rastreamento do hook `moveToken` agora é processado pelo cliente que realmente iniciou o movimento e sincronizado com o Mestre, evitando depender da cópia da operação recebida por outro cliente.
+- O movimento é associado ao Combatant correspondente ao Token movimentado, inclusive em movimentos fora do turno ativo.
+- Adicionada medição alternativa pelas posições de origem/destino e um fallback pelo hook `updateToken` para módulos que alteram diretamente as coordenadas do Token.
+- Adicionada proteção contra contagem duplicada quando `moveToken` e `updateToken` descrevem a mesma movimentação.
+- O botão flutuante de reabertura foi removido e substituído por um controle com ícone de cronômetro na barra de ferramentas à esquerda, visível somente para o Mestre.
+- Adicionado registro de diagnóstico no console sempre que o Controle de Turno contabiliza movimento.
+
+# v0.1.62
+
+- Corrigido o rastreamento de Powers usados fora do turno ativo: Reações agora localizam o Combatant do ator que efetivamente usou o Item.
+- Powers com ações alternativas, como `Standard, movement or reaction`, voltam a abrir a escolha e consomem somente o recurso selecionado.
+- A leitura do campo Action também reconhece `Standart`, `Ação Padrão` e `Padrão`, preservando compatibilidade com conteúdo legado.
+- Corrigida a medição de movimento do Foundry v14: o rastreador soma os trechos `passed` e `pending` da operação atual, sem reutilizar o histórico cumulativo.
+- Movimentos feitos por integrações via método `api` passam a ser contabilizados; movimentos administrativos (`config`, `paste`, `undo`) e teletransportes marcados pelo Foundry são ignorados.
+- Corrigida a corrida de inicialização das condições automáticas Incapacitated/Demoralized, garantindo que a paleta D616 esteja registrada antes de alternar o status.
+- Adicionado fallback seguro por ActiveEffect para condições automáticas quando outro módulo atrasa a reconstrução interna dos status.
+- Adicionada migração não destrutiva dos caminhos de ícones já existentes no mundo, de `systems/marvel-multiverse/` para `systems/multiverse-d616/`.
+- Imagens inválidas na janela Controle de Turno agora usam o ícone genérico como fallback.
+
+# v0.1.61
+
+- Substituído o controle compacto embutido no Combat Tracker por uma janela flutuante exclusiva do Mestre.
+- A janela pode ser arrastada, redimensionada, minimizada e fechada; um botão flutuante permite reabri-la.
+- Posição, tamanho, estado aberto/fechado e minimização são preservados no navegador do Mestre.
+- A janela mostra todos os combatentes, destaca o turno atual e permite controlar Ação Padrão, Reação e Movimento.
+- Mantidos o rastreamento automático de armas/Powers, o consumo de movimento e o reset no início do turno.
+- A paleta de condições agora é exclusiva do Multiverse-D616: condições padrão do Foundry e de módulos não relacionados são removidas.
+- Condições nativas, customizadas pelo sistema e criadas pelo D616 Extempore Effects continuam disponíveis.
+
+# v0.1.60
+
+- Replaced the Powers compendium with the user-provided Foundry export.
+- Preserved all Power Set folders as native compendium Folder documents.
+- Updated legacy `marvel-multiverse` system and icon paths to `multiverse-d616`.
+- Replaced the unavailable world-specific Animal Control icon with the system power icon.
+- Synchronized the Charactermancer fallback Powers data with the new compendium.
+- Removed the temporary runtime folder-reconstruction script.
+
+# Changelog
+
+## 0.1.59
+
+- Restaurada a organização interna do compêndio **Powers** em 26 pastas de **Power Set**.
+- Adicionada migração automática, executada pelo Mestre ativo, que recria as pastas e reassocia os 383 Powers conforme a estrutura original de `powers.json`.
+- A migração preserva os nomes e identificadores originais das pastas sempre que possível, relocka o compêndio após a operação e não altera Powers personalizados.
+- Renomeados os arquivos de compêndio para `v0159`, evitando reaproveitamento de uma migração LevelDB incompleta da versão anterior.
+
+## 0.1.58
+
+- Corrigido o caminho dos arquivos JSON do Charactermancer após sua integração ao sistema.
+- Restaurados os seis compêndios oficiais (Itens, Ocupações, Origens, Poderes, Tags e Traços).
+- Normalizados os caminhos de ícones para `systems/multiverse-d616/`.
+- Atualizadas referências de API para os namespaces do Foundry VTT v14 (`ActorSheet`, `ItemSheet` e `loadTemplates`).
+- Corrigido o retorno interno do Charactermancer para o formato jQuery esperado pelo Application V1.
+- Corrigido o identificador usado pelo guard do libWrapper.
+
+## v0.1.57 — Active Effects, condições e Controle de Turno
+
+- Corrigido o ciclo de preparação de `Actor` e `Item` para o Foundry VTT v14. O sistema não chama mais `prepareData()` uma segunda vez, eliminando os erros de fases `initial`/`final` já concluídas.
+- Restaurada a aplicação dos Active Effects transferidos por Powers, Traits, Origins e Occupations. `Sturdy 1–4` volta a alterar `system.healthDamageReduction`, e o fluxo de dano usa o valor derivado do alvo.
+- O registro de condições agora usa o objeto chaveado exigido pelo Token HUD do Foundry v14, preservando condições de outros módulos.
+- Removido o monkey patch legado de `_getStatusEffectChoices`, que devolvia um array incompatível com v14.
+- Condições automáticas em atores sintéticos são aplicadas diretamente ao ator daquele token, sem alcançar outras cópias não vinculadas.
+- Dano de condição e prompts de recuperação são executados somente pelo Mestre ativo primário, evitando duplicação entre clientes.
+- Poderes usados pela ficha, macro ou Token Action HUD passam pelo mesmo `Item.roll()`, incluindo custo de Focus, Concentração, alvos, contexto de dano e hooks.
+- Adicionado Controle de Turno no Combat Tracker: Ação, Reação e espaços de Movimento usados/máximos, estado por Combatant, reset no início do turno e edição por Mestre/dono.
+- Armas e Powers marcam recursos automaticamente; ações alternativas perguntam qual recurso foi usado e ações combinadas marcam os dois.
+- Movimento do combatente ativo é acompanhado pelo hook `moveToken` do Foundry v14 para movimentos por arraste, teclado e HUD.
+- O contador é reinserido quando o Carousel/Combat Tracker Dock reconstrói o
+  retrato de um combatente, preservando a integração após atualizações.
+- Ações extras não são bloqueadas: o contador pode ultrapassar o máximo para representar poderes e exceções.
+- Migrados os fluxos do sistema de `core.rollMode` para `core.messageMode`.
+- O Controle de Turno foi implementado em `scripts/combat/`, primeiro passo da separação do arquivo central por responsabilidade.
+
+## v0.1.56 — Dano por alvo e compatibilidade Foundry VTT v14
+
+- Corrigido o fluxo do botão `DAMAGE`: ele agora usa exclusivamente os UUIDs dos alvos salvos no card do ataque, em vez dos alvos que estiverem marcados no momento do clique.
+- O card de dano passa a guardar uma estrutura por alvo (`damageApplication`) com UUID do token/ator, tipo, redução e dano final. Os botões **DANO**, **1/2 DANO** e **CURA** aplicam esses valores ao mesmo alvo original.
+- Corrigido o caso em que o GM mudava a própria seleção antes de aplicar o dano e outro token era alterado.
+- Preservado o ator sintético de tokens não vinculados por meio do UUID do token e do ator.
+- O Damage Multiplier efetivo não fica negativo; resultado Fantastic só dobra dano positivo.
+- Cards antigos mantêm fallback conservador, sem trocar silenciosamente para a seleção atual de outro usuário.
+- Atualizado o ciclo de renderização de `ChatMessage` para a API `renderHTML` do Foundry VTT v14.
+- Removidas integrações obsoletas com `ChatMessage#getHTML` e com o hook legado `renderChatMessage`; os complementos de chat usam `renderChatMessageHTML` e `HTMLElement`.
+- Corrigido `MarvelMultiverseRoll.fromTerms`, que referenciava uma variável inexistente.
+- Corrigida a detecção do sistema no botão de exportação PDF.
+- Atualizados os links exibidos nas configurações para este repositório.
+- Executados testes automatizados focados em persistência de alvo, dano integral, meio dano, cura e regra de dano mínimo zero.
+
+## v0.1.55 — Foundry VTT v14
+
+- Atualizado `system.json` para `compatibility.minimum = 14` e `compatibility.verified = 14`.
+- Adicionado bloco `documentTypes` para os tipos de Actor e Item do sistema, com campos HTML registrados para sanitização/validação no servidor.
+- Ajustado o HUD de condições para usar `ChatMessage.author` em vez do campo legado `user`.
+- Ajustado uso de `foundry.utils.getProperty` no dano automático de fim de turno.
+- Tornado o fallback de `TokenHUD` seguro via `globalThis.TokenHUD`.
+- Registro de sheets atualizado para preferir `foundry.documents.collections.Actors/Items`, mantendo fallback para ambientes antigos.
+- Corrigido caminho da arte de setup `mmrpg-setup.png` no pacote.
+- Diretórios de compêndio declarados no manifesto foram recriados no ZIP final.
+
 ## 0.1.53 (2026-02-22)
 - Fix (Chat — EDGE/TROUBLE): rolagens retroativas (EDGE/TROUBLE) não sobrescrevem mais `flags` do sistema no ChatMessage. Isso evita regressões como o botão/estado de Focus “sumir” após um reroll.
 - Melhoria (Focus — custo automático em Powers):

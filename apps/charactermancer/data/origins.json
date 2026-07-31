@@ -20,7 +20,7 @@
     {
       "name": "Alien",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem não é humano e provavelmente não é da Terra ou pelo menos não da Terra-616. O Multiverso Marvel apresenta todos os tipos de raças alienígenas diferentes. As mais comuns delas - Kree, Skrulls e assim por diante - têm suas próprias entradas. Se o personagem não se encaixa em uma delas, então esta origem se aplica.",
         "examples": "Dinossauro Demônio, Gamora, Groot, Rocket Raccoon.",
@@ -66,9 +66,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -79,7 +79,7 @@
     {
       "name": "Unknown",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem desenvolveu poderes, mas não tem certeza de como. Pode ser que o jogador ou o Narrador saiba, mas o personagem não, ou talvez ninguém mais saiba. Coisas surpreendentes acontecem o tempo todo no Multiverso Marvel, e não há como classificar todas elas. A fonte desses poderes pode ser explicada com o tempo. Pode acontecer que o personagem na verdade tenha um tipo padrão de origem, ou pode ser que ele tenha uma origem totalmente única.",
         "examples": "Garota Esquilo, Treinador.",
@@ -112,9 +112,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -125,7 +125,7 @@
     {
       "name": "Symbiote: Knull",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem se uniu a um dos Klyntar, uma raça de simbiontes alienígenas criados pelo deus alienígena Knull e que há muito tempo está sob sua influência - ao contrário do simbionte Venom e sua prole. Quando um personagem se une a tal simbionte, ele sobe um rank e ganha os poderes listados, que devem ser escolhidos para os poderes que o rank concede.",
         "examples": "Carnificina, Venom (Eddie Brock), Shriek.",
@@ -148,7 +148,7 @@
             "_id": "xGRaRAbxMRSIuPpv",
             "name": "Berserker",
             "type": "trait",
-            "img": "systems/marvel-multiverse/icons/trait.svg",
+            "img": "systems/multiverse-d616/icons/trait.svg",
             "system": {
               "restriction": "",
               "description": "O personagem frequentemente perde o controle de seu temperamento. A qualquer momento que ele sofra dano físico, ele deve fazer um teste de Ego com um ND igual à quantidade de dano sofrido. Se ele falhar, ele fica furioso e deve atacar com velocidade total em combate o inimigo que o feriu. Estar furioso dá ao personagem uma vantagem em todos os ataques corpo a corpo e adiciona +2 às suas defesas de Corpo a Corpo, Resiliência e Ego. No entanto, tira –2 de sua defesa de Agilidade, e ele não pode usar armas de longo alcance. Se o personagem derrotar o inimigo que o feriu, ele deve então atacar o inimigo mais próximo. No final do turno do personagem, ele perde 5 de Foco. Quando seu Foco é reduzido ao ponto em que o personagem não poderia gastar voluntariamente mais Foco - ou se não houver inimigos à vista - o estado de fúria termina automaticamente."
@@ -163,7 +163,7 @@
             "_id": "ody1G0sSPcvPumiu",
             "name": "Disguise",
             "type": "power",
-            "img": "systems/marvel-multiverse/icons/super-powers.svg",
+            "img": "systems/multiverse-d616/icons/super-powers.svg",
             "system": {
               "description": "O personagem parece ser outra pessoa,",
               "powerSet": "Basic",
@@ -184,7 +184,7 @@
             "_id": "w0JXTcF5QKfGbpYA",
             "name": "Healing Factor",
             "type": "power",
-            "img": "systems/marvel-multiverse/icons/super-powers.svg",
+            "img": "systems/multiverse-d616/icons/super-powers.svg",
             "system": {
               "description": "O personagem se cura incrivelmente rápido.",
               "powerSet": "Basic",
@@ -288,9 +288,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -301,7 +301,7 @@
     {
       "name": "Magic",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "Os poderes do personagem surgem de meios sobrenaturais. Existem muitas tradições diferentes dentro da magia, cada uma com seus próprios ensinamentos.",
         "examples": "Clea, Doutor Vodu (Jericho Drumm), Encantor.",
@@ -334,9 +334,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -347,7 +347,7 @@
     {
       "name": "Magic: Sorcery",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "Os poderes do personagem surgem do estudo e da prática da feitiçaria.",
         "examples": "Agatha Harkness, Ancião (Yao), Doutor Estranho, Magik, Wong.",
@@ -393,9 +393,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -406,7 +406,7 @@
     {
       "name": "Alien: Shi'ar",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é um membro dos Shi'ar, uma raça humanoide aviária do planeta Chandilar que formou o Império interestelar Shi'ar na Galáxia Shi'ar. Eles se assemelham a humanos, mas são muito mais fortes e têm penas em vez de cabelo na cabeça.",
         "examples": "Adam-X, Deathbird, Majestrix Lilandra Neramani.",
@@ -463,9 +463,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -476,7 +476,7 @@
     {
       "name": "Mutant: External",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é membro de uma rara e poderosa subespécie de mutantes imortais que remonta a milhares de anos. Cerca de mil anos atrás, os Externos formaram um grupo chamado de Altos Senhores que continua a influenciar o destino do mundo por trás dos bastidores. Alguns deles acreditam que Míssil é o mais novo de sua espécie, embora isso não seja confirmado.",
         "examples": "Apocalipse, Selene.",
@@ -548,9 +548,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -561,7 +561,7 @@
     {
       "name": "High Tech: Pym Particles",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem usa Partículas Pym (em homenagem a seu inventor, Henry Pym) para crescer ou encolher drasticamente de tamanho. Após exposição suficiente às Partículas Pym, muitas pessoas são capazes de gerar tais partículas por conta própria, sem a necessidade de ajuda externa. Eles ainda podem precisar usar Partículas Pym extras para atingir tamanhos extremamente grandes ou pequenos.",
         "examples": "Homem-Formiga (Scott Lang), Gigante (Rax Malhotra), Vespa (Janet Van Dyne).",
@@ -634,9 +634,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -647,7 +647,7 @@
     {
       "name": "Spirit of Vengeance",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem foi possuído por um Espírito de Vingança. Seu propósito é encontrar pecadores e impor penitência. Quando um personagem é possuído por um Espírito de Vingança, ele ganha a tag Forma Alternativa, que pode usar voluntariamente a qualquer momento. Quando o personagem assume sua forma de Motoqueiro Fantasma, ele ganha acesso às tags, características e poderes listados. Quando retorna à forma humana, ele perde os benefícios de sua forma de Motoqueiro Fantasma.",
         "examples": "Motoqueiro Fantasma (Johnny Blaze), Motoqueiro Fantasma (Danny Ketch), Motoqueiro Fantasma (Robbie Reyes).",
@@ -882,9 +882,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -895,7 +895,7 @@
     {
       "name": "Alien: Technarch",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é um membro da espécie alienígena conhecida como Tecnarquia. Esses seres tecno-orgânicos de inteligência artificial usam um vírus Transmode para infectar outras criaturas e, eventualmente, dominar um planeta para prepará-lo para se tornar parte da Falange ou ser devorado.",
         "examples": "Warlock, Magus.",
@@ -1210,9 +1210,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1223,7 +1223,7 @@
     {
       "name": "Symbiote",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem se uniu a um dos Klyntar, uma raça de simbiontes alienígenas criados pelo deus alienígena Knull. A maioria dessas criaturas na Terra exibe poderes semelhantes aos de uma aranha. Quando um personagem se une a um simbionte, ele sobe um rank e ganha as tags, características e poderes listados. Quaisquer poderes restantes que ele selecionar são frequentemente do conjunto de Poderes-Aranha, mas não precisam ser. Muitos simbiontes têm o poder Disfarce. Se o simbionte for Venom ou um de seus descendentes, o Homem-Aranha (Peter Parker) não pode obter nenhum benefício de seu poder Sentido-Aranha contra o personagem unido.",
         "examples": "Carnificina, Venom (Eddie Brock), Shriek.",
@@ -1351,9 +1351,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1364,7 +1364,7 @@
     {
       "name": "Magic: Chaos Magic",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é capaz de usar a magia do caos, o que lhe permite dobrar a realidade à sua vontade. Ela se origina do antigo deus Chthon.",
         "examples": "Morgana Le Fay, Feiticeira Escarlate, Wiccano.",
@@ -1410,9 +1410,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1423,7 +1423,7 @@
     {
       "name": "Monstrous: Vampire",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem já esteve vivo, mas foi abraçado por um vampiro e ressuscitou da morte como um vampiro também. Ele pode transmitir essa doença mágica para as vítimas de sua escolha. Quando um personagem se torna um vampiro, ele sobe um rank e ganha as tags, características e poderes listados. Ele não ganha nenhum poder ou característica adicional com esse aumento de rank, mas ganha 5 pontos de habilidade e adiciona +1 ao seu multiplicador de dano. Se ele tiver a tag Heroico, também adiciona 1 ao seu Karma.",
         "examples": "Barão Sangue, Drácula, Blade (meio vampiro).",
@@ -1738,9 +1738,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -1751,7 +1751,7 @@
     {
       "name": "Monstrous: Werewolf",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é afligido pela licantropia, uma doença mágica que o faz assumir a forma de um lobisomem durante as três noites de lua cheia. Ele pode transmitir essa doença mágica às vítimas de sua escolha que sobreviverem aos seus ataques. Quando um personagem se torna um lobisomem, ele ganha as tags Transformação Lunar e Forma Alternativa. Quando o personagem assume sua forma de lobisomem, ele sobe um rank e ganha o restante das tags, características e poderes listados. Ele não ganha nenhum poder ou característica adicional com esse aumento de rank, mas ganha 5 pontos de habilidade e adiciona +1 ao seu multiplicador de dano. Se ele tiver a tag Heroico, também adiciona 1 ao seu Karma. Quando retorna à forma humana, ele perde os benefícios de sua forma de lobisomem. O personagem pode mudar de forma voluntariamente a qualquer momento - exceto durante as três noites em que a lua está mais cheia. Nessas noites, enquanto a lua está acima do horizonte, o personagem deve se transformar em um lobisomem e é governado por sua natureza animal. Ele não pode deixar de caçar e atacar qualquer pessoa ou criatura que encontrar, não importa se é amigo ou inimigo.",
         "examples": "Lobisomem (Jack Russell), Lobisomem (Jake Gomez).",
@@ -2013,9 +2013,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -2026,7 +2026,7 @@
     {
       "name": "Alien: Skrull",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é um membro dos Skrulls, uma raça humanoide reptiliana de metamorfos que formou o Império interestelar Skrull. Em sua forma natural, eles têm pele verde, olhos vermelhos ou verdes, orelhas pontudas e queixos franzidos. Eles surgiram do planeta Skrullos na Galáxia de Andrômeda. Os Skrulls originais não podiam se metamorfosear, mas os Celestiais fizeram experiências com eles para formar os Skrulls Eternos e os Skrulls Deviantes, assim como fizeram com os humanos na Terra. Os Skrulls Deviantes se tornaram a forma dominante da espécie, levando os originais à extinção.",
         "examples": "Hulkling (meio Skrull e meio Kree), Lyja, Super-Skrull (Kl'rt).",
@@ -2232,9 +2232,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -2245,7 +2245,7 @@
     {
       "name": "Weird Science",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "Os poderes do personagem surgiram de um experimento científico ou acidente que é difícil - se não impossível - de reproduzir. Muitas vezes, eles tinham o potencial genético latente para desenvolver poderes e foram de alguma forma expostos aos gatilhos certos - que provavelmente teriam matado a maioria das outras pessoas. Esses tipos de personagens às vezes são chamados de mutados. A diferença entre um mutado e um mutante é que os poderes de um mutante vêm naturalmente, mas os poderes de um mutado exigem um incidente desencadeador que pode nunca acontecer. Nesse sentido, os Inumanos são todos mutados que compartilham um gene com um gatilho conhecido: a Névoa Terrígena.",
         "examples": "Capitão América (Steve Rogers), Demolidor (Matt Murdock), Mulher Invisível, Jessica Jones, Luke Cage, Homem-Aranha (Miles Morales), Homem-Aranha (Peter Parker).",
@@ -2291,9 +2291,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -2304,7 +2304,7 @@
     {
       "name": "Inhuman",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é um membro do Homo sapiens inhumanus, uma raça variante da humanidade geneticamente modificada pelos Kree. Por milênios, eles viveram isolados do mundo, mas emergiram nos últimos anos, liderados por Raio Negro. Todos os Inumanos carregam um gene latente que pode ser ativado pela Névoa Terrígena. A explosão de uma Bomba Terrígena espalhou a névoa por todo o planeta, revelando que muitos humanos (incluindo Kamala Khan) tinham genética Inumana. Raio Negro foi mais tarde forçado a destruir os Inumanos, deixando poucos vivos fora da família real. O personagem é um daqueles raros Inumanos que sobreviveram.",
         "examples": "Raio Negro, Cristal, Karnak, Dentinho, Medusa, Ms. Marvel (Kamala Khan).",
@@ -2337,9 +2337,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -2350,7 +2350,7 @@
     {
       "name": "Deviant",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é um membro do Homo descendus, uma raça variante da humanidade criada pelos Celestiais. Eles estão espalhados pela Terra, mas vivem principalmente em cidades subterrâneas sob o Oceano Pacífico, perto de Lemúria. Apenas cem Deviantes foram criados originalmente, mas muitos outros nasceram ao longo dos milênios desde então. Eles variam muito fisicamente, vindo em todos os tamanhos, formas, cores e texturas. Cada um nasce com uma mutação física única e eles têm a habilidade genética latente de desenvolver poderes, muito parecido com os mutantes. Os Eternos são compelidos a matar os mutados Deviantes como parte de seu princípio 'Corrigir o desvio excessivo'.",
         "examples": "Irmão Tode, Karkas, Kro.",
@@ -2396,9 +2396,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -2409,7 +2409,7 @@
     {
       "name": "Alien: Marginalian",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é um Marginal, uma espécie de hermafroditas que se reproduzem assexuadamente e vêm de Marginalia, um espaço entre universos. Eles não têm pernas, têm a forma de uma batata verde com braços e se locomovem por meio de levitação.",
         "examples": "Doop.",
@@ -2735,9 +2735,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -2748,7 +2748,7 @@
     {
       "name": "High Tech: Android",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é uma pessoa artificial. Seu corpo (quando tem um) é feito de plástico, metal e circuitos, em vez de carne e osso. Seus poderes vêm da tecnologia embutida em seu corpo artificial.",
         "examples": "Tocha Humana (Jim Hammond), Jocasta, Homem-Máquina, Visão.",
@@ -2807,9 +2807,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -2820,7 +2820,7 @@
     {
       "name": "Mythic: Olympian",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é um membro do povo Olímpico, semelhante aos deuses da Grécia e Roma Antigas. Eles chamam o Olimpo de seu lar. O personagem pode ser um dos muitos deuses que foram nomeados ao longo da história, ou pode ser um dos deuses menos conhecidos do Olimpo. Eles devem escolher algo de que são o deus.",
         "examples": "Ares, Atena, Hércules, Zeus.",
@@ -2891,9 +2891,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -2904,7 +2904,7 @@
     {
       "name": "Monstrous",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é algum tipo de monstro. Ele pode ter uma forma humana - ou pode ter sido humano uma vez - mas seus poderes vêm de sua monstruosidade não natural.",
         "examples": "Cullen Bloodstone, Múmia Viva, Homem-Coisa.",
@@ -2936,9 +2936,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -2949,7 +2949,7 @@
     {
       "name": "Mythic: Asgardian",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é um membro do povo Asgardiano, semelhante aos deuses nórdicos. Eles chamam Asgard de seu lar. O personagem pode ser um dos muitos deuses que foram nomeados ao longo da história, ou pode ser um dos deuses menos conhecidos de Asgard. Eles devem escolher algo de que são o deus.",
         "examples": "Hela, Heimdall, Loki, Sif, Thor (Odinson).",
@@ -3020,9 +3020,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -3033,7 +3033,7 @@
     {
       "name": "Eternal",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é um membro do Homo immortalis, uma raça variante da humanidade criada pelos Celestiais. Eles estão espalhados pela Terra, mas sua sede fica na cidade de Olímpia, nas montanhas da Grécia e dobrada em uma dimensão eco. Alguns vivem em Titã (uma lua de Saturno). Os Eternos vivem por três princípios: Proteger os Celestiais. Proteger a Máquina (uma I.A. senciente profundamente conectada à Terra). Corrigir o desvio excessivo. Apenas cem Eternos foram criados originalmente, e apenas dois nasceram desde então: Thanos e Eros. O personagem é um dos cem menos conhecidos ou um novo Eterno trazido à vida por meios extraordinários. Através de um ritual geralmente iniciado pelo Primeiro Eterno (seu líder oficial), os Eternos podem ser chamados para fazer parte de um ser coletivo conhecido como a Uni-Mente.",
         "examples": "Ikaris, Sersi, Sprite, Thanos, Thena.",
@@ -3079,9 +3079,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -3092,7 +3092,7 @@
     {
       "name": "Atlantean",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é um membro do Homo mermanus, uma raça variante da humanidade. Os atlantes respiram água através de guelras em ambos os lados do pescoço e não conseguem respirar ar por mais de dez minutos. Se eles vivem no Oceano Atlântico, provavelmente têm pele azul e são de Atlântida. Se eles vêm do Oceano Pacífico, provavelmente têm pele verde e vivem em Lemúria.",
         "examples": "Attuma, Namor, o Príncipe Submarino, Namora, Senhor da Guerra Krang.",
@@ -3163,9 +3163,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -3176,7 +3176,7 @@
     {
       "name": "Special Training",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "Os poderes do personagem vêm de longas horas de prática. Seu foco intenso lhes concede habilidades que surpreenderiam a maioria das pessoas.",
         "examples": "Gavião Arqueiro (Clint Barton), Gaviã Arqueira (Kate Bishop), Nick Fury Jr., Shang-Chi.",
@@ -3208,9 +3208,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -3221,7 +3221,7 @@
     {
       "name": "High Tech: Battle Suit",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem usa um traje de alta tecnologia que lhe concede poderes. Quando o traje de batalha é removido, o personagem não tem mais acesso aos poderes que ele concede. Eles são inteiramente - ou pelo menos em sua maioria - normais por baixo. A maioria dos personagens com essa origem tem a tag Aparência Extrema ao usar seu traje de batalha.",
         "examples": "Homem de Ferro (Tony Stark), Coração de Ferro, Máquina de Combate.",
@@ -3253,9 +3253,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -3266,7 +3266,7 @@
     {
       "name": "Weird Science: Gamma Mutate",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem tem uma mutação genética que lhe deu poderes uma vez que foi exposto a radiação gama suficiente, transformando-o fisicamente. Isso muitas vezes lhes dá uma aparência monstruosa e muda drasticamente sua coloração, geralmente para verde, embora alguns se tornem vermelhos ou até azuis. Eles muitas vezes também podem se transformar de volta em sua forma original.",
         "examples": "Doc Samson, Harpia (Betty Banner), Hulk (Bruce Banner), Hulk Vermelho (Thaddeus 'Thunderbolt' Ross).",
@@ -3325,9 +3325,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -3338,7 +3338,7 @@
     {
       "name": "Mythic",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é uma criatura ou pessoa de mito e lenda. Embora possa parecer humano, ele é outra coisa.",
         "examples": "Angela (Aldrif Odinsdottir), Fadas, Malekith.",
@@ -3371,9 +3371,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -3384,7 +3384,7 @@
     {
       "name": "Mutant",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "Os poderes do personagem surgem de ele ser um membro da subespécie Homo superior. Eles têm um Gene-X latente que lhes concede poderes, frequentemente acionado na adolescência.",
         "examples": "Ciclope, Jean Grey, Tempestade, Wolverine (Logan).",
@@ -3430,9 +3430,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -3443,7 +3443,7 @@
     {
       "name": "Alien: Kree",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é um membro dos Kree, uma raça humanoide do planeta Hala que formou o Império interestelar Kree na região do espaço conhecida como a Grande Nuvem de Magalhães. Eles se assemelham a humanos, mas são mais fortes e resistentes. Muitos deles têm pele azul, mas um bom número deles tem pele rosada. O ar em Hala tem muito mais nitrogênio, e os Kree que são criados nele (ou em algo semelhante) têm dificuldade em respirar o ar da Terra.",
         "examples": "Capitão Marvel (Mar-Vell), Hulkling (meio Skrull e meio Kree), Magnitron (Yon-Rogg), Ronan, o Acusador.",
@@ -3514,9 +3514,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -3527,7 +3527,7 @@
     {
       "name": "Alien: Brood",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é um membro da Ninhada, uma das espécies alienígenas mais temidas da galáxia. A Ninhada são criaturas insetoides supervisionadas por Rainhas da Ninhada que servem à Imperatriz da Ninhada. A Imperatriz governa toda a população da Ninhada através de uma mente coletiva que se estende por todo o universo. Apenas as Rainhas da Ninhada (incluindo a Imperatriz) podem implantar um embrião da Ninhada em criaturas de outras espécies, que é como a Ninhada se reproduz. As Rainhas preferem implantar embriões em um hospedeiro inconsciente para evitar que o hospedeiro saiba sobre isso. Elas geralmente envenenam o hospedeiro com seu ferrão da cauda e esperam que ele caia antes de implantar o embrião, o que neutraliza o veneno. Se um personagem for totalmente dominado por um embrião da Ninhada implantado nele, ele automaticamente ganha essa origem, junto com a característica Origem Extraordinária.",
         "examples": "Ninhada, Zangão da Ninhada, Rainha da Ninhada, Imperatriz da Ninhada.",
@@ -3864,9 +3864,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -3877,7 +3877,7 @@
     {
       "name": "High Tech",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "Os poderes do personagem surgem de dispositivos de alta tecnologia que estão muito além dos limites da engenharia moderna. Isso pode vir de muitas formas.",
         "examples": "Doutor Octopus (Otto Octavius), Manopla (Joseph Green), Mysterio (Quentin Beck), o Trapaceiro.",
@@ -3909,9 +3909,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -3922,7 +3922,7 @@
     {
       "name": "Symbiote: Venom",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem se uniu a um simbionte que é o simbionte Venom ou descendente dele. Quando um personagem se une a tal simbionte, ele sobe dois ranks e ganha as características e poderes listados, que devem ser escolhidos para os poderes que os ranks concedem.",
         "examples": "Carnificina, Venom (Eddie Brock), Shriek.",
@@ -3945,7 +3945,7 @@
             "_id": "xGRaRAbxMRSIuPpv",
             "name": "Berserker",
             "type": "trait",
-            "img": "systems/marvel-multiverse/icons/trait.svg",
+            "img": "systems/multiverse-d616/icons/trait.svg",
             "system": {
               "restriction": "",
               "description": "O personagem frequentemente perde o controle de seu temperamento. A qualquer momento que ele sofra dano físico, ele deve fazer um teste de Ego com um ND igual à quantidade de dano sofrido. Se ele falhar, ele fica furioso e deve atacar com velocidade total em combate o inimigo que o feriu. Estar furioso dá ao personagem uma vantagem em todos os ataques corpo a corpo e adiciona +2 às suas defesas de Corpo a Corpo, Resiliência e Ego. No entanto, tira –2 de sua defesa de Agilidade, e ele não pode usar armas de longo alcance. Se o personagem derrotar o inimigo que o feriu, ele deve então atacar o inimigo mais próximo. No final do turno do personagem, ele perde 5 de Foco. Quando seu Foco é reduzido ao ponto em que o personagem não poderia gastar voluntariamente mais Foco - ou se não houver inimigos à vista - o estado de fúria termina automaticamente."
@@ -3958,7 +3958,7 @@
             "_id": "KnTzZJDC0n11CRjL",
             "name": "Symbiotic Spider Blinder",
             "type": "trait",
-            "img": "systems/marvel-multiverse/icons/trait.svg",
+            "img": "systems/multiverse-d616/icons/trait.svg",
             "system": {
               "restriction": "",
               "description": "Enquanto o personagem está ligado a um simbionte, ele não pode ser detectado pelo Sentido-Aranha de qualquer personagem que tenha sido previamente ligado ao mesmo simbionte. Este efeito também é passado para a prole do simbionte. A razão é que o Sentido-Aranha detecta o simbionte previamente ligado como parte de si mesmo e, portanto, não é uma ameaça. Testes de Vigilância para perceber o perigo de tal simbionte. Nem tais simbiontes têm dificuldade em testes de Agilidade contra a defesa de Vigilância do personagem."
@@ -3973,7 +3973,7 @@
             "_id": "ody1G0sSPcvPumiu",
             "name": "Disguise",
             "type": "power",
-            "img": "systems/marvel-multiverse/icons/super-powers.svg",
+            "img": "systems/multiverse-d616/icons/super-powers.svg",
             "system": {
               "description": "O personagem parece ser outra pessoa,",
               "powerSet": "Basic",
@@ -3994,7 +3994,7 @@
             "_id": "w0JXTcF5QKfGbpYA",
             "name": "Healing Factor",
             "type": "power",
-            "img": "systems/marvel-multiverse/icons/super-powers.svg",
+            "img": "systems/multiverse-d616/icons/super-powers.svg",
             "system": {
               "description": "O personagem se cura incrivelmente rápido.",
               "powerSet": "Basic",
@@ -4090,7 +4090,7 @@
             "_id": "yKJfBUm62kFOAY2U",
             "name": "Webcasting",
             "type": "power",
-            "img": "systems/marvel-multiverse/icons/super-powers.svg",
+            "img": "systems/multiverse-d616/icons/super-powers.svg",
             "system": {
               "description": "O personagem pode prender um alvo em uma teia.",
               "powerSet": "Spider-Powers",
@@ -4114,7 +4114,7 @@
             "_id": "lPOjxlvu0CXXalJ1",
             "name": "Wallcrawling",
             "type": "power",
-            "img": "systems/marvel-multiverse/icons/super-powers.svg",
+            "img": "systems/multiverse-d616/icons/super-powers.svg",
             "system": {
               "description": "O personagem pode escalar como uma aranha.",
               "powerSet": "Spider-Powers",
@@ -4173,9 +4173,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -4186,7 +4186,7 @@
     {
       "name": "Mutant: Artificial",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "Os poderes do personagem surgem da manipulação de DNA - ou de uma condição natural e inerente - que os faz parecer um verdadeiro mutante. Eles se acreditam ser um mutante, ou acreditaram por anos. No entanto, eles não nasceram com um Gene-X.",
         "examples": "Deadpool, Senhor Sinistro, Mercúrio, Feiticeira Escarlate.",
@@ -4232,9 +4232,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -4245,7 +4245,7 @@
     {
       "name": "Monstrous: Mummudrai",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem é um monstro conhecido como Mummudrai, um espírito gêmeo maligno do Plano Astral que cada feto deve lutar e derrotar no útero para nascer. Poucos deles sobrevivem, mas aqueles que o fazem podem se tornar terrivelmente poderosos, pois podem copiar DNA e criar formas físicas para si mesmos.",
         "examples": "Cassandra Nova.",
@@ -4297,9 +4297,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -4310,7 +4310,7 @@
     {
       "name": "Magic: Demonic",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem explora (ou é amaldiçoado por) os poderes do Inferno. Ele pode ser um nativo de um dos Nove Círculos do Inferno, ou seus poderes podem simplesmente vir de uma fonte Infernal.",
         "examples": "Belasco, Coração Negro, Daimon Hellstrom, Dormammu.",
@@ -4356,9 +4356,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"
@@ -4369,7 +4369,7 @@
     {
       "name": "High Tech: Cybernetics",
       "type": "origin",
-      "img": "systems/marvel-multiverse/icons/origin.svg",
+      "img": "systems/multiverse-d616/icons/origin.svg",
       "system": {
         "description": "O personagem tem implantes de alta tecnologia, cirurgicamente embutidos, que lhe concedem poderes. Estes não podem ser removidos sem muito cuidado ou dor. Se os implantes forem óbvios, o personagem recebe a tag Aparência Extrema. Caso contrário, os implantes foram escondidos dentro de seu corpo (como no revestimento do esqueleto de Wolverine com adamantium) e podem ser visíveis apenas quando em uso (como quando Wolverine usa suas garras), se tanto.",
         "examples": "Deathlok (todos eles), Dentes-de-Sabre, Soldado Invernal, Wolverine (Logan).",
@@ -4414,9 +4414,9 @@
       "flags": {},
       "effects": [],
       "_stats": {
-        "coreVersion": "13.346",
-        "systemId": "marvel-multiverse",
-        "systemVersion": "2.2.0",
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.59",
         "createdTime": 1756480170677,
         "modifiedTime": 1756480170677,
         "lastModifiedBy": "7HEATldsEyjiaswS"

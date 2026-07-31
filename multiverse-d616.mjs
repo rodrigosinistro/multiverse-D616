@@ -12,6 +12,22 @@
  *
  */
 import { handleConcentrationOnUse } from "./scripts/concentration.js";
+import { calculateD616Damage } from "./scripts/damage-calculation.js";
+
+function mmGetMessageMode() {
+  try {
+    return game.settings.get("core", "messageMode") ?? "public";
+  } catch (_error) {
+    return "public";
+  }
+}
+
+function mmApplyMessageMode(chatData, messageMode = mmGetMessageMode()) {
+  if (typeof ChatMessage.applyMode === "function") {
+    return ChatMessage.applyMode(chatData, messageMode);
+  }
+  return chatData;
+}
 
 class MarvelMultiverseRoll extends Roll {
   constructor(formula, data, options) {
@@ -39,10 +55,7 @@ class MarvelMultiverseRoll extends Roll {
    * @returns {MarvelMultiverseRoll}
    */
   static fromTerms(terms) {
-    // biome-ignore lint/complexity/noThisInStatic: <explanation>
-    const newRoll = super.fromTerms(terms);
-    Object.assign(newRoll, roll);
-    return newRoll;
+    return super.fromTerms(terms);
   }
 
   /* -------------------------------------------- */
@@ -231,8 +244,9 @@ class MarvelMultiverseRoll extends Roll {
       messageData.flavor += ` (${game.i18n.localize(
         "MULTIVERSE_D616.trouble"
       )})`;
-    // Record the preferred rollMode
-    options.rollMode = options.rollMode ?? this.options.rollMode;
+    // Foundry v14 uses messageMode instead of the deprecated rollMode option.
+    options.messageMode =
+      options.messageMode ?? this.options.messageMode ?? mmGetMessageMode();
     return super.toMessage(messageData, options);
   }
 
@@ -342,32 +356,6 @@ class MarvelMultiverseRoll extends Roll {
  * @extends {Actor}
  */
 class MarvelMultiverseActor extends Actor {
-  /** @override */
-  prepareData() {
-    // Prepare data for the actor. Calling the super version of this executes
-    // the following, in order: data reset (to clear active effects),
-    // prepareBaseData(), prepareEmbeddedDocuments() (including active effects),
-    // prepareDerivedData().
-    super.prepareData();
-  }
-
-  /** @override */
-  prepareBaseData() {
-    // Data modifications in this step occur before processing embedded
-    // documents or derived data.
-  }
-
-  /**
-   * @override
-   * Augment the actor source data with additional dynamic data that isn't
-   * handled by the actor's DataModel. Data calculated in this step should be
-   * available both inside and outside of character sheets (such as if an actor
-   * is queried and has a roll executed directly from it).
-   */
-  prepareDerivedData() {
-    this.flags.MarvelMultiverse || {};
-  }
-
   /**
    *
    * @override
@@ -429,15 +417,6 @@ class MarvelMultiverseActor extends Actor {
  * @extends {Item}
  */
 let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
-  /**
-   * Augment the basic Item data model with additional dynamic data.
-   */
-  prepareData() {
-    // As with the actor class, items are documents that can have their data
-    // preparation methods overridden (such as prepareBaseData()).
-    super.prepareData();
-  }
-
   prepareDerivedData() {
     super.prepareDerivedData();
     // Build the formula
@@ -481,28 +460,34 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
     const preFocus = await mmPreSpendFocusForPowerUse(this.actor, this);
     if (preFocus === null) return;
 
+    // Assisted turn tracking must never prevent an Item from being used.
+    try {
+      await game.multiverseD616?.turnTracker?.trackItemUse?.(this);
+    } catch (error) {
+      console.warn("[multiverse-d616] Turn Tracker could not record Item use", error);
+    }
+
     // Initialize chat data.
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
-    const rollMode = game.settings.get("core", "rollMode");
-    let label = `ability: ${
-      CONFIG.MULTIVERSE_D616.damageAbility[this.system.ability]
-    }<br/>${this.type}: ${this.name}`;
+    const messageMode = mmGetMessageMode();
+    const abilityLabel =
+      CONFIG.MULTIVERSE_D616.damageAbility[this.system.ability] ??
+      this.system.ability ??
+      "";
+    let label = abilityLabel
+      ? `ability: ${abilityLabel}<br/>${this.type}: ${this.name}`
+      : `${this.type}: ${this.name}`;
     label = this.system.damageType
       ? `${label}<br/>damagetype: ${this.system.damageType}`
       : label;
 
-    console.log(
-      `damageType: ${this.system.damageType} item.roll() : label: ${label}`
-    );
-
-    ChatMessage.create({
+    ChatMessage.create(mmApplyMessageMode({
       speaker: speaker,
-      rollMode: rollMode,
       flavor: label,
       content: `<div>${this.system.description}</div><div>${
         this.system.effect ? this.system.effect : ""
       }</div>`,
-    });
+    }, messageMode));
 
     if (this.system.formula && this.system.ability) {
       // Retrieve roll data.
@@ -538,6 +523,10 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         actorId: this.actor?.id ?? null,
         itemId: this._id,
         ability: abilityKey,
+        damageType:
+          String(this.system.damageType ?? "").toLowerCase() === "focus"
+            ? "focus"
+            : "health",
         damageMultiplier: {
           base: baseDamageMultiplier,
           otherBonus,
@@ -572,13 +561,15 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
 	const msgData = {
         title: this.name,
         speaker: speaker,
-        rollMode: rollMode,
         flavor: modLabel,
 	        flags: { "multiverse-d616": systemFlags },
       };
 
       // Await message creation so any downstream code that depends on flags can rely on it.
-      await roll.toMessage(msgData, { rollMode: rollMode, itemId: this._id });
+      await roll.toMessage(msgData, {
+        messageMode,
+        itemId: this._id,
+      });
 
       if (this.system.attack) {
         Hooks.callAll("multiverse-d616.rollAttack", this, roll);
@@ -1588,7 +1579,8 @@ function mmD616CollectLocalTargets() {
       if (!uuid) continue;
       const name = t.name ?? tokenDoc?.name ?? a?.name ?? "Target";
       const img = tokenDoc?.texture?.src ?? a?.img ?? "";
-      out.push({ uuid, name, img });
+      const actorUuid = a?.uuid ?? "";
+      out.push({ uuid, actorUuid, name, img });
     }
   } catch (e) {
     console.warn("[multiverse-d616] Failed to collect local targets", e);
@@ -1643,27 +1635,143 @@ async function mmD616CollectSharedTargets({ timeoutMs = 250 } = {}) {
 }
 
 
-class ChatMessageMarvel extends ChatMessage {
-  /** @inheritDoc */
-  _initialize(options = {}) {
-    super._initialize(options);
-    Object.defineProperty(this, "user", {
-      value: this.author,
-      configurable: true,
+const M616_SYSTEM_ID = "multiverse-d616";
+const M616_INITIATIVE_FLAG = "initiative";
+
+function mmNormalizeInitiativeText(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function mmInitiativeContext(message) {
+  const context = message?.getFlag?.(M616_SYSTEM_ID, M616_INITIATIVE_FLAG);
+  return context && typeof context === "object" ? context : null;
+}
+
+function mmIsInitiativeMessage(message, flavorElement = null) {
+  if (mmInitiativeContext(message)) return true;
+  const flavor = flavorElement?.textContent ?? message?.flavor ?? "";
+  const normalized = mmNormalizeInitiativeText(flavor);
+  return /\binitiative\b|\biniciativa\b/.test(normalized);
+}
+
+function mmCombatantsArray(combat) {
+  return Array.from(combat?.combatants?.values?.() ?? combat?.combatants ?? []);
+}
+
+function mmResolveInitiativeCombatant(message) {
+  const context = mmInitiativeContext(message);
+  const combat =
+    game.combats?.get?.(context?.combatId) ??
+    game.combat ??
+    null;
+  if (!combat) return { combat: null, combatant: null, context };
+
+  let combatant = context?.combatantId
+    ? combat.combatants?.get?.(context.combatantId) ?? null
+    : null;
+  if (combatant) return { combat, combatant, context };
+
+  const speaker = message?.speaker ?? {};
+  if (speaker.token) {
+    combatant = mmCombatantsArray(combat).find(
+      (candidate) => (candidate.tokenId ?? candidate.token?.id) === speaker.token
+    );
+    if (combatant) return { combat, combatant, context };
+  }
+
+  if (speaker.actor) {
+    const actorMatches = mmCombatantsArray(combat).filter(
+      (candidate) => candidate.actorId === speaker.actor
+    );
+    if (actorMatches.length === 1) {
+      return { combat, combatant: actorMatches[0], context };
+    }
+  }
+
+  const speakerActor = message?.speakerActor ?? null;
+  if (speakerActor) {
+    const exactMatches = mmCombatantsArray(combat).filter((candidate) => {
+      const actor = candidate.actor ?? candidate.token?.actor ?? null;
+      return (
+        actor === speakerActor ||
+        (actor?.uuid && speakerActor?.uuid && actor.uuid === speakerActor.uuid)
+      );
+    });
+    if (exactMatches.length === 1) {
+      return { combat, combatant: exactMatches[0], context };
+    }
+  }
+
+  const alias = String(message?.alias ?? "").trim();
+  if (alias) {
+    const nameMatches = mmCombatantsArray(combat).filter((candidate) => {
+      const actor = candidate.actor ?? candidate.token?.actor ?? null;
+      return candidate.name === alias || actor?.name === alias;
+    });
+    if (nameMatches.length === 1) {
+      return { combat, combatant: nameMatches[0], context };
+    }
+  }
+
+  return { combat, combatant: null, context };
+}
+
+function mmCanAdjustInitiativeMessage(message) {
+  if (game.user?.isGM || message?.author?.id === game.user?.id) return true;
+  const { combatant } = mmResolveInitiativeCombatant(message);
+  const actor = combatant?.actor ?? combatant?.token?.actor ?? message?.speakerActor ?? null;
+  const ownerLevel = CONST.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
+  return !!actor?.testUserPermission?.(game.user, ownerLevel);
+}
+
+async function mmResolveInitiativeResult(message, initiative = null) {
+  const { combat, combatant } = mmResolveInitiativeCombatant(message);
+  if (!combat || !combatant) {
+    console.warn(
+      `[${M616_SYSTEM_ID}] Could not resolve the Combatant for an initiative Edge/Trouble result`,
+      { messageId: message?.id, alias: message?.alias }
+    );
+    ui.notifications?.warn?.(
+      "O resultado do dado foi atualizado, mas o combatente da iniciativa não foi localizado."
+    );
+    return false;
+  }
+
+  const api = game.multiverseD616?.turnTracker?.resolveInitiative;
+  if (typeof api === "function") {
+    return api({
+      combatId: combat.id,
+      combatantId: combatant.id,
+      initiative:
+        initiative === null || initiative === undefined
+          ? null
+          : Number(initiative),
+      messageId: message?.id ?? null,
     });
   }
 
+  if (initiative !== null && initiative !== undefined && Number.isFinite(Number(initiative))) {
+    await combat.setInitiative(combatant.id, Number(initiative));
+  }
+  return true;
+}
+
+
+class ChatMessageMarvel extends ChatMessage {
   /* -------------------------------------------- */
   /*  Rendering                                   */
   /* -------------------------------------------- */
 
   /** @inheritDoc */
-  async getHTML(...args) {
-    const html = await super.getHTML();
+  async renderHTML(options = {}) {
+    const html = await super.renderHTML(options);
     this._displayChatActionButtons(html);
 
-    this._enrichChatCard(html[0]);
-    await this._enrichAttackTargets(html[0]);
+    this._enrichChatCard(html);
+    await this._enrichAttackTargets(html);
 
     /**
      * A hook event that fires after multiverse-d616-specific chat message modifications have completed.
@@ -1672,61 +1780,64 @@ class ChatMessageMarvel extends ChatMessage {
      * @param {ChatMessageMarvel} message  Chat message being rendered.
      * @param {HTMLElement} html       HTML contents of the message.
      */
-    Hooks.callAll("multiverse-d616.renderChatMessage", this, html[0]);
+    Hooks.callAll("multiverse-d616.renderChatMessage", this, html);
 
     return html;
   }
 
   /**
    * Optionally hide the display of chat card action buttons which cannot be performed by the user
-   * @param {jQuery} html     Rendered contents of the message.
+   * @param {HTMLElement} html     Rendered contents of the message.
    * @protected
    */
   _displayChatActionButtons(html) {
-    const chatCard = html.find(
-      ".multiverse-d616.chat-card, .multiverse-d616.chat-card"
-    );
-    if (chatCard.length > 0) {
-      const flavor = html.find(".flavor-text");
-      if (flavor.text() === html.find(".item-name").text()) flavor.remove();
+    const chatCard = html?.querySelector?.(".multiverse-d616.chat-card");
+    if (!chatCard) return;
 
-      if (this.shouldDisplayChallenge)
-        chatCard[0].dataset.displayChallenge = "";
+    const flavor = html.querySelector(".flavor-text");
+    const itemName = html.querySelector(".item-name");
+    if (flavor?.textContent === itemName?.textContent) flavor.remove();
 
-      // Conceal effects that the user cannot apply.
-      chatCard.find(".effects-tray .effect").each((i, el) => {
-        if (
-          !game.user.isGM &&
-          (el.dataset.transferred === "false" || this.user.id !== game.user.id)
-        )
-          el.remove();
-      });
+    if (this.shouldDisplayChallenge) chatCard.dataset.displayChallenge = "";
 
-      // If the user is the message author or the actor owner, proceed
-      const actor = game.actors.get(this.speaker.actor);
-      if (game.user.isGM || actor?.isOwner || this.user.id === game.user.id) {
-        const summonsButton = chatCard[0].querySelector(
-          'button[data-action="summon"]'
-        );
-        if (summonsButton && !SummonsData.canSummon)
-          summonsButton.style.display = "none";
-        const template = chatCard[0].querySelector(
-          'button[data-action="placeTemplate"]'
-        );
-        if (template && !game.user.can("TEMPLATE_CREATE"))
-          template.style.display = "none";
-        return;
+    const authorId = this.author?.id ?? null;
+
+    // Conceal effects that the user cannot apply.
+    for (const el of chatCard.querySelectorAll(".effects-tray .effect")) {
+      if (
+        !game.user.isGM &&
+        (el.dataset.transferred === "false" || authorId !== game.user.id)
+      ) {
+        el.remove();
       }
+    }
 
-      // Otherwise conceal action buttons except for saving throw
-      const buttons = chatCard.find("button[data-action]:not(.apply-effect)");
-      buttons.each((i, btn) => {
-        if (
-          ["save", "rollRequest", "concentration"].includes(btn.dataset.action)
-        )
-          return;
-        btn.style.display = "none";
-      });
+    // If the user is the message author or the actor owner, proceed.
+    const actor = game.actors.get(this.speaker.actor);
+    if (game.user.isGM || actor?.isOwner || authorId === game.user.id) {
+      const summonsButton = chatCard.querySelector(
+        'button[data-action="summon"]'
+      );
+      if (summonsButton && !SummonsData.canSummon)
+        summonsButton.style.display = "none";
+      const template = chatCard.querySelector(
+        'button[data-action="placeTemplate"]'
+      );
+      if (template && !game.user.can("TEMPLATE_CREATE"))
+        template.style.display = "none";
+      return;
+    }
+
+    // Otherwise conceal action buttons except for saving throw.
+    for (const btn of chatCard.querySelectorAll(
+      "button[data-action]:not(.apply-effect)"
+    )) {
+      if (
+        ["save", "rollRequest", "concentration"].includes(btn.dataset.action)
+      ) {
+        continue;
+      }
+      btn.style.display = "none";
     }
   }
 
@@ -1747,7 +1858,7 @@ class ChatMessageMarvel extends ChatMessage {
     if (this.isContentVisible) {
       nameText = this.alias;
     } else {
-      nameText = this.user.name;
+      nameText = this.author?.name ?? game.user?.name ?? "";
     }
 
     const avatar = document.createElement("div");
@@ -1761,16 +1872,18 @@ class ChatMessageMarvel extends ChatMessage {
 
     // Context menu
     const metadata = html.querySelector(".message-metadata");
-    metadata.querySelector(".message-delete")?.remove();
-    const anchor = document.createElement("a");
-    anchor.setAttribute(
-      "aria-label",
-      game.i18n.localize("MULTIVERSE_D616.AdditionalControls")
-    );
-    anchor.classList.add("chat-control");
-    anchor.dataset.contextMenu = "";
-    anchor.innerHTML = '<i class="fas fa-ellipsis-vertical fa-fw"></i>';
-    metadata.appendChild(anchor);
+    if (metadata) {
+      metadata.querySelector(".message-delete")?.remove();
+      const anchor = document.createElement("a");
+      anchor.setAttribute(
+        "aria-label",
+        game.i18n.localize("MULTIVERSE_D616.AdditionalControls")
+      );
+      anchor.classList.add("chat-control");
+      anchor.dataset.contextMenu = "";
+      anchor.innerHTML = '<i class="fas fa-ellipsis-vertical fa-fw"></i>';
+      metadata.appendChild(anchor);
+    }
 
     // SVG icons
     for (const el of html.querySelectorAll("i.multiverse-d616-icon")) {
@@ -1799,16 +1912,83 @@ class ChatMessageMarvel extends ChatMessage {
         .insertAdjacentElement("afterbegin", chatCard);
 
       const flavorText = html.querySelector("span.flavor-text");
-      const isInitiative = flavorText?.innerHTML.includes("Initiative");
+      const initiativeContext = mmInitiativeContext(this);
+      const isInitiative = mmIsInitiativeMessage(this, flavorText);
+      const initiativeModifier = String(initiativeContext?.modifier ?? "");
+      const initiativeResolved = initiativeContext?.resolved === true;
+      const canAdjustInitiative = mmCanAdjustInitiativeMessage(this);
+
       for (const el of html.querySelectorAll("button.retroEdgeMode")) {
         if (isInitiative) {
-          el.setAttribute("data-initiative", true);
+          el.setAttribute("data-initiative", "true");
         }
+
+        if (isInitiative && initiativeContext) {
+          const action = String(el.dataset.retroAction ?? "");
+          const allowed =
+            canAdjustInitiative &&
+            !initiativeResolved &&
+            !!initiativeModifier &&
+            action === initiativeModifier;
+          el.hidden = !allowed;
+          el.disabled = !allowed;
+          if (!allowed) continue;
+        }
+
         el.addEventListener("click", this._onClickRetroButton.bind(this));
       }
-      html
-        .querySelector("button.damage")
-        ?.addEventListener("click", this._onClickDamageButton.bind(this));
+
+      if (
+        isInitiative &&
+        initiativeContext &&
+        initiativeModifier &&
+        !initiativeResolved &&
+        canAdjustInitiative
+      ) {
+        const actionRow = html.querySelector(".mm-roll-actions");
+        if (actionRow && !actionRow.querySelector(".m616-initiative-keep")) {
+          const keepButton = document.createElement("button");
+          keepButton.type = "button";
+          keepButton.className = "m616-initiative-keep";
+          keepButton.title = "Manter o resultado atual e finalizar a iniciativa";
+          keepButton.innerHTML = "<span>Manter iniciativa</span>";
+          keepButton.addEventListener("click", async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            keepButton.disabled = true;
+            try {
+              const message = game.messages.get(this.id) ?? this;
+              const now = Date.now();
+              const updated =
+                (await message.update({
+                  [`flags.${M616_SYSTEM_ID}.${M616_INITIATIVE_FLAG}.resolved`]: true,
+                  [`flags.${M616_SYSTEM_ID}.${M616_INITIATIVE_FLAG}.resolution`]: "kept",
+                  [`flags.${M616_SYSTEM_ID}.${M616_INITIATIVE_FLAG}.resolvedAt`]: now,
+                })) ?? message;
+              await mmResolveInitiativeResult(updated, null);
+            } catch (error) {
+              console.error(
+                `[${M616_SYSTEM_ID}] Could not keep the current initiative result`,
+                error
+              );
+              ui.notifications?.error?.("Não foi possível finalizar esta iniciativa.");
+              keepButton.disabled = false;
+            }
+          });
+          actionRow.appendChild(keepButton);
+        }
+      }
+      const damageButton = html.querySelector("button.damage");
+      if (isInitiative) {
+        // Initiative is an ordering roll, never an attack or damage roll.
+        // Remove the generic DAMAGE action inherited from the shared roll template.
+        damageButton?.remove();
+      } else {
+        damageButton?.addEventListener(
+          "click",
+          this._onClickDamageButton.bind(this)
+        );
+      }
 
       html
         .querySelector("button.spend-focus")
@@ -1912,7 +2092,7 @@ class ChatMessageMarvel extends ChatMessage {
     let targets = this.getFlag("multiverse-d616", "targets") ?? [];
 
     if (!targets?.length) {
-      const authorId = this.author?.id ?? this.user?.id ?? null;
+      const authorId = this.author?.id ?? null;
       if (authorId && game.user?.id === authorId) {
         const localTargets = mmD616CollectLocalTargets();
         if (localTargets?.length) {
@@ -2068,16 +2248,19 @@ class ChatMessageMarvel extends ChatMessage {
    * Handle clicking damage button.
    * @param {PointerEvent} event      The initiating click event.
    */
-  _onClickDamageButton(event) {
+  async _onClickDamageButton(event) {
+    event.preventDefault();
     event.stopPropagation();
     const eventTarget = event.currentTarget;
     const messageId =
-      eventTarget.closest("[data-message-id]").dataset.messageId;
+      eventTarget.closest("[data-message-id]")?.dataset?.messageId;
     const messageHeader = eventTarget.closest("li.chat-message");
     const flavorText =
-      messageHeader.querySelector("span.flavor-text").innerHTML;
+      messageHeader?.querySelector("span.flavor-text")?.innerHTML ??
+      this.flavor ??
+      "";
 
-    this._handleDamageChatButton(messageId, flavorText);
+    await this._handleDamageChatButton(messageId, flavorText);
   }
 
   /**
@@ -2261,13 +2444,56 @@ class ChatMessageMarvel extends ChatMessage {
    */
 
   async _handleDamageChatButton(messageId, flavorText) {
-    const re = /ability:\s(?<ability>\w*)/;
-    const dmgTypeRe = /damagetype:\s(?<damageType>\w*)/;
-    const ability = re.exec(flavorText).groups.ability;
-    const damageType =
-      dmgTypeRe.exec(flavorText)?.groups?.damageType ?? "health";
-    const abilityAbr = MULTIVERSE_D616.damageAbilityAbr[ability] ?? ability;
     const chatMessage = game.messages.get(messageId);
+    if (!chatMessage) {
+      ui.notifications?.warn(
+        "[multiverse-d616] O card de ataque não foi encontrado."
+      );
+      return;
+    }
+
+    // Prefer structured flags written when the attack was rolled. Flavor parsing
+    // remains only for legacy cards.
+    let abilityAbr = String(
+      chatMessage.getFlag("multiverse-d616", "ability") ?? ""
+    ).toLowerCase();
+    let ability =
+      MULTIVERSE_D616.damageAbility[abilityAbr] ??
+      /ability:\s*(?<ability>[^<,\n]+)/i
+        .exec(flavorText ?? "")
+        ?.groups?.ability?.trim() ??
+      "";
+
+    if (!abilityAbr) {
+      const abilityEntry = Object.entries(
+        MULTIVERSE_D616.damageAbilityAbr
+      ).find(([name]) => name.toLowerCase() === ability.toLowerCase());
+      abilityAbr = abilityEntry?.[1] ?? ability.toLowerCase();
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(
+      MULTIVERSE_D616.damageAbility,
+      abilityAbr
+    )) {
+      ui.notifications?.error(
+        `[multiverse-d616] Não foi possível identificar a habilidade do ataque (${ability || "sem habilidade"}).`
+      );
+      return;
+    }
+
+    ability = MULTIVERSE_D616.damageAbility[abilityAbr] ?? abilityAbr;
+
+    const legacyDamageType =
+      /damagetype:\s*(?<damageType>[\w-]+)/i
+        .exec(flavorText ?? "")
+        ?.groups?.damageType ?? "";
+    const damageType =
+      String(
+        chatMessage.getFlag("multiverse-d616", "damageType") ??
+          legacyDamageType
+      ).toLowerCase() === "focus"
+        ? "focus"
+        : "health";
 
     // Focus spend (optional) recorded on the originating roll card.
     const focusBonus = Number(
@@ -2350,103 +2576,214 @@ class ChatMessageMarvel extends ChatMessage {
       return;
     }
 
+    // Damage Multiplier context (stored on the originating roll card).
+    // Weapon bonuses MUST NOT apply passively; they only apply to the attack/item
+    // that created this chat message. The greater bonus wins; penalties still apply.
+    const dmFlags =
+      chatMessage.getFlag("multiverse-d616", "damageMultiplier") ?? {};
+    const itemId = chatMessage.getFlag("multiverse-d616", "itemId");
+    const item = itemId ? actor.items?.get?.(itemId) ?? null : null;
+    const weaponBonusFromItem =
+      item?.type === "weapon" && item.system?.equipped
+        ? Number(item.system?.damageMultiplierBonus ?? 0) || 0
+        : 0;
 
+    let baseDamageMultiplier = Number(dmFlags.base ?? NaN);
+    let otherBonus = Number(dmFlags.otherBonus ?? NaN);
+    let otherPenalty = Number(dmFlags.otherPenalty ?? 0);
+    let weaponBonus = Number(dmFlags.weaponBonus ?? NaN);
 
-	    // Damage Multiplier context (stored on the originating roll card).
-	    // Weapon bonuses MUST NOT apply passively; they only apply to the attack/item that created this chat message.
-	    // Book rule: Weapon DM bonus does NOT stack with any other DM *bonus*. Use the GREATER. Penalties still apply.
-	    const dmFlags = chatMessage.getFlag("multiverse-d616", "damageMultiplier") ?? {};
-	    const itemId = chatMessage.getFlag("multiverse-d616", "itemId");
-	    const item = itemId ? actor.items?.get?.(itemId) ?? null : null;
-	    const weaponBonusFromItem =
-	      item?.type === "weapon" && item.system?.equipped
-	        ? Number(item.system?.damageMultiplierBonus ?? 0) || 0
-	        : 0;
+    // Backward-compatible fallback for cards created before the context flags.
+    if (!Number.isFinite(baseDamageMultiplier)) {
+      const ctx = mmGetDamageMultiplierContext(actor, abilityAbr);
+      baseDamageMultiplier = Number(ctx.base ?? 0) || 0;
+      otherBonus = Number(ctx.otherBonus ?? 0) || 0;
+      otherPenalty = Number(ctx.otherPenalty ?? 0) || 0;
+    }
+    if (!Number.isFinite(otherBonus)) otherBonus = 0;
+    if (!Number.isFinite(otherPenalty)) otherPenalty = 0;
+    if (!Number.isFinite(weaponBonus)) weaponBonus = weaponBonusFromItem;
 
-	    let baseDamageMultiplier = Number(dmFlags.base ?? NaN);
-	    let otherBonus = Number(dmFlags.otherBonus ?? NaN);
-	    let otherPenalty = Number(dmFlags.otherPenalty ?? 0);
-	    let weaponBonus = Number(dmFlags.weaponBonus ?? NaN);
-	
-	    // Backward/forward compatible fallback (older cards or missing flags)
-	    if (!Number.isFinite(baseDamageMultiplier)) {
-	      const ctx = mmGetDamageMultiplierContext(actor, abilityAbr);
-	      baseDamageMultiplier = Number(ctx.base ?? 0) || 0;
-	      otherBonus = Number(ctx.otherBonus ?? 0) || 0;
-	      otherPenalty = Number(ctx.otherPenalty ?? 0) || 0;
-	    }
-	    if (!Number.isFinite(otherBonus)) otherBonus = 0;
-	    if (!Number.isFinite(weaponBonus)) weaponBonus = weaponBonusFromItem;
+    const effectiveBonus = Number.isFinite(Number(dmFlags.effectiveBonus))
+      ? Number(dmFlags.effectiveBonus)
+      : Math.max(weaponBonus, otherBonus);
 
-	    const effectiveBonus = Number.isFinite(Number(dmFlags.effectiveBonus))
-	      ? Number(dmFlags.effectiveBonus)
-	      : Math.max(weaponBonus, otherBonus);
-	
-	    const damageMultiplier = Number.isFinite(Number(dmFlags.finalDM))
-	      ? Number(dmFlags.finalDM)
-	      : baseDamageMultiplier + otherPenalty + effectiveBonus;
+    const damageMultiplier = Number.isFinite(Number(dmFlags.finalDM))
+      ? Number(dmFlags.finalDM)
+      : baseDamageMultiplier + otherPenalty + effectiveBonus;
 
-    const targetTokens = Array.from(game.user?.targets ?? []);
+    const abilityValue =
+      Number(actor.system?.abilities?.[abilityAbr]?.value ?? 0) || 0;
 
-    // Fallback for any modules that don't populate game.user.targets
-    if (!targetTokens.length && canvas?.tokens?.placeables) {
-      targetTokens.push(...canvas.tokens.placeables.filter((t) => mmD616IsTargetedByUser(t, game.user)));
+    // The authoritative targets are the UUIDs captured on the attack message.
+    // Only legacy cards without saved targets may capture the author's current
+    // targets, and those targets are immediately persisted on the old card.
+    let targetRefs = chatMessage.getFlag("multiverse-d616", "targets") ?? [];
+    targetRefs = (Array.isArray(targetRefs) ? targetRefs : [])
+      .map((target) =>
+        typeof target === "string" ? { uuid: target } : { ...target }
+      )
+      .filter((target) => target?.uuid);
+
+    if (!targetRefs.length && chatMessage.isAuthor) {
+      targetRefs = mmD616CollectLocalTargets();
+      if (targetRefs.length) {
+        await chatMessage.setFlag(
+          "multiverse-d616",
+          "targets",
+          targetRefs
+        );
+        ui.notifications?.warn(
+          "[multiverse-d616] Card antigo sem alvos salvos: os alvos atuais do autor foram registrados neste card."
+        );
+      }
     }
 
-    const abilityValue = actor.system.abilities[abilityAbr].value;
+    const resolvedTargets = [];
+    const seenTargetUuids = new Set();
+    for (const ref of targetRefs) {
+      if (!ref?.uuid || seenTargetUuids.has(ref.uuid)) continue;
+      seenTargetUuids.add(ref.uuid);
 
-    const targets = targetTokens.map((t) => t.actor);
-
-    const damageContent = targets.map((t) => {
-      const damageReduction =
-        damageType && damageType === "focus"
-          ? t.system.focusDamageReduction
-          : t.system.healthDamageReduction;
-      const dmgMultiplier = damageMultiplier - damageReduction;
-      let dmg =
-        dmgMultiplier === 0
-          ? 0
-          : marvelTotal * dmgMultiplier + abilityValue + focusBonus;
-      if (isFantastic) {
-        dmg = dmg * 2;
+      let targetDocument = null;
+      let targetActor = null;
+      try {
+        targetDocument = await fromUuid(ref.uuid);
+        targetActor =
+          targetDocument?.actor ??
+          (targetDocument?.documentName === "Actor" ? targetDocument : null);
+      } catch (error) {
+        console.warn(
+          "[multiverse-d616] Failed to resolve saved target UUID",
+          ref.uuid,
+          error
+        );
       }
-      const focusExplain =
-        focusSpent > 0
-          ? ` + Focus bonus ${focusBonus} (spent ${focusSpent})`
-          : "";
-      return `<p><b>${t.name}</b> takes <b>${dmg} ${
+
+      if (!targetActor && ref.actorUuid) {
+        try {
+          const actorDocument = await fromUuid(ref.actorUuid);
+          targetActor =
+            actorDocument?.actor ??
+            (actorDocument?.documentName === "Actor" ? actorDocument : null);
+        } catch (error) {
+          console.warn(
+            "[multiverse-d616] Failed to resolve saved target actor UUID",
+            ref.actorUuid,
+            error
+          );
+        }
+      }
+
+      if (!targetActor) continue;
+      resolvedTargets.push({ ref, document: targetDocument, actor: targetActor });
+    }
+
+    if (targetRefs.length && resolvedTargets.length !== targetRefs.length) {
+      ui.notifications?.warn(
+        "[multiverse-d616] Um ou mais alvos salvos não existem mais ou não puderam ser acessados."
+      );
+    }
+
+    const esc = foundry.utils.escapeHTML;
+    const focusExplain =
+      focusSpent > 0
+        ? ` + Focus bonus ${focusBonus} (spent ${focusSpent})`
+        : "";
+    const damageEntries = [];
+    const damageContent = resolvedTargets.map(({ ref, document, actor: target }) => {
+      const rawDamageReduction =
+        damageType === "focus"
+          ? target.system?.focusDamageReduction
+          : target.system?.healthDamageReduction;
+      const {
+        damage,
+        damageReduction,
+        effectiveDamageMultiplier,
+      } = calculateD616Damage({
+        marvelDie: marvelTotal,
+        damageMultiplier,
+        damageReduction: rawDamageReduction,
+        ability: abilityValue,
+        bonus: focusBonus,
+        fantastic: isFantastic,
+      });
+
+      const targetName =
+        document?.name ?? ref.name ?? target.name ?? "Target";
+      const targetUuid = ref.uuid;
+      const actorUuid = target.uuid ?? ref.actorUuid ?? "";
+
+      damageEntries.push({
+        targetUuid,
+        actorUuid,
+        name: targetName,
+        category: damageType,
+        damage,
+        damageReduction,
+        effectiveDamageMultiplier,
+      });
+
+      return `<p><b>${esc(targetName)}</b> takes <b>${damage} ${
         isFantastic ? "Fantastic" : ""
-      } </b> ${damageType} damage.<br/> re: MarvelDie: ${
+      } </b> ${esc(damageType)} damage.<br/> re: MarvelDie: ${
         marvelTotal
-	      } &#42; damage multiplier: &#40; ${baseDamageMultiplier} + bonus: ${effectiveBonus} &#61; ${damageMultiplier} - damageReduction: ${damageReduction} &#61; ${dmgMultiplier} &#41; + ${ability} score ${abilityValue} of damage${focusExplain}.</p>`;
+      } &#42; damage multiplier: &#40; ${baseDamageMultiplier} + bonus: ${effectiveBonus} &#61; ${damageMultiplier} - damageReduction: ${damageReduction} &#61; ${effectiveDamageMultiplier} &#41; + ${esc(
+        ability
+      )} score ${abilityValue} of damage${esc(focusExplain)}.</p>`;
     });
 
     if (damageContent.length === 0) {
-      let dmg = marvelTotal * damageMultiplier + abilityValue + focusBonus;
-      if (isFantastic) {
-        dmg = dmg * 2;
-      }
-      const focusExplain =
-        focusSpent > 0
-          ? ` + Focus bonus ${focusBonus} (spent ${focusSpent})`
-          : "";
+      const {
+        damage: dmg,
+        effectiveDamageMultiplier,
+      } = calculateD616Damage({
+        marvelDie: marvelTotal,
+        damageMultiplier,
+        ability: abilityValue,
+        bonus: focusBonus,
+        fantastic: isFantastic,
+      });
       damageContent.push(
         `<p>target(s) take <b>${dmg} ${
           isFantastic ? "Fantastic" : ""
-        } </b> ${damageType} damage.<br/> re: MarvelDie: ${
+        } </b> ${esc(damageType)} damage.<br/> re: MarvelDie: ${
           marvelTotal
-        } &#42; damage multiplier: ${damageMultiplier} + ${ability} score ${abilityValue} of damage${focusExplain}.</p>`
+        } &#42; damage multiplier: ${effectiveDamageMultiplier} + ${esc(
+          ability
+        )} score ${abilityValue} of damage${esc(focusExplain)}.</p>`
       );
     }
+
+    const preservedTargets = resolvedTargets.map(({ ref, actor: target }) => ({
+      uuid: ref.uuid,
+      actorUuid: target.uuid ?? ref.actorUuid ?? "",
+      name: ref.name ?? target.name ?? "Target",
+      img: ref.img ?? target.img ?? "",
+    }));
 
     const msgData = {
       // Keep the same speaker so the damage message matches the token/actor used to roll.
       speaker: chatMessage.speaker ?? ChatMessageMarvel.getSpeaker({ actor: actor }),
-      rollMode: game.settings.get("core", "rollMode"),
       flavor: flavorText,
       content: damageContent.join(""),
+      flags: {
+        "multiverse-d616": {
+          sourceMessageId: chatMessage.id,
+          targets: preservedTargets,
+          authorTargets: preservedTargets.map((target) => target.uuid),
+          ability: abilityAbr,
+          damageType,
+          damageApplication: {
+            version: 1,
+            sourceMessageId: chatMessage.id,
+            isFantastic,
+            entries: damageEntries,
+          },
+        },
+      },
     };
-    ChatMessageMarvel.create(msgData);
+    return ChatMessageMarvel.create(mmApplyMessageMode(msgData));
   }
 
 
@@ -2454,7 +2791,8 @@ class ChatMessageMarvel extends ChatMessage {
    * Handle clicking a retro button.
    * @param {PointerEvent} event      The initiating click event.
    */
-  _onClickRetroButton(event) {
+  async _onClickRetroButton(event) {
+    event.preventDefault();
     event.stopPropagation();
     const eventTarget = event.currentTarget;
 
@@ -2462,12 +2800,20 @@ class ChatMessageMarvel extends ChatMessage {
     const isInit = eventTarget.dataset.initiative;
     const dieIndex = Math.round(eventTarget.dataset.index);
     const messageId =
-      eventTarget.closest("[data-message-id]").dataset.messageId;
+      eventTarget.closest("[data-message-id]")?.dataset.messageId;
 
     const messageHeader = eventTarget.closest("li.chat-message");
     const flavorText =
-      messageHeader.querySelector("span.flavor-text")?.innerHTML;
-    this._handleChatButton(action, messageId, dieIndex, isInit, flavorText);
+      messageHeader?.querySelector("span.flavor-text")?.innerHTML;
+
+    eventTarget.disabled = true;
+    try {
+      await this._handleChatButton(action, messageId, dieIndex, isInit, flavorText);
+    } catch (error) {
+      console.error(`[${M616_SYSTEM_ID}] Edge/Trouble reroll failed`, error);
+      ui.notifications?.error?.("Não foi possível aplicar Edge/Trouble à rolagem.");
+      eventTarget.disabled = false;
+    }
   }
 
   async _handleEdge(active, rollResult) {
@@ -2490,6 +2836,28 @@ class ChatMessageMarvel extends ChatMessage {
     if (!action || !messageId) throw new Error("Missing Information");
 
     const chatMessage = game.messages.get(messageId);
+    if (!chatMessage) throw new Error("Chat message not found");
+
+    const initiativeContext = mmInitiativeContext(chatMessage);
+    const isInitiative = !!isInit || mmIsInitiativeMessage(chatMessage);
+    if (isInitiative) {
+      if (!mmCanAdjustInitiativeMessage(chatMessage)) {
+        ui.notifications?.warn?.("Você não pode alterar a iniciativa deste combatente.");
+        return false;
+      }
+      if (initiativeContext?.resolved === true) {
+        ui.notifications?.info?.("O Edge/Trouble desta iniciativa já foi resolvido.");
+        return false;
+      }
+      if (
+        initiativeContext &&
+        String(initiativeContext.modifier ?? "") !== String(action)
+      ) {
+        ui.notifications?.warn?.("Este combatente não possui esse modificador na iniciativa.");
+        return false;
+      }
+    }
+
     const modifier = action === "edge" ? "kh" : "kl";
     const [roll] = chatMessage.rolls;
     const firstRollTerm = roll.terms[0];
@@ -2626,21 +2994,38 @@ class ChatMessageMarvel extends ChatMessage {
     // Only update the roll payload + rendered content/flavor, preserving flags.
     const update = await roll.toMessage({ flavor: flavor }, { create: false });
 
-    if (isInit) {
-      const actorId = game.actors.contents.find(
-        (a) => a.name === chatMessage.alias
-      )._id;
-      const combatant = game.combat.combatants.contents.find(
-        (combatant) => combatant.actorId === actorId
-      );
-      await combatant.update({ initiative: roll.total });
-    }
-
-    return chatMessage.update({
+    const messageUpdate = {
       content: update?.content ?? chatMessage.content,
       flavor: update?.flavor ?? flavor ?? chatMessage.flavor,
       rolls: update?.rolls ?? chatMessage.rolls,
-    });
+    };
+
+    if (isInitiative) {
+      const now = Date.now();
+      foundry.utils.setProperty(
+        messageUpdate,
+        `flags.${M616_SYSTEM_ID}.${M616_INITIATIVE_FLAG}.resolved`,
+        true
+      );
+      foundry.utils.setProperty(
+        messageUpdate,
+        `flags.${M616_SYSTEM_ID}.${M616_INITIATIVE_FLAG}.resolution`,
+        action
+      );
+      foundry.utils.setProperty(
+        messageUpdate,
+        `flags.${M616_SYSTEM_ID}.${M616_INITIATIVE_FLAG}.resolvedAt`,
+        now
+      );
+    }
+
+    const updatedMessage = (await chatMessage.update(messageUpdate)) ?? chatMessage;
+
+    if (isInitiative) {
+      await mmResolveInitiativeResult(updatedMessage, Number(roll.total));
+    }
+
+    return updatedMessage;
   }
 
   /* -------------------------------------------- */
@@ -2725,7 +3110,7 @@ function prepareActiveEffectCategories(effects) {
  * Extend the basic ActorSheet with some very simple modifications
  * @extends {ActorSheet}
  */
-class MarvelMultiverseCharacterSheet extends ActorSheet {
+class MarvelMultiverseCharacterSheet extends foundry.appv1.sheets.ActorSheet {
   /** @override */
   static get defaultOptions() {
     // biome-ignore lint/complexity/noThisInStatic: <explanation>
@@ -3158,12 +3543,17 @@ render(force = false, options = {}) {
    */
   _onRoll(event) {
     event.preventDefault();
-    game.settings.get("core", "rollMode");
     const element = event.currentTarget;
     const dataset = element.dataset;
 
     const itemId = element.closest(".item")?.dataset?.itemId;
     const item = this.actor.items.get(itemId);
+
+    // Powers and weapons must always use Item.roll() so Focus, Concentration,
+    // targets, damage context, hooks, and turn tracking share one workflow.
+    if (item && ["power", "weapon"].includes(item.type)) {
+      return item.roll();
+    }
 
     // Handle item rolls.
     if (dataset.rollType) {
@@ -3182,17 +3572,16 @@ render(force = false, options = {}) {
         : label;
 
       const speaker = ChatMessage.getSpeaker({ actor: this.actor });
-      const rollMode = game.settings.get("core", "rollMode");
+      const messageMode = mmGetMessageMode();
 
       if (item?.system?.description) {
-        ChatMessage.create({
+        ChatMessage.create(mmApplyMessageMode({
           speaker: speaker,
-          rollMode: rollMode,
           flavor: label,
           content: `<div>${item.system.description}</div><div>${
             item.system.effect ? item.system.effect : ""
           }</div>`,
-        });
+        }, messageMode));
       }
 
       const roll = new CONFIG.Dice.MarvelMultiverseRoll(
@@ -3204,10 +3593,9 @@ render(force = false, options = {}) {
         {
           speaker: speaker,
           flavor: label,
-          rollMode: rollMode,
           title: title,
         },
-        { rollMode: rollMode, itemId: itemId }
+        { messageMode, itemId: itemId }
       );
       return roll;
     }
@@ -3218,7 +3606,7 @@ render(force = false, options = {}) {
  * Extend the basic ActorSheet with some very simple modifications
  * @extends {ActorSheet}
  */
-class MarvelMultiverseNPCSheet extends ActorSheet {
+class MarvelMultiverseNPCSheet extends foundry.appv1.sheets.ActorSheet {
   /** @override */
   static get defaultOptions() {
     // biome-ignore lint/complexity/noThisInStatic: <explanation>
@@ -3684,12 +4072,14 @@ render(force = false, options = {}) {
         this.actor.getRollData()
       );
 
-      roll.toMessage({
-        speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-        flavor: label,
-        rollMode: game.settings.get("core", "rollMode"),
-        title: title,
-      });
+      roll.toMessage(
+        {
+          speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+          flavor: label,
+          title: title,
+        },
+        { messageMode: mmGetMessageMode() }
+      );
       return roll;
     }
   }
@@ -3699,10 +4089,10 @@ render(force = false, options = {}) {
  * Extend the basic ItemSheet with some very simple modifications
  * @extends {ItemSheet}
  */
-class MarvelMultiverseItemSheet extends ItemSheet {
+class MarvelMultiverseItemSheet extends foundry.appv1.sheets.ItemSheet {
   /** @override */
   static get defaultOptions() {
-    return foundry.utils.mergeObject(ItemSheet.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["multiverse-d616", "sheet", "item"],
       width: 520,
       height: 480,
@@ -4243,7 +4633,7 @@ class MarvelMultiverseItemSheet extends ItemSheet {
  * @return {Promise}
  */
 const preloadHandlebarsTemplates = async () =>
-  loadTemplates([
+  foundry.applications.handlebars.loadTemplates([
     // Actor partials.
     "systems/multiverse-d616/templates/actor/parts/actor-biography.hbs",
     "systems/multiverse-d616/templates/actor/parts/actor-details.hbs",
@@ -4963,20 +5353,24 @@ Hooks.once("init", () => {
   // Add fonts
   _configureFonts();
 
-  // Register sheet application classes
-  Actors.unregisterSheet("core", ActorSheet);
-  Actors.registerSheet("multiverse-d616", MarvelMultiverseCharacterSheet, {
+  // Register sheet application classes. Prefer the v14 document collection namespace,
+  // while retaining a safe fallback for older compatible runtimes.
+  const ActorsCollection = foundry.documents?.collections?.Actors ?? globalThis.Actors;
+  const ItemsCollection = foundry.documents?.collections?.Items ?? globalThis.Items;
+
+  ActorsCollection?.unregisterSheet?.("core", foundry.appv1.sheets.ActorSheet);
+  ActorsCollection?.registerSheet?.("multiverse-d616", MarvelMultiverseCharacterSheet, {
     types: ["character"],
     makeDefault: true,
     label: "MULTIVERSE_D616.SheetLabels.Actor",
   });
-  Actors.registerSheet("multiverse-d616", MarvelMultiverseNPCSheet, {
+  ActorsCollection?.registerSheet?.("multiverse-d616", MarvelMultiverseNPCSheet, {
     types: ["npc"],
     makeDefault: true,
     label: "MULTIVERSE_D616.SheetLabels.NPC",
   });
-  Items.unregisterSheet("core", ItemSheet);
-  Items.registerSheet("multiverse-d616", MarvelMultiverseItemSheet, {
+  ItemsCollection?.unregisterSheet?.("core", foundry.appv1.sheets.ItemSheet);
+  ItemsCollection?.registerSheet?.("multiverse-d616", MarvelMultiverseItemSheet, {
     makeDefault: true,
     label: "MULTIVERSE_D616.SheetLabels.Item",
   });
@@ -5099,17 +5493,17 @@ Hooks.on("renderSettings", (app, html) => {
     <h2 class='mmrpg-game-title'>${game.system.title}
       <ul class="links mmrpg-ul">
         <li>
-          <a href="https://github.com/mjording/multiverse-d616/releases/latest" target="_blank">
+          <a href="https://github.com/rodrigosinistro/multiverse-D616/releases/latest" target="_blank">
             Multiverse-D616 RPG
           </a>
         </li>
         <li>
-          <a href="https://github.com/mjording/multiverse-d616/issues" target="_blank">${game.i18n.localize(
+          <a href="https://github.com/rodrigosinistro/multiverse-D616/issues" target="_blank">${game.i18n.localize(
             "MULTIVERSE_D616.Issues"
           )}</a>
         </li>
         <li>
-          <a href="https://github.com/mjording/multiverse-d616/wiki" target="_blank">${game.i18n.localize(
+          <a href="https://github.com/rodrigosinistro/multiverse-D616/wiki" target="_blank">${game.i18n.localize(
             "MULTIVERSE_D616.Wiki"
           )}</a>
         </li>
@@ -5134,7 +5528,7 @@ Hooks.on("renderSettings", (app, html) => {
     details.insertAdjacentElement("afterend", heading);
   } else {
     const infoSection = html.querySelector("section.info");
-    infoSection.insertAdjacentElement("beforeend", heading);
+    infoSection?.insertAdjacentElement("beforeend", heading);
   }
 });
 
@@ -5225,4 +5619,3 @@ function rollItemMacro(itemUuid) {
 }
 
 export { ChatMessageMarvel, MULTIVERSE_D616, MarvelMultiverseActor, MarvelMultiverseCharacterSheet, MarvelMultiverseItem$1 as MarvelMultiverseItem, MarvelMultiverseItemSheet, MarvelMultiverseNPCSheet, dice, models, rollItemMacro };
-//# sourceMappingURL=multiverse-d616-compiled.mjs.map
