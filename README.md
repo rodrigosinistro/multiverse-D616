@@ -4,10 +4,16 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 
 ## Versão
 
-- **Versão do sistema:** 0.1.68
+- **Versão do sistema:** 0.1.69
 - **Compatibilidade:** Foundry VTT v14 (`minimum: 14`, `verified: 14`)
 - **ID / pasta interna:** `multiverse-d616`
 - **Manifest:** `https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json`
+
+## Atualização v0.1.69 — Atributos nos ataques
+
+- Powers e armas voltam a somar o atributo selecionado à fórmula e ao total do ataque.
+- O modificador aparece no card de rolagem e também é considerado na comparação contra a defesa do alvo.
+- A correção vale para ficha, macro e Token Action HUD e evita duplicação em fórmulas personalizadas.
 
 ## Atualização v0.1.68 — Card de iniciativa limpo
 

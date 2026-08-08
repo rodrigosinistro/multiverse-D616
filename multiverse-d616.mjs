@@ -13,6 +13,7 @@
  */
 import { handleConcentrationOnUse } from "./scripts/concentration.js";
 import { calculateD616Damage } from "./scripts/damage-calculation.js";
+import { buildItemRollFormula } from "./scripts/roll-formula.mjs";
 
 function mmGetMessageMode() {
   try {
@@ -417,15 +418,6 @@ class MarvelMultiverseActor extends Actor {
  * @extends {Item}
  */
 let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
-  prepareDerivedData() {
-    super.prepareDerivedData();
-    // Build the formula
-    this.formula =
-      this.system.ability && this.formula
-        ? `${this.formula} + @${this.system.ability}.value`
-        : "";
-  }
-
   /**
    * Prepare a data object which defines the data schema used by dice roll commands against this Item
    * @override
@@ -433,6 +425,14 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
   getRollData() {
     // Starts off by populating the roll data with `this.system`
     const rollData = { ...super.getRollData() };
+
+    // Foundry v14 keeps DataModel fields under Item.system. Build the effective
+    // attack formula explicitly so the selected ability is present in both the
+    // formula rendered on the chat card and the evaluated total.
+    rollData.formula = buildItemRollFormula(
+      this.system.formula ?? rollData.formula,
+      this.system.ability
+    );
 
     // Quit early if there's no parent actor
     if (!this.actor) return rollData;

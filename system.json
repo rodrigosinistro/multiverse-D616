@@ -27,7 +27,7 @@
       "thumbnail": "systems/multiverse-d616/ui/official/mmrpg-setup-thumbnail.png"
     }
   ],
-  "version": "0.1.68",
+  "version": "0.1.69",
   "compatibility": {
     "minimum": "14",
     "verified": "14"
@@ -140,7 +140,7 @@
   ],
   "socket": true,
   "manifest": "https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json",
-  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.1.68/multiverse-d616-v0.1.68.zip",
+  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.1.69/multiverse-d616-v0.1.69.zip",
   "background": "systems/multiverse-d616/ui/official/mmrpg-background.webp",
   "grid": {
     "distance": 5,

@@ -1,4 +1,4 @@
-# Checklist de teste — v0.1.68
+# Checklist de teste — v0.1.69
 
 Use uma cópia do mundo no Foundry VTT v14 antes de substituir a versão usada na campanha.
 
@@ -7,7 +7,17 @@ Use uma cópia do mundo no Foundry VTT v14 antes de substituir a versão usada n
 1. Feche o mundo.
 2. Faça backup de `Data/worlds` e da pasta atual `Data/systems/multiverse-d616`.
 3. Substitua a pasta do sistema pela pasta `multiverse-d616` deste ZIP.
-4. Reinicie o Foundry VTT e confirme a versão **0.1.68**.
+4. Reinicie o Foundry VTT e confirme a versão **0.1.69**.
+
+## Fórmula e total dos ataques
+
+1. Use um Power de ataque configurado com Agility em um personagem que tenha Agility diferente de 0.
+2. Confirme que o card mostra `{1d6,1dm,1d6} + X`, sendo `X` o valor atual de Agility.
+3. Confirme que o total é a soma dos três dados (tratando MARVEL como 6) mais Agility.
+4. Repita com um ataque de Melee e com uma arma equipada.
+5. Repita pela ficha, por macro e pelo Token Action HUD.
+6. Aplique Edge ou Trouble no card e confirme que o atributo permanece na fórmula e no total atualizado.
+7. Use uma fórmula personalizada que já contenha `@agl.value` e confirme que Agility é somada somente uma vez.
 
 ## Compêndio Powers e pastas de Power Set
 

@@ -1,3 +1,10 @@
+# v0.1.69
+
+- Corrigida a fórmula de ataques realizados por Powers e armas no Foundry VTT v14.
+- O atributo selecionado no Item (Melee, Agility, Resilience, Vigilance, Ego ou Logic) volta a aparecer na fórmula do card e a ser somado ao resultado total.
+- A correção também cobre rolagens iniciadas por macro e pelo Token Action HUD, pois todos esses fluxos usam o mesmo `Item.roll()`.
+- Fórmulas personalizadas que já contêm a referência do atributo são preservadas sem duplicar o modificador.
+
 # v0.1.68
 
 - Removido o botão **DAMAGE** dos cards de rolagem de iniciativa.
