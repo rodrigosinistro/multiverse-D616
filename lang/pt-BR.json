@@ -51,6 +51,19 @@
   "MULTIVERSE_D616": {
     "hit": "ACERTOU",
     "miss": "ERROU",
-    "target": "ALVO"
+    "target": "ALVO",
+    "ActionHud": {
+      "Settings": {
+        "EnabledName": "HUD de Ações nativo",
+        "EnabledHint": "Exibe as abas ABILITIES e POWERS ao selecionar um token, sem depender do Token Action HUD Core."
+      },
+      "Abilities": "ABILITIES",
+      "Powers": "POWERS",
+      "NoPowers": "Nenhum Power acionável.",
+      "NoPermission": "Você não tem permissão para usar as ações deste ator.",
+      "Collapse": "Minimizar HUD",
+      "Expand": "Expandir HUD",
+      "Drag": "Arraste para mover"
+    }
   }
 }

@@ -1,3 +1,44 @@
+# v0.1.73
+
+- Removido o fluxo manual **Extempore Effects** do menu de contexto do chat.
+- Ao usar um Power cuja duração seja **Concentração/Concentration**, o sistema cria automaticamente um Active Effect transitório próprio no ator do token.
+- A condição automática usa o nome e o ícone do Power; ao passar o mouse no painel lateral, o tooltip mostra exatamente o campo **Descrição** do Power.
+- Condições de Powers concentrados não são gravadas em `customConditions`, não entram em `CONFIG.statusEffects` e não aparecem como atalhos reutilizáveis no Token HUD.
+- Reutilizar o mesmo Power atualiza a condição existente sem criar duplicata nem consumir outro nível de Concentração.
+- Remover uma condição de Power reduz em um o nível genérico **Concentração N** quando ela ocupa um nível.
+- Remover a condição genérica **Concentração N** encerra a concentração e apaga todas as condições transitórias dos Powers correspondentes.
+- Mantido integralmente o HUD de Ações nativo aprovado na v0.1.72, sem dependência de Token Action HUD Core.
+
+# v0.1.72
+
+- **D616 Extempore Effects** foi incorporado ao sistema base: cada efeito existe somente como documento `ActiveEffect` no ator do token enquanto estiver aplicado.
+- Efeitos Extempore não são gravados em `customConditions`, não entram em `CONFIG.statusEffects` e nunca aparecem como atalhos na paleta do Token HUD.
+- Registros legados `d616ee.*` são removidos automaticamente do cadastro customizado pelo Mestre, sem apagar Active Effects já aplicados.
+- O painel lateral de condições reconhece o Active Effect transitório diretamente no token e mostra seu nome e descrição sem criar um cadastro reutilizável.
+- Remover um efeito Extempore pelo painel exclui diretamente o documento do ator/token.
+- **Token Action HUD Multiverse-D616** também foi incorporado ao sistema base, com as abas **ABILITIES** e **POWERS** disponíveis ao selecionar um token.
+- O HUD nativo preserva a ordem fixa dos seis atributos, classifica Powers alfabeticamente, oculta Powers permanentes, mostra nomes completos e mantém os tooltips do sistema.
+- Powers usados pelo HUD nativo chamam diretamente `Item.roll()`, preservando Focus, Concentração, alvos, dano e Controle de Turno.
+- Removida a dependência de **Token Action HUD Core** e, consequentemente, a dependência indireta de socketlib para esse HUD.
+- O HUD pode ser movido, minimizado e desativado individualmente nas configurações do cliente.
+- Após atualizar, os módulos externos **D616 Extempore Effects**, **Token Action HUD Multiverse-D616** e **Token Action HUD Core** podem e devem ser desativados para evitar comandos ou interfaces duplicadas.
+
+# v0.1.71
+
+- Restaurada a integração com o módulo **D616 Extempore Effects**: suas entradas `d616ee.*` permanecem disponíveis internamente em `CONFIG.statusEffects`, permitindo novamente a criação de Active Effects pelo menu de contexto do chat.
+- Os registros internos do Extempore continuam ocultos da paleta do Token HUD, que exibe somente as 29 condições nativas e as condições customizadas pelo usuário.
+- O botão **Limpar custom** agora remove apenas as condições gerenciadas pelo usuário e preserva silenciosamente os registros internos necessários ao Extempore.
+- O gerenciador informa quantos registros internos do Extempore foram preservados, sem misturá-los ao JSON editável.
+- Active Effects criados pelo Extempore continuam aparecendo no painel de condições do personagem e podem ser removidos normalmente.
+
+# v0.1.70
+
+- Atualizada a lista nativa de 29 condições com os nomes em português primeiro e os ajustes fornecidos para **Imobilizado**, **Atordoado** e **Arrasado**.
+- Corrigida a paleta de condições do Token HUD para conter somente as condições do arquivo nativo e as condições realmente salvas no cadastro customizado do sistema.
+- Condições antigas de módulos externos, inclusive entradas `d616ee.*`, não permanecem mais no Token HUD após a lista customizada ser limpa.
+- O Token HUD aberto é atualizado imediatamente após salvar as condições customizadas, sem apagar Active Effects já aplicados aos personagens.
+- O carregamento do arquivo de condições agora usa a versão do sistema para evitar que o navegador reaproveite uma cópia antiga em cache após a atualização.
+
 # v0.1.69
 
 - Corrigida a fórmula de ataques realizados por Powers e armas no Foundry VTT v14.

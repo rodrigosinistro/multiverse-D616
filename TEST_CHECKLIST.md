@@ -1,4 +1,4 @@
-# Checklist de teste — v0.1.69
+# Checklist de teste — v0.1.73
 
 Use uma cópia do mundo no Foundry VTT v14 antes de substituir a versão usada na campanha.
 
@@ -7,7 +7,8 @@ Use uma cópia do mundo no Foundry VTT v14 antes de substituir a versão usada n
 1. Feche o mundo.
 2. Faça backup de `Data/worlds` e da pasta atual `Data/systems/multiverse-d616`.
 3. Substitua a pasta do sistema pela pasta `multiverse-d616` deste ZIP.
-4. Reinicie o Foundry VTT e confirme a versão **0.1.69**.
+4. Desative **D616 Extempore Effects**, **Token Action HUD Multiverse-D616** e **Token Action HUD Core**.
+5. Reinicie o Foundry VTT e confirme a versão **0.1.73**.
 
 ## Fórmula e total dos ataques
 
@@ -43,13 +44,20 @@ Use uma cópia do mundo no Foundry VTT v14 antes de substituir a versão usada n
 
 1. Abra o Token HUD e confirme que as condições padrão do Foundry não aparecem.
 2. Confirme que aparecem somente as condições nativas do D616 e condições customizadas.
-3. Com D616 Extempore Effects ativo, crie uma condição e confirme que ela também aparece no Token HUD.
-4. Leve Health a 0 e confirme **Incapacitated** somente no token atingido.
-5. Leve Focus a 0 e confirme **Demoralized**.
-6. Use dois tokens não vinculados do mesmo ator-base e confirme que o status não passa para a outra cópia.
-7. Aplique Ablaze/Bleeding/Corroding, encerre o turno e confirme o dano uma única vez.
-8. Com Health Damage Reduction, confirme a redução do dano contínuo.
-9. Teste uma condição custom pelo menu de configurações.
+3. Use um Power de duração **Concentração** e confirme a criação automática de duas condições no token: **Concentração 1** e a condição com o nome do Power.
+4. Passe o mouse sobre a condição do Power e confirme que o tooltip mostra exatamente seu campo **Descrição**.
+5. Confirme que a condição usa o ícone do próprio Power e não aparece na paleta de atalhos nem no gerenciador customizado.
+6. Use o mesmo Power novamente e confirme que a condição é atualizada, sem duplicação e sem aumentar Concentração.
+7. Use outro Power de Concentração e confirme a mudança para **Concentração 2** e a presença das duas condições de Power.
+8. Remova uma condição de Power e confirme a redução de Concentração 2 para Concentração 1.
+9. Remova a condição genérica Concentração 1 e confirme que todas as condições de Powers concentrados são apagadas.
+10. Cadastre uma condição externa no gerenciador customizado e confirme que somente ela aparece no Token HUD.
+11. Leve Health a 0 e confirme **Incapacitated** somente no token atingido.
+12. Leve Focus a 0 e confirme **Demoralized**.
+13. Use dois tokens não vinculados do mesmo ator-base e confirme que o status não passa para a outra cópia.
+14. Aplique Ablaze/Bleeding/Corroding, encerre o turno e confirme o dano uma única vez.
+15. Com Health Damage Reduction, confirme a redução do dano contínuo.
+16. Teste uma condição custom pelo menu de configurações.
 
 ## Controle de Turno
 
@@ -80,10 +88,16 @@ Use uma cópia do mundo no Foundry VTT v14 antes de substituir a versão usada n
 25. Confirme que abrir o quadro não troca a ferramenta ativa, não bloqueia o canvas e não causa atualização contínua da interface.
 ## Integrações
 
-1. Com Token Action HUD Core 2.1.x e o módulo D616 v0.1.13, use um Power com custo de Focus.
-2. Confirme o desconto de Focus, Concentração, rolagem, alvo salvo e Controle de Turno.
-3. Com D616 Extempore Effects v0.1.10, abra o menu de contexto de uma mensagem.
-4. Crie e remova um efeito, confirmando o ícone no token e a descrição na bandeja de condições.
+1. Confirme que os três módulos externos listados na seção Instalação estão desativados.
+2. Selecione um token e confirme que o HUD nativo mostra **ABILITIES** e **POWERS** sem erros de dependência no console.
+3. Confirme os seis atributos na ordem Melee, Agility, Resilience, Vigilance, Ego e Logic.
+4. Role um atributo e confirme que seu modificador aparece na fórmula e no total.
+5. Abra POWERS e confirme ordem alfabética, nomes completos em uma coluna e ausência de Powers com duração Permanent/Permanente.
+6. Use um Power com custo de Focus e duração Concentração; confirme desconto de Focus, condições genérica/específica, rolagem, alvo salvo, dano e Controle de Turno.
+7. Arraste o HUD pelo ícone M, minimize-o e recarregue; posição, aba e estado devem ser preservados neste navegador.
+8. Abra o menu de contexto de uma mensagem e confirme que os três comandos **Extempore Effects** não existem mais.
+9. Confirme que a condição automática do Power aparece na bandeja lateral, mas não cria nova opção na paleta do Token HUD.
+10. Remova a condição e confirme que o Active Effect é apagado sem deixar entrada em `customConditions` ou `CONFIG.statusEffects`.
 
 ## Alvo preservado
 

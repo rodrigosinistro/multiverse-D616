@@ -8,6 +8,15 @@ let CONDITIONS_INSTALLED = false;
 
 // ---- Custom Conditions Support (world setting) ----
 const CUSTOM_COND_SETTING = "customConditions";
+const EXTEMPORE_COND_PREFIX = "d616ee.";
+const EXTEMPORE_MODULE_ID = "d616-extempore-effects";
+const CONCENTRATION_POWER_COND_PREFIX = "mmrpg.concentration-power.";
+
+function __mmrpg_conditionsUrl() {
+  const version = String(game?.system?.version ?? "").trim();
+  const suffix = version ? `?v=${encodeURIComponent(version)}` : "";
+  return `${SYS_PATH}/data/conditions.json${suffix}`;
+}
 
 function __mmrpg_iconPath(icon) {
   const fallback = `${SYS_PATH}/icons/m.svg`;
@@ -31,7 +40,7 @@ function __mmrpg_iconPath(icon) {
   return `${SYS_PATH}/${v}`;
 }
 
-function __mmrpg_parseCustomConditions(raw) {
+function __mmrpg_parseStoredConditionObjects(raw) {
   if (!raw) return [];
   let parsed;
   try {
@@ -40,6 +49,32 @@ function __mmrpg_parseCustomConditions(raw) {
     return [];
   }
   const arr = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.conditions) ? parsed.conditions : [];
+  return arr.filter((condition) => condition && typeof condition === "object");
+}
+
+function __mmrpg_isExtemporeCondition(conditionOrId) {
+  const id = typeof conditionOrId === "object"
+    ? conditionOrId?.id
+    : conditionOrId;
+  return String(id ?? "").trim().startsWith(EXTEMPORE_COND_PREFIX);
+}
+
+function __mmrpg_isConcentrationPowerCondition(conditionOrId) {
+  const id = typeof conditionOrId === "object"
+    ? conditionOrId?.id
+    : conditionOrId;
+  return String(id ?? "").trim().startsWith(CONCENTRATION_POWER_COND_PREFIX);
+}
+
+function __mmrpg_isTransientCondition(conditionOrId) {
+  return (
+    __mmrpg_isExtemporeCondition(conditionOrId) ||
+    __mmrpg_isConcentrationPowerCondition(conditionOrId)
+  );
+}
+
+function __mmrpg_parseCustomConditions(raw) {
+  const arr = __mmrpg_parseStoredConditionObjects(raw);
   const cleaned = [];
   for (const c of arr) {
     if (!c || typeof c !== "object") continue;
@@ -57,14 +92,82 @@ function __mmrpg_parseCustomConditions(raw) {
   return cleaned;
 }
 
+function __mmrpg_getStoredConditionObjects() {
+  try {
+    const raw = game?.settings?.get?.(MODULE_ID, CUSTOM_COND_SETTING);
+    return __mmrpg_parseStoredConditionObjects(raw);
+  } catch (_e) {
+    return [];
+  }
+}
+
 function __mmrpg_getCustomConditions() {
   // Setting may not exist if script loaded before init in some edge cases
   try {
     const raw = game?.settings?.get?.(MODULE_ID, CUSTOM_COND_SETTING);
-    return __mmrpg_parseCustomConditions(raw);
+    return __mmrpg_parseCustomConditions(raw)
+      .filter((condition) => !__mmrpg_isTransientCondition(condition));
   } catch (_e) {
     return [];
   }
+}
+
+async function __mmrpg_cleanupLegacyExtemporeConditions() {
+  if (!game.user?.isGM) return 0;
+  const stored = __mmrpg_getStoredConditionObjects();
+  const filtered = stored.filter((condition) => !__mmrpg_isTransientCondition(condition));
+  const removed = stored.length - filtered.length;
+  if (!removed) return 0;
+  await game.settings.set(MODULE_ID, CUSTOM_COND_SETTING, JSON.stringify(filtered, null, 2));
+  return removed;
+}
+
+function __mmrpg_effectStatusIds(effect) {
+  const statuses = effect?.statuses;
+  if (statuses instanceof Set) return Array.from(statuses, String);
+  if (Array.isArray(statuses)) return statuses.map(String);
+  return [];
+}
+
+function __mmrpg_extemporeFlags(effect) {
+  return (
+    effect?.flags?.[MODULE_ID]?.extempore ??
+    effect?.flags?.[EXTEMPORE_MODULE_ID] ??
+    {}
+  );
+}
+
+function __mmrpg_actorStatusIds(actor) {
+  const ids = new Set(Array.from(actor?.statuses ?? [], String));
+  for (const effect of Array.from(actor?.effects ?? [])) {
+    if (effect?.disabled) continue;
+    for (const id of __mmrpg_effectStatusIds(effect)) {
+      if (__mmrpg_isTransientCondition(id)) ids.add(id);
+    }
+  }
+  return Array.from(ids).sort();
+}
+
+function __mmrpg_transientCondition(actor, statusId) {
+  if (!__mmrpg_isTransientCondition(statusId)) return null;
+  const effect = Array.from(actor?.effects ?? []).find((candidate) =>
+    !candidate?.disabled && __mmrpg_effectStatusIds(candidate).includes(statusId)
+  );
+  if (!effect) return null;
+  const extemporeFlags = __mmrpg_extemporeFlags(effect);
+  const concentrationPowerFlags = effect?.flags?.[MODULE_ID]?.concentrationPower ?? {};
+  const isConcentrationPower = __mmrpg_isConcentrationPowerCondition(statusId);
+  return {
+    id: statusId,
+    name: effect.name ?? statusId,
+    icon: effect.img ?? effect.icon ?? "icons/m.svg",
+    description: isConcentrationPower
+      ? concentrationPowerFlags.description ?? "Power mantido por Concentração."
+      : extemporeFlags.description ?? "Efeito Extempore temporário.",
+    // For Concentration Powers the hover content is intentionally just the
+    // Power name plus its Description, as shown on the Item itself.
+    remove: isConcentrationPower ? "" : "Remova esta condição do token.",
+  };
 }
 
 async function __mmrpg_refreshConditions() {
@@ -73,42 +176,61 @@ async function __mmrpg_refreshConditions() {
   CONDITIONS_INSTALLED = false;
   await installConditions({ force: true });
   try { tray?.scheduleRender?.(true); } catch (_e) {}
+  await __mmrpg_rerenderTokenHud();
+}
+
+function __mmrpg_allowedStatusIds() {
+  return new Set(
+    (CONDITION_DATA?.conditions || [])
+      .filter((condition) => !__mmrpg_isTransientCondition(condition))
+      .map((condition) => String(condition?.id ?? "").trim())
+      .filter(Boolean)
+  );
+}
+
+function __mmrpg_filterRenderedTokenHud(html) {
+  const root = html?.[0] ?? html;
+  if (!root?.querySelectorAll) return 0;
+
+  const allowed = __mmrpg_allowedStatusIds();
+  let removed = 0;
+  for (const control of root.querySelectorAll("[data-status-id]")) {
+    const id = String(control?.dataset?.statusId ?? control?.getAttribute?.("data-status-id") ?? "").trim();
+    if (!id || allowed.has(id)) continue;
+    control.remove();
+    removed += 1;
+  }
+  return removed;
+}
+
+async function __mmrpg_rerenderTokenHud() {
+  const tokenHud = globalThis.canvas?.tokens?.hud ?? globalThis.canvas?.hud?.token;
+  if (!tokenHud?.rendered || typeof tokenHud.render !== "function") return;
+
+  try {
+    await tokenHud.render(true);
+    __mmrpg_filterRenderedTokenHud(tokenHud.element);
+  } catch (error) {
+    console.error(`[${MODULE_ID}] Failed to rerender Token HUD conditions`, error);
+  }
 }
 
 function __mmrpg_applyExclusiveStatusEffects() {
-  const sorted = [...(CONDITION_DATA?.conditions || [])].sort((a,b)=>
-    (a.name||"").localeCompare(b.name||"", navigator.language||"pt-BR", {sensitivity:"base"})
-  );
+  const sorted = [...(CONDITION_DATA?.conditions || [])]
+    .filter((condition) => !__mmrpg_isTransientCondition(condition))
+    .sort((a,b)=>
+      (a.name||"").localeCompare(b.name||"", navigator.language||"pt-BR", {sensitivity:"base"})
+    );
 
-  // Foundry v14 uses an object keyed by status id. The D616 system owns the
-  // complete status palette: core Foundry statuses and unrelated module
-  // statuses are intentionally discarded. Extempore Effects are allowed and
-  // identified by the d616ee.* prefix; they are also synchronized into the
-  // system customConditions setting by the module.
-  const currentEntries = Array.isArray(CONFIG.statusEffects)
-    ? CONFIG.statusEffects
-    : Object.values(CONFIG.statusEffects ?? {});
+  // The reusable Token HUD palette contains only native and user-managed
+  // system conditions. Power/legacy transient effects are standalone
+  // ActiveEffect documents and never enter CONFIG.statusEffects.
   const keyed = {};
-
-  for (const entry of currentEntries) {
-    const id = String(entry?.id ?? "").trim();
-    if (!id.startsWith("d616ee.")) continue;
-    const img = entry?.img ?? entry?.icon ?? `${SYS_PATH}/icons/m.svg`;
-    keyed[id] = {
-      ...entry,
-      id,
-      name: entry?.name ?? entry?.label ?? id,
-      label: entry?.label ?? entry?.name ?? id,
-      img,
-      icon: img,
-    };
-  }
 
   sorted.forEach((condition, index) => {
     const id = String(condition.id);
     const img = __mmrpg_iconPath(condition.icon);
     keyed[id] = {
-      ...(keyed[id] ?? {}),
       id,
       name: condition.name,
       label: condition.name,
@@ -124,7 +246,7 @@ function __mmrpg_applyExclusiveStatusEffects() {
 
 async function installConditions({ force = false } = {}) {
   if (!CONDITION_DATA) {
-    const url = `${SYS_PATH}/data/conditions.json`;
+    const url = __mmrpg_conditionsUrl();
     const baseData = await fetch(url).then(r=>r.json());
     const base = [...(baseData.conditions || [])];
     const custom = __mmrpg_getCustomConditions();
@@ -142,7 +264,7 @@ async function installConditions({ force = false } = {}) {
   const signature = Object.keys(CONFIG.statusEffects ?? {}).sort().join("|");
   if (signature !== LAST_STATUS_SIGNATURE) {
     LAST_STATUS_SIGNATURE = signature;
-    console.log(`[${MODULE_ID}] Installed ${count} exclusive D616/Extempore conditions into CONFIG.statusEffects.`);
+    console.log(`[${MODULE_ID}] Installed ${count} configured D616 conditions into CONFIG.statusEffects.`);
   }
   return CONDITION_DATA;
 }
@@ -190,7 +312,7 @@ class ConditionTray {
   }
 
   _onEffectChange(effect) {
-    if (this._isSelectedActor(effect?.parent)) this.scheduleRender();
+    if (this._isSelectedActor(effect?.parent)) this.scheduleRender(true);
   }
 
   _changesContainEffects(changes) {
@@ -273,7 +395,7 @@ class ConditionTray {
     }
 
     const actor = this.selectedActor;
-    const statuses = actor ? Array.from(actor.statuses ?? []).sort() : [];
+    const statuses = actor ? __mmrpg_actorStatusIds(actor) : [];
     const signature = `${actor?.uuid ?? "none"}|${game.user?.isGM ? "gm" : "player"}|${statuses.join("|")}`;
     if (!force && signature === this._lastSignature) {
       this.schedulePosition();
@@ -289,7 +411,7 @@ class ConditionTray {
 
     const byId = Object.fromEntries((CONDITION_DATA.conditions || []).map((c) => [c.id, c]));
     for (const sid of statuses) {
-      const c = byId[sid];
+      const c = byId[sid] ?? __mmrpg_transientCondition(actor, sid);
       if (!c) continue;
       const pill = document.createElement("div");
       pill.className = "mmrpg-cond-pill";
@@ -317,6 +439,18 @@ class ConditionTray {
     const token = this.selectedToken;
     const actor = token?.actor;
     if (!actor || !game.user?.isGM) return;
+    if (__mmrpg_isTransientCondition(condId)) {
+      try {
+        const ids = Array.from(actor.effects ?? [])
+          .filter((effect) => __mmrpg_effectStatusIds(effect).includes(condId))
+          .map((effect) => effect.id)
+          .filter(Boolean);
+        if (ids.length) await actor.deleteEmbeddedDocuments("ActiveEffect", ids);
+      } catch (error) {
+        console.error(`[${MODULE_ID}] Falha ao remover Active Effect transitório`, error);
+      }
+      return;
+    }
     try {
       if (actor?.toggleStatusEffect) return await actor.toggleStatusEffect(condId, { active: false });
     } catch (_e) {}
@@ -346,13 +480,13 @@ class MMRPGConditionsManager extends FormApplication {
   }
 
   async getData(options) {
-    const baseUrl = `${SYS_PATH}/data/conditions.json`;
+    const baseUrl = __mmrpg_conditionsUrl();
     let base = [];
     try {
       const baseData = await fetch(baseUrl).then(r=>r.json());
       base = baseData?.conditions ?? [];
     } catch (_e) {}
-    const customRaw = game.settings.get(MODULE_ID, CUSTOM_COND_SETTING) ?? "[]";
+    const userConditions = __mmrpg_getCustomConditions();
     // Keep a cached example for the UI buttons
     this._exampleJson = JSON.stringify([
       {
@@ -365,7 +499,7 @@ class MMRPGConditionsManager extends FormApplication {
     ], null, 2);
     return {
       baseCount: base.length,
-      customJson: String(customRaw ?? "[]"),
+      customJson: JSON.stringify(userConditions, null, 2),
       exampleJson: this._exampleJson,
     };
   }
@@ -402,9 +536,10 @@ class MMRPGConditionsManager extends FormApplication {
       return;
     }
     const cleaned = __mmrpg_parseCustomConditions(JSON.stringify(arr));
-    const normalized = JSON.stringify(cleaned, null, 2);
+    const userConditions = cleaned.filter((condition) => !__mmrpg_isTransientCondition(condition));
+    const normalized = JSON.stringify(userConditions, null, 2);
     await game.settings.set(MODULE_ID, CUSTOM_COND_SETTING, normalized);
-    ui.notifications.info(`Condições custom salvas: ${cleaned.length}. Recarregando...`);
+    ui.notifications.info(`Condições custom salvas: ${userConditions.length}. Recarregando...`);
     await __mmrpg_refreshConditions();
   }
 }
@@ -491,6 +626,7 @@ if(!existing){ const link = document.createElement("link"); link.rel="stylesheet
 });
 
 Hooks.once("ready", async()=>{
+  await __mmrpg_cleanupLegacyExtemporeConditions();
   await installConditions({ force: true });
   tray.scheduleRender(true);
   tray.observeSidebarTabs();
@@ -498,13 +634,20 @@ Hooks.once("ready", async()=>{
 });
 
 // Reassert the exclusive D616 palette after canvas/token HUD initialization.
-// This keeps Foundry's default conditions from reappearing while preserving
-// conditions created by D616 Extempore Effects.
+// This keeps Foundry and module statuses which are not in the configured D616
+// sources from reappearing in the token palette.
 Hooks.on("canvasReady", () => {
   installConditions({ force: true }).catch((error) => console.error(`[${MODULE_ID}] Failed to refresh exclusive conditions`, error));
 });
-Hooks.on("renderTokenHUD", () => {
-  installConditions({ force: true }).catch((error) => console.error(`[${MODULE_ID}] Failed to filter Token HUD conditions`, error));
+Hooks.on("renderTokenHUD", (_hud, html) => {
+  // Run after all synchronous render hooks. Some modules append their own
+  // statuses during the same render cycle; the D616 palette remains the final
+  // source of truth and the already-rendered HUD is pruned immediately.
+  queueMicrotask(() => {
+    installConditions({ force: true })
+      .then(() => __mmrpg_filterRenderedTokenHud(html))
+      .catch((error) => console.error(`[${MODULE_ID}] Failed to filter Token HUD conditions`, error));
+  });
 });
 
 // Key change: only updateCombat; use combat.previous.turn safely

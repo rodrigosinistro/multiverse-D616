@@ -4,10 +4,27 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 
 ## Versão
 
-- **Versão do sistema:** 0.1.69
+- **Versão do sistema:** 0.1.73
 - **Compatibilidade:** Foundry VTT v14 (`minimum: 14`, `verified: 14`)
 - **ID / pasta interna:** `multiverse-d616`
 - **Manifest:** `https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json`
+
+## Atualização v0.1.73 — Powers em Concentração
+
+- Usar um Power com duração **Concentração/Concentration** cria automaticamente uma condição transitória própria no token.
+- A condição mostra o nome e o ícone do Power. Ao passar o mouse, o tooltip exibe o campo **Descrição** do Power.
+- Essa condição existe somente como Active Effect no ator do token: não entra na lista customizada nem na paleta de atalhos do Token HUD.
+- Reutilizar o mesmo Power atualiza sua condição sem duplicá-la e sem consumir outro nível.
+- Remover uma condição de Power reduz o nível **Concentração N** correspondente; remover a condição genérica encerra todos os Powers concentrados.
+- O menu manual do Extempore foi removido. O HUD de Ações nativo da v0.1.72 permanece inalterado.
+
+## Atualização v0.1.72 — Extempore e HUD de Ações nativos
+
+- **D616 Extempore Effects** agora faz parte do sistema base. Pelo menu de contexto do chat, ele cria um `ActiveEffect` somente no token/ator selecionado.
+- O efeito Extempore não é cadastrado na lista de condições, não é salvo como atalho reutilizável e não aparece na paleta de condições do Token HUD. Ao removê-lo, o documento temporário é apagado.
+- As abas **ABILITIES** e **POWERS** do Token Action HUD agora são fornecidas por um HUD nativo, móvel e minimizável.
+- O HUD nativo não depende de **Token Action HUD Core** nem de socketlib. Powers continuam usando `Item.roll()` e preservam todo o fluxo do sistema.
+- Depois da atualização, desative os módulos externos **D616 Extempore Effects**, **Token Action HUD Multiverse-D616** e **Token Action HUD Core**.
 
 ## Atualização v0.1.69 — Atributos nos ataques
 
@@ -68,7 +85,9 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 - Os controles mostram **Ação Padrão**, **Reação** e **Movimento** usados/máximos.
 - Clique acrescenta um uso; clique direito desfaz; `Shift` + clique em Movimento consome o restante; a seta circular zera a linha.
 - O rastreamento automático por armas, Powers e movimento do token permanece ativo, inclusive quando a janela está fechada.
-- A paleta do Token HUD contém somente condições D616, condições customizadas do sistema e condições do módulo **D616 Extempore Effects**.
+- A paleta do Token HUD contém somente as condições nativas D616 e as condições atualmente salvas no gerenciador customizado do sistema.
+- Powers com duração Concentração criam Active Effects transitórios diretamente no token; eles aparecem no painel lateral enquanto ativos, mas nunca entram na paleta ou no editor de condições customizadas.
+- Condições de outros módulos não entram automaticamente na paleta; para disponibilizá-las no Token HUD, cadastre-as em **Configurações do Sistema → Condições (D616)**.
 
 ## Atualização v0.1.56 — Dano por alvo
 
@@ -99,6 +118,7 @@ Esta versão atualiza o pacote para a geração 14 do Foundry VTT, mantendo a es
 
 - Foundry Virtual Tabletop v14.
 - Instalação na pasta: `{UserData}/Data/systems/multiverse-d616/`.
+- Nenhum módulo é obrigatório para as condições automáticas de Concentração ou para o HUD de Ações nativo.
 
 ## Instalação manual
 
@@ -126,6 +146,8 @@ https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.js
 - Chat Power Details
 - Damage Reduction Helper
 - Conditions HUD
+- Condições automáticas de Powers em Concentração
+- HUD de Ações para ABILITIES e POWERS
 - Charactermancer (assistente de criação)
 - PDF Export
 - Power Sets custom (suporte a Power Sets novos sem crash na ficha)

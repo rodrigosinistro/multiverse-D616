@@ -1,0 +1,247 @@
+/* Multiverse-D616 native Token Action HUD */
+
+#mmrpg-native-action-hud {
+  --mmrpg-action-hud-accent: #e88420;
+  --mmrpg-action-hud-bg: rgba(13, 13, 18, 0.95);
+  position: fixed;
+  z-index: 80;
+  display: grid;
+  grid-template-columns: max-content;
+  width: max-content;
+  min-width: 238px;
+  max-width: calc(100vw - 16px);
+  color: #f3eee7;
+  background: var(--mmrpg-action-hud-bg);
+  border: 1px solid rgba(232, 132, 32, 0.65);
+  border-radius: 6px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.65);
+  font-family: var(--font-primary, "Roboto Condensed", sans-serif);
+  user-select: none;
+}
+
+#mmrpg-native-action-hud.is-dragging {
+  opacity: 0.92;
+  cursor: grabbing;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__header {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 30px;
+  align-items: center;
+  min-height: 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__drag {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  cursor: grab;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__drag:active {
+  cursor: grabbing;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__drag img {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  filter: drop-shadow(0 0 2px rgba(232, 132, 32, 0.8));
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__actor {
+  overflow: hidden;
+  padding: 0 6px;
+  color: #ddd5cb;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__collapse {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  padding: 0;
+  color: #d9d2ca;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__collapse:hover,
+#mmrpg-native-action-hud .mmrpg-native-action-hud__collapse:focus-visible {
+  color: var(--mmrpg-action-hud-accent);
+  text-shadow: 0 0 5px rgba(232, 132, 32, 0.8);
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__tab {
+  min-height: 32px;
+  margin: 0;
+  padding: 4px 12px;
+  color: #cfc7bd;
+  background: rgba(255, 255, 255, 0.025);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__tab + .mmrpg-native-action-hud__tab {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__tab:hover,
+#mmrpg-native-action-hud .mmrpg-native-action-hud__tab:focus-visible,
+#mmrpg-native-action-hud .mmrpg-native-action-hud__tab.is-active {
+  color: #fff;
+  background: rgba(232, 132, 32, 0.13);
+  border-bottom-color: var(--mmrpg-action-hud-accent);
+  text-shadow: 0 0 4px rgba(232, 132, 32, 0.55);
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__body {
+  box-sizing: border-box;
+  padding: 5px;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__body.is-abilities {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(112px, 1fr));
+  gap: 4px;
+  width: 100%;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__body.is-powers {
+  display: grid;
+  grid-template-columns: max-content;
+  align-items: stretch;
+  justify-items: stretch;
+  gap: 4px;
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  overflow: visible;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-height: 31px;
+  margin: 0;
+  padding: 3px 7px;
+  color: #eee7df;
+  background: linear-gradient(180deg, rgba(61, 58, 62, 0.95), rgba(34, 32, 36, 0.97));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  box-shadow: none;
+  font-size: 12px;
+  line-height: 1.15;
+  text-align: left;
+  cursor: pointer;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action:hover,
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action:focus-visible {
+  color: #fff;
+  background: linear-gradient(180deg, rgba(105, 72, 42, 0.98), rgba(56, 39, 29, 0.98));
+  border-color: var(--mmrpg-action-hud-accent);
+  box-shadow: 0 0 5px rgba(232, 132, 32, 0.35);
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.is-busy {
+  opacity: 0.65;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.ability {
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 112px;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.ability .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.ability .value {
+  flex: 0 0 auto;
+  color: #ffb25f;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.power {
+  justify-self: stretch;
+  width: 100%;
+  min-width: max-content;
+  max-width: none;
+  gap: 7px;
+  padding-right: 10px;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.power img {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  border: 0;
+  border-radius: 3px;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.power .name {
+  flex: 0 0 auto;
+  width: max-content;
+  min-width: max-content;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__empty {
+  min-width: 228px;
+  margin: 0;
+  padding: 10px;
+  color: #bfb7ad;
+  font-size: 12px;
+  font-style: italic;
+  text-align: center;
+}
+
+#mmrpg-native-action-hud.is-collapsed .mmrpg-native-action-hud__tabs,
+#mmrpg-native-action-hud.is-collapsed .mmrpg-native-action-hud__body {
+  display: none;
+}
+
+@media (max-width: 520px) {
+  #mmrpg-native-action-hud .mmrpg-native-action-hud__body.is-abilities {
+    grid-template-columns: minmax(180px, 1fr);
+  }
+}

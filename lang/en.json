@@ -107,7 +107,20 @@
     "AbilityModifier": "Ability Modifier",
     "RollSituationalBonus": "Situational Bonus?",
     "RollMode": "Roll Mode",
-    "target": "TARGET"
+    "target": "TARGET",
+    "ActionHud": {
+      "Settings": {
+        "EnabledName": "Native Action HUD",
+        "EnabledHint": "Shows ABILITIES and POWERS when a token is selected, without Token Action HUD Core."
+      },
+      "Abilities": "ABILITIES",
+      "Powers": "POWERS",
+      "NoPowers": "No actionable Powers.",
+      "NoPermission": "You do not have permission to use this actor's actions.",
+      "Collapse": "Collapse HUD",
+      "Expand": "Expand HUD",
+      "Drag": "Drag to move"
+    }
   },
   "MMHT": {
     "Settings": {
