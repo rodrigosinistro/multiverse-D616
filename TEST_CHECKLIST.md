@@ -1,4 +1,4 @@
-# Checklist de teste — v0.1.73
+# Checklist de teste — v0.1.74
 
 Use uma cópia do mundo no Foundry VTT v14 antes de substituir a versão usada na campanha.
 
@@ -8,7 +8,7 @@ Use uma cópia do mundo no Foundry VTT v14 antes de substituir a versão usada n
 2. Faça backup de `Data/worlds` e da pasta atual `Data/systems/multiverse-d616`.
 3. Substitua a pasta do sistema pela pasta `multiverse-d616` deste ZIP.
 4. Desative **D616 Extempore Effects**, **Token Action HUD Multiverse-D616** e **Token Action HUD Core**.
-5. Reinicie o Foundry VTT e confirme a versão **0.1.73**.
+5. Reinicie o Foundry VTT e confirme a versão **0.1.74**.
 
 ## Fórmula e total dos ataques
 
@@ -86,6 +86,19 @@ Use uma cópia do mundo no Foundry VTT v14 antes de substituir a versão usada n
 23. Passe o turno e confirme que Ação, Reação e Movimento do novo combatente começam zerados conforme a regra implementada.
 24. Feche e reabra a janela em contas diferentes e confirme que posição, tamanho e estado são preservados separadamente em cada navegador.
 25. Confirme que abrir o quadro não troca a ferramenta ativa, não bloqueia o canvas e não causa atualização contínua da interface.
+## AutoAnimations em Powers de Concentração
+
+1. Ative **AutoAnimations**, **Sequencer** e os assets JB2A usados no mundo.
+2. Remova qualquer entrada manual de teste para o mesmo Power em **Automatic Recognition → Active Effects**, para que o teste valide apenas a configuração salva no próprio Power.
+3. Abra um Power com duração **Concentração/Concentration** e configure nele uma animação **On Token** persistente, por exemplo `Shield → Complete → Blue`.
+4. Use o Power e confirme que o sistema cria o Active Effect específico do Power e que a animação configurada diretamente no Item aparece no token.
+5. Mova o token e confirme que o efeito persistente o acompanha.
+6. Remova somente a condição específica do Power e confirme que a animação desaparece junto com o Active Effect.
+7. Repita e remova a condição genérica **Concentração N**; confirme que o Active Effect específico e a animação persistente também são encerrados.
+8. Configure dois personagens com Powers de mesmo nome, mas animações/cores diferentes, e confirme que cada um usa sua própria configuração do Item.
+9. Reutilize o mesmo Power após alterar sua configuração A-A e confirme que o Active Effect recebe a nova configuração sem duplicar a condição nem consumir outro nível de Concentração.
+10. Desative AutoAnimations/JB2A e confirme que a mecânica normal de Concentração continua funcionando sem erros no console.
+
 ## Integrações
 
 1. Confirme que os três módulos externos listados na seção Instalação estão desativados.

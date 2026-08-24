@@ -1,6 +1,12 @@
-# Migração 0.1.73
+# Migração 0.1.74
 
-Esta versão não altera Items, Combats ou compêndios. O HUD de Ações nativo da v0.1.72 é preservado integralmente.
+Esta versão não altera Items, Combats ou compêndios. O HUD de Ações nativo da v0.1.72 e o fluxo de Powers em Concentração da v0.1.73 são preservados.
+
+## AutoAnimations
+
+Powers de duração **Concentração/Concentration** agora transferem sua configuração `flags.autoanimations` para o Active Effect transitório criado pelo sistema. Isso permite configurar animações persistentes diretamente no Power, inclusive efeitos **On Token**, sem depender de uma entrada com o mesmo nome em **Automatic Recognition → Active Effects**.
+
+A integração é opcional: não há nova dependência obrigatória. Mundos sem AutoAnimations/JB2A continuam usando a Concentração normalmente.
 
 ## Módulos externos
 

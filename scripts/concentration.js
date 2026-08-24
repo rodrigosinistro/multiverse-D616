@@ -144,6 +144,28 @@ function findConcentrationPowerEffect(actor, item) {
   }) ?? null;
 }
 
+/**
+ * AutoAnimations stores each Item's custom animation under flags.autoanimations.
+ * A Power maintained by Concentration is represented by a separate transient
+ * ActiveEffect, so copy the AutoAnimations namespace to that effect. This lets
+ * AutoAnimations play the Power's own persistent/on-token configuration when
+ * the effect is created and stop it when that effect is removed.
+ */
+function getAutoAnimationsFlags(item) {
+  const flags = item?.flags?.autoanimations;
+  if (!flags || typeof flags !== "object") return null;
+
+  try {
+    return foundry.utils.deepClone(flags);
+  } catch (_error) {
+    try {
+      return structuredClone(flags);
+    } catch (_cloneError) {
+      return { ...flags };
+    }
+  }
+}
+
 function concentrationPowerEffectData(item, countsTowardLevel) {
   const statusId = concentrationPowerStatusId(item);
   const description = String(item?.system?.description ?? "").trim();
@@ -155,13 +177,21 @@ function concentrationPowerEffectData(item, countsTowardLevel) {
     description: description || "Power mantido por Concentração.",
     countsTowardLevel: countsTowardLevel !== false,
   };
+
+  const effectFlags = {
+    [MODULE_ID]: { concentrationPower: flags },
+  };
+
+  const autoAnimationsFlags = getAutoAnimationsFlags(item);
+  if (autoAnimationsFlags) effectFlags.autoanimations = autoAnimationsFlags;
+
   return {
     name: item?.name ?? "Power em Concentração",
     img: item?.img || `systems/${MODULE_ID}/icons/m.svg`,
     disabled: false,
     changes: [],
     statuses: [statusId],
-    flags: { [MODULE_ID]: { concentrationPower: flags } },
+    flags: effectFlags,
   };
 }
 
@@ -178,9 +208,15 @@ export async function createOrRefreshConcentrationPowerEffect(
     existingCounts === undefined ? countsTowardLevel : existingCounts
   );
   if (existing?.id && actor?.updateEmbeddedDocuments) {
-    return actor.updateEmbeddedDocuments("ActiveEffect", [
-      { _id: existing.id, ...data },
-    ]);
+    const updateData = { _id: existing.id, ...data };
+
+    // If the Power no longer has an AutoAnimations customization, clear an old
+    // copied configuration from the existing transient ActiveEffect.
+    if (!getAutoAnimationsFlags(item) && existing?.flags?.autoanimations) {
+      updateData["flags.-=autoanimations"] = null;
+    }
+
+    return actor.updateEmbeddedDocuments("ActiveEffect", [updateData]);
   }
   return actor.createEmbeddedDocuments("ActiveEffect", [data]);
 }

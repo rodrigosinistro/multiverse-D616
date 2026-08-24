@@ -1,3 +1,13 @@
+# v0.1.74
+
+- Integrado o **AutoAnimations** aos Active Effects transitórios de Powers em **Concentração/Concentration**.
+- Ao usar um Power concentrado com configuração própria em **A-A / AutoAnimations**, o sistema copia `flags.autoanimations` do Power para o Active Effect criado automaticamente.
+- Animações persistentes configuradas diretamente no Power, como escudos **On Token**, podem iniciar junto com a condição específica do Power e acompanhar o token.
+- Ao remover a condição específica ou encerrar a Concentração, o Active Effect continua sendo removido pelo fluxo nativo do sistema, permitindo ao AutoAnimations encerrar a animação persistente vinculada ao efeito.
+- Reutilizar o mesmo Power atualiza também a configuração AutoAnimations copiada; se a customização for removida do Power, a configuração antiga é limpa do Active Effect na próxima atualização.
+- Nenhuma dependência obrigatória foi adicionada: sem AutoAnimations/JB2A, o comportamento normal de Concentração do D616 permanece inalterado.
+- Mantida compatibilidade mínima e verificada com **Foundry VTT v14**.
+
 # v0.1.73
 
 - Removido o fluxo manual **Extempore Effects** do menu de contexto do chat.

@@ -4,10 +4,17 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 
 ## Versão
 
-- **Versão do sistema:** 0.1.73
+- **Versão do sistema:** 0.1.74
 - **Compatibilidade:** Foundry VTT v14 (`minimum: 14`, `verified: 14`)
 - **ID / pasta interna:** `multiverse-d616`
 - **Manifest:** `https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json`
+
+## Atualização v0.1.74 — AutoAnimations em Powers concentrados
+
+- Configurações personalizadas do **AutoAnimations** salvas diretamente em um Power de duração **Concentração/Concentration** passam a ser copiadas para o Active Effect transitório criado pelo sistema.
+- Isso permite configurar no próprio Power animações persistentes **On Token** (por exemplo, escudos JB2A) sem cadastrar cada Power no Automatic Recognition → Active Effects.
+- Cada Power preserva sua própria animação, variante e cor; personagens com Powers de mesmo nome podem usar visuais diferentes.
+- O sistema não depende do AutoAnimations nem do JB2A: se esses módulos não estiverem ativos, a mecânica de Concentração continua funcionando normalmente.
 
 ## Atualização v0.1.73 — Powers em Concentração
 
