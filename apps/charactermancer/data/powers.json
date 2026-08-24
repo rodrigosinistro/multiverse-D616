@@ -930,7 +930,7 @@
         "duration": "Instant",
         "range": "5 spaces times the character's rank",
         "cost": "5 Focus",
-        "effect": "O aliado recebe Redução de Dano de Health igual ao poder de Shield do personagem contra esse ataque. O escudo então ricocheteia de volta para o personagem.",
+        "effect": "O aliado recebe Redução de Dano de Health igual ao poder de Shield do personagem contra esse ataque. O escudo retorna ao personagem no início do próximo turno dele. Até esse momento, o personagem não pode usar outros poderes de Shield Bearer nem recebe os benefícios do escudo.",
         "quantity": 1,
         "ability": "",
         "attack": false,
@@ -2348,7 +2348,7 @@
         "duration": "Instant",
         "range": "10 espaços vezes o rank do personagem",
         "cost": "5 Focus",
-        "effect": "O personagem faz um ataque à distância contra um inimigo. Se o ataque for bem-sucedido, o inimigo sofre dano normal. Em um Sucesso Fantástico, o inimigo sofre o dobro de dano e é derrubado no chão. O escudo então retorna ao personagem.",
+        "effect": "O personagem faz um ataque à distância contra um inimigo. Se o ataque for bem-sucedido, o inimigo sofre dano normal. Em um Sucesso Fantástico, o inimigo sofre o dobro de dano e é derrubado no chão. O escudo retorna ao personagem no início do próximo turno dele. Até esse momento, o personagem não pode usar outros poderes de Shield Bearer nem recebe os benefícios do escudo.",
         "ability": "agl",
         "attackTarget": "agl",
         "attackKind": "ranged",
@@ -6527,7 +6527,7 @@
         "duration": "Instant",
         "range": "5 spaces times the character's rank",
         "cost": "5 Focus",
-        "effect": "O inimigo tem desvantagem no ataque. Em seguida, o escudo volta para o personagem.",
+        "effect": "O inimigo tem desvantagem no ataque. Em seguida, O escudo retorna ao personagem no início do próximo turno dele. Até esse momento, o personagem não pode usar outros poderes de Shield Bearer nem recebe os benefícios do escudo.",
         "ability": "agl",
         "attackTarget": "agl",
         "attackKind": "ranged",
@@ -19771,7 +19771,7 @@
         "duration": "Instant",
         "range": "10 spaces times the character's rank",
         "cost": "10 Focus",
-        "effect": "O personagem realiza um ataque à distância contra um alvo. Se o ataque for bem-sucedido, o alvo sofre dano normal. Em um Sucesso Fantástico, o alvo também é derrubado no chão (prone), e o personagem pode realizar um ataque extra contra outro alvo, adicionando a distância extra entre os dois alvos na nova rolagem de ataque. Isso pode ser repetido até que um ataque não seja um Sucesso Fantástico. Quando os ataques terminam, o escudo retorna ao personagem.",
+        "effect": "O personagem realiza um ataque à distância contra um alvo. Se o ataque for bem-sucedido, o alvo sofre dano normal. Em um Sucesso Fantástico, o alvo também é derrubado no chão (prone), e o personagem pode realizar um ataque extra contra outro alvo, adicionando a distância extra entre os dois alvos na nova rolagem de ataque. Isso pode ser repetido até que um ataque não seja um Sucesso Fantástico. Quando os ataques terminam, O escudo retorna ao personagem no início do próximo turno dele. Até esse momento, o personagem não pode usar outros poderes de Shield Bearer nem recebe os benefícios do escudo.",
         "ability": "agl",
         "attackTarget": "agl",
         "attackKind": "ranged",
@@ -20659,6 +20659,252 @@
         "default": 0
       },
       "_id": "zwMNsvxAe63Xdw8S"
+    },
+    {
+      "name": "Control Emotion",
+      "type": "power",
+      "img": "systems/multiverse-d616/icons/super-powers.svg",
+      "system": {
+        "description": "O personagem exerce controle intenso sobre as emoções de um alvo.",
+        "powerSet": "Telepathy",
+        "prerequisites": "Sense Emotion, Sway Emotion, Rank 2",
+        "action": "Standard",
+        "trigger": "",
+        "duration": "Concentration",
+        "range": "10 spaces",
+        "cost": "5 Focus",
+        "effect": "Escolha um alvo dentro do alcance e linha de visão e faça um teste de Ego contra a defesa de Ego dele. Em caso de sucesso, o alvo sente as emoções escolhidas pelo personagem, inclusive emoções que normalmente não sentiria. Em um Fantastic success, o alvo deve agir imediatamente de acordo com essas emoções, sem considerar as consequências. Se isso puder levá-lo a fazer algo que normalmente consideraria repreensível, ele pode fazer um teste de Ego contra a defesa de Ego do personagem para se libertar. Em um Fantastic success nesse teste, também descobre quem o influenciou e fica imune a novas influências por um dia.",
+        "quantity": 1,
+        "ability": "ego",
+        "attack": true,
+        "formula": "{1d6,1dm,1d6}",
+        "modifiers": [],
+        "numbered": 0,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "isElemental": false
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "9e745fc9dcc37bb2",
+      "_stats": {
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.75",
+        "createdTime": 1787544154694,
+        "modifiedTime": 1787544154694,
+        "lastModifiedBy": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0
+      },
+      "_id": "c960d21c9abe1354"
+    },
+    {
+      "name": "Control Group Emotion",
+      "type": "power",
+      "img": "systems/multiverse-d616/icons/super-powers.svg",
+      "system": {
+        "description": "O personagem exerce controle intenso sobre as emoções de um grupo.",
+        "powerSet": "Telepathy",
+        "prerequisites": "Control Emotion, Sense Emotion, Sway Emotion, Rank 4",
+        "action": "Standard",
+        "trigger": "",
+        "duration": "Concentration",
+        "range": "10 spaces",
+        "cost": "15 Focus",
+        "effect": "Designe um espaço dentro da linha de visão. O ataque pode afetar cada alvo escolhido em até 10 espaços desse ponto. Faça um único teste de Ego e compare o resultado à defesa de Ego de cada alvo, aplicando os mesmos resultados de Control Emotion.",
+        "quantity": 1,
+        "ability": "ego",
+        "attack": true,
+        "formula": "{1d6,1dm,1d6}",
+        "modifiers": [],
+        "numbered": 0,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "isElemental": false
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "9e745fc9dcc37bb2",
+      "_stats": {
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.75",
+        "createdTime": 1787544154694,
+        "modifiedTime": 1787544154694,
+        "lastModifiedBy": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0
+      },
+      "_id": "400ed3f5a55b0f9b"
+    },
+    {
+      "name": "Sense Emotion",
+      "type": "power",
+      "img": "systems/multiverse-d616/icons/super-powers.svg",
+      "system": {
+        "description": "O personagem consegue sentir as emoções de um alvo.",
+        "powerSet": "Telepathy",
+        "prerequisites": "",
+        "action": "Standard",
+        "trigger": "",
+        "duration": "Concentration",
+        "range": "10 spaces",
+        "cost": "",
+        "effect": "Escolha um alvo dentro do alcance e linha de visão e faça um teste de Ego contra a defesa de Ego dele. Em caso de sucesso, o personagem entende como o alvo está se sentindo. Em um Fantastic success, também entende o motivo.",
+        "quantity": 1,
+        "ability": "ego",
+        "attack": true,
+        "formula": "{1d6,1dm,1d6}",
+        "modifiers": [],
+        "numbered": 0,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "isElemental": false
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "9e745fc9dcc37bb2",
+      "_stats": {
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.75",
+        "createdTime": 1787544154695,
+        "modifiedTime": 1787544154695,
+        "lastModifiedBy": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0
+      },
+      "_id": "4a93e0bab0b2b03c"
+    },
+    {
+      "name": "Sway Emotion",
+      "type": "power",
+      "img": "systems/multiverse-d616/icons/super-powers.svg",
+      "system": {
+        "description": "O personagem consegue manipular suavemente as emoções de um alvo.",
+        "powerSet": "Telepathy",
+        "prerequisites": "Sense Emotion",
+        "action": "Standard",
+        "trigger": "",
+        "duration": "Concentration",
+        "range": "10 spaces",
+        "cost": "",
+        "effect": "Escolha um alvo dentro do alcance e linha de visão e faça um teste de Ego contra a defesa de Ego dele. Em caso de sucesso, o alvo sente emoções escolhidas pelo personagem, mas apenas emoções suaves que possam levá-lo a fazer algo que já estivesse inclinado a fazer. Em um Fantastic success, o alvo não percebe a influência e acredita que sempre se sentiu daquela forma.",
+        "quantity": 1,
+        "ability": "ego",
+        "attack": true,
+        "formula": "{1d6,1dm,1d6}",
+        "modifiers": [],
+        "numbered": 0,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "isElemental": false
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "9e745fc9dcc37bb2",
+      "_stats": {
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.75",
+        "createdTime": 1787544154695,
+        "modifiedTime": 1787544154695,
+        "lastModifiedBy": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0
+      },
+      "_id": "265c33312df59a8e"
+    },
+    {
+      "name": "Iconic Item",
+      "type": "power",
+      "img": "systems/multiverse-d616/icons/super-powers.svg",
+      "system": {
+        "description": "O personagem possui algo que lhe dá acesso a um poder incrível.",
+        "powerSet": "Basic",
+        "prerequisites": "",
+        "action": "",
+        "trigger": "",
+        "duration": "Permanent",
+        "range": "",
+        "cost": "",
+        "effect": "O personagem é conhecido por possuir e usar um item único e poderoso, como Mjolnir ou o escudo do Capitão América. O Narrador deve aprovar os detalhes de qualquer novo item icônico. Este poder pode ser adquirido mais de uma vez, cada vez para um item diferente. Pode substituir Iconic Weapon, se o jogador desejar.",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "modifiers": [],
+        "numbered": 0,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "isElemental": false
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "bbe663a787c7ec04",
+      "_stats": {
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.75",
+        "createdTime": 1787544154695,
+        "modifiedTime": 1787544154695,
+        "lastModifiedBy": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0
+      },
+      "_id": "69b22b0631e25e41"
+    },
+    {
+      "name": "Power Cosmic",
+      "type": "power",
+      "img": "systems/multiverse-d616/icons/super-powers.svg",
+      "system": {
+        "description": "O personagem tem acesso ao Power Cosmic e pode realizar uma enorme variedade de feitos.",
+        "powerSet": "Basic",
+        "prerequisites": "Rank 5, Weird Science: Power Cosmic origin",
+        "action": "Standard",
+        "trigger": "",
+        "duration": "Varies",
+        "range": "",
+        "cost": "5 or more Focus",
+        "effect": "O personagem pode usar qualquer outro poder para o qual tenha Rank suficiente, mesmo sem cumprir os demais pré-requisitos. Ele paga o custo normal de Focus desse poder +5 Focus. Se a duração do poder usado for Permanent, ela passa a ser Concentration. Se for um poder Permanent numerado, o custo é 5 Focus vezes o número do poder (por exemplo, Mighty 3 custa 15 Focus).",
+        "quantity": 1,
+        "ability": "",
+        "attack": false,
+        "formula": "{1d6,1dm,1d6}",
+        "modifiers": [],
+        "numbered": 0,
+        "attackRange": 0,
+        "attackMultiplier": 0,
+        "isElemental": false
+      },
+      "flags": {},
+      "effects": [],
+      "folder": "bbe663a787c7ec04",
+      "_stats": {
+        "coreVersion": "14.365",
+        "systemId": "multiverse-d616",
+        "systemVersion": "0.1.75",
+        "createdTime": 1787544154695,
+        "modifiedTime": 1787544154695,
+        "lastModifiedBy": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0
+      },
+      "_id": "4c105215c4ef5fbd"
     }
   ],
   "source": {

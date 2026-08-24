@@ -176,6 +176,13 @@
       "name": "Infectado (Infected)",
       "icon": "icons/m.svg",
       "description": "Exposição por ar (até 3 espaços) ou contato; teste imediato de Resilience vs TN (padrão 12). Sucesso fantástico = imunidade por 1 dia."
+    },
+    {
+      "id": "mmrpg.shield-thrown",
+      "name": "Escudo Arremessado (Shield Thrown)",
+      "icon": "icons/weapons.svg",
+      "description": "O escudo foi arremessado e só retorna no início do próximo turno do personagem. Até lá, ele não pode usar poderes de Shield Bearer nem recebe os benefícios do escudo.",
+      "remove": "Retorna automaticamente no início do próximo turno do personagem."
     }
   ]
 }

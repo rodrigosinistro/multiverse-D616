@@ -1,3 +1,28 @@
+# v0.1.76
+
+- Atualizados os **compêndios nativos** para acompanhar o conteúdo de Secret Wars já integrado ao Charactermancer.
+- Compêndio **Powers**: adicionados **Control Emotion**, **Control Group Emotion**, **Sense Emotion**, **Sway Emotion**, **Iconic Item** e **Power Cosmic**.
+- Compêndio **Traits**: adicionados **From Range**, **Hard to Kill** e **The Hunger**.
+- Compêndio **Tags**: adicionados **Ageless**, **Allspeak**, **Media Awareness**, **Signature Item** e **Worthy**.
+- Compêndio **Origins**: adicionados **Monstrous: Marvel Zombie** e **Weird Science: Power Cosmic**, mantendo a limitação de Rank 5 da origem Power Cosmic.
+- Nenhuma regra da v0.1.75 foi alterada; esta versão sincroniza os compêndios com o conteúdo já validado no Charactermancer.
+- Mantida compatibilidade mínima e verificada com **Foundry VTT v14**.
+
+# v0.1.75
+
+- Atualizadas regras selecionadas da **Secret Wars Expansion (2026)**.
+- **Resize / Flight:** mudanças de tamanho não recalculam mais a Flight Speed; o voo usa a Run Speed regular como base, conforme a nova clarificação.
+- **Fantastic Initiative:** um resultado Fantastic na iniciativa cria uma **Rodada Bônus** antes da Rodada 1; personagens com **Danger Sense** também participam, exceto quando Surprised.
+- **Ultimate Fantastic Initiative (6M6):** durante a Rodada Bônus, o personagem pode escolher um único Action Check para transformar o Marvel Die em **M**.
+- O Quadro de Controle de Turno e o Combat Tracker nativo respeitam a ordem exclusiva dos participantes da Rodada Bônus.
+- **Shield Bearer:** Hurled Shield Bash, Hurled Shield Block, Hurled Shield Deflection e Rico-Shield aplicam a nova condição **Escudo Arremessado (Shield Thrown)**; o escudo retorna automaticamente no início do próximo turno do personagem.
+- Enquanto o escudo está arremessado, outros Powers de Shield Bearer ficam bloqueados e os Active Effects de Health Damage Reduction concedidos pelos Powers Shield são temporariamente desativados e restaurados no retorno.
+- **Mythic Origins:** Mythic, Mythic: Asgardian e Mythic: Olympian agora concedem automaticamente a tag **Allspeak** no Charactermancer.
+- **Elemental Control:** adicionado o elemento **Plants**, cujo efeito em Fantastic success é **Target is grabbed**.
+- Charactermancer atualizado com conteúdo de Secret Wars: Origins **Monstrous: Marvel Zombie** e **Weird Science: Power Cosmic**; Traits **From Range**, **Hard to Kill** e **The Hunger**; Tags **Ageless**, **Allspeak**, **Media Awareness**, **Signature Item** e **Worthy**; Powers **Control Emotion**, **Control Group Emotion**, **Sense Emotion**, **Sway Emotion**, **Iconic Item** e **Power Cosmic**.
+- **Self-Sacrifice não foi automatizado nesta versão.**
+- Mantida compatibilidade mínima e verificada com **Foundry VTT v14**.
+
 # v0.1.74
 
 - Integrado o **AutoAnimations** aos Active Effects transitórios de Powers em **Concentração/Concentration**.

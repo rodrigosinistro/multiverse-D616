@@ -731,7 +731,12 @@ async _preloadKindFromPacks(kind){
       src.filter(o=> keyOf(o).includes(q) || (o.system?.description||"").toLowerCase().includes(q)).forEach(o=>{
         const row = document.createElement("div"); row.className="mmc-pwr";
         const pickKey = keyOf(o);
-	    row.innerHTML = `<div class="name">${o.name}</div><div class="desc">${o.system?.description||""}</div><div><button class="mmc-btn" data-pick="${pickKey}">${MMCCharactermancer.mmcLocalize("MMC.Select", "Selecionar")}</button></div>`;
+        const minimumRank = kind === "origin" ? Number(o.system?.minimumRank ?? 0) || 0 : 0;
+        const rankBlocked = minimumRank > Number(this.state.rank ?? 1);
+        const action = rankBlocked
+          ? `<button class="mmc-btn" disabled title="Requer Rank ${minimumRank}">Rank ${minimumRank}</button>`
+          : `<button class="mmc-btn" data-pick="${pickKey}">${MMCCharactermancer.mmcLocalize("MMC.Select", "Selecionar")}</button>`;
+	    row.innerHTML = `<div class="name">${o.name}</div><div class="desc">${o.system?.description||""}</div><div>${action}</div>`;
         list.appendChild(row);
       });
       list.querySelectorAll("[data-pick]").forEach(btn=> btn.addEventListener("click", (ev)=>{

@@ -1,3 +1,45 @@
+# Checklist adicional — v0.1.76 / Compêndios Secret Wars
+
+1. Abra o compêndio **Powers** e confirme os 6 novos Powers: Control Emotion, Control Group Emotion, Sense Emotion, Sway Emotion, Iconic Item e Power Cosmic.
+2. Abra o compêndio **Traits** e confirme From Range, Hard to Kill e The Hunger.
+3. Abra o compêndio **Tags** e confirme Ageless, Allspeak, Media Awareness, Signature Item e Worthy.
+4. Abra o compêndio **Origins** e confirme Monstrous: Marvel Zombie e Weird Science: Power Cosmic.
+5. Arraste pelo menos um item novo de cada compêndio para uma ficha e confirme que a ficha abre sem erro e preserva descrição/restrições.
+6. Confirme que as regras da v0.1.75 (Resize/Flight, Fantastic Initiative 6M6, Shield Thrown, Allspeak e Plants) continuam funcionando.
+
+# Checklist adicional — v0.1.75 / Secret Wars
+
+## Resize / Flight
+1. Use um personagem com Flight e anote a Flight Speed em tamanho Average.
+2. Altere o tamanho para Small, Big, Huge e outros tamanhos via efeitos de Resize.
+3. Confirme que Run/defesas/reach mudam conforme os efeitos de tamanho, mas **Flight Speed permanece igual à velocidade regular calculada antes do Resize**.
+
+## Fantastic Initiative e 6M6
+1. Inicie um combate com pelo menos três combatentes e force/teste um resultado Fantastic na iniciativa de apenas um deles.
+2. Confirme que o combate abre uma **Rodada Bônus** apenas com os elegíveis e depois inicia a Rodada 1 completa.
+3. Confirme que **Danger Sense** participa da Rodada Bônus mesmo sem Fantastic e que Surprised impede essa participação.
+4. Force uma iniciativa **6M6** e, durante o turno bônus desse combatente, faça um Action Check.
+5. Confirme o diálogo de **Ultimate Fantastic Initiative**; escolha usar e confirme que o Marvel Die é mostrado/contado como **M**.
+6. Confirme que o benefício 6M6 não pode ser usado novamente no mesmo combate e que escolher “Guardar” mantém o benefício disponível para um teste posterior da mesma Rodada Bônus.
+7. Teste avançar/retroceder tanto pelo Quadro de Controle de Turno quanto pelo Combat Tracker nativo.
+
+## Shield Bearer
+1. Use Shield 1–4 e confirme a Health Damage Reduction normal.
+2. Use Hurled Shield Bash, Hurled Shield Block, Hurled Shield Deflection ou Rico-Shield.
+3. Confirme a condição **Escudo Arremessado (Shield Thrown)** e que a Health Damage Reduction do Shield deixa de valer imediatamente.
+4. Tente usar outro Power de Shield Bearer antes do retorno e confirme que o sistema bloqueia o uso.
+5. Avance até o início do próximo turno do personagem e confirme que a condição some, a Health Damage Reduction é restaurada e os Powers voltam a funcionar.
+6. Remova manualmente a condição antes do retorno e confirme que os Active Effects de Shield também são restaurados.
+
+## Mythic / Plants / Charactermancer
+1. No Charactermancer, selecione Mythic, Mythic: Asgardian e Mythic: Olympian em testes separados e confirme que **Allspeak** é concedido.
+2. Abra um Power de Elemental Control e confirme que **Plants** aparece no seletor de Element; confirme no tooltip/regra que Fantastic deixa o alvo Grabbed.
+3. Confirme no Charactermancer os Origins Monstrous: Marvel Zombie e Weird Science: Power Cosmic.
+4. Confirme os Traits From Range, Hard to Kill e The Hunger; e as Tags Ageless, Allspeak, Media Awareness, Signature Item e Worthy.
+5. Confirme os Powers Control Emotion, Control Group Emotion, Sense Emotion, Sway Emotion, Iconic Item e Power Cosmic.
+
+---
+
 # Checklist de teste — v0.1.74
 
 Use uma cópia do mundo no Foundry VTT v14 antes de substituir a versão usada na campanha.

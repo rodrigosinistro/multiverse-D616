@@ -4,10 +4,30 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 
 ## Versão
 
-- **Versão do sistema:** 0.1.74
+- **Versão do sistema:** 0.1.76
 - **Compatibilidade:** Foundry VTT v14 (`minimum: 14`, `verified: 14`)
 - **ID / pasta interna:** `multiverse-d616`
 - **Manifest:** `https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json`
+
+
+## Atualização v0.1.76 — Compêndios Secret Wars
+
+- Sincronizados os compêndios nativos com o conteúdo regular já disponível no Charactermancer.
+- **Powers:** Control Emotion, Control Group Emotion, Sense Emotion, Sway Emotion, Iconic Item e Power Cosmic.
+- **Traits:** From Range, Hard to Kill e The Hunger.
+- **Tags:** Ageless, Allspeak, Media Awareness, Signature Item e Worthy.
+- **Origins:** Monstrous: Marvel Zombie e Weird Science: Power Cosmic.
+- Mantidas todas as automações e regras aprovadas da v0.1.75.
+
+## Atualização v0.1.75 — Regras de Secret Wars
+
+- Flight Speed deixa de acompanhar alterações de tamanho de Resize e permanece baseada na velocidade regular do personagem.
+- Fantastic na iniciativa cria uma **Rodada Bônus**; **6M6** concede uma oportunidade de transformar o Marvel Die em M em um teste dessa rodada.
+- Arremessar um escudo com Shield Bearer cria **Escudo Arremessado**, suspende os benefícios do escudo e bloqueia os demais Powers do conjunto até o início do próximo turno do personagem.
+- Mythic Origins passam a conceder **Allspeak**.
+- **Plants** foi adicionado ao Elemental Control (Fantastic: alvo fica Grabbed).
+- O Charactermancer recebe os novos Origins, Traits, Tags e Powers regulares apresentados/reproduzidos na Secret Wars Expansion.
+- Self-Sacrifice foi deliberadamente deixado fora desta atualização.
 
 ## Atualização v0.1.74 — AutoAnimations em Powers concentrados
 

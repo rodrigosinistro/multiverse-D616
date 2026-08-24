@@ -14,6 +14,7 @@ const SYSTEM_ID = "multiverse-d616";
 const FLAG_KEY = "turnTracker";
 const INITIATIVE_PHASE_FLAG = "initiativePhase";
 const INITIATIVE_RESOLUTION_FLAG = "initiativeResolution";
+const BONUS_ROUND_FLAG = "bonusRound";
 const SOCKET_NAME = `system.${SYSTEM_ID}`;
 const POPUP_ID = "m616-turn-tracker-window";
 const STORAGE_KEY = `${SYSTEM_ID}.turnTrackerWindow.v1`;
@@ -203,6 +204,10 @@ async function handleSocket(payload) {
     }
     if (payload.type === "initiativeResolutionRequest") {
       await applyInitiativeResolutionRequest(payload, requestingUser);
+      return;
+    }
+    if (payload.type === "ultimateFantasticConsumeRequest") {
+      await applyUltimateFantasticConsumeRequest(payload, requestingUser);
     }
   } catch (error) {
     console.error(`[${SYSTEM_ID}] Turn Tracker socket update failed`, error);
@@ -221,6 +226,66 @@ function hasInitiative(combatant) {
 function initiativePhase(combat) {
   const phase = combat?.getFlag?.(SYSTEM_ID, INITIATIVE_PHASE_FLAG);
   return phase?.active ? phase : null;
+}
+
+function bonusRound(combat) {
+  const state = combat?.getFlag?.(SYSTEM_ID, BONUS_ROUND_FLAG);
+  return state?.active ? state : null;
+}
+
+function initiativeMessageForCombatant(combat, combatant, promptId = "") {
+  if (!combat || !combatant) return null;
+  const messages = Array.from(game.messages?.contents ?? game.messages ?? []).reverse();
+  return messages.find((message) => {
+    const data = message?.getFlag?.(SYSTEM_ID, "initiative") ?? message?.flags?.[SYSTEM_ID]?.initiative;
+    if (!data) return false;
+    if (String(data.combatId ?? "") !== String(combat.id)) return false;
+    if (String(data.combatantId ?? "") !== String(combatant.id)) return false;
+    if (promptId && data.promptId && String(data.promptId) !== String(promptId)) return false;
+    return !!message.rolls?.length;
+  }) ?? null;
+}
+
+function activeDieResult(die) {
+  const result = die?.results?.find?.((entry) => entry.active && !entry.discarded) ??
+    die?.results?.find?.((entry) => !entry.discarded) ??
+    die?.results?.[0];
+  return result?.result == null ? null : Number(result.result);
+}
+
+function initiativeOutcomeFromMessage(message) {
+  const roll = message?.rolls?.[0];
+  if (!roll) return { fantastic: false, ultimate: false };
+  let pool = null;
+  const first = roll.terms?.[0];
+  if (first instanceof foundry.dice.terms.PoolTerm) pool = first;
+  else if (first instanceof foundry.dice.terms.ParentheticalTerm && first.roll?.terms?.[0] instanceof foundry.dice.terms.PoolTerm) {
+    pool = first.roll.terms[0];
+  }
+  if (!pool?.rolls || pool.rolls.length < 3) {
+    return { fantastic: !!roll.isFantastic, ultimate: false };
+  }
+  const left = activeDieResult(pool.rolls[0]?.terms?.[0]);
+  const marvel = activeDieResult(pool.rolls[1]?.terms?.[0]);
+  const right = activeDieResult(pool.rolls[2]?.terms?.[0]);
+  const fantastic = marvel === 1;
+  return { fantastic, ultimate: fantastic && left === 6 && right === 6 };
+}
+
+function actorHasPower(actor, name) {
+  const wanted = String(name ?? "").trim().toLowerCase();
+  return Array.from(actor?.items ?? []).some(
+    (item) => item?.type === "power" && String(item.name ?? "").trim().toLowerCase() === wanted
+  );
+}
+
+function actorIsSurprised(actor) {
+  try {
+    if (actor?.statuses?.has?.("mmrpg.surprised")) return true;
+  } catch (_) {}
+  return Array.from(actor?.effects ?? []).some(
+    (effect) => !effect?.disabled && Array.from(effect?.statuses ?? []).includes("mmrpg.surprised")
+  );
 }
 
 function initiativeModifierForCombatant(combatant) {
@@ -589,16 +654,59 @@ async function beginInitiativePhase(combat) {
 
 async function maybeStartCombatAfterInitiative(combat) {
   if (!isPrimaryGM() || initiativeAutoStartBusy || !combat || combat.started) return false;
+  const phase = initiativePhase(combat);
   if (
-    !initiativePhase(combat) ||
+    !phase ||
     pendingInitiativeCombatants(combat).length ||
     pendingInitiativeResolutions(combat).length
   ) return false;
 
+  // updateCombatant can fire before Foundry finishes creating the initiative
+  // ChatMessage. Wait for every final roll message so Fantastic / 6M6 is read
+  // from the actual kept dice, including Edge or Trouble.
+  const missingRollMessage = combatantsArray(combat).some(
+    (combatant) => !initiativeMessageForCombatant(combat, combatant, phase.promptId)
+  );
+  if (missingRollMessage) return false;
+
   initiativeAutoStartBusy = true;
   try {
+    const outcomes = new Map();
+    for (const combatant of combatantsArray(combat)) {
+      const message = initiativeMessageForCombatant(combat, combatant, phase.promptId);
+      outcomes.set(combatant.id, initiativeOutcomeFromMessage(message));
+    }
+
     await combat.unsetFlag(SYSTEM_ID, INITIATIVE_PHASE_FLAG);
     await combat.startCombat();
+
+    const ordered = Array.from(combat.turns ?? []);
+    const eligibleIds = ordered
+      .filter((combatant) => {
+        const actor = combatantActor(combatant);
+        if (!actor || combatant.defeated || actorIsSurprised(actor)) return false;
+        return outcomes.get(combatant.id)?.fantastic || actorHasPower(actor, "Danger Sense");
+      })
+      .map((combatant) => combatant.id);
+    const ultimateIds = ordered
+      .filter((combatant) => eligibleIds.includes(combatant.id) && outcomes.get(combatant.id)?.ultimate)
+      .map((combatant) => combatant.id);
+
+    if (eligibleIds.length) {
+      await combat.setFlag(SYSTEM_ID, BONUS_ROUND_FLAG, {
+        active: true,
+        eligibleIds,
+        ultimateIds,
+        usedUltimateIds: [],
+        startedAt: Date.now(),
+      });
+      const firstIndex = ordered.findIndex((combatant) => combatant.id === eligibleIds[0]);
+      if (firstIndex >= 0 && Number(combat.turn) !== firstIndex) await combat.update({ turn: firstIndex }, { m616BonusTransition: true });
+      const names = eligibleIds.map((id) => combat.combatants.get(id)?.name).filter(Boolean).join(", ");
+      await ChatMessage.create({
+        content: `<div class="m616-card"><b>Rodada Bônus</b><br>${escapeHtml(names)} podem agir antes da rodada principal.${ultimateIds.length ? "<br><b>6M6:</b> quem obteve Ultimate Fantastic pode transformar o Marvel Die em M em um teste desta rodada bônus." : ""}</div>`
+      });
+    }
     return true;
   } catch (error) {
     console.error(`[${SYSTEM_ID}] Could not auto-start combat after initiative`, error);
@@ -607,6 +715,119 @@ async function maybeStartCombatAfterInitiative(combat) {
   } finally {
     initiativeAutoStartBusy = false;
   }
+}
+
+function bonusOrderedIds(combat, state = bonusRound(combat)) {
+  if (!combat || !state) return [];
+  const allowed = new Set(state.eligibleIds ?? []);
+  return Array.from(combat.turns ?? []).map((combatant) => combatant.id).filter((id) => allowed.has(id));
+}
+
+async function advanceBonusTurn(combat, direction = 1) {
+  const state = bonusRound(combat);
+  if (!state) return direction < 0 ? combat.previousTurn() : combat.nextTurn();
+  const ids = bonusOrderedIds(combat, state);
+  if (!ids.length) {
+    await combat.unsetFlag(SYSTEM_ID, BONUS_ROUND_FLAG);
+    return combat.update({ turn: 0 }, { m616BonusTransition: true });
+  }
+  const currentId = combat.combatant?.id;
+  const pos = Math.max(0, ids.indexOf(currentId));
+  const targetPos = pos + (direction < 0 ? -1 : 1);
+
+  if (direction < 0) {
+    if (targetPos < 0) return false;
+    const index = Array.from(combat.turns ?? []).findIndex((combatant) => combatant.id === ids[targetPos]);
+    return index >= 0 ? combat.update({ turn: index }, { m616BonusTransition: true }) : false;
+  }
+
+  if (targetPos < ids.length) {
+    const index = Array.from(combat.turns ?? []).findIndex((combatant) => combatant.id === ids[targetPos]);
+    return index >= 0 ? combat.update({ turn: index }, { m616BonusTransition: true }) : false;
+  }
+
+  await combat.unsetFlag(SYSTEM_ID, BONUS_ROUND_FLAG);
+  ui.notifications?.info?.("Rodada Bônus encerrada. Começa a Rodada 1.");
+  return combat.update({ turn: 0 }, { m616BonusTransition: true });
+}
+
+async function consumeUltimateFantastic(combat, combatantId) {
+  const state = bonusRound(combat);
+  if (!state || !state.ultimateIds?.includes?.(combatantId)) return false;
+  const used = new Set(state.usedUltimateIds ?? []);
+  if (used.has(combatantId)) return false;
+  used.add(combatantId);
+  await combat.setFlag(SYSTEM_ID, BONUS_ROUND_FLAG, { ...state, usedUltimateIds: Array.from(used) });
+  schedulePopupRender({ force: true });
+  return true;
+}
+
+async function applyUltimateFantasticConsumeRequest(payload, requestingUser) {
+  const combat = combatForId(payload.combatId);
+  const combatant = combat?.combatants?.get?.(payload.combatantId);
+  if (!combat || !combatant || !canControl(combatant, requestingUser)) return false;
+  return consumeUltimateFantastic(combat, combatant.id);
+}
+
+async function requestUltimateFantastic(actor) {
+  const combat = game.combat;
+  const state = bonusRound(combat);
+  if (!combat?.started || !state || !actor) return false;
+  const combatant = combatantForActor(actor);
+  if (!combatant) return false;
+  if (!state.ultimateIds?.includes?.(combatant.id)) return false;
+  if (state.usedUltimateIds?.includes?.(combatant.id)) return false;
+
+  const content = `<p><b>${escapeHtml(combatant.name ?? actor.name)}</b> obteve <b>6M6</b> na iniciativa.</p><p>Transformar o Marvel Die em <b>M</b> neste teste?</p>`;
+  const DialogV2 = foundry.applications?.api?.DialogV2;
+  let useIt = false;
+  if (DialogV2?.wait) {
+    useIt = await DialogV2.wait({
+      window: { title: "Ultimate Fantastic Initiative" },
+      content,
+      modal: true,
+      buttons: [
+        {
+          action: "use",
+          label: "Usar 6M6",
+          icon: "fa-solid fa-burst",
+          default: true,
+          callback: () => true,
+        },
+        {
+          action: "save",
+          label: "Guardar",
+          icon: "fa-solid fa-hourglass-half",
+          callback: () => false,
+        },
+      ],
+      close: () => false,
+    });
+  } else {
+    useIt = await new Promise((resolve) => new Dialog({
+      title: "Ultimate Fantastic Initiative",
+      content,
+      buttons: { yes: { label: "Usar 6M6", callback: () => resolve(true) }, no: { label: "Guardar", callback: () => resolve(false) } },
+      default: "yes",
+      close: () => resolve(false),
+    }).render(true));
+  }
+  if (!useIt) return false;
+
+  if (game.user?.isGM) await consumeUltimateFantastic(combat, combatant.id);
+  else {
+    if (!primaryGM()) {
+      ui.notifications?.warn?.("É necessário um Mestre conectado para usar o 6M6.");
+      return false;
+    }
+    game.socket.emit(SOCKET_NAME, {
+      type: "ultimateFantasticConsumeRequest",
+      combatId: combat.id,
+      combatantId: combatant.id,
+      userId: game.user.id,
+    });
+  }
+  return true;
 }
 
 async function confirmEndCombat(combat) {
@@ -661,8 +882,8 @@ async function runCombatControl(action, button) {
   button?.classList?.add("is-busy");
   try {
     if (action === "start") return await beginInitiativePhase(combat);
-    if (action === "previous") return combat.started ? await combat.previousTurn() : false;
-    if (action === "next") return combat.started ? await combat.nextTurn() : false;
+    if (action === "previous") return combat.started ? await advanceBonusTurn(combat, -1) : false;
+    if (action === "next") return combat.started ? await advanceBonusTurn(combat, 1) : false;
     if (action === "end") {
       if (!combat.started || !(await confirmEndCombat(combat))) return false;
       return await combat.endCombat();
@@ -1046,6 +1267,8 @@ function renderCombatantRow(combatant, activeId) {
   const resources = TURN_TRACKER_RESOURCES
     .map((resource) => resourceButtonHtml(resource, state))
     .join("");
+  const bonus = bonusRound(combatant?.combat ?? game.combat);
+  const ultimateAvailable = bonus?.ultimateIds?.includes?.(combatant.id) && !bonus?.usedUltimateIds?.includes?.(combatant.id);
 
   const image = combatantImage(combatant);
   return `<article class="m616-popup-combatant${isActive ? " is-active" : ""}${defeated ? " is-defeated" : ""}"
@@ -1054,7 +1277,7 @@ function renderCombatantRow(combatant, activeId) {
       <img src="${escapeHtml(image)}" alt="" loading="lazy" decoding="async">
       <div class="m616-popup-combatant-name" title="${escapeHtml(name)}">
         <strong>${escapeHtml(name)}</strong>
-        <span>${isActive ? "Turno atual" : defeated ? "Derrotado" : pendingModifier || "Aguardando"}</span>
+        <span>${isActive ? (bonus ? `Turno atual · Rodada Bônus${ultimateAvailable ? " · 6M6 disponível" : ""}` : "Turno atual") : defeated ? "Derrotado" : pendingModifier || (bonus?.eligibleIds?.includes?.(combatant.id) ? "Rodada Bônus" : "Aguardando")}</span>
       </div>
       ${game.user?.isGM ? `<button type="button" class="m616-popup-reset" data-m616-popup-reset
         title="Zerar Ação Padrão, Reação e Movimento deste combatente">
@@ -1136,6 +1359,7 @@ function popupSignature(combat) {
     ];
   });
   const phase = initiativePhase(combat);
+  const bonus = bonusRound(combat);
   return JSON.stringify([
     combat.id,
     combat.name ?? "",
@@ -1144,6 +1368,10 @@ function popupSignature(combat) {
     combat.turn ?? null,
     activeId,
     phase?.promptId ?? "",
+    bonus?.active ?? false,
+    bonus?.eligibleIds ?? [],
+    bonus?.ultimateIds ?? [],
+    bonus?.usedUltimateIds ?? [],
     pendingInitiativeCombatants(combat).length,
     pendingInitiativeResolutions(combat).length,
     rows,
@@ -1179,10 +1407,13 @@ function renderPopup({ force = false } = {}) {
   const round = Number(combat.round ?? 0);
   const turn = Number(combat.turn ?? 0) + 1;
   const phase = initiativePhase(combat);
+  const bonus = bonusRound(combat);
   const pendingInitiatives = pendingInitiativeCombatants(combat).length;
   const pendingResolutions = pendingInitiativeResolutions(combat).length;
   const status = combat.started
-    ? `Rodada ${round || 1} · Turno ${turn}`
+    ? bonus
+      ? `Rodada Bônus · Turno ${turn}`
+      : `Rodada ${round || 1} · Turno ${turn}`
     : phase
       ? pendingInitiatives
         ? `Aguardando iniciativas · ${pendingInitiatives} pendente${pendingInitiatives === 1 ? "" : "s"}`
@@ -1529,7 +1760,8 @@ function combatantChangeAffectsPopup(changes = {}) {
 function combatChangeAffectsPopup(changes = {}) {
   return (
     ["turn", "round", "active", "started", "name"].some((key) => key in changes) ||
-    hasOwnPath(changes, `flags.${SYSTEM_ID}.${INITIATIVE_PHASE_FLAG}`)
+    hasOwnPath(changes, `flags.${SYSTEM_ID}.${INITIATIVE_PHASE_FLAG}`) ||
+    hasOwnPath(changes, `flags.${SYSTEM_ID}.${BONUS_ROUND_FLAG}`)
   );
 }
 
@@ -1571,6 +1803,8 @@ Hooks.once("ready", () => {
     getState: stateFor,
     reset: (combatant) => requestUpdate(combatant, { operation: "reset" }),
     resolveInitiative: requestInitiativeResolution,
+    requestUltimateFantastic,
+    isBonusRound: () => !!bonusRound(game.combat),
     openWindow: () => showPopup(true),
     closeWindow: () => showPopup(false),
   };
@@ -1623,6 +1857,25 @@ Hooks.on("deleteCombatant", (combatant) => {
 });
 Hooks.on("createCombat", () => schedulePopupRender({ force: true }));
 Hooks.on("deleteCombat", () => schedulePopupRender({ force: true }));
+Hooks.on("preUpdateCombat", (combat, changed, options = {}) => {
+  const bonus = bonusRound(combat);
+  if (!bonus || options?.m616BonusTransition || !isPrimaryGM()) return;
+  if (!("turn" in (changed ?? {}) || "round" in (changed ?? {}))) return;
+
+  // Foundry's native Combat Tracker normally advances through every combatant.
+  // During the Secret Wars bonus round, route those controls through the same
+  // eligible-only order used by the D616 tracker.
+  const currentRound = Number(combat.round ?? 1);
+  const requestedRound = Number(changed?.round ?? currentRound);
+  const currentTurn = Number(combat.turn ?? 0);
+  const requestedTurn = Number(changed?.turn ?? currentTurn);
+  const direction = requestedRound < currentRound || (requestedRound === currentRound && requestedTurn < currentTurn) ? -1 : 1;
+  void advanceBonusTurn(combat, direction).catch((error) =>
+    console.error(`[${SYSTEM_ID}] Native bonus-round navigation failed`, error)
+  );
+  return false;
+});
+
 Hooks.on("combatStart", (combat) => {
   initiativePromptOpenKey = "";
   resetActiveCombatant(combat).catch((error) =>

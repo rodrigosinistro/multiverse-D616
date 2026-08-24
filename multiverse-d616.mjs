@@ -14,6 +14,11 @@
 import { handleConcentrationOnUse } from "./scripts/concentration.js";
 import { calculateD616Damage } from "./scripts/damage-calculation.js";
 import { buildItemRollFormula } from "./scripts/roll-formula.mjs";
+import {
+  canUseShieldBearerPower,
+  markShieldThrown,
+  maybeRequestUltimateFantastic,
+} from "./scripts/secret-wars-rules.mjs";
 
 function mmGetMessageMode() {
   try {
@@ -196,10 +201,44 @@ class MarvelMultiverseRoll extends Roll {
     this.options.configured = true;
   }
 
+  /**
+   * Secret Wars: Ultimate Fantastic Initiative (6M6) can turn the Marvel die
+   * to M on one action check during the bonus round.
+   */
+  applyForcedMarvelM() {
+    if (!this._evaluated || !this.options?.forceMarvelM || !this.validD616Roll) return false;
+    const marvelDie = this.dice?.[1];
+    if (!marvelDie) return false;
+    const active = marvelDie.results?.find((result) => result.active && !result.discarded) ??
+      marvelDie.results?.find((result) => !result.discarded) ??
+      marvelDie.results?.[0];
+    if (!active) return false;
+
+    const oldValue = active.result === 1 ? 6 : Number(active.count ?? active.result ?? 0);
+    const oldTotal = Number(this.total ?? 0);
+    active.result = 1;
+    active.count = 6;
+    active.active = true;
+    active.discarded = false;
+    marvelDie._total = 6;
+
+    const delta = 6 - oldValue;
+    const pool = this.terms?.[0] instanceof foundry.dice.terms.PoolTerm
+      ? this.terms[0]
+      : this.terms?.[0]?.roll?.terms?.[0] instanceof foundry.dice.terms.PoolTerm
+        ? this.terms[0].roll.terms[0]
+        : null;
+    if (pool && Number.isFinite(Number(pool.total))) pool._total = Number(pool.total) + delta;
+    if (Number.isFinite(oldTotal)) this._total = oldTotal + delta;
+    this.options.ultimateFantasticApplied = true;
+    return true;
+  }
+
   /** @inheritdoc */
   async toMessage(messageData = {}, options = {}) {
     // Evaluate the roll now so we have the results available to determine edge mode
     if (!this._evaluated) await this.evaluate({});
+    this.applyForcedMarvelM();
 
     // Add appropriate edge mode message flavor and mmrpg roll flags
     messageData.flavor = messageData.flavor || this.options.flavor;
@@ -449,6 +488,10 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
    * @private
    */
   async roll() {
+    // Secret Wars: a shield that was hurled is unavailable until the start of
+    // this character's next turn.
+    if (!canUseShieldBearerPower(this.actor, this)) return;
+
     // Concentração: incrementa condição no token até o Rank (mmrpg.concentration.X)
     const __okConc = await handleConcentrationOnUse(this.actor, this);
     if (!__okConc) return;
@@ -489,13 +532,18 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       }</div>`,
     }, messageMode));
 
+    // The throw itself makes the shield unavailable even if the attack misses.
+    await markShieldThrown(this.actor, this);
+
     if (this.system.formula && this.system.ability) {
       // Retrieve roll data.
       const rollData = this.getRollData();
       // Invoke the roll and submit it to chat.
+      const useUltimateFantastic = await maybeRequestUltimateFantastic(this.actor);
       const roll = new CONFIG.Dice.MarvelMultiverseRoll(
         rollData.formula,
-        rollData.actor
+        rollData.actor,
+        useUltimateFantastic ? { forceMarvelM: true } : {}
       );
       // If you need to store the value first, uncomment the next line.
       // const result = await roll.evaluate();
@@ -730,6 +778,10 @@ MULTIVERSE_D616.movementTypes = {
 };
 
 MULTIVERSE_D616.elements = {
+  plants: {
+    label: "Plants",
+    fantasticEffect: "Target is grabbed.",
+  },
   air: {
     label: "Air",
     fantasticEffect: "Target is knocked prone for one round.",
@@ -3541,7 +3593,7 @@ render(force = false, options = {}) {
    * @param {Event} event   The originating click event
    * @private
    */
-  _onRoll(event) {
+  async _onRoll(event) {
     event.preventDefault();
     const element = event.currentTarget;
     const dataset = element.dataset;
@@ -3584,9 +3636,11 @@ render(force = false, options = {}) {
         }, messageMode));
       }
 
+      const useUltimateFantastic = await maybeRequestUltimateFantastic(this.actor);
       const roll = new CONFIG.Dice.MarvelMultiverseRoll(
         dataset.formula,
-        this.actor.getRollData()
+        this.actor.getRollData(),
+        useUltimateFantastic ? { forceMarvelM: true } : {}
       );
 
       roll.toMessage(
@@ -4043,7 +4097,7 @@ render(force = false, options = {}) {
    * @param {Event} event   The originating click event
    * @private
    */
-  _onRoll(event) {
+  async _onRoll(event) {
     event.preventDefault();
     const element = event.currentTarget;
     const dataset = element.dataset;
@@ -4067,9 +4121,11 @@ render(force = false, options = {}) {
         ? `${label} [damageType] ${dataset.damageType}`
         : label;
 
+      const useUltimateFantastic = await maybeRequestUltimateFantastic(this.actor);
       const roll = new CONFIG.Dice.MarvelMultiverseRoll(
         dataset.formula,
-        this.actor.getRollData()
+        this.actor.getRollData(),
+        useUltimateFantastic ? { forceMarvelM: true } : {}
       );
 
       roll.toMessage(
@@ -4862,6 +4918,42 @@ class MarvelMultiverseActorBase extends foundry.abstract
 
     this.attributes.init.value += this.abilities.vig.value;
 
+    // Secret Wars Resize clarification: Flight must be calculated from the
+    // character's regular Run Speed, not from the Run modifier caused by a
+    // temporary size change. Preserve other Run modifiers (such as Speed Run).
+    let regularRunForFlight = Number(this.movement.run.value ?? 0);
+    switch (String(this.size ?? "").toLowerCase()) {
+      case "small": regularRunForFlight += 1; break;
+      case "big": regularRunForFlight -= 1; break;
+      case "huge": regularRunForFlight /= 5; break;
+      case "gigantic": regularRunForFlight /= 20; break;
+      case "titanic": regularRunForFlight /= 80; break;
+      case "gargantuan": regularRunForFlight /= 320; break;
+    }
+
+    // Unusual Size is the one exception: its regular Flight Speed is calculated
+    // as Small for below-Small sizes and Big for above-Big sizes.
+    const hasUnusualSize = Array.from(this.parent?.items ?? []).some(
+      (item) => item?.type === "trait" && String(item?.name ?? "").trim().toLowerCase() === "unusual size"
+    );
+    if (hasUnusualSize) {
+      const size = String(this.size ?? "").toLowerCase();
+      if (["microscopic", "miniature", "tiny", "little"].includes(size)) regularRunForFlight -= 1;
+      else if (["huge", "gigantic", "titanic", "gargantuan"].includes(size)) regularRunForFlight += 1;
+    }
+
+    // Apply any non-size Run calculation before Flight uses it as its base.
+    switch (this.movement.run.calc) {
+      case "half": regularRunForFlight = Math.ceil(regularRunForFlight * 0.5); break;
+      case "double": regularRunForFlight *= 2; break;
+      case "triple": regularRunForFlight *= 3; break;
+      case "rank": {
+        const val = regularRunForFlight === 0 ? 1 : regularRunForFlight;
+        regularRunForFlight = val * this.attributes.rank.value;
+        break;
+      }
+    }
+
     for (const key in this.movement) {
       this.movement[key].label =
         game.i18n.localize(CONFIG.MULTIVERSE_D616.movementTypes[key].label) ??
@@ -4879,15 +4971,10 @@ class MarvelMultiverseActorBase extends foundry.abstract
           this.movement[key].value *= 3;
           break;
         case "runspeed":
-          this.movement[key].value = this.movement.run.value;
+          this.movement[key].value = key === "flight" ? regularRunForFlight : this.movement.run.value;
           break;
         case "rank": {
-          // Flight in MMRPG is based on current Run Speed (which can itself be modified),
-          // then scaled by character Rank.
-          // This also keeps backward compatibility with older content that attempted to set
-          // flight.calc twice (runspeed then rank) via Active Effects.
-          const base =
-            key === "flight" ? this.movement.run.value : this.movement[key].value;
+          const base = key === "flight" ? regularRunForFlight : this.movement[key].value;
           const val = base === 0 ? 1 : base;
           this.movement[key].value = val * this.attributes.rank.value;
           break;
@@ -4932,6 +5019,42 @@ class MarvelMultiverseNPC extends MarvelMultiverseActorBase {
 
     this.attributes.init.value += this.abilities.vig.value;
 
+    // Secret Wars Resize clarification: Flight must be calculated from the
+    // character's regular Run Speed, not from the Run modifier caused by a
+    // temporary size change. Preserve other Run modifiers (such as Speed Run).
+    let regularRunForFlight = Number(this.movement.run.value ?? 0);
+    switch (String(this.size ?? "").toLowerCase()) {
+      case "small": regularRunForFlight += 1; break;
+      case "big": regularRunForFlight -= 1; break;
+      case "huge": regularRunForFlight /= 5; break;
+      case "gigantic": regularRunForFlight /= 20; break;
+      case "titanic": regularRunForFlight /= 80; break;
+      case "gargantuan": regularRunForFlight /= 320; break;
+    }
+
+    // Unusual Size is the one exception: its regular Flight Speed is calculated
+    // as Small for below-Small sizes and Big for above-Big sizes.
+    const hasUnusualSize = Array.from(this.parent?.items ?? []).some(
+      (item) => item?.type === "trait" && String(item?.name ?? "").trim().toLowerCase() === "unusual size"
+    );
+    if (hasUnusualSize) {
+      const size = String(this.size ?? "").toLowerCase();
+      if (["microscopic", "miniature", "tiny", "little"].includes(size)) regularRunForFlight -= 1;
+      else if (["huge", "gigantic", "titanic", "gargantuan"].includes(size)) regularRunForFlight += 1;
+    }
+
+    // Apply any non-size Run calculation before Flight uses it as its base.
+    switch (this.movement.run.calc) {
+      case "half": regularRunForFlight = Math.ceil(regularRunForFlight * 0.5); break;
+      case "double": regularRunForFlight *= 2; break;
+      case "triple": regularRunForFlight *= 3; break;
+      case "rank": {
+        const val = regularRunForFlight === 0 ? 1 : regularRunForFlight;
+        regularRunForFlight = val * this.attributes.rank.value;
+        break;
+      }
+    }
+
     for (const key in this.movement) {
       this.movement[key].label =
         game.i18n.localize(CONFIG.MULTIVERSE_D616.movementTypes[key].label) ??
@@ -4949,15 +5072,10 @@ class MarvelMultiverseNPC extends MarvelMultiverseActorBase {
           this.movement[key].value *= 3;
           break;
         case "runspeed":
-          this.movement[key].value = this.movement.run.value;
+          this.movement[key].value = key === "flight" ? regularRunForFlight : this.movement.run.value;
           break;
         case "rank": {
-          // Flight in MMRPG is based on current Run Speed (which can itself be modified),
-          // then scaled by character Rank.
-          // This also keeps backward compatibility with older content that attempted to set
-          // flight.calc twice (runspeed then rank) via Active Effects.
-          const base =
-            key === "flight" ? this.movement.run.value : this.movement[key].value;
+          const base = key === "flight" ? regularRunForFlight : this.movement[key].value;
           const val = base === 0 ? 1 : base;
           this.movement[key].value = val * this.attributes.rank.value;
           break;
