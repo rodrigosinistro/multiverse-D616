@@ -1,3 +1,29 @@
+# Checklist adicional — v0.1.78 / Correção multiplayer da Concentração
+
+1. Abra o mesmo mundo em dois clientes: **Mestre** e **Jogador** proprietário do personagem.
+2. Com um personagem Rank 2, mantenha dois Powers de duração **Concentração** ativos e confirme **Concentração 2**.
+3. No cliente do **Jogador**, use um terceiro Power de Concentração, responda **SIM** e escolha um dos Powers antigos para substituir.
+4. Confirme que o Power escolhido é removido, o novo Power aparece e a condição genérica permanece **Concentração 2**.
+5. Repita escolhendo o outro Power e confirme o mesmo resultado.
+6. Repita deixando o **Mestre** clicar na escolha do chat em uma tentativa iniciada pelo Jogador.
+7. No console do Jogador e do Mestre, confirme que não aparecem erros `ActiveEffect ... does not exist` nem `undefined id ... EmbeddedCollection` ligados a `concentration.js`.
+8. Com AutoAnimations ativo, confirme que a animação do Power antigo encerra e a do novo Power inicia normalmente.
+9. Remova manualmente uma condição específica de Power como Jogador e confirme que o nível de Concentração é reduzido apenas uma vez.
+10. Remova manualmente a condição genérica de Concentração como Mestre e confirme que os Powers concentrados são apagados uma única vez, sem duplicação entre clientes.
+
+# Checklist adicional — v0.1.77 / Troca de Concentração
+
+1. Use um personagem Rank 2 e mantenha dois Powers de duração **Concentração** ativos; confirme **Concentração 2** e dois Active Effects específicos de Power.
+2. Use um terceiro Power de Concentração e confirme a mensagem privada de limite máximo com **SIM/NÃO**.
+3. Clique **NÃO** e confirme que nada é alterado.
+4. Repita, clique **SIM** e confirme uma segunda mensagem privada perguntando qual Power será substituído.
+5. Confirme que os dois Powers antigos aparecem como botões, com o mais antigo no topo marcado como **(mais antiga)**.
+6. Escolha o Power mais antigo e confirme que ele desaparece do token, o novo Power aparece e a condição genérica permanece **Concentração 2**.
+7. Repita escolhendo o outro Power para confirmar que a troca respeita a escolha manual, e não apenas a ordem automática.
+8. Faça o teste com o jogador clicando no botão e com o Mestre clicando em outra tentativa; ambas as respostas devem concluir o mesmo fluxo.
+9. Com AutoAnimations ativo, confirme que a animação persistente do Power removido encerra e a do novo Power inicia conforme a configuração do Item.
+10. Reutilize um Power que já ocupa uma vaga válida e confirme que ele apenas atualiza o efeito, sem abrir prompt e sem consumir outra Concentração.
+
 # Checklist adicional — v0.1.76 / Compêndios Secret Wars
 
 1. Abra o compêndio **Powers** e confirme os 6 novos Powers: Control Emotion, Control Group Emotion, Sense Emotion, Sway Emotion, Iconic Item e Power Cosmic.

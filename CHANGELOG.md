@@ -1,3 +1,23 @@
+# v0.1.78
+
+- Corrigido o fluxo de **troca de Concentração para jogadores** em mesas com Mestre conectado.
+- A substituição de um Power concentrado solicitada por um jogador agora é executada pelo **Mestre ativo primário** via socket nativo do sistema, evitando operações de Active Effect com permissões/autoridade diferentes entre clientes.
+- O hook `deleteActiveEffect` da Concentração agora processa a sincronização somente no cliente que iniciou a exclusão (`userId`), impedindo que Mestre e jogador tentem alterar os mesmos Active Effects ao mesmo tempo.
+- Eliminada a condição de corrida que gerava erros como **ActiveEffect does not exist** e **undefined id does not exist in EmbeddedCollection** durante a troca de Powers em Concentração.
+- O comportamento aprovado da v0.1.77 foi mantido: SIM/NÃO, escolha manual do Power a substituir, indicação do Power mais antigo, suporte a AutoAnimations e limite **Concentração = Rank**.
+- Mantida compatibilidade mínima e verificada com **Foundry VTT v14**.
+
+# v0.1.77
+
+- Ajustado o limite de **Concentração** quando o personagem já está usando o número máximo de Powers permitido pelo Rank.
+- O prompt **SIM/NÃO** ao exceder o limite foi preservado.
+- Ao responder **SIM**, uma segunda mensagem privada é enviada para **Mestres e proprietários do personagem** com a lista de Powers atualmente concentrados.
+- O usuário escolhe exatamente qual Power será substituído; o Power mais antigo aparece primeiro e marcado como **(mais antiga)**.
+- A condição/Active Effect do Power escolhido é removida e o novo Power assume a vaga sem ultrapassar **Concentração = Rank**.
+- As respostas dos prompts de Concentração agora são sincronizadas pelo socket nativo, permitindo que Mestre ou jogador proprietário façam a escolha pelo chat.
+- Compatibilidade preservada com efeitos de **AutoAnimations** vinculados aos Active Effects transitórios de Concentração.
+- Mantida compatibilidade mínima e verificada com **Foundry VTT v14**.
+
 # v0.1.76
 
 - Atualizados os **compêndios nativos** para acompanhar o conteúdo de Secret Wars já integrado ao Charactermancer.

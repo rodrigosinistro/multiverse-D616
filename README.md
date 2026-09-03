@@ -4,11 +4,28 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 
 ## Versão
 
-- **Versão do sistema:** 0.1.76
+- **Versão do sistema:** 0.1.78
 - **Compatibilidade:** Foundry VTT v14 (`minimum: 14`, `verified: 14`)
 - **ID / pasta interna:** `multiverse-d616`
 - **Manifest:** `https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json`
 
+
+## Atualização v0.1.78 — Correção multiplayer da Concentração
+
+- Corrigida a troca de Powers em Concentração quando a ação é iniciada por um **jogador** com o Mestre conectado.
+- A alteração dos Active Effects da troca é encaminhada ao **Mestre ativo primário**, que executa a substituição e devolve o resultado ao jogador pelo socket nativo.
+- O sistema agora ignora, nos demais clientes, o `deleteActiveEffect` iniciado por outro usuário, evitando sincronizações duplicadas e documentos já removidos.
+- Isso corrige os erros `ActiveEffect ... does not exist` e `undefined id ... does not exist in EmbeddedCollection` observados no cliente do jogador.
+- O fluxo visual da v0.1.77 não mudou: o jogador ou Mestre pode responder **SIM**, escolher qual Power será substituído e o novo Power assume a vaga mantendo **Concentração = Rank**.
+
+## Atualização v0.1.77 — Troca de Powers em Concentração
+
+- Quando o personagem já está no limite de **Concentração = Rank**, o fluxo **SIM/NÃO** permanece igual.
+- Ao escolher **SIM**, o sistema abre uma segunda mensagem privada para **Mestres e proprietários do personagem**, perguntando qual Power concentrado será encerrado.
+- Os Powers ativos aparecem como botões; o mais antigo fica no topo e é identificado como **(mais antiga)**.
+- Ao escolher um Power, o Active Effect dele é removido e o novo Power assume exatamente aquela vaga, mantendo o nível genérico **Concentração N** no limite correto.
+- Mestre ou jogador proprietário pode responder à escolha pelo chat; a decisão é sincronizada pelo socket nativo do sistema.
+- Powers excedentes criados pelo comportamento antigo (`countsTowardLevel: false`) podem ser reutilizados e convertidos corretamente para uma vaga válida durante a troca.
 
 ## Atualização v0.1.76 — Compêndios Secret Wars
 
