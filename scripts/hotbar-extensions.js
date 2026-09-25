@@ -1,3 +1,5 @@
+import { getElementalEdgeMode } from "./elemental-fantastic.mjs";
+
 /**
  * Multiverse-D616 (Foundry VTT v14)
  * Hotbar improvements:
@@ -134,7 +136,12 @@ async function rollAbilityMacro(actorUuid, abilityKey, mode = "value") {
   const speaker = ChatMessage.getSpeaker({ actor });
   const messageMode = game.settings.get("core", "messageMode");
 
-  const roll = new CONFIG.Dice.MarvelMultiverseRoll(formula, actor.getRollData());
+  const edgeMode = getElementalEdgeMode(actor);
+  const roll = new CONFIG.Dice.MarvelMultiverseRoll(
+    formula,
+    actor.getRollData(),
+    edgeMode ? { edgeMode } : {}
+  );
   await roll.toMessage(
     {
       speaker,

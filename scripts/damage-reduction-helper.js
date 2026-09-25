@@ -1,4 +1,5 @@
 import { calculateD616Damage } from "./damage-calculation.js";
+import { applyElementalFantasticFromDamageMessage, postElementalFantasticConfirmation } from "./elemental-fantastic.mjs";
 
 const MODULE_ID = "multiverse-d616";
 const MMDR_VER = "1.0.0";
@@ -650,6 +651,8 @@ document.addEventListener(
       }
 
       await postConfirmation(results, action);
+      const elementalApplied = await applyElementalFantasticFromDamageMessage(message, action);
+      await postElementalFantasticConfirmation(message, elementalApplied);
       const summary = results
         .map(
           (result) =>

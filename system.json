@@ -27,7 +27,7 @@
       "thumbnail": "systems/multiverse-d616/ui/official/mmrpg-setup-thumbnail.png"
     }
   ],
-  "version": "0.1.83",
+  "version": "0.1.85",
   "compatibility": {
     "minimum": "14",
     "verified": "14"
@@ -74,7 +74,7 @@
       "name": "tags",
       "label": "Tags",
       "system": "multiverse-d616",
-      "path": "packs/mmc-tags-v0183",
+      "path": "packs/mmc-tags-v0185",
       "type": "Item",
       "private": false,
       "flags": {}
@@ -83,7 +83,7 @@
       "name": "traits",
       "label": "Traits",
       "system": "multiverse-d616",
-      "path": "packs/mmc-traits-v0183",
+      "path": "packs/mmc-traits-v0185",
       "type": "Item",
       "private": false,
       "flags": {}
@@ -92,7 +92,7 @@
       "name": "powers",
       "label": "Powers",
       "system": "multiverse-d616",
-      "path": "packs/mmc-powers-v0183",
+      "path": "packs/mmc-powers-v0185",
       "type": "Item",
       "private": false,
       "flags": {}
@@ -101,7 +101,7 @@
       "name": "origins",
       "label": "Origins",
       "system": "multiverse-d616",
-      "path": "packs/mmc-origins-v0183",
+      "path": "packs/mmc-origins-v0185",
       "type": "Item",
       "private": false,
       "flags": {}
@@ -110,7 +110,7 @@
       "name": "occupations",
       "label": "Occupations",
       "system": "multiverse-d616",
-      "path": "packs/mmc-occupations-v0183",
+      "path": "packs/mmc-occupations-v0185",
       "type": "Item",
       "private": false,
       "flags": {}
@@ -119,7 +119,7 @@
       "name": "items",
       "label": "Items",
       "system": "multiverse-d616",
-      "path": "packs/mmc-items-v0183",
+      "path": "packs/mmc-items-v0185",
       "type": "Item",
       "private": false,
       "flags": {}
@@ -142,7 +142,7 @@
   ],
   "socket": true,
   "manifest": "https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json",
-  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.1.83/multiverse-d616-v0.1.83.zip",
+  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.1.85/multiverse-d616-v0.1.85.zip",
   "background": "systems/multiverse-d616/ui/official/mmrpg-background.webp",
   "grid": {
     "distance": 5,

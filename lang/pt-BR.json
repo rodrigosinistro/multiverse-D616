@@ -64,6 +64,11 @@
       "Collapse": "Minimizar HUD",
       "Expand": "Expandir HUD",
       "Drag": "Arraste para mover"
+    },
+    "edgeMode": {
+      "edge": "Edge",
+      "trouble": "Trouble",
+      "normal": "Normal"
     }
   }
 }

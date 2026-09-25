@@ -1,3 +1,24 @@
+# Changelog
+
+## 0.1.85
+- Elemental Control: poderes com `system.element` vazio agora herdam `system.defaultElement` da ficha do personagem.
+- Edge/Trouble: corrigido o reroll do Marvel Die para armazenar apenas um resultado ativo e tratar `M` corretamente.
+- Edge/Trouble: removida a repetição de `(MULTIVERSE_D616.edge)` / `(MULTIVERSE_D616.trouble)` no flavor e no card de dano.
+- Elemental Fantastic: aplicação de condições agora usa primeiro `Actor.toggleStatusEffect`, compatível com o HUD de condições e atores sintéticos.
+- Elemental Fantastic: o card de dano recupera metadados do card de ataque original após rerolls de Edge/Trouble.
+
+# v0.1.84 — Elemental Control Fantastic Automation
+
+- Elemental Control powers now persist their selected element on attack roll cards.
+- Fantastic results display the element's special effect directly in chat.
+- When the GM applies Fantastic damage, matching elemental conditions are automatically applied to saved targets.
+- Automated status effects: Plants/Grabbed, Air/Prone, Electricity/Stunned, Energy/Blinded, Fire/Ablaze, Ice/Paralyzed, Iron/Pinned, Sound/Deafened, Water/Surprised, Toxin/Poisoned, Chemical/Corroding and Swarm/Frightened.
+- Earth now halves all movement modes for 1 round.
+- Force now imposes Trouble on actions for 1 round, including sheet and ability-hotbar rolls.
+- Hellfire remains an explicit chat reminder because its Health/Focus split depends on damage handling and is not silently inferred.
+- Temporary one-round elemental effects use Foundry VTT v14 ActiveEffect durations and are cleaned up when expired.
+- Based on the stable v0.1.83 compendium packaging fix; no rollback of embedded Active Effects.
+
 # v0.1.83
 
 - Corrige a compilação dos Active Effects dos compêndios no LevelDB do Foundry VTT v14.

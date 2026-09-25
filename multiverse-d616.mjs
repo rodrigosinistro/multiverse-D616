@@ -19,6 +19,12 @@ import {
   markShieldThrown,
   maybeRequestUltimateFantastic,
 } from "./scripts/secret-wars-rules.mjs";
+import {
+  getElementalFantasticMetadata,
+  getElementalEdgeMode,
+  hasElementalHalfMovement,
+  registerElementalFantasticHooks,
+} from "./scripts/elemental-fantastic.mjs";
 
 function mmGetMessageMode() {
   try {
@@ -33,6 +39,29 @@ function mmApplyMessageMode(chatData, messageMode = mmGetMessageMode()) {
     return ChatMessage.applyMode(chatData, messageMode);
   }
   return chatData;
+}
+
+function mmCleanEdgeModeFlavor(flavor) {
+  return String(flavor ?? "")
+    .replace(/\s*\((?:MULTIVERSE_D616\.(?:edge|trouble|edgeMode\.(?:edge|trouble))|EDGE|TROUBLE|Edge|Trouble)\)\s*/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function mmEdgeModeLabel(mode) {
+  const isEdge = Number(mode) > 0;
+  const key = isEdge
+    ? "MULTIVERSE_D616.edgeMode.edge"
+    : "MULTIVERSE_D616.edgeMode.trouble";
+  const translated = game.i18n.localize(key);
+  return translated === key ? (isEdge ? "EDGE" : "TROUBLE") : translated;
+}
+
+function mmApplyEdgeModeFlavor(flavor, mode = 0) {
+  const clean = mmCleanEdgeModeFlavor(flavor);
+  if (!mode) return clean;
+  const marker = `(${mmEdgeModeLabel(mode)})`;
+  return clean ? `${clean} ${marker}` : marker;
 }
 
 class MarvelMultiverseRoll extends Roll {
@@ -276,14 +305,12 @@ class MarvelMultiverseRoll extends Roll {
       );
     }
 
-    if (this.hasEdge)
-      messageData.flavor += ` (${game.i18n.localize(
-        "MULTIVERSE_D616.edge"
-      )})`;
-    else if (this.hasTrouble)
-      messageData.flavor += ` (${game.i18n.localize(
-        "MULTIVERSE_D616.trouble"
-      )})`;
+    // Keep Edge/Trouble flavor idempotent. Retro rerolls re-render the same
+    // ChatMessage; without cleaning first the marker was appended repeatedly.
+    messageData.flavor = mmApplyEdgeModeFlavor(
+      messageData.flavor,
+      this.hasEdge ? 1 : this.hasTrouble ? -1 : 0
+    );
     // Foundry v14 uses messageMode instead of the deprecated rollMode option.
     options.messageMode =
       options.messageMode ?? this.options.messageMode ?? mmGetMessageMode();
@@ -540,10 +567,13 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       const rollData = this.getRollData();
       // Invoke the roll and submit it to chat.
       const useUltimateFantastic = await maybeRequestUltimateFantastic(this.actor);
+      const elementalEdgeMode = getElementalEdgeMode(this.actor, this);
+      const rollOptions = useUltimateFantastic ? { forceMarvelM: true } : {};
+      if (elementalEdgeMode) rollOptions.edgeMode = elementalEdgeMode;
       const roll = new CONFIG.Dice.MarvelMultiverseRoll(
         rollData.formula,
         rollData.actor,
-        useUltimateFantastic ? { forceMarvelM: true } : {}
+        rollOptions
       );
       // If you need to store the value first, uncomment the next line.
       // const result = await roll.evaluate();
@@ -584,6 +614,9 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
           finalDM: finalDamageMultiplier,
         },
       };
+
+      const elementalFantastic = getElementalFantasticMetadata(this, this.actor);
+      if (elementalFantastic) systemFlags.elementalFantastic = elementalFantastic;
 
       // Persist Focus spending on the roll card so it survives Edge/Trouble retro rolls.
       // Also hides the old "Focus" button (auto workflow).
@@ -2280,7 +2313,17 @@ class ChatMessageMarvel extends ChatMessage {
 
     evaluation.innerHTML = resolved.join("");
 
-    html.querySelector(".message-content")?.appendChild(evaluation);
+    const messageContent = html.querySelector(".message-content");
+    messageContent?.appendChild(evaluation);
+
+    const elementalFantastic = this.getFlag("multiverse-d616", "elementalFantastic");
+    if (isFantastic && elementalFantastic?.key && elementalFantastic?.text) {
+      html.querySelector(".m616-elemental-fantastic")?.remove();
+      const elemental = document.createElement("div");
+      elemental.className = "m616-elemental-fantastic";
+      elemental.innerHTML = `<b>EFEITO ELEMENTAL — ${esc(String(elementalFantastic.label ?? elementalFantastic.key).toUpperCase())}</b><br>${esc(elementalFantastic.text)}`;
+      messageContent?.appendChild(elemental);
+    }
   }
 
   /* -------------------------------------------- */
@@ -2817,7 +2860,9 @@ class ChatMessageMarvel extends ChatMessage {
     const msgData = {
       // Keep the same speaker so the damage message matches the token/actor used to roll.
       speaker: chatMessage.speaker ?? ChatMessageMarvel.getSpeaker({ actor: actor }),
-      flavor: flavorText,
+      // The damage card is a calculation/application card, not a new roll.
+      // Do not carry Edge/Trouble roll markers into it.
+      flavor: mmCleanEdgeModeFlavor(flavorText),
       content: damageContent.join(""),
       flags: {
         "multiverse-d616": {
@@ -2832,6 +2877,7 @@ class ChatMessageMarvel extends ChatMessage {
             isFantastic,
             entries: damageEntries,
           },
+          elementalFantastic: chatMessage.getFlag("multiverse-d616", "elementalFantastic") ?? null,
         },
       },
     };
@@ -2940,74 +2986,85 @@ class ChatMessageMarvel extends ChatMessage {
       targetDie instanceof game.MarvelMultiverse.dice.MarvelDie;
     const formulaReg = /(?<number>\d)d(?<dieType>\d|m).*/;
     const formulaGroups = formulaReg.exec(targetRoll._formula)?.groups;
+    if (!formulaGroups?.dieType) throw new Error(`Unsupported reroll formula: ${targetRoll._formula}`);
 
     const formulaDie = formulaGroups.dieType;
 
-    targetDie.number = 2;
+    // Retro Edge/Trouble is one additional die. Roll exactly one replacement
+    // result and compare it with the currently-kept result. The previous
+    // implementation rolled 2 dice and then stored only results[0], which
+    // could leave multiple active Marvel results (especially when M appeared).
+    const previousRollTotal = Number(roll.total ?? 0);
+    const previousPoolTotal = Number(rollTerm.total ?? 0);
+    const oldRollResult =
+      targetDie.results.find((r) => r.active && !r.discarded) ??
+      targetDie.results.find((r) => !r.discarded) ??
+      targetDie.results[targetDie.results.length - 1];
+    if (!oldRollResult) throw new Error("Could not identify kept die result");
 
-    const targetFormula = `${targetDie.number}d${formulaDie}`;
+    const resultValue = (result) => {
+      if (!result) return 0;
+      if (targetIsMarvel && Number(result.result) === 1) return 6;
+      return Number(result.count ?? result.result ?? 0) || 0;
+    };
+    const isMarvelResult = (result) =>
+      targetIsMarvel && Number(result?.result) === 1;
 
-    targetRoll._formula = `${targetFormula}${modifier}`;
+    const oldResult = resultValue(oldRollResult);
+    const oldFantastic = isMarvelResult(oldRollResult);
 
-    rollTerm.terms[dieIndex] = targetRoll._formula;
-
-    targetDie.modifiers = [modifier];
-
-    const oldRollResult = targetDie.results.find((r) => r.active);
-    const oldFantastic = targetIsMarvel && oldRollResult.result === 1;
-    const oldResult =
-      targetIsMarvel && oldRollResult.result === 1 ? 6 : oldRollResult.result;
-
-    const newRoll = new MarvelMultiverseRoll(targetRoll._formula, {
-      ...targetRoll.data,
-    });
+    const rerollFormula = `1d${formulaDie}`;
+    const newRoll = new MarvelMultiverseRoll(rerollFormula, { ...targetRoll.data });
     await newRoll.roll();
+    const rerollDie =
+      newRoll.dice?.[0] ??
+      newRoll.terms?.find?.((term) => term instanceof foundry.dice.terms.Die);
+    const sourceNewResult =
+      rerollDie?.results?.find((r) => r.active && !r.discarded) ??
+      rerollDie?.results?.[0];
+    if (!sourceNewResult) throw new Error("Edge/Trouble reroll produced no die result");
 
-    const newRollResult = newRoll.terms[0].results[0];
-    const newFantastic = targetIsMarvel && newRollResult.result === 1;
-    const newResult =
-      targetIsMarvel && newRollResult.result === 1 ? 6 : newRollResult.result;
+    const newRollResult = foundry.utils.deepClone(sourceNewResult);
+    newRollResult.active = false;
+    newRollResult.discarded = true;
+    const newResult = resultValue(newRollResult);
+    const newFantastic = isMarvelResult(newRollResult);
 
+    let useNew = false;
     if (modifier === "kh") {
-      if (newFantastic || newResult >= oldResult) {
-        this._handleEdge(false, oldRollResult);
-        this._handleEdge(true, newRollResult);
-      } else if (oldFantastic || oldResult >= newResult) {
-        this._handleEdge(false, newRollResult);
-      }
-    } else if (modifier === "kl") {
-      if (newFantastic) {
-        this._handleEdge(false, newRollResult);
-        this._handleEdge(true, oldRollResult);
-      } else if (newResult <= oldResult) {
-        this._handleEdge(false, oldRollResult);
-        this._handleEdge(true, newRollResult);
-      } else if (newResult > oldResult) {
-        this._handleEdge(false, newRollResult);
-        this._handleEdge(true, oldRollResult);
-      }
+      // A Marvel result is always the preferred Edge result because it is
+      // Fantastic. Otherwise keep the numerically higher result.
+      if (newFantastic && !oldFantastic) useNew = true;
+      else if (!newFantastic && oldFantastic) useNew = false;
+      else useNew = newResult > oldResult;
+    } else {
+      // Trouble keeps the worse result. A Marvel result is beneficial, so it
+      // loses against any ordinary result; otherwise keep the lower value.
+      if (newFantastic && !oldFantastic) useNew = false;
+      else if (!newFantastic && oldFantastic) useNew = true;
+      else useNew = newResult < oldResult;
     }
 
     targetDie.results.push(newRollResult);
+    for (const result of targetDie.results) {
+      result.active = false;
+      result.discarded = true;
+    }
+    const keptResult = useNew ? newRollResult : oldRollResult;
+    keptResult.active = true;
+    keptResult.discarded = false;
 
-    // Recalculate the die total after retro Edge/Trouble so downstream logic (like damage) reflects the kept result.
-    const keptDieResults = targetDie.results.filter(
-      (r) => r.active && !r.discarded
-    );
-    const calcDieResults = keptDieResults.length
-      ? keptDieResults
-      : targetDie.results.filter((r) => r.active);
-    const dieResultsForTotal = calcDieResults.length
-      ? calcDieResults
-      : [targetDie.results[targetDie.results.length - 1]];
-    const computedDieTotal = dieResultsForTotal.reduce((sum, r) => {
-      if (targetIsMarvel && r.result === 1) return sum + 6;
-      const v = r.count ?? r.result ?? 0;
-      return sum + v;
-    }, 0);
-    targetDie._total = computedDieTotal;
+    targetDie.number = targetDie.results.length;
+    targetDie.modifiers = [modifier];
+    targetRoll._formula = `${targetDie.number}d${formulaDie}${modifier}`;
+    const keptValue = resultValue(keptResult);
+    const delta = keptValue - oldResult;
+    targetDie._total = keptValue;
+    targetRoll._total = keptValue;
+    if (Number.isFinite(previousPoolTotal)) rollTerm._total = previousPoolTotal + delta;
+    if (Number.isFinite(previousRollTotal)) roll._total = previousRollTotal + delta;
 
-    const re = /(\(?{)(\dd\d),(\ddm),(\dd\d)(}.*)/;
+    const re = /(\(?{)(\d+d6(?:kh|kl)?),(\d+dm(?:kh|kl)?),(\d+d6(?:kh|kl)?)(}.*)/;
 
     let replacedFormula;
     switch (dieIndex) {
@@ -3034,17 +3091,15 @@ class ChatMessageMarvel extends ChatMessage {
       }
     }
 
-    roll._formula = replacedFormula;
-
-    if (newRollResult.active) {
-      roll._total = roll.total - oldResult + newResult;
-    }
+    if (replacedFormula) roll._formula = replacedFormula;
 
     // IMPORTANT:
     // Updating via a full merge can clobber custom system flags (ex.: itemId/focusSpent),
     // which breaks Focus controls and other enrichments after retro Edge/Trouble.
     // Only update the roll payload + rendered content/flavor, preserving flags.
-    const update = await roll.toMessage({ flavor: flavor }, { create: false });
+    const rerollMode = action === "edge" ? 1 : -1;
+    const rerollFlavor = mmApplyEdgeModeFlavor(flavor ?? chatMessage.flavor, rerollMode);
+    const update = await roll.toMessage({ flavor: rerollFlavor }, { create: false });
 
     const messageUpdate = {
       content: update?.content ?? chatMessage.content,
@@ -3637,10 +3692,13 @@ render(force = false, options = {}) {
       }
 
       const useUltimateFantastic = await maybeRequestUltimateFantastic(this.actor);
+      const actorEdgeMode = getElementalEdgeMode(this.actor);
+      const rollOptions = useUltimateFantastic ? { forceMarvelM: true } : {};
+      if (actorEdgeMode) rollOptions.edgeMode = actorEdgeMode;
       const roll = new CONFIG.Dice.MarvelMultiverseRoll(
         dataset.formula,
         this.actor.getRollData(),
-        useUltimateFantastic ? { forceMarvelM: true } : {}
+        rollOptions
       );
 
       roll.toMessage(
@@ -4122,10 +4180,13 @@ render(force = false, options = {}) {
         : label;
 
       const useUltimateFantastic = await maybeRequestUltimateFantastic(this.actor);
+      const actorEdgeMode = getElementalEdgeMode(this.actor);
+      const rollOptions = useUltimateFantastic ? { forceMarvelM: true } : {};
+      if (actorEdgeMode) rollOptions.edgeMode = actorEdgeMode;
       const roll = new CONFIG.Dice.MarvelMultiverseRoll(
         dataset.formula,
         this.actor.getRollData(),
-        useUltimateFantastic ? { forceMarvelM: true } : {}
+        rollOptions
       );
 
       roll.toMessage(
@@ -4981,6 +5042,13 @@ class MarvelMultiverseActorBase extends foundry.abstract
         }
       }
     }
+
+    // Elemental Control (Earth): halve every movement mode for one round.
+    if (hasElementalHalfMovement(this.parent)) {
+      for (const key in this.movement) {
+        this.movement[key].value = Math.ceil((Number(this.movement[key].value) || 0) * 0.5);
+      }
+    }
   }
 }
 
@@ -5080,6 +5148,13 @@ class MarvelMultiverseNPC extends MarvelMultiverseActorBase {
           this.movement[key].value = val * this.attributes.rank.value;
           break;
         }
+      }
+    }
+
+    // Elemental Control (Earth): halve every movement mode for one round.
+    if (hasElementalHalfMovement(this.parent)) {
+      for (const key in this.movement) {
+        this.movement[key].value = Math.ceil((Number(this.movement[key].value) || 0) * 0.5);
       }
     }
   }
@@ -5420,6 +5495,7 @@ Hooks.once("init", () => {
 
   // Record Configuration Values
   CONFIG.MULTIVERSE_D616 = MULTIVERSE_D616;
+  registerElementalFantasticHooks();
 
   /**
    * Set an initiative formula for the system
