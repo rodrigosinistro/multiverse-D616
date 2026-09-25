@@ -1,3 +1,10 @@
+# v0.1.83
+
+- Corrige a compilação dos Active Effects dos compêndios no LevelDB do Foundry VTT v14.
+- Active Effects agora são gravados como documentos embutidos (`!items.effects!<item>.<effect>`), seguindo a hierarquia do compilador oficial do Foundry.
+- Atualizados Powers, Traits, Tags, Origins, Occupations e Items a partir dos JSONs fornecidos.
+- Base do sistema restaurada à v0.1.78 antes da atualização dos compêndios, removendo alterações experimentais das v0.1.80-v0.1.82.
+
 # v0.1.78
 
 - Corrigido o fluxo de **troca de Concentração para jogadores** em mesas com Mestre conectado.
