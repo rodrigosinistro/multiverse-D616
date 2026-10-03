@@ -1,11 +1,11 @@
 
 /* Sheet Export — Marvel Multiverse (D616)
- * v0.3.54
+ * v0.3.56
  */
 
 const M616 = {
   ID: "sheet-export-m616",
-  VERSION: "0.3.54",
+  VERSION: "0.3.56",
   TEMPLATES: {
     red:   "systems/multiverse-d616/features/sheet-export-m616/assets/templates/M616 Character Sheet - Alt Red.pdf",
     black: "systems/multiverse-d616/features/sheet-export-m616/assets/templates/M616 Character Sheet - Alt Black.pdf",
@@ -70,14 +70,41 @@ function get(obj, path){ try{ const parts = String(path).split("."); let o=obj; 
 function nvl(a,b){ return (a!==undefined && a!==null) ? a : b; }
 function nvl3(a,b,c){ return nvl(nvl(a,b), c); }
 function stripHtml(html){ if(!html) return ""; const div=document.createElement("div"); div.innerHTML=String(html); return (div.textContent||div.innerText||"").trim(); }
-function cleanText(v){ const t=stripHtml(v); return t? t.replace(/\s+/g," ").trim() : ""; }
+function cleanText(v){ const t=stripHtml(v); return t? normalizePdfText(t).replace(/\s+/g," ").trim() : ""; }
 function normalizePdfText(text){
-  if (!text) return "";
-  let t = String(text);
-  const map = { "\u00A0":" ", "\u2010":"-","\u2011":"-","\u2012":"-","\u2013":"-","\u2014":"-","\u2212":"-",
+  if (text === undefined || text === null) return "";
+  let t = String(text).normalize("NFC");
+
+  // pdf-lib StandardFonts.Helvetica usa WinAnsi. Conteúdo copiado de páginas HTML
+  // pode trazer caracteres invisíveis (ex.: U+200B ZERO WIDTH SPACE), que fazem
+  // widthOfTextAtSize/drawText falhar com "WinAnsi cannot encode".
+  const map = {
+    "\u00A0":" ", "\u2007":" ", "\u202F":" ",
+    "\u2010":"-","\u2011":"-","\u2012":"-","\u2013":"-","\u2014":"-","\u2212":"-",
     "\u2018":"'","\u2019":"'","\u201A":"'","\u201B":"'","\u201C":'"',"\u201D":'"',"\u201E":'"',
-    "\u2026":"...","\u2022":"-","\u00B7":"-"};
-  return t.replace(/[\u00A0\u2010-\u2014\u2212\u2018-\u201E\u2026\u2022\u00B7]/g, ch => map[ch] || "");
+    "\u2026":"...","\u2022":"-","\u00B7":"-"
+  };
+  t = t.replace(/[\u00A0\u2007\u202F\u2010-\u2014\u2212\u2018-\u201E\u2026\u2022\u00B7]/g, ch => map[ch] ?? "");
+
+  // Caracteres de largura zero, BOM, soft-hyphen e controles bidi não possuem
+  // representação útil na ficha e não devem chegar ao encoder WinAnsi.
+  t = t.replace(/[\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g, "");
+
+  // Última barreira: mantém ASCII, Latin-1 e os poucos caracteres extras do
+  // Windows-1252. Outros símbolos são transliterados quando possível ou viram ?.
+  const winAnsiExtra = /[\u0152\u0153\u0160\u0161\u0178\u017D\u017E\u0192\u02C6\u02DC\u20AC\u2020\u2021\u2030\u2039\u203A\u2122]/;
+  let out = "";
+  for (const ch of t){
+    const cp = ch.codePointAt(0);
+    if (ch === "\n" || ch === "\r" || ch === "\t" || (cp >= 0x20 && cp <= 0x7E) || (cp >= 0xA0 && cp <= 0xFF) || winAnsiExtra.test(ch)){
+      out += ch;
+      continue;
+    }
+    const ascii = ch.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+    if (/^[\x20-\x7E]+$/.test(ascii)) out += ascii;
+    else out += "?";
+  }
+  return out;
 }
 function fmtDR(v){ const n = Number(v)||0; if(n===0) return "0"; return `-${Math.abs(n)}`; }
 function abilityDefense(val){ return String(10 + (Number(val)||0)); }
@@ -109,15 +136,39 @@ function setFieldDA(tf, size){
   } catch {}
 }
 function setText(form, name, value, size){
-  try { const tf = form.getTextField(name); setFieldDA(tf, size||M616.FLATTEN_SIZE); tf.setText(value==null?"":String(value)); } catch {}
+  try {
+    const tf = form.getTextField(name);
+    setFieldDA(tf, size||M616.FLATTEN_SIZE);
+    tf.setText(normalizePdfText(value==null?"":String(value)));
+  } catch (e) {
+    console.warn(`[${M616.ID}] não foi possível preencher o campo ${name}`, e);
+  }
 }
 
 /* ------- Long columns ------- */
 function collectLong(actor){
   const items = Array.from(actor?.items ?? []);
   const uniq = arr => Array.from(new Set(arr.map(s => String(s||"").trim()).filter(Boolean)));
-  const traits = uniq(items.filter(i=>i.type==="trait").map(i=>i.name));
-  const tags   = uniq(items.filter(i=>i.type==="tag").map(i=>i.name));
+  // Mantém a mesma lógica do Charactermancer Web: Traits/Tags repetidos são
+  // consolidados com quantidade (ex.: Linguist ×2), enquanto Powers continuam
+  // únicos por nome na primeira página.
+  const counted = arr => {
+    const order = [];
+    const counts = new Map();
+    for (const raw of arr){
+      const name = String(raw||"").trim();
+      if (!name) continue;
+      const key = name.toLowerCase();
+      if (!counts.has(key)) order.push({key, name});
+      counts.set(key, (counts.get(key)||0) + 1);
+    }
+    return order.map(({key, name}) => {
+      const count = counts.get(key) || 0;
+      return count > 1 ? `${name} ×${count}` : name;
+    });
+  };
+  const traits = counted(items.filter(i=>i.type==="trait").map(i=>i.name));
+  const tags   = counted(items.filter(i=>i.type==="tag").map(i=>i.name));
   const powers = uniq(items.filter(i=>i.type==="power").map(i=>i.name));
   const perCol = Math.ceil(powers.length/3) || 0;
   const cols = [powers.slice(0,perCol), powers.slice(perCol,2*perCol), powers.slice(2*perCol)];
@@ -244,8 +295,19 @@ async function exportActor(actor){
 
     /* --- Páginas detalhadas (CONTÍNUAS) com widow/orphan control --- */
     const powers = items.filter(i=>i.type==="power");
-    const traits = items.filter(i=>i.type==="trait");
-    const tags   = items.filter(i=>i.type==="tag");
+    // Nas páginas detalhadas, a quantidade já é mostrada na primeira página.
+    // Evita repetir a mesma descrição várias vezes, alinhando com o site.
+    const uniqueItemsByName = (list)=>{
+      const seen = new Set();
+      return (list||[]).filter(it=>{
+        const key = String(it?.name||"").toLowerCase().trim();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    };
+    const traits = uniqueItemsByName(items.filter(i=>i.type==="trait"));
+    const tags   = uniqueItemsByName(items.filter(i=>i.type==="tag"));
 
     // Helpers de layout
     function newPageWithHeader(pdfDoc, helvBold, name){

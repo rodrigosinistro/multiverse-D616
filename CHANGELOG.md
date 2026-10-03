@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.1.95
+
+- **PDF — Traits/Tags repetidos:** a primeira página agora preserva seleções repetidas usando contador, igual ao Charactermancer Web (ex.: `Surprising Power ×2`, `Linguist ×2`, `Obligation ×2`).
+- **PDF — páginas extras:** descrições de Traits/Tags repetidos aparecem apenas uma vez, evitando duplicação desnecessária.
+- **Compatibilidade:** mantida a correção WinAnsi/Unicode da v0.1.94 e todas as alterações do Charactermancer para `system.multiple = true`.
+- Mantida compatibilidade com **Foundry VTT v14**.
+
+## 0.1.94
+
+- **Fix (Exportação PDF):** corrigido erro `WinAnsi cannot encode` ao exportar fichas com textos contendo caracteres invisíveis, incluindo `U+200B ZERO WIDTH SPACE`.
+- O exportador agora remove caracteres de largura zero/BOM/controles bidi e normaliza textos antes de medir ou desenhar no PDF.
+- Campos do formulário PDF também passam pela mesma normalização, evitando falhas silenciosas com caracteres não suportados pela fonte Helvetica/WinAnsi.
+- Adicionada barreira de compatibilidade para caracteres fora do WinAnsi: quando possível são transliterados; caso contrário, são substituídos por `?` em vez de interromper a exportação.
+- Mantidas integralmente as alterações da v0.1.93 para **Traços e Tags repetíveis** no Charactermancer.
+- Mantida compatibilidade com **Foundry VTT v14**.
+
+## 0.1.93
+
+- **Charactermancer — Traços/Tags múltiplos:** o passo **Traços & Tags** agora respeita `system.multiple = true` dos itens.
+- Itens múltiplos continuam disponíveis com **Selecionar novamente** e podem ser escolhidos quantas vezes a criação permitir.
+- Itens não múltiplos continuam limitados a uma única seleção; itens concedidos por Ocupação/Origem só podem ser escolhidos novamente quando forem marcados como múltiplos.
+- O botão **×** remove somente uma ocorrência de um Traço/Tag repetido.
+- A revisão agrupa repetições com contador (ex.: `Linguist ×2`).
+- Ao criar o Actor, repetições válidas são preservadas como Items separados; a deduplicação continua ativa para Traços/Tags comuns.
+- Mantida compatibilidade com **Foundry VTT v14**.
+
 ## 0.1.92
 
 - **Chat — Attack Edge Mode:** o aviso foi movido para o **final do card informativo**, depois da caixa de Ação/Duração/Custo/Gatilho/Alcance.
