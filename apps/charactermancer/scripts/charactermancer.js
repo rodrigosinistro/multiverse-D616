@@ -846,6 +846,7 @@ _renderTraitsTags(){
     const used = (this.state.selectedTraits || []).length;
     const remaining = Math.max(0, extraAllowed - used);
 
+    // ===== Left column: Traits list
     const left = document.createElement("div"); left.className="mmc-card";
     left.innerHTML = `<h3>Traços</h3>
       <div id="mmc-traits-remaining" class="mmc-small">Traços extras restantes: ${remaining} (de ${extraAllowed})</div>
@@ -868,6 +869,7 @@ _renderTraitsTags(){
           const desc = String(t?.system?.description || "").toLowerCase();
           return name.includes(tq) || desc.includes(tq);
         })
+        // Granted entries remain available only when the catalog says they are repeatable.
         .filter(t => !isGrantedTrait(t) || isRepeatable(t))
         .forEach(t=>{
           const row = document.createElement("div"); row.className="mmc-pwr";
@@ -920,6 +922,7 @@ _renderTraitsTags(){
       requestAnimationFrame(()=>{ listT.scrollTop = this.state.scroll["traits"]; });
     }
 
+    // ===== Right column: Tags list
     const rightTop = document.createElement("div"); rightTop.className="mmc-card";
     rightTop.innerHTML = `<h3>Tags</h3>
       <input class="mmc-search" name="search-tags" placeholder="Buscar..." value="${this.state.search?.tags || ""}"> `;
@@ -975,7 +978,8 @@ _renderTraitsTags(){
       }));
     };
     renderListTags();
-    
+
+    // === Live-load Traits & Tags from World/Compendia (no cache), then refresh lists ===
     try {
       const prevT = this.state?.scroll?.["traits"] ?? listT.scrollTop;
       const prevG = this.state?.scroll?.["tags"] ?? listG.scrollTop;
@@ -1004,6 +1008,7 @@ _renderTraitsTags(){
       requestAnimationFrame(()=>{ listG.scrollTop = this.state.scroll["tags"]; });
     }
 
+    // ===== Bottom-left: Selected Traits
     const selTraits = document.createElement("div"); selTraits.className="mmc-card mmc-selected";
     selTraits.innerHTML = `<h3>Selecionados — Traços</h3>`;
     const chipsT = document.createElement("div"); chipsT.className="mmc-tags";
@@ -1019,6 +1024,7 @@ _renderTraitsTags(){
     selTraits.appendChild(chipsT);
     wrap.appendChild(selTraits);
 
+    // ===== Bottom-right: Selected Tags
     const selTags = document.createElement("div"); selTags.className="mmc-card mmc-selected";
     selTags.innerHTML = `<h3>Selecionados — Tags</h3>`;
     const chipsG = document.createElement("div"); chipsG.className="mmc-tags";
@@ -1034,6 +1040,7 @@ _renderTraitsTags(){
     selTags.appendChild(chipsG);
     wrap.appendChild(selTags);
 
+    // -- Live hooks while Step 4 is open (create/update/delete): keep lists in sync without reopening
     if (!this._mmc_step4ItemHooks){
       const handler = async (item, data, opts, userId) => {
         const t = String((item?.type||item?.document?.type||"")).toLowerCase();
@@ -1065,6 +1072,8 @@ _renderTraitsTags(){
       renderListTags();
     });
 
+    // Remove exactly one occurrence. Repeatable entries share the same catalog _id,
+    // so filtering by _id would remove every copy at once.
     selTraits.querySelectorAll("[data-remove-trait-index]").forEach(btn=> btn.addEventListener("click", ev=>{
       ev.preventDefault(); ev.stopPropagation();
       const index = Number(ev.currentTarget.dataset.removeTraitIndex);
