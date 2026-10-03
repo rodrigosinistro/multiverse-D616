@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.93
+
+- **Charactermancer — Traços/Tags múltiplos:** o passo **Traços & Tags** agora respeita `system.multiple = true` dos itens.
+- Itens múltiplos continuam disponíveis com **Selecionar novamente** e podem ser escolhidos quantas vezes a criação permitir.
+- Itens não múltiplos continuam limitados a uma única seleção; itens concedidos por Ocupação/Origem só podem ser escolhidos novamente quando forem marcados como múltiplos.
+- O botão **×** remove somente uma ocorrência de um Traço/Tag repetido.
+- A revisão agrupa repetições com contador (ex.: `Linguist ×2`).
+- Ao criar o Actor, repetições válidas são preservadas como Items separados; a deduplicação continua ativa para Traços/Tags comuns.
+- Mantida compatibilidade com **Foundry VTT v14**.
+
 ## 0.1.92
 
 - **Chat — Attack Edge Mode:** o aviso foi movido para o **final do card informativo**, depois da caixa de Ação/Duração/Custo/Gatilho/Alcance.

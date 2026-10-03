@@ -4,11 +4,18 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 
 ## Versão
 
-- **Versão do sistema:** 0.1.92
+- **Versão do sistema:** 0.1.93
 - **Compatibilidade:** Foundry VTT v14 (`minimum: 14`, `verified: 14`)
 - **ID / pasta interna:** `multiverse-d616`
 - **Manifest:** `https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json`
 
+
+## Atualização v0.1.93 — Traços e Tags repetíveis no Charactermancer
+
+- O Charactermancer agora respeita **`system.multiple = true`** em Traços e Tags.
+- Itens repetíveis podem ser selecionados novamente; os demais continuam com seleção única.
+- Remover uma seleção apaga somente aquela ocorrência.
+- A criação do personagem preserva todas as ocorrências válidas no Actor.
 
 ## Atualização v0.1.92 — destaque visual do Attack Edge Mode
 

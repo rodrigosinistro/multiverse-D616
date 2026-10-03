@@ -1,7 +1,7 @@
 
 import { loadTraitsAndTags } from "./utils/mmc-load-traits-tags.js";
 
-/* Marvel Multiverse — Charactermancer v0.6.9 */
+/* Marvel Multiverse — Charactermancer v0.6.10 */
 class MMCCharactermancer extends foundry.appv1.api.Application {
 
   /**
@@ -32,6 +32,52 @@ class MMCCharactermancer extends foundry.appv1.api.Application {
       return out;
     }catch(e){ return Array.from(arr||[]); }
   }
+  static _mmcIsRepeatable(item){
+    return item?.system?.multiple === true;
+  }
+
+  static _mmcDedupRepeatAware(arr){
+    try{
+      const list = Array.from(arr || []);
+      const repeatableNames = new Set(
+        list
+          .filter(it => this._mmcIsRepeatable(it))
+          .map(it => String(it?.name || "").toLowerCase().trim())
+          .filter(Boolean)
+      );
+      const seen = new Set();
+      const out = [];
+      for (const it of list){
+        const key = String(it?.name || "").toLowerCase().trim();
+        if (!key) continue;
+        if (!repeatableNames.has(key)){
+          if (seen.has(key)) continue;
+          seen.add(key);
+        }
+        out.push(it);
+      }
+      return out;
+    }catch(e){ return Array.from(arr || []); }
+  }
+
+  static _mmcFormatNamesWithCounts(arr){
+    try{
+      const order = [];
+      const counts = new Map();
+      for (const it of arr || []){
+        const name = String(it?.name || "").trim();
+        if (!name) continue;
+        const key = name.toLowerCase();
+        if (!counts.has(key)) order.push({ key, name });
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+      return order.map(({key, name}) => {
+        const count = counts.get(key) || 0;
+        return count > 1 ? `${name} ×${count}` : name;
+      }).join(", ");
+    }catch(_){ return (arr || []).map(it=>it?.name).filter(Boolean).join(", "); }
+  }
+
   static _mmcDedupPowersByNameAndSet(arr){
     try{
       const map = new Map();
@@ -768,13 +814,11 @@ _renderTraitsTags(){
     const wrap = document.createElement("div"); 
     wrap.className="mmc-grid";
 
-    // Helpers/state
     this.state.search = this.state.search || {};
     this.state.scroll = this.state.scroll || {};
     this.state.selectedTraits = this.state.selectedTraits || [];
     this.state.selectedTags = this.state.selectedTags || [];
 
-    // Granted by Occupation/Origin
     const grantedTraits = [
       ...(this.state.occupation?.system?.traits || []),
       ...(this.state.origin?.system?.traits || [])
@@ -784,19 +828,24 @@ _renderTraitsTags(){
       ...(this.state.origin?.system?.tags || [])
     ].filter(Boolean);
 
-    // Build id and name sets for reliable matching
     const traitIdSet = new Set(grantedTraits.map(t=>t?._id).filter(Boolean));
-    const traitNameSet = new Set(grantedTraits.map(t=>(t?.name||"").toLowerCase()).filter(Boolean));
+    const traitNameSet = new Set(grantedTraits.map(t=>String(t?.name||"").toLowerCase()).filter(Boolean));
     const tagIdSet = new Set(grantedTags.map(t=>t?._id).filter(Boolean));
-    const tagNameSet = new Set(grantedTags.map(t=>(t?.name||"").toLowerCase()).filter(Boolean));
-    const isConnections = (nm)=> /^(connections|conexões)$/i.test(nm||"");
+    const tagNameSet = new Set(grantedTags.map(t=>String(t?.name||"").toLowerCase()).filter(Boolean));
 
-    // Rules: extra Traits allowed = current Rank
+    const isRepeatable = (item)=> MMCCharactermancer._mmcIsRepeatable(item);
+    const sameItem = (a,b)=> {
+      if (!a || !b) return false;
+      if (a._id && b._id && a._id === b._id) return true;
+      return String(a.name||"").toLowerCase() === String(b.name||"").toLowerCase();
+    };
+    const isGrantedTrait = (t)=> traitIdSet.has(t?._id) || traitNameSet.has(String(t?.name||"").toLowerCase());
+    const isGrantedTag = (t)=> tagIdSet.has(t?._id) || tagNameSet.has(String(t?.name||"").toLowerCase());
+
     const extraAllowed = Number(this.state.rank || 1);
     const used = (this.state.selectedTraits || []).length;
     const remaining = Math.max(0, extraAllowed - used);
 
-    // ===== Left column: Traits list
     const left = document.createElement("div"); left.className="mmc-card";
     left.innerHTML = `<h3>Traços</h3>
       <div id="mmc-traits-remaining" class="mmc-small">Traços extras restantes: ${remaining} (de ${extraAllowed})</div>
@@ -809,48 +858,68 @@ _renderTraitsTags(){
       const prev = listT.scrollTop;
       listT.innerHTML = "";
       const tq = (this.state.search?.traits || "").toLowerCase();
+      const remainingNow = Math.max(0, Number(this.state.rank || 1) - (this.state.selectedTraits || []).length);
+      const remEl = left.querySelector("#mmc-traits-remaining");
+      if (remEl) remEl.textContent = `Traços extras restantes: ${remainingNow} (de ${Number(this.state.rank || 1)})`;
+
       (this.state.data?.traits || [])
-        .filter(t => (t.name || "").toLowerCase().includes(tq))
-        // hide granted unless "Connections"
-        .filter(t => !(traitIdSet.has(t._id) || traitNameSet.has((t.name||"").toLowerCase())) || isConnections(t.name))
+        .filter(t => {
+          const name = String(t?.name || "").toLowerCase();
+          const desc = String(t?.system?.description || "").toLowerCase();
+          return name.includes(tq) || desc.includes(tq);
+        })
+        .filter(t => !isGrantedTrait(t) || isRepeatable(t))
         .forEach(t=>{
           const row = document.createElement("div"); row.className="mmc-pwr";
-          const picked = !!this.state.selectedTraits.find(x=>x._id===t._id || (x.name||"").toLowerCase()===(t.name||"").toLowerCase());
-          // disable when already granted or already picked (except Connections)
-          const disableByGrant = (traitIdSet.has(t._id) || traitNameSet.has((t.name||"").toLowerCase())) && !isConnections(t.name);
-          const disableByPicked = picked && !isConnections(t.name);
-          const disabled = disableByGrant || disableByPicked || remaining<=0;
-          let action = `<button class="mmc-btn" data-add-trait="${t._id}" ${disabled?"disabled":""}>Selecionar</button>`;
+          const repeatable = isRepeatable(t);
+          const granted = isGrantedTrait(t);
+          const picked = (this.state.selectedTraits || []).some(x=>sameItem(x,t));
+          const disableByGrant = granted && !repeatable;
+          const disableByPicked = picked && !repeatable;
+          const disabled = disableByGrant || disableByPicked || remainingNow <= 0;
+
+          const actionLabel = repeatable && (granted || picked) ? "Selecionar novamente" : "Selecionar";
+          let action = `<button class="mmc-btn" data-add-trait="${t._id}" ${disabled?"disabled":""}>${actionLabel}</button>`;
           if (disableByGrant) action = `<button class="mmc-btn" disabled>Concedido</button>`;
           if (!disableByGrant && disableByPicked) action = `<button class="mmc-btn" disabled>Selecionado</button>`;
-          row.innerHTML = `<div class="name">${t.name}</div>
+
+          const multi = repeatable ? ` <span class="mmc-small">— pode repetir</span>` : "";
+          row.innerHTML = `<div class="name">${t.name}${multi}</div>
             <div class="desc">${t.system?.description || ""}</div>
             <div>${action}</div>`;
           listT.appendChild(row);
         });
-      // restore scroll
+
       listT.scrollTop = prev;
       requestAnimationFrame(()=>{ listT.scrollTop = prev; });
-      // attach add handlers
+
       listT.querySelectorAll("[data-add-trait]").forEach(btn=> btn.addEventListener("click", ev=>{
         const id = ev.currentTarget.dataset.addTrait;
         const obj = (this.state.data?.traits||[]).find(x=>x._id===id);
-        // prevent dup by name when not Connections
-        if (obj && !isConnections(obj.name)) {
-          const dupByName = (this.state.selectedTraits||[]).some(x => (x.name||"").toLowerCase()===(obj.name||"").toLowerCase());
-          if (dupByName) return;
+        if (!obj) return;
+
+        const remainingAtClick = Math.max(0, Number(this.state.rank || 1) - (this.state.selectedTraits || []).length);
+        if (remainingAtClick <= 0) {
+          ui.notifications?.warn("Você já escolheu todos os Traços bônus.");
+          return;
         }
-        if (remaining<=0) { ui.notifications?.warn("Você já escolheu todos os Traços bônus."); return; }
-        if (obj) this.state.selectedTraits.push(obj);
-        this.state.scroll["traits"]=listT.scrollTop;
+
+        if (!isRepeatable(obj)) {
+          const duplicate = (this.state.selectedTraits||[]).some(x=>sameItem(x,obj));
+          if (duplicate) return;
+        }
+
+        this.state.selectedTraits.push(foundry.utils.deepClone(obj));
+        this.state.scroll["traits"] = listT.scrollTop;
         this._refreshPowerChips();
       }));
     };
     renderListTraits();
-    // restore persistent scroll from state after build
-    if (this.state.scroll["traits"]!=null) { listT.scrollTop = this.state.scroll["traits"]; requestAnimationFrame(()=>{ listT.scrollTop = this.state.scroll["traits"]; }); }
+    if (this.state.scroll["traits"]!=null) {
+      listT.scrollTop = this.state.scroll["traits"];
+      requestAnimationFrame(()=>{ listT.scrollTop = this.state.scroll["traits"]; });
+    }
 
-    // ===== Right column: Tags list
     const rightTop = document.createElement("div"); rightTop.className="mmc-card";
     rightTop.innerHTML = `<h3>Tags</h3>
       <input class="mmc-search" name="search-tags" placeholder="Buscar..." value="${this.state.search?.tags || ""}"> `;
@@ -863,33 +932,50 @@ _renderTraitsTags(){
       listG.innerHTML = "";
       const gq = (this.state.search?.tags || "").toLowerCase();
       (this.state.data?.tags || [])
-        .filter(t => (t.name || "").toLowerCase().includes(gq))
+        .filter(t => {
+          const name = String(t?.name || "").toLowerCase();
+          const desc = String(t?.system?.description || "").toLowerCase();
+          return name.includes(gq) || desc.includes(gq);
+        })
         .forEach(t=>{
           const row = document.createElement("div"); row.className="mmc-pwr";
-          const granted = tagIdSet.has(t._id) || tagNameSet.has((t.name||"").toLowerCase());
-          const picked = !!this.state.selectedTags.find(x=>x._id===t._id || (x.name||"").toLowerCase()===(t.name||"").toLowerCase());
-          const disabled = granted || picked;
-          let action = `<button class="mmc-btn" data-add-tag="${t._id}" ${disabled?"disabled":""}>Selecionar</button>`;
-          if (granted) action = `<button class="mmc-btn" disabled>Concedido</button>`;
-          if (!granted && picked) action = `<button class="mmc-btn" disabled>Selecionado</button>`;
-          row.innerHTML = `<div class="name">${t.name}</div>
+          const repeatable = isRepeatable(t);
+          const granted = isGrantedTag(t);
+          const picked = (this.state.selectedTags || []).some(x=>sameItem(x,t));
+          const disabled = !repeatable && (granted || picked);
+
+          const actionLabel = repeatable && (granted || picked) ? "Selecionar novamente" : "Selecionar";
+          let action = `<button class="mmc-btn" data-add-tag="${t._id}" ${disabled?"disabled":""}>${actionLabel}</button>`;
+          if (granted && !repeatable) action = `<button class="mmc-btn" disabled>Concedido</button>`;
+          else if (picked && !repeatable) action = `<button class="mmc-btn" disabled>Selecionado</button>`;
+
+          const multi = repeatable ? ` <span class="mmc-small">— pode repetir</span>` : "";
+          row.innerHTML = `<div class="name">${t.name}${multi}</div>
             <div class="desc">${t.system?.description || ""}</div>
             <div>${action}</div>`;
           listG.appendChild(row);
         });
+
       listG.scrollTop = prev;
       requestAnimationFrame(()=>{ listG.scrollTop = prev; });
+
       listG.querySelectorAll("[data-add-tag]").forEach(btn=> btn.addEventListener("click", ev=>{
         const id = ev.currentTarget.dataset.addTag;
         const obj = (this.state.data?.tags||[]).find(x=>x._id===id);
-        if (obj) this.state.selectedTags.push(obj);
-        this.state.scroll["tags"]=listG.scrollTop;
+        if (!obj) return;
+
+        if (!isRepeatable(obj)) {
+          const duplicate = (this.state.selectedTags||[]).some(x=>sameItem(x,obj));
+          if (duplicate || isGrantedTag(obj)) return;
+        }
+
+        this.state.selectedTags.push(foundry.utils.deepClone(obj));
+        this.state.scroll["tags"] = listG.scrollTop;
         this._refreshPowerChips();
       }));
     };
     renderListTags();
     
-    // === Live-load Traits & Tags from World/Compendia (no cache), then refresh lists ===
     try {
       const prevT = this.state?.scroll?.["traits"] ?? listT.scrollTop;
       const prevG = this.state?.scroll?.["tags"] ?? listG.scrollTop;
@@ -906,7 +992,6 @@ _renderTraitsTags(){
         this.state.data.tags = mergeByName(baseTags, tags);
         if (typeof renderListTraits === "function") renderListTraits();
         if (typeof renderListTags === "function") renderListTags();
-        // restore scrolls (list-level)
         listT.scrollTop = prevT; requestAnimationFrame(()=>{ listT.scrollTop = prevT; });
         listG.scrollTop = prevG; requestAnimationFrame(()=>{ listG.scrollTop = prevG; });
       });
@@ -914,27 +999,26 @@ _renderTraitsTags(){
       console.warn("MMC | Step 4 live load falhou:", e);
     }
 
-    if (this.state.scroll["tags"]!=null) { listG.scrollTop = this.state.scroll["tags"]; requestAnimationFrame(()=>{ listG.scrollTop = this.state.scroll["tags"]; }); }
+    if (this.state.scroll["tags"]!=null) {
+      listG.scrollTop = this.state.scroll["tags"];
+      requestAnimationFrame(()=>{ listG.scrollTop = this.state.scroll["tags"]; });
+    }
 
-    // ===== Bottom-left: Selected Traits
     const selTraits = document.createElement("div"); selTraits.className="mmc-card mmc-selected";
     selTraits.innerHTML = `<h3>Selecionados — Traços</h3>`;
     const chipsT = document.createElement("div"); chipsT.className="mmc-tags";
-    // granted first (cannot remove)
     grantedTraits.forEach(x=>{
       const c = document.createElement("div"); c.className="mmc-tag mmc-tag-granted"; c.textContent = x.name;
       chipsT.appendChild(c);
     });
-    // extras picked by user (can remove)
-    (this.state.selectedTraits || []).forEach(x=>{
-      const c = document.createElement("div"); c.className="mmc-tag"; 
-      c.innerHTML = `${x.name} <button type="button" class="mmc-chip-x" data-remove-trait="${x._id}" title="Remover">×</button>`;
+    (this.state.selectedTraits || []).forEach((x,index)=>{
+      const c = document.createElement("div"); c.className="mmc-tag";
+      c.innerHTML = `${x.name} <button type="button" class="mmc-chip-x" data-remove-trait-index="${index}" title="Remover uma ocorrência">×</button>`;
       chipsT.appendChild(c);
     });
     selTraits.appendChild(chipsT);
     wrap.appendChild(selTraits);
 
-    // ===== Bottom-right: Selected Tags
     const selTags = document.createElement("div"); selTags.className="mmc-card mmc-selected";
     selTags.innerHTML = `<h3>Selecionados — Tags</h3>`;
     const chipsG = document.createElement("div"); chipsG.className="mmc-tags";
@@ -942,16 +1026,14 @@ _renderTraitsTags(){
       const c = document.createElement("div"); c.className="mmc-tag mmc-tag-granted"; c.textContent = x.name;
       chipsG.appendChild(c);
     });
-    (this.state.selectedTags || []).forEach(x=>{
-      const c = document.createElement("div"); c.className="mmc-tag"; 
-      c.innerHTML = `${x.name} <button type="button" class="mmc-chip-x" data-remove-tag="${x._id}" title="Remover">×</button>`;
+    (this.state.selectedTags || []).forEach((x,index)=>{
+      const c = document.createElement("div"); c.className="mmc-tag";
+      c.innerHTML = `${x.name} <button type="button" class="mmc-chip-x" data-remove-tag-index="${index}" title="Remover uma ocorrência">×</button>`;
       chipsG.appendChild(c);
     });
     selTags.appendChild(chipsG);
     wrap.appendChild(selTags);
 
-    
-    // -- Live hooks while Step 4 is open (create/update/delete): keep lists in sync without reopening
     if (!this._mmc_step4ItemHooks){
       const handler = async (item, data, opts, userId) => {
         const t = String((item?.type||item?.document?.type||"")).toLowerCase();
@@ -964,7 +1046,6 @@ _renderTraitsTags(){
         update: Hooks.on("updateItem", handler),
         delete: Hooks.on("deleteItem", handler)
       };
-      // cleanup on close
       this.once?.("close", () => {
         try{
           Hooks.off("createItem", this._mmc_step4ItemHooks.create);
@@ -974,7 +1055,7 @@ _renderTraitsTags(){
         this._mmc_step4ItemHooks = null;
       });
     }
-// ===== Search listeners (no full re-render; update list in place)
+
     left.querySelector('input[name="search-traits"]').addEventListener("input", (ev)=>{
       this.state.search.traits = ev.target.value || "";
       renderListTraits();
@@ -984,23 +1065,23 @@ _renderTraitsTags(){
       renderListTags();
     });
 
-    // Remove buttons (only extras, not granted)
-    selTraits.querySelectorAll("[data-remove-trait]").forEach(btn=> btn.addEventListener("click", ev=>{
+    selTraits.querySelectorAll("[data-remove-trait-index]").forEach(btn=> btn.addEventListener("click", ev=>{
       ev.preventDefault(); ev.stopPropagation();
-      const id = ev.currentTarget.dataset.removeTrait;
-      this.state.selectedTraits = (this.state.selectedTraits || []).filter(x=>x._id!==id);
+      const index = Number(ev.currentTarget.dataset.removeTraitIndex);
+      if (!Number.isInteger(index) || index < 0) return;
+      this.state.selectedTraits = (this.state.selectedTraits || []).filter((_,i)=>i!==index);
       this._refreshPowerChips();
     }));
-    selTags.querySelectorAll("[data-remove-tag]").forEach(btn=> btn.addEventListener("click", ev=>{
+    selTags.querySelectorAll("[data-remove-tag-index]").forEach(btn=> btn.addEventListener("click", ev=>{
       ev.preventDefault(); ev.stopPropagation();
-      const id = ev.currentTarget.dataset.removeTag;
-      this.state.selectedTags = (this.state.selectedTags || []).filter(x=>x._id!==id);
+      const index = Number(ev.currentTarget.dataset.removeTagIndex);
+      if (!Number.isInteger(index) || index < 0) return;
+      this.state.selectedTags = (this.state.selectedTags || []).filter((_,i)=>i!==index);
       this._refreshPowerChips();
     }));
 
     return wrap;
   }
-
 
 
   
@@ -1323,8 +1404,8 @@ _renderReview(){
         <li><strong>Atributos:</strong> M${this.state.abilities.mle} A${this.state.abilities.agl} R${this.state.abilities.res} V${this.state.abilities.vig} E${this.state.abilities.ego} L${this.state.abilities.log}</li>
         <li><strong>Ocupação:</strong> ${this.state.occupation?.name||"—"}</li>
         <li><strong>Origem:</strong> ${this.state.origin?.name||"—"}</li>
-        <li><strong>Traços:</strong> ${[...(this.state.occupation?.system?.traits||[]), ...(this.state.origin?.system?.traits||[]), ...(this.state.selectedTraits||[])].map(t=>t.name).join(", ")||"—"}</li>
-        <li><strong>Tags:</strong> ${[...(this.state.occupation?.system?.tags||[]), ...(this.state.origin?.system?.tags||[]), ...(this.state.selectedTags||[])].map(t=>t.name).join(", ")||"—"}</li>
+        <li><strong>Traços:</strong> ${MMCCharactermancer._mmcFormatNamesWithCounts([...(this.state.occupation?.system?.traits||[]), ...(this.state.origin?.system?.traits||[]), ...(this.state.selectedTraits||[])])||"—"}</li>
+        <li><strong>Tags:</strong> ${MMCCharactermancer._mmcFormatNamesWithCounts([...(this.state.occupation?.system?.tags||[]), ...(this.state.origin?.system?.tags||[]), ...(this.state.selectedTags||[])])||"—"}</li>
         <li><strong>Poderes (granteds + escolhidos):</strong> ${[...grantedPowers, ...(this.state.chosenPowers||[])].map(p=>p.name).join(", ")||"—"}</li>
         <li><strong>Limite / Escolhidos:</strong> ${chosenCount} / ${limit}</li>
       </ul>
@@ -1400,7 +1481,7 @@ _bioInput(key,label,val){
       ...(this.state.occupation?.system?.tags || []),
       ...(this.state.origin?.system?.tags || [])
     ];
-    const preparedTraits = MMCCharactermancer._mmcDedupByName([
+    const preparedTraits = MMCCharactermancer._mmcDedupRepeatAware([
       ...grantedTraits,
       ...(this.state.selectedTraits || [])
     ]).map(it => {
@@ -1409,7 +1490,7 @@ _bioInput(key,label,val){
       if (!clone.type && clone.mmcKind) clone.type = clone.mmcKind;
       return clone;
     });
-    const preparedTags = MMCCharactermancer._mmcDedupByName([
+    const preparedTags = MMCCharactermancer._mmcDedupRepeatAware([
       ...grantedTags,
       ...(this.state.selectedTags || [])
     ]).map(it => {
