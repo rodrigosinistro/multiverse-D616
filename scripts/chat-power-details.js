@@ -1,6 +1,6 @@
 
 const MODULE_ID = "multiverse-d616";
-const VERSION = "1.7.4";
+const VERSION = "1.7.5";
 const DEBUG = false;
 
 const FIELDS = ["action","duration","cost","trigger","range"];
@@ -143,10 +143,12 @@ if (
 
     if (contentEl.querySelector(".mcpd-card")) { processed.add(id); return; }
 
-    // insere após o último <p> ou no final
+    // Mantém o aviso de EDGE/TROUBLE como o último elemento do card.
     const ps = contentEl.querySelectorAll("p");
     const boxHTML = buildMetaBox(fields);
-    if (ps.length) ps[ps.length-1].insertAdjacentHTML("afterend", boxHTML);
+    const edgeModeNotice = contentEl.querySelector(".mm-attack-edge-mode");
+    if (edgeModeNotice) edgeModeNotice.insertAdjacentHTML("beforebegin", boxHTML);
+    else if (ps.length) ps[ps.length-1].insertAdjacentHTML("afterend", boxHTML);
     else contentEl.insertAdjacentHTML("beforeend", boxHTML);
 
     processed.add(id);
@@ -181,7 +183,9 @@ Hooks.on("renderChatMessageHTML", async (message, html) => {
     if (!fields) return;
     const boxHTML = buildMetaBox(fields);
     const ps = contentEl.querySelectorAll?.("p");
-    if (ps?.length) ps[ps.length-1].insertAdjacentHTML("afterend", boxHTML);
+    const edgeModeNotice = contentEl.querySelector?.(".mm-attack-edge-mode");
+    if (edgeModeNotice) edgeModeNotice.insertAdjacentHTML("beforebegin", boxHTML);
+    else if (ps?.length) ps[ps.length-1].insertAdjacentHTML("afterend", boxHTML);
     else contentEl.insertAdjacentHTML?.("beforeend", boxHTML);
     log("injected via renderChatMessageHTML", { id: message.id, power: item.name });
   } catch (e) {

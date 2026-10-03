@@ -4,10 +4,42 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 
 ## Versão
 
-- **Versão do sistema:** 0.1.88
+- **Versão do sistema:** 0.1.92
 - **Compatibilidade:** Foundry VTT v14 (`minimum: 14`, `verified: 14`)
 - **ID / pasta interna:** `multiverse-d616`
 - **Manifest:** `https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json`
+
+
+## Atualização v0.1.92 — destaque visual do Attack Edge Mode
+
+- O aviso do `Attack Edge Mode` foi movido para o **final do card informativo do Power**, depois dos dados de Ação/Duração/Custo/Alcance.
+- `edge` mostra: **Esse Ataque tem 1 EDGE (Vantagem)**.
+- `trouble` mostra: **Esse Ataque tem 1 TROUBLE (Desvantagem)**.
+- O aviso fica centralizado, em negrito, com fonte maior e moldura vermelha.
+- `normal` e campo vazio continuam sem exibir aviso.
+- Alteração somente visual; nenhuma regra de EDGE/TROUBLE foi modificada.
+
+## Atualização v0.1.91 — Attack Edge Mode visível no chat
+
+- Powers/Weapons com **`system.attackEdgeMode = edge`** agora exibem **ATTACK EDGE MODE: EDGE** no card informativo do chat.
+- Powers/Weapons com **`system.attackEdgeMode = trouble`** exibem **ATTACK EDGE MODE: TROUBLE**.
+- Valores **Normal** ou **vazio** não exibem nenhuma informação adicional.
+- A mudança é exclusivamente informativa: nenhuma regra, cancelamento, rerrolagem ou automação de EDGE/TROUBLE foi modificada.
+
+
+## Atualização v0.1.90 — Formatação do Efeito no Charactermancer
+
+- O popup informativo dos Powers agora interpreta corretamente o rich text salvo em **`system.effect`**.
+- Marcações HTML como parágrafos, negrito, itálico e listas deixam de aparecer como texto literal e passam a ser exibidas com sua formatação visual.
+- O ajuste é somente de apresentação e não altera qualquer mecânica existente.
+
+
+## Atualização v0.1.89 — Efeito dos Powers no Charactermancer
+
+- Cada Power exibido no passo **Poderes** do Charactermancer agora possui um pequeno botão circular **i** ao lado do nome.
+- Ao clicar no ícone, é aberto um popup compacto mostrando o texto completo do campo **Efeito** do Power.
+- O popup fecha pelo **×**, por clique fora da janela ou pela tecla **Esc**.
+- A alteração é exclusivamente visual/informativa e não modifica seleção de Powers, pré-requisitos, limites, compêndios nem mecânicas de combate.
 
 
 ## Atualização v0.1.88 — Combat Trickery automático

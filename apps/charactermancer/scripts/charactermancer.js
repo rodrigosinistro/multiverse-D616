@@ -1,7 +1,7 @@
 
 import { loadTraitsAndTags } from "./utils/mmc-load-traits-tags.js";
 
-/* Marvel Multiverse — Charactermancer v0.6.8 */
+/* Marvel Multiverse — Charactermancer v0.6.9 */
 class MMCCharactermancer extends foundry.appv1.api.Application {
 
   /**
@@ -1040,6 +1040,95 @@ _renderTraitsTags(){
     }catch(e){ console.warn("MMC | _mmc_step4RefreshData failed", e); }
   }
 
+  _mmcClosePowerEffect(){
+    try{
+      if (this._mmcPowerEffectKeyHandler){
+        document.removeEventListener("keydown", this._mmcPowerEffectKeyHandler);
+        this._mmcPowerEffectKeyHandler = null;
+      }
+      if (this._mmcPowerEffectOverlay?.remove) this._mmcPowerEffectOverlay.remove();
+      this._mmcPowerEffectOverlay = null;
+    }catch(_e){}
+  }
+
+  async _mmcShowPowerEffect(power){
+    try{
+      this._mmcClosePowerEffect();
+
+      const overlay = document.createElement("div");
+      overlay.className = "mmc-power-effect-overlay";
+      overlay.setAttribute("role", "presentation");
+
+      const popup = document.createElement("section");
+      popup.className = "mmc-power-effect-popup";
+      popup.setAttribute("role", "dialog");
+      popup.setAttribute("aria-modal", "true");
+      popup.setAttribute("aria-label", `Efeito de ${power?.name || "Poder"}`);
+
+      const header = document.createElement("header");
+      header.className = "mmc-power-effect-header";
+
+      const heading = document.createElement("div");
+      heading.className = "mmc-power-effect-heading";
+      const kicker = document.createElement("span");
+      kicker.className = "mmc-power-effect-kicker";
+      kicker.textContent = "EFEITO";
+      const title = document.createElement("strong");
+      title.className = "mmc-power-effect-title";
+      title.textContent = power?.name || "Poder";
+      heading.append(kicker, title);
+
+      const close = document.createElement("button");
+      close.type = "button";
+      close.className = "mmc-power-effect-close";
+      close.setAttribute("aria-label", "Fechar");
+      close.title = "Fechar";
+      close.textContent = "×";
+
+      const body = document.createElement("div");
+      body.className = "mmc-power-effect-body";
+      const effect = String(power?.system?.effect ?? "").trim();
+      if (effect){
+        // system.effect is a rich-text field (ProseMirror/HTML). Render it as formatted
+        // content instead of exposing the stored markup (e.g. <p>, <strong>, lists).
+        let enriched = effect;
+        try{
+          const editor = globalThis.foundry?.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
+          if (typeof editor?.enrichHTML === "function") {
+            enriched = await editor.enrichHTML(effect, { async: true });
+          }
+        }catch(err){
+          console.warn("MMC | Não foi possível enriquecer o Efeito do Power; usando HTML armazenado.", err);
+        }
+        body.innerHTML = enriched;
+      } else {
+        body.textContent = "Este poder não possui um texto de efeito cadastrado.";
+      }
+
+      header.append(heading, close);
+      popup.append(header, body);
+      overlay.appendChild(popup);
+      document.body.appendChild(overlay);
+      this._mmcPowerEffectOverlay = overlay;
+
+      const cleanup = ()=> this._mmcClosePowerEffect();
+      close.addEventListener("click", cleanup);
+      overlay.addEventListener("click", ev=>{ if (ev.target === overlay) cleanup(); });
+      popup.addEventListener("click", ev=> ev.stopPropagation());
+
+      this._mmcPowerEffectKeyHandler = ev=>{
+        if (ev.key === "Escape"){
+          ev.preventDefault();
+          cleanup();
+        }
+      };
+      document.addEventListener("keydown", this._mmcPowerEffectKeyHandler);
+      requestAnimationFrame(()=> close.focus());
+    }catch(e){
+      console.warn("MMC | Falha ao abrir popup de efeito do Power", e);
+    }
+  }
+
   _renderPowers(){
     // Outer container
     const container = document.createElement("div");
@@ -1106,7 +1195,7 @@ _renderTraitsTags(){
           actionHTML = `<button class="mmc-btn" data-add-power="${p._id}">Selecionar</button>`; 
         }
       }
-      row.innerHTML = `<div class="name">${p.name}${pre?` <span class="mmc-small">— Pré: ${pre}</span>`:""}</div>
+      row.innerHTML = `<div class="name"><span class="mmc-power-name">${p.name}</span><button type="button" class="mmc-power-info" data-power-info="${p._id}" title="Ver efeito" aria-label="Ver efeito de ${p.name}">i</button>${pre?` <span class="mmc-small">— Pré: ${pre}</span>`:""}</div>
         <div class="desc">${p.system?.description||""}</div>
         <div>${actionHTML}</div>`;
       return row;
@@ -1177,6 +1266,15 @@ this._restoreScroll(listSet,'powers-set');
       if ((ev.ctrlKey||ev.metaKey) && ev.key.toLowerCase()==="f"){ ev.preventDefault(); inputBasic.focus(); inputBasic.select(); }
     });
     setSel.addEventListener("change", ev=>{ this.state.powerSet = ev.target.value||""; this.state.scroll['powers-basic']=listBasic.scrollTop; this.state.scroll['powers-set']=listSet.scrollTop; this.render(true); });
+
+    // Popup de efeito dos Powers
+    container.querySelectorAll("[data-power-info]").forEach(btn=> btn.addEventListener("click", ev=>{
+      ev.preventDefault();
+      ev.stopPropagation();
+      const id = ev.currentTarget.dataset.powerInfo;
+      const p = (this.state.data.powers||[]).find(x=>x._id===id);
+      if (p) this._mmcShowPowerEffect(p);
+    }));
 
     // Add/remove listeners
     container.querySelectorAll("[data-add-power]").forEach(btn=> btn.addEventListener("click", ev=>{

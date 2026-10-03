@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.1.92
+
+- **Chat — Attack Edge Mode:** o aviso foi movido para o **final do card informativo**, depois da caixa de Ação/Duração/Custo/Gatilho/Alcance.
+- `edge` agora exibe **Esse Ataque tem 1 EDGE (Vantagem)**.
+- `trouble` agora exibe **Esse Ataque tem 1 TROUBLE (Desvantagem)**.
+- O aviso é centralizado, em negrito, com fonte maior e moldura vermelha.
+- `normal` e valores vazios continuam sem indicação adicional.
+- Alteração estritamente visual; nenhuma mecânica de EDGE/TROUBLE foi modificada.
+
+## 0.1.91
+
+- **Chat — Attack Edge Mode:** Powers/Weapons configurados com `attackEdgeMode = edge` passam a exibir **ATTACK EDGE MODE: EDGE** no card informativo do chat.
+- Powers/Weapons configurados com `attackEdgeMode = trouble` exibem **ATTACK EDGE MODE: TROUBLE**.
+- `normal` e valores vazios permanecem sem indicação adicional.
+- Alteração estritamente visual/informativa; a mecânica existente de EDGE/TROUBLE, incluindo efeitos elementais e rerrolagens, não foi alterada.
+
+## 0.1.90
+
+- **Fix (Charactermancer — popup de Efeito):** o conteúdo de `system.effect` agora é renderizado como HTML formatado, em vez de exibir literalmente marcações como `<p>`, `<strong>`, listas e outros elementos do editor.
+- O popup tenta usar o enriquecimento de rich text do próprio Foundry VTT e mantém fallback para o HTML armazenado do Power.
+- Ajustados espaçamentos de parágrafos, listas, citações e links dentro do popup.
+- Nenhuma mecânica de seleção de Powers, rolagem, combate ou automação foi alterada.
+
+## 0.1.89
+
+- **Charactermancer — informação de Powers:** adicionado um botão circular **i** ao lado do nome de cada Power nas listas de Poderes Básicos e Power Sets.
+- Ao clicar no botão, o Charactermancer abre um popup compacto com o conteúdo do campo **Efeito (`system.effect`)** daquele Power.
+- O popup pode ser fechado pelo botão **×**, clicando fora dele ou pressionando **Esc**.
+- O texto do Efeito é exibido de forma segura, sem alterar os dados do Power, pré-requisitos, seleção de Powers ou qualquer mecânica de rolagem/combate.
+- Mantidas integralmente as automações e regras aprovadas até a v0.1.88.
 ## 0.1.88
 
 - **Novo (Combat Trickery):** ao usar o Power, o sistema gasta o Focus normalmente e prepara o próximo ataque válido do personagem. Se todos os alvos marcados tiverem **Rank igual ou superior** ao atacante, o dado Marvel é automaticamente transformado em **MARVEL (1)**.

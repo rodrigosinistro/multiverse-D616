@@ -11,3 +11,18 @@
 .mcpd-row { margin: 2px 0; }
 .mcpd-label { font-weight: 700; margin-right: 4px; }
 .mcpd-value { font-weight: 500; }
+
+/* Attack Edge Mode — aviso informativo no final do card do Power. */
+.mm-attack-edge-mode {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 8px 0 0 0;
+  padding: 8px 10px;
+  border: 2px solid #b3261e;
+  border-radius: 8px;
+  background: rgba(179, 38, 30, 0.06);
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 800;
+}

@@ -41,6 +41,21 @@ function mmApplyMessageMode(chatData, messageMode = mmGetMessageMode()) {
   return chatData;
 }
 
+/**
+ * Return an informational badge for a Power/Weapon configured with an intrinsic
+ * Attack Edge Mode. This is display-only: it does not change Edge/Trouble rules.
+ * NORMAL and blank values intentionally render nothing.
+ */
+function mmAttackEdgeModeCardHtml(itemOrSystem) {
+  const system = itemOrSystem?.system ?? itemOrSystem ?? {};
+  const mode = String(system.attackEdgeMode ?? "").trim().toLowerCase();
+  if (mode !== "edge" && mode !== "trouble") return "";
+  const text = mode === "edge"
+    ? "Esse Ataque tem 1 EDGE (Vantagem)"
+    : "Esse Ataque tem 1 TROUBLE (Desvantagem)";
+  return `<div class="mm-attack-edge-mode mm-attack-edge-mode-${mode}">${text}</div>`;
+}
+
 function mmCleanEdgeModeFlavor(flavor) {
   return String(flavor ?? "")
     .replace(/\s*\((?:MULTIVERSE_D616\.(?:edge|trouble|edgeMode\.(?:edge|trouble))|EDGE|TROUBLE|Edge|Trouble)\)\s*/g, " ")
@@ -565,7 +580,7 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       flavor: label,
       content: `<div>${this.system.description}</div><div>${
         this.system.effect ? this.system.effect : ""
-      }</div>`,
+      }</div>${mmAttackEdgeModeCardHtml(this)}`,
     }, messageMode));
 
     // The throw itself makes the shield unavailable even if the attack misses.
@@ -3967,7 +3982,7 @@ render(force = false, options = {}) {
           flavor: label,
           content: `<div>${item.system.description}</div><div>${
             item.system.effect ? item.system.effect : ""
-          }</div>`,
+          }</div>${mmAttackEdgeModeCardHtml(item)}`,
         }, messageMode));
       }
 
