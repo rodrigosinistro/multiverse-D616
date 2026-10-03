@@ -4,23 +4,11 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 
 ## Versão
 
-- **Versão do sistema:** 0.1.95
+- **Versão do sistema:** 0.1.93
 - **Compatibilidade:** Foundry VTT v14 (`minimum: 14`, `verified: 14`)
 - **ID / pasta interna:** `multiverse-d616`
 - **Manifest:** `https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json`
 
-
-## Atualização v0.1.95 — PDF com Traits/Tags repetidos
-
-- A exportação PDF agora mostra a quantidade de Traits e Tags repetidos na primeira página, igual ao site (ex.: **Linguist ×2**).
-- As páginas de descrição não duplicam o mesmo Trait/Tag várias vezes.
-
-## Atualização v0.1.94 — correção da exportação PDF
-
-- Corrigida a falha **`WinAnsi cannot encode`** ao exportar personagens que contenham caracteres Unicode invisíveis em descrições de Powers/Traits/Tags.
-- O exportador remove caracteres como **ZERO WIDTH SPACE (U+200B)** antes de medir/desenhar o texto.
-- A normalização agora também protege os campos da ficha PDF contra caracteres que a fonte padrão não consegue codificar.
-- As escolhas repetidas de Traços/Tags implementadas na v0.1.93 permanecem inalteradas.
 
 ## Atualização v0.1.93 — Traços e Tags repetíveis no Charactermancer
 
