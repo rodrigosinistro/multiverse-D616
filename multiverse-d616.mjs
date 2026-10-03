@@ -515,6 +515,15 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
    * @private
    */
   async roll() {
+    const isCombatTrickery = mmD616IsCombatTrickeryItem(this);
+    if (isCombatTrickery) {
+      const check = mmD616CanArmCombatTrickery(this.actor);
+      if (!check.ok) {
+        ui.notifications?.warn?.(check.message);
+        return;
+      }
+    }
+
     // Secret Wars: a shield that was hurled is unavailable until the start of
     // this character's next turn.
     if (!canUseShieldBearerPower(this.actor, this)) return;
@@ -562,13 +571,34 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
     // The throw itself makes the shield unavailable even if the attack misses.
     await markShieldThrown(this.actor, this);
 
+    // Combat Trickery is a Reaction that modifies the character's NEXT valid attack.
+    // Clicking the power spends its normal Focus cost and arms a one-shot actor flag.
+    if (isCombatTrickery) {
+      await mmD616ArmCombatTrickery(this.actor, this);
+      return this;
+    }
+
     if (this.system.formula && this.system.ability) {
       // Retrieve roll data.
       const rollData = this.getRollData();
       // Invoke the roll and submit it to chat.
-      const useUltimateFantastic = await maybeRequestUltimateFantastic(this.actor);
+      const combatTrickery = mmD616CombatTrickeryAttackContext(this.actor, this);
+      if (combatTrickery.armed && !combatTrickery.apply && combatTrickery.warning) {
+        ui.notifications?.warn?.(combatTrickery.warning);
+      }
+
+      // If Combat Trickery already guarantees M, do not ask to consume an Ultimate
+      // Fantastic Initiative use for the same roll.
+      const useUltimateFantastic = combatTrickery.apply
+        ? false
+        : await maybeRequestUltimateFantastic(this.actor);
       const elementalEdgeMode = getElementalEdgeMode(this.actor, this);
       const rollOptions = useUltimateFantastic ? { forceMarvelM: true } : {};
+      if (combatTrickery.apply) {
+        rollOptions.forceMarvelM = true;
+        rollOptions.combatTrickery = true;
+        rollOptions.lockMarvelTrouble = true;
+      }
       if (elementalEdgeMode) rollOptions.edgeMode = elementalEdgeMode;
       const roll = new CONFIG.Dice.MarvelMultiverseRoll(
         rollData.formula,
@@ -601,6 +631,11 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         actorId: this.actor?.id ?? null,
         itemId: this._id,
         ability: abilityKey,
+        // The attack ability and the defense targeted by a power/weapon are
+        // independent in Marvel Multiverse (e.g. Logic vs Agility). Persist
+        // both so HIT/MISS always compares against the defense configured on
+        // the item, including after Edge/Trouble re-renders.
+        attackTarget: this.system.attackTarget ?? null,
         damageType:
           String(this.system.damageType ?? "").toLowerCase() === "focus"
             ? "focus"
@@ -617,6 +652,16 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
 
       const elementalFantastic = getElementalFantasticMetadata(this, this.actor);
       if (elementalFantastic) systemFlags.elementalFantastic = elementalFantastic;
+
+      if (combatTrickery.apply) {
+        systemFlags.combatTrickery = {
+          applied: true,
+          noMarvelTrouble: true,
+          sourceItemId: combatTrickery.state?.sourceItemId ?? null,
+          attackerRank: combatTrickery.attackerRank,
+          targetRanks: combatTrickery.targetRanks,
+        };
+      }
 
       // Persist Focus spending on the roll card so it survives Edge/Trouble retro rolls.
       // Also hides the old "Focus" button (auto workflow).
@@ -651,6 +696,13 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         messageMode,
         itemId: this._id,
       });
+
+      if (combatTrickery.apply) {
+        await mmD616ConsumeCombatTrickery(this.actor);
+        ui.notifications?.info?.(
+          "Combat Trickery aplicado: dado Marvel transformado em MARVEL (1)."
+        );
+      }
 
       if (this.system.attack) {
         Hooks.callAll("multiverse-d616.rollAttack", this, roll);
@@ -1647,6 +1699,161 @@ function mmD616IsTargetedByUser(token, user) {
   return false;
 }
 
+const M616_COMBAT_TRICKERY_FLAG = "combatTrickery";
+
+function mmD616NormalizeRuleName(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+function mmD616IsCombatTrickeryItem(item) {
+  if (!item || item.type !== "power") return false;
+  const name = mmD616NormalizeRuleName(item.name);
+  return name === "combat trickery" || name === "ardil de combate";
+}
+
+function mmD616CurrentBattleId() {
+  const combat = game.combat;
+  if (!combat) return null;
+  const started = combat.started ?? (Number(combat.round ?? 0) > 0);
+  return started ? combat.id : null;
+}
+
+function mmD616GetCombatTrickeryState(actor) {
+  try {
+    return actor?.getFlag?.(M616_SYSTEM_ID, M616_COMBAT_TRICKERY_FLAG) ?? null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function mmD616CanArmCombatTrickery(actor) {
+  const state = mmD616GetCombatTrickeryState(actor);
+  const battleId = mmD616CurrentBattleId();
+
+  // An armed use from the current battle (or from outside combat) is already waiting
+  // for the next valid attack and must not spend Focus a second time.
+  if (state?.armed && state.battleId === battleId) {
+    return {
+      ok: false,
+      message: "Combat Trickery já está preparado para o próximo ataque válido.",
+    };
+  }
+
+  // The power is explicitly once per battle. Outside an active Combat encounter we
+  // still allow it so worlds can test/use the automation without a Combat Tracker.
+  if (battleId && state?.usedBattleId === battleId) {
+    return {
+      ok: false,
+      message: "Combat Trickery já foi usado nesta batalha.",
+    };
+  }
+
+  return { ok: true, battleId };
+}
+
+async function mmD616ArmCombatTrickery(actor, item) {
+  if (!actor) return false;
+  const battleId = mmD616CurrentBattleId();
+  const previous = mmD616GetCombatTrickeryState(actor) ?? {};
+  const next = {
+    ...previous,
+    armed: true,
+    battleId,
+    // Only an active Combat has a persistent once-per-battle scope. Outside combat,
+    // a consumed test can be armed again normally.
+    usedBattleId: battleId ?? previous.usedBattleId ?? null,
+    sourceItemId: item?.id ?? null,
+    armedAt: Date.now(),
+    consumedAt: null,
+  };
+  await actor.setFlag(M616_SYSTEM_ID, M616_COMBAT_TRICKERY_FLAG, next);
+  ui.notifications?.info?.(
+    "Combat Trickery preparado: o próximo ataque válido terá o dado Marvel = MARVEL (1)."
+  );
+  return true;
+}
+
+function mmD616LocalTargetActors() {
+  const tokens = Array.from(game.user?.targets ?? []);
+  if (!tokens.length && canvas?.tokens?.placeables) {
+    tokens.push(
+      ...canvas.tokens.placeables.filter((token) =>
+        mmD616IsTargetedByUser(token, game.user)
+      )
+    );
+  }
+
+  return tokens
+    .map((token) => token?.actor ?? token?.document?.actor ?? null)
+    .filter(Boolean);
+}
+
+function mmD616CombatTrickeryAttackContext(actor, item) {
+  const state = mmD616GetCombatTrickeryState(actor);
+  if (!state?.armed || !item?.system?.attack || mmD616IsCombatTrickeryItem(item)) {
+    return { armed: false, apply: false, state };
+  }
+
+  const targets = mmD616LocalTargetActors();
+  if (!targets.length) {
+    return {
+      armed: true,
+      apply: false,
+      state,
+      warning:
+        "Combat Trickery está preparado, mas o ataque precisa ter pelo menos um alvo marcado para validar o Rank.",
+    };
+  }
+
+  const attackerRank = Number(actor?.system?.attributes?.rank?.value ?? NaN);
+  const targetRanks = targets.map((target) =>
+    Number(target?.system?.attributes?.rank?.value ?? NaN)
+  );
+  if (!Number.isFinite(attackerRank) || targetRanks.some((rank) => !Number.isFinite(rank))) {
+    return {
+      armed: true,
+      apply: false,
+      state,
+      warning:
+        "Combat Trickery está preparado, mas não foi possível determinar o Rank de todos os envolvidos.",
+    };
+  }
+
+  if (targetRanks.some((rank) => rank < attackerRank)) {
+    return {
+      armed: true,
+      apply: false,
+      state,
+      warning:
+        "Combat Trickery não foi consumido: todos os alvos precisam ter Rank igual ou superior ao atacante.",
+    };
+  }
+
+  return {
+    armed: true,
+    apply: true,
+    state,
+    attackerRank,
+    targetRanks,
+  };
+}
+
+async function mmD616ConsumeCombatTrickery(actor) {
+  if (!actor) return false;
+  const state = mmD616GetCombatTrickeryState(actor);
+  if (!state?.armed) return false;
+  await actor.setFlag(M616_SYSTEM_ID, M616_COMBAT_TRICKERY_FLAG, {
+    ...state,
+    armed: false,
+    consumedAt: Date.now(),
+  });
+  return true;
+}
+
 function mmD616CollectLocalTargets() {
   const out = [];
   try {
@@ -2003,7 +2210,20 @@ class ChatMessageMarvel extends ChatMessage {
       const initiativeResolved = initiativeContext?.resolved === true;
       const canAdjustInitiative = mmCanAdjustInitiativeMessage(this);
 
+      const combatTrickeryFlag = this.getFlag(M616_SYSTEM_ID, "combatTrickery");
       for (const el of html.querySelectorAll("button.retroEdgeMode")) {
+        const action = String(el.dataset.retroAction ?? "");
+        const dieIndex = Number(el.dataset.index ?? -1);
+        if (
+          combatTrickeryFlag?.noMarvelTrouble &&
+          action === "trouble" &&
+          dieIndex === 1
+        ) {
+          el.hidden = true;
+          el.disabled = true;
+          continue;
+        }
+
         if (isInitiative) {
           el.setAttribute("data-initiative", "true");
         }
@@ -2148,9 +2368,24 @@ class ChatMessageMarvel extends ChatMessage {
     const [attackRoll] = this.rolls ?? [];
     if (!attackRoll) return;
 
-    // Ability key used to fetch target defense
+    // Attack ability and configured target defense are separate values.
+    // Example: Telekinetic Barrier rolls Logic but explicitly targets Agility.
     let abilityAbr = this.getFlag("multiverse-d616", "ability") ?? null;
+    let attackTargetAbr = this.getFlag("multiverse-d616", "attackTarget") ?? null;
     const flavorText = this.flavor ?? "";
+
+    const mmD616NormalizeAbilityKey = (value) => {
+      const key = String(value ?? "").trim().toLowerCase();
+      const aliases = {
+        mle: "mle", melee: "mle",
+        agl: "agl", agility: "agl",
+        res: "res", resilience: "res",
+        vig: "vig", vigilance: "vig",
+        ego: "ego",
+        log: "log", logic: "log",
+      };
+      return aliases[key] ?? null;
+    };
 
     // Hidden marker we add in flavor for roll messages
     if (!abilityAbr) {
@@ -2170,6 +2405,29 @@ class ChatMessageMarvel extends ChatMessage {
           null;
       }
     }
+
+    abilityAbr = mmD616NormalizeAbilityKey(abilityAbr);
+    attackTargetAbr = mmD616NormalizeAbilityKey(attackTargetAbr);
+
+    // Backward compatibility for cards created before attackTarget was persisted:
+    // recover the defense configured on the original Power/Weapon when possible.
+    if (!attackTargetAbr) {
+      try {
+        const { scene: sceneId, token: tokenId, actor: actorId } = this.speaker ?? {};
+        const sourceActor =
+          game.scenes.get(sceneId)?.tokens.get(tokenId)?.actor ??
+          game.actors.get(actorId);
+        const itemId = this.getFlag("multiverse-d616", "itemId");
+        const sourceItem = sourceActor?.items?.get?.(itemId) ?? null;
+        attackTargetAbr = mmD616NormalizeAbilityKey(sourceItem?.system?.attackTarget);
+      } catch (e) {
+        // Keep the legacy fallback below if the source item no longer exists.
+      }
+    }
+
+    // Legacy/special-case fallback: if an item has no explicit target defense,
+    // preserve the historical behavior of comparing against the attack ability.
+    if (!attackTargetAbr) attackTargetAbr = abilityAbr;
 
     // Determine targets: always use the targets saved on the message (set at roll time by the rolling user).
     // If missing, ONLY the message author will auto-capture their current local targets and persist them,
@@ -2248,10 +2506,13 @@ class ChatMessageMarvel extends ChatMessage {
 
 
     // Trait-based defense swaps (Marvel Multiverse rules) applied on the *target*.
-    // Brawling: Agility attacks are defended with Melee.
-    // Evasion: Melee attacks are defended with Agility.
-    // Wisdom: Logic attacks are defended with Ego.
-    // Integrity: Ego attacks are defended with Logic.
+    // IMPORTANT: these swaps are keyed to the DEFENSE being targeted by the attack,
+    // not to the ability used to make the roll. This matters for powers such as
+    // Telekinetic Grab (Logic vs Melee): a target with Evasion defends with Agility.
+    // Brawling: attacks targeting Agility are defended with Melee.
+    // Evasion: attacks targeting Melee are defended with Agility.
+    // Wisdom: attacks targeting Logic are defended with Ego.
+    // Integrity: attacks targeting Ego are defended with Logic.
     const mmD616Norm = (s) => String(s ?? "").trim().toLowerCase();
 
     const mmD616HasNamedTrait = (actor, traitName) => {
@@ -2267,13 +2528,16 @@ class ChatMessageMarvel extends ChatMessage {
       return false;
     };
 
-    const mmD616ResolveDefenseAbility = (attackAbr, actor) => {
-      let def = attackAbr;
-      if (!actor || !attackAbr) return def;
-      if (attackAbr === "agl" && mmD616HasNamedTrait(actor, "Brawling")) def = "mle";
-      else if (attackAbr === "mle" && mmD616HasNamedTrait(actor, "Evasion")) def = "agl";
-      else if (attackAbr === "log" && mmD616HasNamedTrait(actor, "Wisdom")) def = "ego";
-      else if (attackAbr === "ego" && mmD616HasNamedTrait(actor, "Integrity")) def = "log";
+    const mmD616ResolveDefenseAbility = (attackAbr, configuredDefenseAbr, actor) => {
+      // The Power/Weapon's attackTarget is the defense the incoming attack actually
+      // challenges. Defensive Basic powers therefore react to that targeted defense,
+      // even when the roll itself uses a different ability (for example Logic vs Melee).
+      let def = configuredDefenseAbr || attackAbr;
+      if (!actor || !def) return def;
+      if (def === "agl" && mmD616HasNamedTrait(actor, "Brawling")) def = "mle";
+      else if (def === "mle" && mmD616HasNamedTrait(actor, "Evasion")) def = "agl";
+      else if (def === "log" && mmD616HasNamedTrait(actor, "Wisdom")) def = "ego";
+      else if (def === "ego" && mmD616HasNamedTrait(actor, "Integrity")) def = "log";
       return def;
     };
 
@@ -2284,13 +2548,14 @@ class ChatMessageMarvel extends ChatMessage {
 
         // Defense value is only computed for GM to avoid leaking defenses.
         // Apply trait-based defense swaps (Brawling/Evasion/Wisdom/Integrity) on the target.
-        const defenseAbr = isGM && abilityAbr ? mmD616ResolveDefenseAbility(abilityAbr, a) : null;
+        const defenseAbr =
+          isGM && (abilityAbr || attackTargetAbr)
+            ? mmD616ResolveDefenseAbility(abilityAbr, attackTargetAbr, a)
+            : null;
         const currentAc =
           isGM && defenseAbr && a?.system?.abilities?.[defenseAbr]?.defense != null
             ? a.system.abilities[defenseAbr].defense
-            : isGM && abilityAbr && a?.system?.abilities?.[abilityAbr]?.defense != null
-              ? a.system.abilities[abilityAbr].defense
-              : null;
+            : null;
 
         const name = tokenDoc?.name ?? t.name ?? a?.name ?? "Target";
         const img = tokenDoc?.texture?.src ?? t.img ?? a?.img ?? "";
@@ -2935,6 +3200,21 @@ class ChatMessageMarvel extends ChatMessage {
 
     const chatMessage = game.messages.get(messageId);
     if (!chatMessage) throw new Error("Chat message not found");
+
+    const combatTrickeryFlag = chatMessage.getFlag(
+      M616_SYSTEM_ID,
+      "combatTrickery"
+    );
+    if (
+      combatTrickeryFlag?.noMarvelTrouble &&
+      action === "trouble" &&
+      Number(dieIndex) === 1
+    ) {
+      ui.notifications?.info?.(
+        "Combat Trickery: o dado Marvel não pode ser afetado por Trouble."
+      );
+      return false;
+    }
 
     const initiativeContext = mmInitiativeContext(chatMessage);
     const isInitiative = !!isInit || mmIsInitiativeMessage(chatMessage);

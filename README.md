@@ -4,10 +4,37 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 
 ## Versão
 
-- **Versão do sistema:** 0.1.83
+- **Versão do sistema:** 0.1.88
 - **Compatibilidade:** Foundry VTT v14 (`minimum: 14`, `verified: 14`)
 - **ID / pasta interna:** `multiverse-d616`
 - **Manifest:** `https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json`
+
+
+## Atualização v0.1.88 — Combat Trickery automático
+
+- **Combat Trickery** agora prepara automaticamente o próximo ataque válido do personagem e gasta o Focus normalmente.
+- Se todos os alvos marcados tiverem **Rank igual ou superior** ao atacante, o dado Marvel desse ataque é transformado automaticamente em **MARVEL (1)**.
+- O dado Marvel fica protegido contra **Trouble** nesse ataque, sem alterar Trouble nos demais dados.
+- Em combate, o uso é limitado a **uma vez por batalha** por personagem. Fora do Combat Tracker, permanece disponível para testes e uso manual.
+- Ataques sem alvo marcado ou com qualquer alvo de Rank inferior não consomem o efeito preparado.
+
+## Atualização v0.1.87 — Defesas alternativas pelo alvo real
+
+- **Brawling, Evasion, Wisdom e Integrity** agora verificam a defesa indicada em `system.attackTarget`.
+- Isso corrige combinações em que a habilidade usada na rolagem difere da defesa-alvo, como **Telekinetic Grab (Logic vs Melee)** contra um alvo com **Evasion**, que passa a usar **Agility Defense**.
+- As demais mecânicas de ataque, EDGE/TROUBLE, Fantastic, Focus e dano permanecem inalteradas.
+
+## Atualização v0.1.86 — Habilidade de ataque x defesa-alvo
+
+- A avaliação **ACERTOU/ERROU** separa corretamente a habilidade usada na rolagem (`system.ability`) da defesa indicada pelo Power/Weapon (`system.attackTarget`).
+- Ataques como **Logic vs Agility** agora comparam o total contra **Agility Defense**, e não contra Logic.
+- Os cards persistem `attackTarget`, com fallback para recuperar o valor do item original em cards anteriores.
+
+## Atualização v0.1.85 — Elemental Control e EDGE/TROUBLE
+
+- Powers de **Elemental Control** com `system.element` vazio passam a herdar o elemento padrão da ficha.
+- Corrigido o armazenamento do Marvel Die em rerolls de **EDGE/TROUBLE**, incluindo tratamento correto de `M`.
+- Fantastic de Elemental Control preserva os metadados necessários para aplicação automática das condições correspondentes.
 
 
 ## Atualização v0.1.78 — Correção multiplayer da Concentração

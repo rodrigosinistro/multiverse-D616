@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.88
+
+- **Novo (Combat Trickery):** ao usar o Power, o sistema gasta o Focus normalmente e prepara o próximo ataque válido do personagem. Se todos os alvos marcados tiverem **Rank igual ou superior** ao atacante, o dado Marvel é automaticamente transformado em **MARVEL (1)**.
+- **Trouble:** no ataque afetado por Combat Trickery, o dado Marvel fica protegido contra **Trouble**; o botão de Trouble desse dado é bloqueado, sem alterar a aplicação de Trouble aos outros dados.
+- **Uma vez por batalha:** quando há um Combat ativo, o sistema impede um segundo uso de Combat Trickery pelo mesmo personagem naquela batalha. Fora do Combat Tracker, a automação continua disponível para testes/uso manual.
+- **Múltiplos alvos:** o benefício só é consumido quando todos os alvos marcados atendem ao requisito de Rank. Ataques sem alvo marcado ou com alvo de Rank inferior não consomem o efeito preparado.
+- **Compatibilidade:** preservadas as mecânicas existentes de EDGE/TROUBLE, Fantastic, Ultimate Fantastic Initiative, Focus, dano, alvos, defesas alternativas, Elemental Control e Concentração.
+
+## 0.1.87
+
+- **Fix (defesas alternativas — alvo real do ataque):** **Brawling, Evasion, Wisdom e Integrity** agora verificam a defesa indicada em `system.attackTarget`, e não a habilidade usada para realizar a rolagem. Assim, por exemplo, **Telekinetic Grab (Logic vs Melee)** contra um alvo com **Evasion** usa **Agility Defense**.
+- **Abrangência:** a mesma correção vale para qualquer combinação em que a habilidade da rolagem seja diferente da defesa-alvo, preservando as demais mecânicas de ataque, EDGE/TROUBLE, Fantastic, Focus, dano e alvos.
+
+## 0.1.86
+
+- **Fix (Ataques — habilidade x defesa-alvo):** a avaliação **ACERTOU/ERROU** agora separa corretamente a habilidade usada na rolagem (`system.ability`) da defesa indicada pelo Power/Weapon (`system.attackTarget`). Assim, ataques como **Logic vs Agility** comparam o total contra a defesa de **Agility**, e não contra Logic.
+- **Compatibilidade:** novos cards persistem `attackTarget` nos flags da rolagem; cards anteriores tentam recuperar o valor diretamente do item original. Valores abreviados/por extenso e diferenças de maiúsculas/minúsculas são normalizados.
+- **Defesas alternativas preservadas:** **Brawling, Evasion, Wisdom e Integrity** continuam podendo substituir a defesa, com base na habilidade do ataque, sem alterar as demais mecânicas de rolagem, EDGE/TROUBLE, Fantastic, Focus, dano ou alvos.
+
 ## 0.1.85
 - Elemental Control: poderes com `system.element` vazio agora herdam `system.defaultElement` da ficha do personagem.
 - Edge/Trouble: corrigido o reroll do Marvel Die para armazenar apenas um resultado ativo e tratar `M` corretamente.
