@@ -171,13 +171,29 @@ static async _mmcEnsureType(stub, fallback){
    * Atualiza os PODERES a partir do Mundo e de TODOS os Compêndios (ignora cache), mesclando por nome.
    * Se 'renderAfter' for true, re-renderiza mantendo o scroll.
    */
+
+  // Compêndios LevelDB instalados podem conter registros anteriores à correção
+  // do catálogo JSON. Ajusta somente os campos corrigidos, sem alterar efeitos.
+  _mmcUseCorrectedPowerCatalog(power) {
+    if (!power?._id) return power;
+    const canonical = this._mmcCanonicalPowerCorrections?.get(power._id);
+    if (!canonical) return power;
+    if (power.name === canonical.name &&
+        power.system?.prerequisites === canonical.prerequisites) return power;
+    return {
+      ...power, name: canonical.name,
+      system: { ...(power.system || {}), prerequisites: canonical.prerequisites }
+    };
+  }
+
   async _refreshPowersFromCompendia(renderAfter=false){
     // cache not used for refresh
     try{
       const worldPowers = await this._getWorldItems("power"); const _wC = (worldPowers||[]).length;
       const packPowers  = await this._getPackItems("power"); const _pC = (packPowers||[]).length; console.info('[mmc] refresh powers: world=',_wC,'packs=',_pC);
       const override = new Map();
-      for (const it of [...worldPowers, ...packPowers]){
+      for (const original of [...worldPowers, ...packPowers]){
+        const it = this._mmcUseCorrectedPowerCatalog(original);
         if (!it?.name) continue;
         override.set(String(it.name).toLowerCase(), it);
       }
@@ -406,6 +422,12 @@ static async _mmcEnsureType(stub, fallback){
     this.state.data.traits = traits.items ?? [];
     this.state.data.tags = tags.items ?? [];
     this.state.data.powers = powers.items ?? [];
+    const correctedPowerIds = new Set(["zFthXeiXzdI646hT","V29Yrxdf0uiGQgMF","nnmvCBn8OGU03QvH","UbhhYpzKg4XTis2V","491xrGpqoQAbGdGo","JowNvBE3za7LGiV4","fIYIWtQcvFzwnjNg","fd3AyzufIQFe4TqS","KQxISBVt5QDnkh6C","IBkz80gRi2Kq3Tgt","2bWg8lf2ZwkyiKiB","6PApDX5qMnMqgRa3","KOGbtsAQoEHQm7gg","KdVAEjrKMnvmyfIV","UQG3sZnzI8JvK34o","VLbgw5shFgAQcYDI","WUKnnYcEInYLJBfp","YknqhTMOfiRP7aZX","ZughvwBl1xGSpx6Q","ZzRySxUQjMJ6rZ7S","iEWHhcouN1guY3TE","n7LkZDiJaeOk3ChY","v4wnQsxkb32CNQay","vvAff82Tqkg2SS1q"]);
+    this._mmcCanonicalPowerCorrections = new Map(
+      (this.state.data.powers || []).filter(p=>correctedPowerIds.has(p._id)).map(p=>[
+        p._id, {name:p.name, prerequisites:p.system?.prerequisites || ''}
+      ])
+    );
     // Normalize powerSet labels across sources (fixes small punctuation/whitespace differences)
     try{
       const canon = s => String(s||"").replace(/[–—]/g,"-").replace(/\s+/g," ").trim();
@@ -427,7 +449,8 @@ static async _mmcEnsureType(stub, fallback){
       const worldPowers = await this._getWorldItems("power"); const _wC = (worldPowers||[]).length;
       const packPowers = await this._preloadKindFromPacks("power");
       const override = new Map();
-      for (const it of [...worldPowers, ...packPowers]){
+      for (const original of [...worldPowers, ...packPowers]){
+        const it = this._mmcUseCorrectedPowerCatalog(original);
         if (!it?.name) continue;
         override.set(String(it.name).toLowerCase(), it);
       }
@@ -1404,6 +1427,14 @@ this._restoreScroll(listSet,'powers-set');
       const id = ev.currentTarget.dataset.addPower;
       const p = (this.state.data.powers||[]).find(x=>x._id===id);
       if (!p) return;
+      const check = this._meetsAllPrereqs(p.system?.prerequisites, this.state, {
+        allP: this.state.data.powers || [], chosen: this.state.chosenPowers,
+        grantedNameSet, grantedIdSet
+      });
+      if (!check.ok) {
+        ui.notifications?.warn?.('Pré-requisito ausente: ' + check.missing.join(', '));
+        return;
+      }
       if ((this.state.rank||1) === 1){
         const chosenSets = new Set((this.state.chosenPowers||[]).map(x=>x.system?.powerSet ?? "Basic").filter(s=>s!=="Basic"));
         const pSet = p.system?.powerSet ?? "Basic";
