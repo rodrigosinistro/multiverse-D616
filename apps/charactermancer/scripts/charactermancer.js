@@ -218,65 +218,98 @@ static async _mmcEnsureType(stub, fallback){
    * Retorna { ok: boolean, missing: string[] }.
    */
   _meetsAllPrereqs(preText, state, ctx={}){
-    try{
-      if (!preText || !String(preText).trim()) return {ok:true, missing:[]};
-      const text = String(preText).toLowerCase().replace(/^pré:\s*/,'').trim();
+    try {
+      const source = String(preText || '').replace(/^(?:pré|pre)\s*:\s*/i, '').trim();
+      if (!source || /^none$/i.test(source)) return {ok:true, missing:[]};
+      const normalize = value => String(value || '').normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '').trim().toLowerCase().replace(/\s+/g, ' ');
       const missing = [];
-      const haveChosen = new Set((state.chosenPowers||[]).map(p => (p.name||'').toLowerCase()));
-      const haveGranted = new Set([...(ctx.grantedNameSet||new Set())]);
-      const haveAllPowers = new Set([...haveChosen, ...haveGranted]);
-      const abilities = state.abilities || {};
-
-      // Rank
-      const rankHits = [...text.matchAll(/rank\s*(\d+)/g)];
-      for (const m of rankHits){
-        const need = Number(m[1]||0);
-        if (Number(state.rank||0) < need) missing.push(`Rank ${need}`);
-      }
-
-      // Abilities
-      const map = { agl:'agl', melee:'mle', mle:'mle', res:'res', resilience:'res', vig:'vig', vigilance:'vig', ego:'ego', log:'log', logic:'log' };
-      const abilHits = [...text.matchAll(/\b(agl|mle|res|vig|ego|log|melee|resilience|vigilance|logic)\s*(\d+)\s*\+/g)];
-      for (const m of abilHits){
-        const key = map[m[1]] || m[1];
-        const need = Number(m[2]||0);
-        const have = Number(abilities?.[key] ?? 0);
-        if (have < need) missing.push(`${m[1].toUpperCase()} ${need}+`);
-      }
-
-      // Traits
-      const traitHits = [...text.matchAll(/\b(trai?ç?o?s?|trait?s?)\s*:\s*([^\.;,]+)/g)];
-      for (const m of traitHits){
-        const list = (m[2]||'').split(/[,;/]+|\se\s/).map(s=>s.trim().toLowerCase()).filter(Boolean);
-        const have = new Set((state.selectedTraits||[]).map(t => (t.name||'').toLowerCase()));
-        for (const name of list){ if (!have.has(name)) missing.push(`Traço ${name}`); }
-      }
-
-      // Tags
-      const tagHits = [...text.matchAll(/\b(tags?)\s*:\s*([^\.;,]+)/g)];
-      for (const m of tagHits){
-        const list = (m[2]||'').split(/[,;/]+|\se\s/).map(s=>s.trim().toLowerCase()).filter(Boolean);
-        const have = new Set((state.selectedTags||[]).map(t => (t.name||'').toLowerCase()));
-        for (const name of list){ if (!have.has(name)) missing.push(`Tag ${name}`); }
-      }
-
-      // Required powers by name
-      const tokens = text.split(/[,;•\-\u2013\u2014]/).map(s => s.trim()).filter(Boolean);
-      const allPowerNames = new Set((ctx.allP||[]).map(p => (p.name||'').toLowerCase()));
-      for (let tok of tokens){
-        const t = tok.replace(/^pré:\s*/,'').trim();
-        if (!t) continue;
-        if (/^rank\s*\d+/.test(t)) continue;
-        if (/\b(agl|mle|res|vig|ego|log|melee|resilience|vigilance|logic)\s*\d+\s*\+?/.test(t)) continue;
-        if (/^(trai?ç?o?s?|trait?s?|tags?)\s*:/.test(t)) continue;
-        const match = [...allPowerNames].find(n => n === t || n.startsWith(t));
-        if (match && !haveAllPowers.has(match)){
-          missing.push(`Poder ${match}`);
+      const powers = [...(state.data?.powers || []), ...(ctx.allP || [])];
+      const powerNames = new Map(powers.filter(p=>p?.name).map(p=>[normalize(p.name), p.name]));
+      const tags = (state.data?.tags || []).map(t=>normalize(t?.name));
+      const traits = (state.data?.traits || []).map(t=>normalize(t?.name));
+      const tagCatalog = new Set(tags);
+      const traitCatalog = new Set(traits);
+      const granted = new Set(Array.from(ctx.grantedNameSet || []).map(normalize));
+      const chosen = state.chosenPowers || ctx.chosen || [];
+      const chosenNames = new Set(chosen.map(p=>normalize(p?.name)));
+      const grantedIds = ctx.grantedIdSet || new Set();
+      for (const p of chosen) {
+        if (p?._id) {
+          const canonical = powers.find(x=>x?._id === p._id);
+          if (canonical) chosenNames.add(normalize(canonical.name));
         }
       }
-
-      return {ok: missing.length===0, missing};
-    }catch(e){ console.warn('[mmc] prereq parse error', e); return {ok:true, missing:[]}; }
+      for (const p of powers) {
+        if (p?._id && grantedIds.has(p._id)) granted.add(normalize(p.name));
+      }
+      const hasPower = name=>chosenNames.has(normalize(name)) || granted.has(normalize(name));
+      const traitNames = new Set([...(state.selectedTraits || []),
+        ...(state.occupation?.system?.traits || []), ...(state.origin?.system?.traits || [])]
+        .map(t=>normalize(t?.name)));
+      const tagNames = new Set([...(state.selectedTags || []),
+        ...(state.occupation?.system?.tags || []), ...(state.origin?.system?.tags || [])]
+        .map(t=>normalize(t?.name)));
+      const abilities = {melee:'mle',mle:'mle',agility:'agl',agl:'agl',
+        resilience:'res',res:'res',vigilance:'vig',vig:'vig',ego:'ego',logic:'log',log:'log'};
+  
+      // "Grow 2 or Shrink 2" é alternativa: basta um dos dois poderes.
+      const parts = source.replace(/\.\s+(?=[A-Za-z])/g, ', ').split(/[,;]/)
+        .map(part=>part.trim()).filter(Boolean);
+      for (const original of parts) {
+        const part = original.replace(/^(?:power|poder)\s*:\s*/i, '').trim();
+        if (/^(?:none|nenhum)$/i.test(part)) continue;
+        const rank = part.match(/^rank\s*(\d+)$/i);
+        if (rank) {
+          if (Number(state.rank || 1) < Number(rank[1])) missing.push('Rank ' + rank[1]);
+          continue;
+        }
+        const ability = part.match(/^(melee|mle|agility|agl|resilience|res|vigilance|vig|ego|logic|log)\s*(\d+)\+?$/i);
+        if (ability) {
+          const key = abilities[ability[1].toLowerCase()];
+          const value = state.abilities?.[key];
+          const current = Number(value?.value ?? value ?? 0);
+          if (current < Number(ability[2])) missing.push(ability[1] + ' ' + ability[2]);
+          continue;
+        }
+        const trait = part.match(/^(?:trait|traits|traco|tracos|traço|traços)\s*:\s*(.+)$/i);
+        if (trait) {
+          if (!traitNames.has(normalize(trait[1]))) missing.push('Traço: ' + trait[1]);
+          continue;
+        }
+        const tag = part.match(/^tags?\s*:\s*(.+)$/i);
+        if (tag) {
+          if (!tagNames.has(normalize(tag[1]))) missing.push('Tag: ' + tag[1]);
+          continue;
+        }
+        const origin = part.match(/^(.+?)\s+origin$/i);
+        if (origin) {
+          if (normalize(state.origin?.name) !== normalize(origin[1])) missing.push('Origem: ' + origin[1]);
+          continue;
+        }
+        const alternatives = part.split(/\s+(?:or|ou)\s+/i).map(s=>s.trim()).filter(Boolean);
+        if (alternatives.length > 1) {
+          const unknown = alternatives.filter(name=>!powerNames.has(normalize(name)));
+          if (unknown.length) missing.push('Pré-requisito não reconhecido: ' + unknown.join(' / '));
+          else if (!alternatives.some(hasPower)) missing.push('Um de: ' + alternatives.join(' ou '));
+          continue;
+        }
+        if (powerNames.has(normalize(part))) {
+          if (!hasPower(part)) missing.push('Poder: ' + powerNames.get(normalize(part)));
+        } else if (tagCatalog.has(normalize(part))) {
+          if (!tagNames.has(normalize(part))) missing.push('Tag: ' + part);
+        } else if (traitCatalog.has(normalize(part))) {
+          if (!traitNames.has(normalize(part))) missing.push('Traço: ' + part);
+        } else {
+          // Desconhecido deve bloquear, nunca ignorar um pré-requisito digitado errado.
+          missing.push('Pré-requisito não reconhecido: ' + part);
+        }
+      }
+      return {ok:missing.length === 0, missing:[...new Set(missing)]};
+    } catch(error) {
+      console.warn('MMC | Erro ao validar pré-requisitos', error);
+      return {ok:false, missing:['Falha na validação dos pré-requisitos']};
+    }
   }
 
   _restoreFocus(key){ try{ const sel = this._focus?.[key]; if(!sel) return; const el = this.element?.querySelector(sel.q); if(!el) return; el.focus(); if(typeof sel.pos==='number'){ try{ el.selectionStart=el.selectionEnd=Math.min(sel.pos, el.value?.length??0);}catch(e){} } }catch(e){} }
@@ -1277,7 +1310,7 @@ _renderTraitsTags(){
       else if (reqRank && (Number(this.state.rank||1) < reqRank)){ actionHTML = `<button class="mmc-btn" disabled title="Requer Rank ${reqRank}">Rank ${reqRank}</button>`; }
       else if ( (this.state.chosenPowers||[]).length >= Math.max(0, limit - (originConsume?.length||0)) ){ actionHTML = `<button class="mmc-btn" disabled title="Limite atingido">Limite</button>`; }
       else {
-        const result = this._meetsAllPrereqs(pre, this.state, { allP, grantedNameSet, grantedIdSet, chosen: this.state.chosenPowers });
+        const result = this._meetsAllPrereqs(pre, this.state, { allP: this.state.data.powers || [], grantedNameSet, grantedIdSet, chosen: this.state.chosenPowers });
         if (!result.ok) { 
           const tt = (result.missing&&result.missing.length) ? ` title="Falta: ${'${result.missing.join(', ')}'}"` : '';
           actionHTML = `<button class="mmc-btn" disabled${tt}>Bloqueado</button>`; 
