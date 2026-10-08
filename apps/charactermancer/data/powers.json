@@ -549,7 +549,7 @@
       "system": {
         "description": "<p>O personagem possui uma linguagem própria.</p>",
         "powerSet": "Translation",
-        "prerequisites": "Understand Spoken Language. Understand Unusual Communication. Rank 3",
+        "prerequisites": "Understand Spoken Language, Understand Unusual Communication, Rank 3",
         "action": "",
         "trigger": "",
         "duration": "Permanent",
@@ -1255,7 +1255,7 @@
       "system": {
         "description": "<p>O personagem gira atirando contra todos os inimigos ao seu redor.</p>",
         "powerSet": "Ranged Weapons",
-        "prerequisites": "Slow-Motion",
+        "prerequisites": "Slow-Motion Shoot-Dodge, Rank 3",
         "action": "Standard",
         "trigger": "",
         "duration": "Instant",
@@ -1683,7 +1683,7 @@
       "system": {
         "description": "O personagem sabe o que aconteceu no último século.",
         "powerSet": "Sixth Sense",
-        "prerequisites": "Postcognition 3. Rank 5",
+        "prerequisites": "Postcognition 3, Rank 5",
         "action": "Standard",
         "trigger": "",
         "duration": "Instant",
@@ -5479,7 +5479,7 @@
       "_id": "Hy1zEysfam1HDWSZ"
     },
     {
-      "name": "Invisibility",
+      "name": "Mirror Images",
       "type": "power",
       "img": "systems/multiverse-d616/icons/illusion.svg",
       "system": {
@@ -6295,7 +6295,7 @@
       "system": {
         "description": "O personagem pode redimensionar alguém que esteja tocando.",
         "powerSet": "Resize",
-        "prerequisites": "Grow ou Shrink, Rank 3",
+        "prerequisites": "Grow 2 or Shrink 2, Rank 3",
         "action": "Standard ou reaction",
         "trigger": "",
         "duration": "Permanent",
@@ -6569,7 +6569,7 @@
       "system": {
         "description": "O personagem pode mover um alvo com seu elemento.",
         "powerSet": "Elemental Control",
-        "prerequisites": "Elemental Burst. Rank 1",
+        "prerequisites": "Elemental Burst, Rank 1",
         "action": "Standard",
         "trigger": "",
         "duration": "instant",
@@ -6611,7 +6611,7 @@
       "_id": "KOGbtsAQoEHQm7gg"
     },
     {
-      "name": "Venom Bash",
+      "name": "Venom Burst",
       "type": "power",
       "img": "systems/multiverse-d616/icons/super-powers.svg",
       "system": {
@@ -6666,7 +6666,7 @@
       "system": {
         "description": "O personagem consegue sentir quando o perigo está a caminho.",
         "powerSet": "Sixth Sense",
-        "prerequisites": "Precognition 1. Rank 2",
+        "prerequisites": "Precognition 1, Rank 2",
         "action": "",
         "trigger": "",
         "duration": "Permanent",
@@ -10858,7 +10858,7 @@
       "system": {
         "description": "Manipulando luz e som, o personagem cria um holograma incrivelmente real.",
         "powerSet": "Illusion",
-        "prerequisites": "Animated Illusion,  Rank 3",
+        "prerequisites": "Animated Illusion, Rank 3",
         "action": "Standard",
         "trigger": "",
         "duration": "Concentration",
@@ -10993,7 +10993,7 @@
       "_id": "UZ4cyX6vkKsp2qKU"
     },
     {
-      "name": "Extend Invisiblity",
+      "name": "Extend Invisibility",
       "type": "power",
       "img": "systems/multiverse-d616/icons/illusion.svg",
       "system": {
@@ -11401,7 +11401,7 @@
       "system": {
         "description": "O personagem turbina todos os poderes de outro personagem!",
         "powerSet": "Power Control",
-        "prerequisites": "Bump Powers Rank 4",
+        "prerequisites": "Bump Power, Rank 4",
         "action": "Standard",
         "trigger": "",
         "duration": "Concentration",
@@ -11493,7 +11493,7 @@
       "system": {
         "description": "O personagem sabe o que aconteceu no último ano.",
         "powerSet": "Sixth Sense",
-        "prerequisites": "Postcognition 2. Rank 4",
+        "prerequisites": "Postcognition 2, Rank 4",
         "action": "Standard",
         "trigger": "",
         "duration": "Instant",
@@ -11589,7 +11589,7 @@
       "system": {
         "description": "O personagem sabe o que aconteceu no último dia.",
         "powerSet": "Sixth Sense",
-        "prerequisites": "Postcognition 1 Rank 3",
+        "prerequisites": "Postcognition 1, Rank 3",
         "action": "Standard",
         "trigger": "",
         "duration": "Instant",
@@ -12202,7 +12202,7 @@
       "system": {
         "description": "O personagem pode detectar detalhes sobre coisas em qualquer lugar do universo.",
         "powerSet": "Sixth Sense",
-        "prerequisites": "Microscopic Awareness. Rank 4",
+        "prerequisites": "Microscopic Awareness, Rank 4",
         "action": "Standard",
         "trigger": "",
         "duration": "Concentration",
@@ -12719,7 +12719,7 @@
       "system": {
         "description": "<p>O personagem consegue perceber se você está dizendo a verdade.</p>",
         "powerSet": "Translation",
-        "prerequisites": "Understand Body Language. Rank 2",
+        "prerequisites": "Understand Body Language, Rank 2",
         "action": "Standard or reaction",
         "trigger": "Comunicação verbal que o personagem consiga entender",
         "duration": "Instant",
@@ -12762,13 +12762,13 @@
       "_id": "ZughvwBl1xGSpx6Q"
     },
     {
-      "name": "Elemental Richochet",
+      "name": "Elemental Ricochet",
       "type": "power",
       "img": "systems/multiverse-d616/icons/four-elements.svg",
       "system": {
         "description": "O personagem rebate a rajada de um alvo para outro.",
         "powerSet": "Elemental Control",
-        "prerequisites": "Elemental Burst. Rank 3",
+        "prerequisites": "Elemental Burst, Rank 3",
         "action": "Standard",
         "trigger": "",
         "duration": "Instantâneo",
@@ -14556,7 +14556,7 @@
       "system": {
         "description": "O personagem pode mudar o tamanho de um objeto ao seu alcance.",
         "powerSet": "Resize",
-        "prerequisites": "Grow & or Shrink, Rank 3",
+        "prerequisites": "Grow 2 or Shrink 2, Rank 3",
         "action": "Standard",
         "trigger": "",
         "duration": "Permanent",
@@ -14809,7 +14809,7 @@
       "system": {
         "description": "O personagem responde a um ataque com uma rajada de tiros.",
         "powerSet": "Ranged Weapons",
-        "prerequisites": "Suppressive Fire, Rank 8",
+        "prerequisites": "Suppressive Fire, Rank 2",
         "action": "Reaction",
         "trigger": "Um inimigo declara um ataque contra o personagem.",
         "duration": "Instant",
@@ -15474,7 +15474,7 @@
       "system": {
         "description": "O personagem consegue ver o próximo mês.",
         "powerSet": "Sixth Sense",
-        "prerequisites": "Precognition 2. Rank 4",
+        "prerequisites": "Precognition 2, Rank 4",
         "action": "Standard",
         "trigger": "",
         "duration": "Instant",
@@ -17183,7 +17183,7 @@
       "system": {
         "description": "O personagem dá uma mão a um amigo.",
         "powerSet": "Tactics",
-        "prerequisites": "Change of Plans. Rank 3",
+        "prerequisites": "Change of Plans, Rank 3",
         "action": "Standard",
         "trigger": "",
         "duration": "1 round",
@@ -17506,13 +17506,13 @@
       "_id": "nk06JRiSPGiYgnI7"
     },
     {
-      "name": "Steal Powers",
+      "name": "Steal Power",
       "type": "power",
       "img": "systems/multiverse-d616/icons/super-powers.svg",
       "system": {
         "description": "O personagem remove o poder de um alvo e o toma para si!",
         "powerSet": "Power Control",
-        "prerequisites": "Copy Powers, Dampen Power, Rank 3",
+        "prerequisites": "Copy Power, Dampen Power, Rank 3",
         "action": "Standard or reaction",
         "trigger": "O alvo está agarrado.",
         "duration": "Concentration",
@@ -19335,7 +19335,7 @@
       "system": {
         "description": "<p>O personagem tem um toque de cura.</p>",
         "powerSet": "Healing",
-        "prerequisites": "Let's Go. Rank 3",
+        "prerequisites": "Let's Go, Rank 3",
         "action": "Standard",
         "trigger": "",
         "duration": "Instant",
@@ -19384,7 +19384,7 @@
       "system": {
         "description": "<p>O personagem consegue mirar melhor do que quase qualquer um.</p>",
         "powerSet": "Basic",
-        "prerequisites": "Accuracy 3. Rank 4",
+        "prerequisites": "Accuracy 3, Rank 4",
         "action": "",
         "trigger": "",
         "duration": "Permanent",
@@ -20522,7 +20522,7 @@
       "system": {
         "description": "O personagem pode lançar azar sobre aqueles que cruzam seu caminho.",
         "powerSet": "Luck",
-        "prerequisites": "Jinks You, Rank 2",
+        "prerequisites": "Jinx You, Rank 2",
         "action": "Standard",
         "trigger": "",
         "duration": "Concentration",
