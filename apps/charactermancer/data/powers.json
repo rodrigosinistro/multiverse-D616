@@ -2631,7 +2631,7 @@
       "system": {
         "description": "<p>O personagem está preparado para lutar.</p>",
         "powerSet": "Martial Arts",
-        "prerequisites": "Do This Al Day, Rank 3",
+        "prerequisites": "Do This All Day, Rank 3",
         "action": "",
         "trigger": "",
         "duration": "Permanent",
