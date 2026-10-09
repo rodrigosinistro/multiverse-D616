@@ -4,13 +4,13 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 
 ## Versão
 
-- **Versão do sistema:** 0.1.95
+- **Versão do sistema:** 0.1.96
 - **Compatibilidade:** Foundry VTT v14 (`minimum: 14`, `verified: 14`)
 - **ID / pasta interna:** `multiverse-d616`
 - **Manifest:** `https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json`
 
 
-## Atualização v0.1.95 — PDF com Traits/Tags repetidos
+## Atualização v0.1.96 — PDF com Traits/Tags repetidos
 
 - A exportação PDF agora mostra a quantidade de Traits e Tags repetidos na primeira página, igual ao site (ex.: **Linguist ×2**).
 - As páginas de descrição não duplicam o mesmo Trait/Tag várias vezes.

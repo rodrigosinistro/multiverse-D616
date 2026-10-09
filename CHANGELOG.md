@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.96
+
+- **Charactermancer / Pré-requisitos:** normalização de 25 registros no catálogo de poderes (grafia, nomes de poderes distintos, Rank e separadores).
+- **Return Fire:** requer `Suppressive Fire, Rank 2`. **Always Ready:** requer `Do This All Day, Rank 3`.
+- **Poderes distintos:** nomes `Mirror Images`, `Venom Burst` e `Steal Power` corrigidos sem perder os registros originais.
+- **Outras correções:** `Evil Eye`, `Boost Powers`, `Extend Invisibility`, `Dance of Death`, `Elemental Ricochet` e requisitos dos demais poderes auditados.
+- **Resize Other/Resize Object:** aceitam `Grow 2` **ou** `Shrink 2`, com Rank mínimo 3.
+- **Validação reforçada:** verifica poderes, Tags, Traços, origem, atributos e Rank; não libera pré-requisitos não reconhecidos; revalida ao clicar em Selecionar.
+- **Compêndios legados:** o Charactermancer reconcilia as referências de poderes corrigidos ao carregar os dados, preservando os efeitos de cada item.
+- **Empacotamento:** versão `0.1.96`, mantendo compatibilidade com Foundry VTT v14 e compêndios do pacote anterior.
+
 ## 0.1.95
 
 - **PDF — Traits/Tags repetidos:** a primeira página agora preserva seleções repetidas usando contador, igual ao Charactermancer Web (ex.: `Surprising Power ×2`, `Linguist ×2`, `Obligation ×2`).
