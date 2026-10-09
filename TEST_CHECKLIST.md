@@ -1,3 +1,16 @@
+## Testes adicionados na v0.1.97 (Foundry VTT v14)
+
+- [ ] Como GM, **fechar/minimizar** o Controle de Turno, criar combate e adicionar um personagem: a janela deve abrir restaurada no GM e nos jogadores conectados que tenham o combate ativo.
+- [ ] Fechar a janela manualmente após a abertura automática; adicionar mais personagens ao **mesmo** combate: não deve forçar nova abertura.
+- [ ] Criar **novo** combate e adicionar personagem como GM: a janela deve abrir novamente.
+- [ ] Adicionar combatente usando conta de jogador: não deve acionar a abertura automática.
+- [ ] Com personagem que tenha Concentração 2 e dois Powers ativos, selecionar seu token como proprietário e clicar em **×** no status de um **Power**. Apenas esse Power é removido e o contador vira Concentração 1.
+- [ ] No mesmo personagem, clicar no **×** do status genérico Concentração 1. Todos os efeitos de Concentração somem, mas condições comuns (por exemplo, Envenenado) permanecem.
+- [ ] Tentar remover condições comuns como jogador: não deve existir botão **×** para esses efeitos.
+- [ ] Tentar controlar token de personagem de outro jogador: não deve aparecer opção de remover Concentração.
+- [ ] Fazer as remoções com GM conectado e conferir que os efeitos e o contador sincronizam corretamente entre clientes.
+- [ ] Confirmar que o GM mantém a remoção normal de todas as condições.
+
 # Checklist adicional — v0.1.78 / Correção multiplayer da Concentração
 
 1. Abra o mesmo mundo em dois clientes: **Mestre** e **Jogador** proprietário do personagem.

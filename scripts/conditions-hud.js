@@ -1,3 +1,5 @@
+import { isRemovableConcentrationStatusId, requestRemoveConcentrationStatus } from "./concentration.js";
+
 
 const MODULE_ID = "multiverse-d616";
 const SYS_ID = (game?.system?.id) || "multiverse-d616";
@@ -396,7 +398,9 @@ class ConditionTray {
 
     const actor = this.selectedActor;
     const statuses = actor ? __mmrpg_actorStatusIds(actor) : [];
-    const signature = `${actor?.uuid ?? "none"}|${game.user?.isGM ? "gm" : "player"}|${statuses.join("|")}`;
+    const actorOwnedByUser = !!actor && (game.user?.isGM ||
+      !!actor.testUserPermission?.(game.user, CONST.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3));
+    const signature = `${actor?.uuid ?? "none"}|${game.user?.isGM ? "gm" : "player"}|${actorOwnedByUser}|${statuses.join("|")}`;
     if (!force && signature === this._lastSignature) {
       this.schedulePosition();
       return;
@@ -415,20 +419,35 @@ class ConditionTray {
       if (!c) continue;
       const pill = document.createElement("div");
       pill.className = "mmrpg-cond-pill";
+      const mayRemove = game.user?.isGM ||
+        (actorOwnedByUser && isRemovableConcentrationStatusId(sid));
+      const playerRemoveTitle = String(sid).startsWith("mmrpg.concentration-power.")
+        ? "Encerrar a Concentração neste Power" : "Encerrar todas as Concentrações";
       pill.innerHTML = `
         <img src="${__mmrpg_iconPath(c.icon)}" loading="lazy" decoding="async" />
         <span class="name">${c.name}</span>
-        ${game.user?.isGM ? `<button class="mmrpg-cond-remove" title="Remover (GM)">×</button>` : ``}
+        ${mayRemove ? `<button type="button" class="mmrpg-cond-remove" title="${game.user?.isGM ? "Remover condição" : playerRemoveTitle}" aria-label="${game.user?.isGM ? "Remover condição" : playerRemoveTitle}">×</button>` : ``}
         <div class="mmrpg-cond-tooltip">
           <div style="font-weight:700;margin-bottom:6px;">${c.name}</div>
           <div>${c.description ?? ""}</div>
           ${c.remove ? `<hr style="opacity:.2;margin:8px 0;"><div><b>Como remover:</b> ${c.remove}</div>` : ""}
         </div>`;
       tray.appendChild(pill);
-      if (game.user?.isGM) {
-        pill.querySelector(".mmrpg-cond-remove")?.addEventListener("click", (ev) => {
+      if (mayRemove) {
+        pill.querySelector(".mmrpg-cond-remove")?.addEventListener("click", async (ev) => {
           ev.stopPropagation();
-          this.removeCondition(c.id).then(() => this.scheduleRender(true));
+          const button = ev.currentTarget;
+          if (button.disabled) return;
+          button.disabled = true;
+          try {
+            await this.removeCondition(sid);
+          } catch (error) {
+            console.error(`[${MODULE_ID}] Falha ao remover Concentração`, error);
+            ui.notifications?.error?.(error?.message ?? "Não foi possível remover a Concentração.");
+          } finally {
+            button.disabled = false;
+            this.scheduleRender(true);
+          }
         });
       }
     }
@@ -438,7 +457,13 @@ class ConditionTray {
   async removeCondition(condId) {
     const token = this.selectedToken;
     const actor = token?.actor;
-    if (!actor || !game.user?.isGM) return;
+    if (!actor) return;
+    // The same path is used for GM and owner removals, ensuring that removing
+    // an individual Power keeps the generic Concentração counter in sync.
+    if (isRemovableConcentrationStatusId(condId)) {
+      return requestRemoveConcentrationStatus(actor, condId);
+    }
+    if (!game.user?.isGM) return;
     if (__mmrpg_isTransientCondition(condId)) {
       try {
         const ids = Array.from(actor.effects ?? [])

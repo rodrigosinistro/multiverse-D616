@@ -48,6 +48,11 @@ export function getActorRank(actor) {
 
 const COND_PREFIX = "mmrpg.concentration.";
 const COND_MAX = 6;
+export function isRemovableConcentrationStatusId(statusId) {
+  const id = String(statusId ?? "");
+  return /^mmrpg\.concentration\.[1-6]$/.test(id) ||
+    (id.startsWith(CONCENTRATION_POWER_PREFIX) && id.length > CONCENTRATION_POWER_PREFIX.length);
+}
 export const CONCENTRATION_POWER_PREFIX = "mmrpg.concentration-power.";
 
 const internalOperations = new Map();
@@ -681,6 +686,56 @@ async function replaceConcentrationPowerLocal(actor, item, effectToReplace) {
   }
 }
 
+async function removeConcentrationStatusLocal(actor, statusId) {
+  if (!isRemovableConcentrationStatusId(statusId)) {
+    throw new Error("Somente condições de Concentração podem ser removidas por jogadores.");
+  }
+
+  if (String(statusId).startsWith(COND_PREFIX)) {
+    // Generic Concentração N represents every maintained Power. Removing it
+    // ends all Concentrations and clears the associated transient effects.
+    if (!getConcentrationLevel(actor)) return false;
+    await clearConcentration(actor);
+    return true;
+  }
+
+  // A Power-specific marker ends only that Power. The existing delete hook
+  // decrements the generic Concentração level once, in a serialized queue.
+  const effect = getConcentrationPowerEffects(actor).find((candidate) =>
+    effectStatusIds(candidate).includes(statusId) && isConcentrationPowerEffect(candidate)
+  );
+  if (!effect?.id) return false;
+  await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
+  return true;
+}
+
+export async function requestRemoveConcentrationStatus(actor, statusId) {
+  if (!actor || !isRemovableConcentrationStatusId(statusId)) return false;
+  if (!canUserAnswerConcentrationPrompt(actor, game.user)) {
+    throw new Error("Você só pode remover a Concentração dos seus próprios personagens.");
+  }
+  const gm = primaryActiveGM();
+  if (game.user?.isGM || !gm) return removeConcentrationStatusLocal(actor, statusId);
+
+  const requestId = concentrationMutationRequestId();
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      pendingMutations.delete(requestId);
+      reject(new Error("O Mestre não respondeu à remoção da Concentração a tempo."));
+    }, CONCENTRATION_MUTATION_TIMEOUT_MS);
+    pendingMutations.set(requestId, { resolve, reject, timeout });
+    game.socket.emit(CONCENTRATION_SOCKET, {
+      scope: CONCENTRATION_SOCKET_SCOPE,
+      type: "MUTATION_REQUEST",
+      operation: "REMOVE_STATUS",
+      requestId,
+      requesterId: game.user.id,
+      actorUuid: actor.uuid,
+      statusId,
+    });
+  });
+}
+
 async function applyConcentrationMutationRequest(data) {
   const requestingUser = game.users?.get?.(data?.requesterId);
   const actor = await resolveUuidDocument(data?.actorUuid);
@@ -688,6 +743,9 @@ async function applyConcentrationMutationRequest(data) {
     throw new Error("Usuário sem permissão para alterar a Concentração deste personagem.");
   }
 
+  if (data.operation === "REMOVE_STATUS") {
+    return removeConcentrationStatusLocal(actor, data.statusId);
+  }
   if (data.operation !== "REPLACE_POWER") {
     throw new Error(`Operação de Concentração desconhecida: ${data.operation ?? "?"}`);
   }

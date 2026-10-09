@@ -4,11 +4,18 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 
 ## Versão
 
-- **Versão do sistema:** 0.1.96
+- **Versão do sistema:** 0.1.97
 - **Compatibilidade:** Foundry VTT v14 (`minimum: 14`, `verified: 14`)
 - **ID / pasta interna:** `multiverse-d616`
 - **Manifest:** `https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json`
 
+
+## Atualização v0.1.97 — Controle de Turno e Concentração
+
+- **Controle de Turno:** a janela se abre automaticamente para participantes conectados quando o Mestre adiciona o primeiro personagem ao combate ativo, mesmo que estivesse fechada ou minimizada. Novas adições ao mesmo combate respeitam um fechamento manual posterior.
+- **Bandeja de condições:** o jogador proprietário do Actor pode clicar no **×** dos seus próprios status de Concentração. Remover `Concentração N` encerra todas as concentrações; remover o status de um Power encerra apenas aquele Power.
+- **Permissões:** demais condições continuam limitadas ao Mestre. Com Mestre conectado, a operação é autorizada e executada pelo GM via socket do sistema; sem Mestre, permanece disponível a execução diretamente pelo proprietário.
+- **Instalação:** extraia o ZIP que contém `multiverse-d616/` na pasta `Data/systems` do Foundry v14. Para atualizar o GitHub, use o ZIP de fontes com os arquivos na raiz. O link de download da nova versão no `system.json` será válido **após** publicar a release `v0.1.97` com o ZIP instalável.
 
 ## Atualização v0.1.96 — PDF com Traits/Tags repetidos
 

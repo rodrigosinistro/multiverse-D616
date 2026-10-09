@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.97
+
+- **Controle de Turno:** abre e restaura automaticamente a janela no primeiro combatente adicionado pelo Mestre ao combate ativo. Funciona para GM e jogadores conectados e evita reabrir após o usuário fechar manualmente a janela no mesmo combate.
+- **Concentração — jogadores:** donos de personagens podem remover a condição genérica de Concentração (encerrando todos os Powers mantidos) ou um status de Power em Concentração (encerrando apenas aquele Power). Outras condições continuam restritas ao Mestre.
+- **Concentração — sincronização:** remoção pelos jogadores é encaminhada ao Mestre ativo por socket, com verificação de propriedade do Actor e do tipo exato de status. Os contadores e efeitos vinculados são sincronizados pelos hooks existentes.
+- **Compatibilidade:** preservados os compêndios, dados e demais recursos da v0.1.96. Validado para Foundry VTT v14.
+
 ## 0.1.96
 
 - **Charactermancer / Pré-requisitos:** normalização de 25 registros no catálogo de poderes (grafia, nomes de poderes distintos, Rank e separadores).

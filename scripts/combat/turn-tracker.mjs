@@ -63,6 +63,8 @@ let windowState = loadWindowState();
 let combatControlBusy = false;
 let initiativeAutoStartBusy = false;
 let initiativePromptOpenKey = "";
+// Open once per encounter, so later additions do not override a manually closed window.
+const autoOpenedEncounterIds = new Set();
 
 function primaryGM() {
   return game.users?.find?.((user) => user.active && user.isGM) ?? null;
@@ -1837,7 +1839,22 @@ Hooks.on("updateCombatant", (combatant, changed) => {
     );
   }
 });
-Hooks.on("createCombatant", (combatant) => {
+function autoOpenTrackerForGmAddition(combatant, authorId) {
+  if (!game.ready || game.system?.id !== SYSTEM_ID || !combatant) return false;
+  // Foundry broadcasts this hook to every connected client, including players.
+  // Only additions authored by a GM to the current encounter trigger the window.
+  if (!authorId || !game.users?.get?.(authorId)?.isGM) return false;
+  const combat = combatant.combat ?? null;
+  if (!combat?.id || game.combat?.id !== combat.id) return false;
+  if (autoOpenedEncounterIds.has(combat.id)) return false;
+  autoOpenedEncounterIds.add(combat.id);
+  showPopup(true);
+  setMinimized(false);
+  return true;
+}
+
+Hooks.on("createCombatant", (combatant, _options, authorId) => {
+  autoOpenTrackerForGmAddition(combatant, authorId);
   schedulePopupRender({ force: true });
   const combat = combatant?.combat ?? game.combat;
   const phase = initiativePhase(combat);
@@ -1856,7 +1873,10 @@ Hooks.on("deleteCombatant", (combatant) => {
   );
 });
 Hooks.on("createCombat", () => schedulePopupRender({ force: true }));
-Hooks.on("deleteCombat", () => schedulePopupRender({ force: true }));
+Hooks.on("deleteCombat", (combat) => {
+  if (combat?.id) autoOpenedEncounterIds.delete(combat.id);
+  schedulePopupRender({ force: true });
+});
 Hooks.on("preUpdateCombat", (combat, changed, options = {}) => {
   const bonus = bonusRound(combat);
   if (!bonus || options?.m616BonusTransition || !isPrimaryGM()) return;
