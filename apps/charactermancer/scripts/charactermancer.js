@@ -172,8 +172,8 @@ static async _mmcEnsureType(stub, fallback){
    * Se 'renderAfter' for true, re-renderiza mantendo o scroll.
    */
 
-  // Os compêndios LevelDB existentes podem estar com nomes e requisitos antigos.
-  // Ajusta somente os campos que mudaram no catálogo oficial, sem mexer nos efeitos.
+  // Compêndios LevelDB instalados podem conter registros anteriores à correção
+  // do catálogo JSON. Ajusta somente os campos corrigidos, sem alterar efeitos.
   _mmcUseCorrectedPowerCatalog(power) {
     if (!power?._id) return power;
     const canonical = this._mmcCanonicalPowerCorrections?.get(power._id);
@@ -422,10 +422,10 @@ static async _mmcEnsureType(stub, fallback){
     this.state.data.traits = traits.items ?? [];
     this.state.data.tags = tags.items ?? [];
     this.state.data.powers = powers.items ?? [];
-    const correctedPowerIds = new Set(["8MaB6fHzANxJzpbq", "zFthXeiXzdI646hT", "V29Yrxdf0uiGQgMF", "nnmvCBn8OGU03QvH", "UbhhYpzKg4XTis2V", "491xrGpqoQAbGdGo", "JowNvBE3za7LGiV4", "fIYIWtQcvFzwnjNg", "fd3AyzufIQFe4TqS", "KQxISBVt5QDnkh6C", "IBkz80gRi2Kq3Tgt", "2bWg8lf2ZwkyiKiB", "6PApDX5qMnMqgRa3", "KOGbtsAQoEHQm7gg", "KdVAEjrKMnvmyfIV", "UQG3sZnzI8JvK34o", "VLbgw5shFgAQcYDI", "WUKnnYcEInYLJBfp", "YknqhTMOfiRP7aZX", "ZughvwBl1xGSpx6Q", "ZzRySxUQjMJ6rZ7S", "iEWHhcouN1guY3TE", "n7LkZDiJaeOk3ChY", "v4wnQsxkb32CNQay", "vvAff82Tqkg2SS1q"]);
+    const correctedPowerIds = new Set(["zFthXeiXzdI646hT","V29Yrxdf0uiGQgMF","nnmvCBn8OGU03QvH","UbhhYpzKg4XTis2V","491xrGpqoQAbGdGo","JowNvBE3za7LGiV4","fIYIWtQcvFzwnjNg","fd3AyzufIQFe4TqS","KQxISBVt5QDnkh6C","IBkz80gRi2Kq3Tgt","2bWg8lf2ZwkyiKiB","6PApDX5qMnMqgRa3","KOGbtsAQoEHQm7gg","KdVAEjrKMnvmyfIV","UQG3sZnzI8JvK34o","VLbgw5shFgAQcYDI","WUKnnYcEInYLJBfp","YknqhTMOfiRP7aZX","ZughvwBl1xGSpx6Q","ZzRySxUQjMJ6rZ7S","iEWHhcouN1guY3TE","n7LkZDiJaeOk3ChY","v4wnQsxkb32CNQay","vvAff82Tqkg2SS1q"]);
     this._mmcCanonicalPowerCorrections = new Map(
       (this.state.data.powers || []).filter(p=>correctedPowerIds.has(p._id)).map(p=>[
-        p._id, { name:p.name, prerequisites:p.system?.prerequisites || '' }
+        p._id, {name:p.name, prerequisites:p.system?.prerequisites || ''}
       ])
     );
     // Normalize powerSet labels across sources (fixes small punctuation/whitespace differences)
