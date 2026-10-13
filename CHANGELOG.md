@@ -1,3 +1,23 @@
+## 0.2.1
+- Character sheet Speed block no longer shows the movement calculation explanation text.
+- Speed now displays out-of-combat movement by default and automatically switches to in-combat movement while the actor is in an active combat.
+- Open character and NPC sheets now refresh automatically when combat starts, ends, or combatants change.
+
+## 0.2.0 — Auditoria de tamanho e movimentos (Foundry VTT v14)
+
+- Motor compartilhado em `scripts/movement-calculator.mjs` para PC e NPC, com testes automatizados de regressão em `tests/movement.test.mjs`.
+- Run: Agility +1 por 5 pontos; base legada que já inclui Agility detectada para não duplicar.
+- Resize: tamanhos Little/Tiny/Miniature/Microscopic e todos os tamanhos maiores aplicados de modo único, sem duplicar efeitos de fichas importadas da v0.1.x; arredondamento para baixo nos multiplicadores de Resize.
+- Flight: independente de mudanças temporárias de tamanho (FAQ oficial); Unusual Size consulta tamanho natural salvo, mesmo com Resize temporário. Speed Run não multiplica novamente outro poder de movimento.
+- Climb, Jump e Swim: recalculados após Run; poderes específicos calculados da velocidade regular, sem empilhamento multiplicativo de poderes de movimento.
+- Glide/Swingline/Levitation: cálculo especial, multiplicadores de tamanho não-flight e velocidades próprias preservadas.
+- Velocidade fora de combate: derivada da velocidade final e do multiplicador do Active Effect; ficha mostra combat e fora de combate.
+- Trocas de tamanho: operações aguardadas em ordem (`await`), efeitos reconhecidos por flag ou pelo padrão legado; selecionando tamanho permanente, atualiza tamanho natural.
+- Alcance: calculado por multiplicador de tamanho em relação ao alcance original quando não houver outro Active Effect alterando alcance.
+- Efeitos Flight importados no Charactermancer: removido `runspeed` redundante na mesma chave `flight.calc`.
+- Compatibilidade: sistema completo em ZIP, sem atualizar repositório; compêndios LevelDB legados preservados.
+- Verificação de regressão: `node tests/movement.test.mjs`. Requer Node.js 20+.
+
 ## 0.1.99
 - NPC sheet: added top spacing above the Powers block so it no longer overlaps the Health panel.
 

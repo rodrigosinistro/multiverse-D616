@@ -14755,12 +14755,6 @@
             {
               "key": "system.movement.flight.calc",
               "mode": 5,
-              "value": "runspeed",
-              "priority": null
-            },
-            {
-              "key": "system.movement.flight.calc",
-              "mode": 5,
               "value": "rank",
               "priority": null
             },
@@ -16227,12 +16221,6 @@
               "key": "system.movement.flight.active",
               "mode": 5,
               "value": "true",
-              "priority": null
-            },
-            {
-              "key": "system.movement.flight.calc",
-              "mode": 5,
-              "value": "runspeed",
               "priority": null
             },
             {

@@ -11,6 +11,7 @@
  * @param {(number)} [options.targetValue]       Assign a target value against which the result of this roll should be
  *
  */
+import { prepareD616Movement } from "./scripts/movement-calculator.mjs";
 import { handleConcentrationOnUse } from "./scripts/concentration.js";
 import { calculateD616Damage } from "./scripts/damage-calculation.js";
 import { buildItemRollFormula } from "./scripts/roll-formula.mjs";
@@ -1021,7 +1022,7 @@ MULTIVERSE_D616.sizeEffects = {
     description: "",
     transfer: true,
     statuses: [],
-    flags: {},
+    flags: { "multiverse-d616": { managedSize: true, version: "0.2.0" } },
   },
   miniature: {
     name: "Miniature Effects",
@@ -1046,7 +1047,7 @@ MULTIVERSE_D616.sizeEffects = {
     description: "",
     transfer: true,
     statuses: [],
-    flags: {},
+    flags: { "multiverse-d616": { managedSize: true, version: "0.2.0" } },
   },
   tiny: {
     name: "Tiny Effects",
@@ -1071,7 +1072,7 @@ MULTIVERSE_D616.sizeEffects = {
     description: "",
     transfer: true,
     statuses: [],
-    flags: {},
+    flags: { "multiverse-d616": { managedSize: true, version: "0.2.0" } },
   },
   little: {
     name: "Little Effects",
@@ -1094,19 +1095,19 @@ MULTIVERSE_D616.sizeEffects = {
       },
       {
         key: "prototypeToken.width",
-        mode: 1,
+        mode: 5,
         value: 0.25,
       },
       {
         key: "prototypeToken.height",
-        mode: 1,
+        mode: 5,
         value: 0.25,
       },
     ],
     description: "",
     transfer: true,
     statuses: [],
-    flags: {},
+    flags: { "multiverse-d616": { managedSize: true, version: "0.2.0" } },
   },
   small: {
     name: "Small Effects",
@@ -1127,16 +1128,11 @@ MULTIVERSE_D616.sizeEffects = {
         mode: 2,
         value: 1,
       },
-      {
-        key: "system.movement.run.value",
-        mode: 2,
-        value: -1,
-      },
     ],
     description: "",
     transfer: true,
     statuses: [],
-    flags: {},
+    flags: { "multiverse-d616": { managedSize: true, version: "0.2.0" } },
   },
   average: {
     name: "Average Effects",
@@ -1151,7 +1147,7 @@ MULTIVERSE_D616.sizeEffects = {
     description: "",
     transfer: true,
     statuses: [],
-    flags: {},
+    flags: { "multiverse-d616": { managedSize: true, version: "0.2.0" } },
   },
   big: {
     name: "Big Effects",
@@ -1172,21 +1168,11 @@ MULTIVERSE_D616.sizeEffects = {
         mode: 2,
         value: -1,
       },
-      {
-        key: "system.reach",
-        mode: 5,
-        value: 2,
-      },
-      {
-        key: "system.movement.run.value",
-        mode: 2,
-        value: 1,
-      },
     ],
     description: "",
     transfer: true,
     statuses: [],
-    flags: {},
+    flags: { "multiverse-d616": { managedSize: true, version: "0.2.0" } },
   },
   huge: {
     name: "Huge Effects",
@@ -1208,35 +1194,25 @@ MULTIVERSE_D616.sizeEffects = {
         value: -2,
       },
       {
-        key: "system.reach",
-        mode: 5,
-        value: 5,
-      },
-      {
-        key: "system.movement.run.value",
-        mode: 1,
-        value: 5,
-      },
-      {
         key: "system.abilities.mle.damageMultiplier",
         mode: 2,
         value: 2,
       },
       {
         key: "prototypeToken.width",
-        mode: 1,
+        mode: 5,
         value: 5,
       },
       {
         key: "prototypeToken.height",
-        mode: 1,
+        mode: 5,
         value: 5,
       },
     ],
     description: "",
     transfer: true,
     statuses: [],
-    flags: {},
+    flags: { "multiverse-d616": { managedSize: true, version: "0.2.0" } },
   },
   gigantic: {
     name: "Gigantic Effects",
@@ -1258,35 +1234,25 @@ MULTIVERSE_D616.sizeEffects = {
         value: -3,
       },
       {
-        key: "system.reach",
-        mode: 5,
-        value: 20,
-      },
-      {
-        key: "system.movement.run.value",
-        mode: 1,
-        value: 20,
-      },
-      {
         key: "system.abilities.mle.damageMultiplier",
         mode: 2,
         value: 4,
       },
       {
         key: "prototypeToken.width",
-        mode: 1,
+        mode: 5,
         value: 20,
       },
       {
         key: "prototypeToken.height",
-        mode: 1,
+        mode: 5,
         value: 20,
       },
     ],
     description: "",
     transfer: true,
     statuses: [],
-    flags: {},
+    flags: { "multiverse-d616": { managedSize: true, version: "0.2.0" } },
   },
   titanic: {
     name: "Titanic Effects",
@@ -1308,35 +1274,25 @@ MULTIVERSE_D616.sizeEffects = {
         value: -4,
       },
       {
-        key: "system.reach",
-        mode: 5,
-        value: 80,
-      },
-      {
-        key: "system.movement.run.value",
-        mode: 1,
-        value: 80,
-      },
-      {
         key: "system.abilities.mle.damageMultiplier",
         mode: 2,
         value: 6,
       },
       {
         key: "prototypeToken.width",
-        mode: 1,
+        mode: 5,
         value: 80,
       },
       {
         key: "prototypeToken.height",
-        mode: 1,
+        mode: 5,
         value: 80,
       },
     ],
     description: "",
     transfer: true,
     statuses: [],
-    flags: {},
+    flags: { "multiverse-d616": { managedSize: true, version: "0.2.0" } },
   },
   gargantuan: {
     name: "Gargantuan Effects",
@@ -1358,35 +1314,25 @@ MULTIVERSE_D616.sizeEffects = {
         value: -5,
       },
       {
-        key: "system.reach",
-        mode: 5,
-        value: 320,
-      },
-      {
-        key: "system.movement.run.value",
-        mode: 1,
-        value: 320,
-      },
-      {
         key: "system.abilities.mle.damageMultiplier",
         mode: "2",
         value: "8",
       },
       {
         key: "prototypeToken.width",
-        mode: 1,
+        mode: 5,
         value: 320,
       },
       {
         key: "prototypeToken.height",
-        mode: 1,
+        mode: 5,
         value: 320,
       },
     ],
     description: "",
     transfer: true,
     statuses: [],
-    flags: {},
+    flags: { "multiverse-d616": { managedSize: true, version: "0.2.0" } },
   },
 };
 
@@ -3512,6 +3458,29 @@ function prepareActiveEffectCategories(effects) {
  * Extend the basic ActorSheet with some very simple modifications
  * @extends {ActorSheet}
  */
+function actorHasOpenCombat(actor) {
+  if (!actor) return false;
+  try {
+    if (actor.combatant) return true;
+  } catch (_) {}
+  const combats = Array.from(game.combats ?? []);
+  return combats.some((combat) => {
+    const combatants = Array.from(combat?.combatants ?? []);
+    return combatants.some((c) => c?.actor?.id === actor.id || c?.actorId === actor.id);
+  });
+}
+
+function rerenderOpenD616ActorSheets() {
+  for (const app of Object.values(ui.windows ?? {})) {
+    if (
+      app instanceof MarvelMultiverseCharacterSheet ||
+      app instanceof MarvelMultiverseNPCSheet
+    ) {
+      app.render(false);
+    }
+  }
+}
+
 class MarvelMultiverseCharacterSheet extends foundry.appv1.sheets.ActorSheet {
   /** @override */
   static get defaultOptions() {
@@ -3601,6 +3570,7 @@ render(force = false, options = {}) {
     // Prepare character data and items.
     this._prepareItems(context);
     this._prepareData(context);
+    context.showCombatMovement = actorHasOpenCombat(this.actor);
 
     // Add roll data for TinyMCE editors.
     context.rollData = context.actor.getRollData();
@@ -3808,24 +3778,23 @@ render(force = false, options = {}) {
   async _onSizeChange(event) {
     event.preventDefault();
     const selected = event.target.value;
-    this._changeSizeEffect(selected);
+    await this._changeSizeEffect(selected);
   }
 
   async _changeSizeEffect(effectKey) {
-    const sizeEffectNames = Object.keys(
-      CONFIG.MULTIVERSE_D616.sizeEffects
-    ).map((key) => CONFIG.MULTIVERSE_D616.sizeEffects[key].name);
-
-    const currentSizeEffects = this.actor.effects.contents.filter((effect) =>
-      sizeEffectNames.includes(effect.name)
-    );
-    const currentSizeEffectIds = currentSizeEffects.map((ae) => ae._id);
-
-    if (currentSizeEffectIds.length > 0) {
-      this.actor.deleteEmbeddedDocuments("ActiveEffect", currentSizeEffectIds);
-    }
-    const effect = CONFIG.MULTIVERSE_D616.sizeEffects[effectKey];
-    ActiveEffect.create(effect, { parent: this.actor });
+    if (!Object.hasOwn(CONFIG.MULTIVERSE_D616.sizeEffects, effectKey)) return;
+    const knownNames = new Set(Object.values(CONFIG.MULTIVERSE_D616.sizeEffects).map(e => e.name));
+    const current = this.actor.effects.contents.filter(effect => {
+      if (effect.flags?.["multiverse-d616"]?.managedSize) return true;
+      const changes = effect.system?.changes ?? effect.changes ?? [];
+      return knownNames.has(effect.name) && changes.some(c => c.key === "system.size");
+    });
+    if (current.length) await this.actor.deleteEmbeddedDocuments("ActiveEffect", current.map(e => e.id));
+    // Persist the natural size for Unusual Size. Temporary Resize effects do
+    // not change the saved natural size; they only override it while active.
+    await this.actor.update({ "system.size": effectKey });
+    const effect = foundry.utils.deepClone(CONFIG.MULTIVERSE_D616.sizeEffects[effectKey]);
+    await this.actor.createEmbeddedDocuments("ActiveEffect", [effect]);
   }
 
   /**
@@ -3876,7 +3845,7 @@ render(force = false, options = {}) {
 
   /** Fired whenever an embedded document is created.
    */
-  _onDropItemCreate(itemData) {
+  async _onDropItemCreate(itemData) {
     if (!this.actor.items.map((item) => item.name).includes(itemData.name)) {
       if (
         itemData.type === "power" &&
@@ -3929,7 +3898,7 @@ render(force = false, options = {}) {
         itemData.type === "trait" &&
         ["Big", "Small"].includes(itemData.name)
       ) {
-        this._changeSizeEffect(itemData.name.toLowerCase());
+        await this._changeSizeEffect(itemData.name.toLowerCase());
         return super._onDropItemCreate(itemData);
         // biome-ignore lint/style/noUselessElse: <explanation>
       } else {
@@ -4109,6 +4078,8 @@ render(force = false, options = {}) {
     if (actorData.type === "npc") {
       this._prepareItems(context);
     }
+
+    context.showCombatMovement = actorHasOpenCombat(this.actor);
 
     // Add roll data for TinyMCE editors.
     context.rollData = context.actor.getRollData();
@@ -4321,24 +4292,23 @@ render(force = false, options = {}) {
   async _onSizeChange(event) {
     event.preventDefault();
     const selected = event.target.value;
-    this._changeSizeEffect(selected);
+    await this._changeSizeEffect(selected);
   }
 
   async _changeSizeEffect(effectKey) {
-    const sizeEffectNames = Object.keys(
-      CONFIG.MULTIVERSE_D616.sizeEffects
-    ).map((key) => CONFIG.MULTIVERSE_D616.sizeEffects[key].name);
-
-    const currentSizeEffects = this.actor.effects.contents.filter((effect) =>
-      sizeEffectNames.includes(effect.name)
-    );
-    const currentSizeEffectIds = currentSizeEffects.map((ae) => ae._id);
-
-    if (currentSizeEffectIds.length > 0) {
-      this.actor.deleteEmbeddedDocuments("ActiveEffect", currentSizeEffectIds);
-    }
-    const effect = CONFIG.MULTIVERSE_D616.sizeEffects[effectKey];
-    ActiveEffect.create(effect, { parent: this.actor });
+    if (!Object.hasOwn(CONFIG.MULTIVERSE_D616.sizeEffects, effectKey)) return;
+    const knownNames = new Set(Object.values(CONFIG.MULTIVERSE_D616.sizeEffects).map(e => e.name));
+    const current = this.actor.effects.contents.filter(effect => {
+      if (effect.flags?.["multiverse-d616"]?.managedSize) return true;
+      const changes = effect.system?.changes ?? effect.changes ?? [];
+      return knownNames.has(effect.name) && changes.some(c => c.key === "system.size");
+    });
+    if (current.length) await this.actor.deleteEmbeddedDocuments("ActiveEffect", current.map(e => e.id));
+    // Persist the natural size for Unusual Size. Temporary Resize effects do
+    // not change the saved natural size; they only override it while active.
+    await this.actor.update({ "system.size": effectKey });
+    const effect = foundry.utils.deepClone(CONFIG.MULTIVERSE_D616.sizeEffects[effectKey]);
+    await this.actor.createEmbeddedDocuments("ActiveEffect", [effect]);
   }
 
   /**
@@ -4436,7 +4406,7 @@ render(force = false, options = {}) {
         itemData.type === "trait" &&
         ["Big", "Small"].includes(itemData.name)
       ) {
-        this._changeSizeEffect(itemData.name.toLowerCase());
+        await this._changeSizeEffect(itemData.name.toLowerCase());
         return super._onDropItemCreate(itemData);
         // biome-ignore lint/style/noUselessElse: <explanation>
       } else {
@@ -5255,93 +5225,24 @@ class MarvelMultiverseActorBase extends foundry.abstract
   }
 
   prepareDerivedData() {
-    // Loop through ability scores, and add their modifiers to our sheet output.
+    // Shared PC/NPC calculation (v0.2.0); retain established ability math.
     for (const key in this.abilities) {
-      // Caclulate the defense score using mmrpg rules.
       this.abilities[key].defense += this.abilities[key].value + 10;
-      // Damage Multiplier rank to apply effect changes.
       this.abilities[key].damageMultiplier += this.attributes.rank.value;
-      // Non-combat checks base to apply effect changes.
       this.abilities[key].noncom += this.abilities[key].value;
-      // Handle ability label localization.
-      this.abilities[key].label =
-        game.i18n.localize(CONFIG.MULTIVERSE_D616.abilities[key]) ?? key;
+      this.abilities[key].label = game.i18n.localize(CONFIG.MULTIVERSE_D616.abilities[key]) ?? key;
     }
-
-    this.movement.climb.value = Math.ceil(this.movement.run.value * 0.5);
-    this.movement.jump.value = Math.ceil(this.movement.run.value * 0.5);
-    this.movement.swim.value = Math.ceil(this.movement.run.value * 0.5);
-
     this.attributes.init.value += this.abilities.vig.value;
 
-    // Secret Wars Resize clarification: Flight must be calculated from the
-    // character's regular Run Speed, not from the Run modifier caused by a
-    // temporary size change. Preserve other Run modifiers (such as Speed Run).
-    let regularRunForFlight = Number(this.movement.run.value ?? 0);
-    switch (String(this.size ?? "").toLowerCase()) {
-      case "small": regularRunForFlight += 1; break;
-      case "big": regularRunForFlight -= 1; break;
-      case "huge": regularRunForFlight /= 5; break;
-      case "gigantic": regularRunForFlight /= 20; break;
-      case "titanic": regularRunForFlight /= 80; break;
-      case "gargantuan": regularRunForFlight /= 320; break;
-    }
+    const movementLabels = Object.fromEntries(Object.entries(CONFIG.MULTIVERSE_D616.movementTypes)
+      .map(([key, config]) => [key, game.i18n.localize(config.label) ?? key]));
+    prepareD616Movement(this, this.parent, movementLabels);
 
-    // Unusual Size is the one exception: its regular Flight Speed is calculated
-    // as Small for below-Small sizes and Big for above-Big sizes.
-    const hasUnusualSize = Array.from(this.parent?.items ?? []).some(
-      (item) => item?.type === "trait" && String(item?.name ?? "").trim().toLowerCase() === "unusual size"
-    );
-    if (hasUnusualSize) {
-      const size = String(this.size ?? "").toLowerCase();
-      if (["microscopic", "miniature", "tiny", "little"].includes(size)) regularRunForFlight -= 1;
-      else if (["huge", "gigantic", "titanic", "gargantuan"].includes(size)) regularRunForFlight += 1;
-    }
-
-    // Apply any non-size Run calculation before Flight uses it as its base.
-    switch (this.movement.run.calc) {
-      case "half": regularRunForFlight = Math.ceil(regularRunForFlight * 0.5); break;
-      case "double": regularRunForFlight *= 2; break;
-      case "triple": regularRunForFlight *= 3; break;
-      case "rank": {
-        const val = regularRunForFlight === 0 ? 1 : regularRunForFlight;
-        regularRunForFlight = val * this.attributes.rank.value;
-        break;
-      }
-    }
-
-    for (const key in this.movement) {
-      this.movement[key].label =
-        game.i18n.localize(CONFIG.MULTIVERSE_D616.movementTypes[key].label) ??
-        key;
-      switch (this.movement[key].calc) {
-        case "half": {
-          this.movement[key].value = Math.ceil(this.movement[key].value * 0.5);
-          break;
-        }
-        case "double": {
-          this.movement[key].value *= 2;
-          break;
-        }
-        case "triple":
-          this.movement[key].value *= 3;
-          break;
-        case "runspeed":
-          this.movement[key].value = key === "flight" ? regularRunForFlight : this.movement.run.value;
-          break;
-        case "rank": {
-          const base = key === "flight" ? regularRunForFlight : this.movement[key].value;
-          const val = base === 0 ? 1 : base;
-          this.movement[key].value = val * this.attributes.rank.value;
-          break;
-        }
-      }
-    }
-
-    // Elemental Control (Earth): halve every movement mode for one round.
+    // Earth elemental effect halves every actual speed, including non-combat.
     if (hasElementalHalfMovement(this.parent)) {
-      for (const key in this.movement) {
-        this.movement[key].value = Math.ceil((Number(this.movement[key].value) || 0) * 0.5);
+      for (const movement of Object.values(this.movement)) {
+        movement.value = Math.ceil((Number(movement.value) || 0) / 2);
+        movement.noncom = Math.ceil((Number(movement.noncom) || 0) / 2);
       }
     }
   }
@@ -5362,97 +5263,7 @@ class MarvelMultiverseCharacter extends MarvelMultiverseActorBase {
 }
 
 class MarvelMultiverseNPC extends MarvelMultiverseActorBase {
-  prepareDerivedData() {
-    // Loop through ability scores, and add their modifiers to our sheet output.
-    for (const key in this.abilities) {
-      // Caclulate the defense score using mmrpg rules.
-      this.abilities[key].defense += this.abilities[key].value + 10;
-      // Damage Multiplier rank to apply effect changes.
-      this.abilities[key].damageMultiplier += this.attributes.rank.value;
-      // Non-combat checks base to apply effect changes.
-      this.abilities[key].noncom += this.abilities[key].value;
-      // Handle ability label localization.
-      this.abilities[key].label =
-        game.i18n.localize(CONFIG.MULTIVERSE_D616.abilities[key]) ?? key;
-    }
-
-    this.movement.climb.value = Math.ceil(this.movement.run.value * 0.5);
-    this.movement.jump.value = Math.ceil(this.movement.run.value * 0.5);
-    this.movement.swim.value = Math.ceil(this.movement.run.value * 0.5);
-
-    this.attributes.init.value += this.abilities.vig.value;
-
-    // Secret Wars Resize clarification: Flight must be calculated from the
-    // character's regular Run Speed, not from the Run modifier caused by a
-    // temporary size change. Preserve other Run modifiers (such as Speed Run).
-    let regularRunForFlight = Number(this.movement.run.value ?? 0);
-    switch (String(this.size ?? "").toLowerCase()) {
-      case "small": regularRunForFlight += 1; break;
-      case "big": regularRunForFlight -= 1; break;
-      case "huge": regularRunForFlight /= 5; break;
-      case "gigantic": regularRunForFlight /= 20; break;
-      case "titanic": regularRunForFlight /= 80; break;
-      case "gargantuan": regularRunForFlight /= 320; break;
-    }
-
-    // Unusual Size is the one exception: its regular Flight Speed is calculated
-    // as Small for below-Small sizes and Big for above-Big sizes.
-    const hasUnusualSize = Array.from(this.parent?.items ?? []).some(
-      (item) => item?.type === "trait" && String(item?.name ?? "").trim().toLowerCase() === "unusual size"
-    );
-    if (hasUnusualSize) {
-      const size = String(this.size ?? "").toLowerCase();
-      if (["microscopic", "miniature", "tiny", "little"].includes(size)) regularRunForFlight -= 1;
-      else if (["huge", "gigantic", "titanic", "gargantuan"].includes(size)) regularRunForFlight += 1;
-    }
-
-    // Apply any non-size Run calculation before Flight uses it as its base.
-    switch (this.movement.run.calc) {
-      case "half": regularRunForFlight = Math.ceil(regularRunForFlight * 0.5); break;
-      case "double": regularRunForFlight *= 2; break;
-      case "triple": regularRunForFlight *= 3; break;
-      case "rank": {
-        const val = regularRunForFlight === 0 ? 1 : regularRunForFlight;
-        regularRunForFlight = val * this.attributes.rank.value;
-        break;
-      }
-    }
-
-    for (const key in this.movement) {
-      this.movement[key].label =
-        game.i18n.localize(CONFIG.MULTIVERSE_D616.movementTypes[key].label) ??
-        key;
-      switch (this.movement[key].calc) {
-        case "half": {
-          this.movement[key].value = Math.ceil(this.movement[key].value * 0.5);
-          break;
-        }
-        case "double": {
-          this.movement[key].value *= 2;
-          break;
-        }
-        case "triple":
-          this.movement[key].value *= 3;
-          break;
-        case "runspeed":
-          this.movement[key].value = key === "flight" ? regularRunForFlight : this.movement.run.value;
-          break;
-        case "rank": {
-          const base = key === "flight" ? regularRunForFlight : this.movement[key].value;
-          const val = base === 0 ? 1 : base;
-          this.movement[key].value = val * this.attributes.rank.value;
-          break;
-        }
-      }
-    }
-
-    // Elemental Control (Earth): halve every movement mode for one round.
-    if (hasElementalHalfMovement(this.parent)) {
-      for (const key in this.movement) {
-        this.movement[key].value = Math.ceil((Number(this.movement[key].value) || 0) * 0.5);
-      }
-    }
-  }
+  // Inherit exactly the same size, movement, and derived data rules as PCs.
 }
 
 class MarvelMultiverseItemBase extends foundry.abstract.TypeDataModel {
@@ -5970,6 +5781,19 @@ Hooks.once("ready", () => {
     void createItemMacro(data, slot);
     return false;
   });
+
+  const refreshSheetHooks = [
+    "createCombat",
+    "deleteCombat",
+    "combatStart",
+    "createCombatant",
+    "deleteCombatant",
+    "updateCombatant",
+    "updateCombat",
+  ];
+  for (const hook of refreshSheetHooks) {
+    Hooks.on(hook, () => rerenderOpenD616ActorSheets());
+  }
 });
 /* -------------------------------------------- */
 /*  Render Settings Hook                                  */

@@ -1,0 +1,6 @@
+Multiverse D616 v0.2.0 — SHA256 de arquivos críticos
+b9f261cd3ed9f1aae38cefc0a751f314d2c4ce214995e83f64577f9e8477797a  system.json
+347d7243c9315b55f15dc63710f30d5935c94afca26b7a676b870c0fb7a3c403  multiverse-d616.mjs
+36e126aa9f635acebd020609f5c60cee6867fe1f7378e8cf5b86bf9c639edd1a  scripts/movement-calculator.mjs
+4618e88426fe497ffc3ea7f6bbfac8f2afb8b5e781149af921e32858dbd69deb  apps/charactermancer/data/powers.json
+8722b3c5fe470d064be0718177922d94b90e08e526d168c29e96b40ac094b814  CHANGELOG.md

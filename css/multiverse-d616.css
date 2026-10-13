@@ -1659,3 +1659,10 @@
   height: auto;
   overflow: visible;
 }
+
+/* v0.2.0: movement breakdown in the Character sheet only. */
+.multiverse-d616.sheet.actor .mm-speed-explain {
+  margin: 3px 0 0; font: 10px/1.3 sans-serif; opacity: .82;
+  overflow-wrap: anywhere;
+}
+.multiverse-d616.sheet.actor .mm-noncombat-speed { font-size: 10px; opacity: .8; }

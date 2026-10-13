@@ -319,3 +319,12 @@ To install and use the  Multiverse-D616 Role Playing Game system for Foundry Vir
 In your foundry setup page copy and paste the following Link into the **Install System** dialog on the Setup menu of the application.
 
 Updates are released often, if you upgrade and discover an issue please submit it.
+
+
+## Multiverse D616 v0.2.1 — Movimentos e tamanhos
+
+A v0.2.1 preserva as fichas existentes; instale substituindo a pasta inteira `Data/systems/multiverse-d616` com o Foundry fechado. No painel de Speed, os valores em parênteses indicam espaços fora de combate.
+
+O sistema aplica automaticamente o bônus de Agility ao Run, e a regra de tamanho à velocidade terrestre; o Flight normal não muda ao encolher ou crescer temporariamente, exceto pela referência de tamanho natural do traço Unusual Size. Efeitos antigos de tamanho continuam reconhecidos. Fichas legadas em que Run já estava manualmente calculado como `5 + floor(Agility/5)` não recebem o mesmo bônus novamente.
+
+Testes isolados: `node tests/movement.test.mjs`. Esses testes não substituem a validação visual e multiplayer no Foundry VTT v14.
