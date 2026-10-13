@@ -3,7 +3,7 @@
   <header class="sheet-header">
       <div class="flexrow">
 
-        <div class="flexcol -gap-sm -space-between -grow-2">
+        <div class="flexcol -gap-sm -grow-2">
           {{!-- codename --}}
           <div class="mm-styled-field">
             <label class="mm-styled-label -align-left" for="name"><span>Codename</span></label>
@@ -91,6 +91,13 @@
               </div>
             </div>
           </div>
+          {{!-- Powers: below the portrait and abilities, across the NPC's left column --}}
+          <div class="mm-styled-container mm-powers-block">
+            <h3>Powers</h3>
+            <div class="mm-styled-container-body">
+              {{> "systems/multiverse-d616/templates/actor/parts/actor-powers.hbs"}}
+            </div>
+          </div>
         </div>
 
         <div class="flexcol -gap-sm -nowrap">
@@ -147,13 +154,6 @@
                 </div>
               </li>
             </ul>
-          </div>
-          {{!-- Powers --}}
-          <div class="mm-styled-container mm-powers-block">
-            <h3>Powers</h3>
-            <div class="mm-styled-container-body">
-              {{> "systems/multiverse-d616/templates/actor/parts/actor-powers.hbs"}}
-            </div>
           </div>
           {{!-- Traits & Tags --}}
           <div class="mm-styled-container mm-traitstags-block">

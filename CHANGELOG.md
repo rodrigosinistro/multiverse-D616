@@ -1,4 +1,14 @@
+## 0.1.99
+- NPC sheet: added top spacing above the Powers block so it no longer overlaps the Health panel.
+
 # Changelog
+
+## 0.1.98
+
+- **Ficha de NPC — organização:** painel **Powers** transferido da coluna direita para a coluna esquerda, diretamente abaixo do retrato, Rank, Health/Focus e atributos.
+- **Painel de Poderes:** ocupa toda a largura disponível da coluna esquerda, com altura ajustada ao conteúdo. Mantidos grupos de poderes, rolagens e os comandos de inclusão, edição e exclusão.
+- **Coluna direita:** continua mostrando **Damage** e **Traits & Tags**, sem o painel de poderes.
+- **Escopo:** ajuste limitado ao layout de NPC; ficha de personagem, mecânicas de jogo, compêndios e automações da v0.1.97 preservados. Compatibilidade Foundry VTT v14 mantida.
 
 ## 0.1.97
 

@@ -1645,3 +1645,17 @@
 .m616-elemental-confirm b {
   color: #c41418;
 }
+
+/* D616 v0.1.99 - NPC sheet: Powers below portrait and abilities, with added top spacing.
+   Scoped to NPCs so the character sheet retains its existing layout. */
+.multiverse-d616.sheet.actor form.npc .mm-powers-block {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 0;
+  margin-top: 28px;
+}
+
+.multiverse-d616.sheet.actor form.npc .mm-powers-block .mm-styled-container-body {
+  height: auto;
+  overflow: visible;
+}
