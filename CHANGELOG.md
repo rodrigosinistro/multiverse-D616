@@ -1,3 +1,64 @@
+## 0.2.7 — Token X/Y/Z sincronizado com tamanho de Grow, Shrink e ficha (Foundry v14)
+
+- Ao escolher tamanho em **Grow 1–4** ou **Shrink 1–4**, atualiza automaticamente o tamanho em espaços de grade **X (width), Y (height), Z (depth)** do token colocado na cena e do token padrão (*prototype token*) de um Actor vinculado.
+- Mapeamento único: Microscopic 0,1; Miniature 0,3; Tiny 0,5; Little 0,7; Small 0,9; Average 1; Big 2; Huge 3; Gigantic 5; Titanic 8; Gargantuan 10. X/Y/Z recebem o mesmo valor.
+- A opção **Tamanho normal** retorna à categoria natural do personagem, inclusive em personagens com **Unusual Size**; alternar Grow/Shrink não acumula dimensões.
+- A troca **manual** de tamanho na ficha (personagem ou NPC) utiliza a mesma tabela. A movimentação de X/Y/Z não altera coordenadas do token (`x`, `y`), elevação ou escala artística (`texture.scaleX/scaleY`).
+- Para tokens não vinculados (*synthetic actors*), apenas aquele token específico é alterado. Para Actors vinculados, os tokens vinculados na cena atual e o token padrão são atualizados; clones não vinculados não são tocados.
+- Os efeitos antigos de tamanho que continham `prototypeToken.width/height` são limpos conforme usados, e os novos efeitos usam somente modificadores da ficha. Efeitos Grow/Shrink já ativos na cena são sincronizados ao abrir a cena como Mestre.
+- Remover/desativar um efeito de Grow/Shrink restaura o tamanho conforme os efeitos restantes ou o tamanho natural.
+- Os compêndios e os dados do Charactermancer não foram modificados. Não publicado no GitHub; validar localmente na v14.
+
+## 0.2.6 — Shrink 1–4: seleção de tamanho e atalhos (Foundry v14)
+
+- **Shrink 1–4** agora abrem a janela de Encolhimento ao usar o poder na ficha ou nos atalhos, mostrando os tamanhos permitidos, altura/faixa por categoria e opção de tamanho normal.
+- Limites oficiais: Shrink 1 Little; Shrink 2 Tiny; Shrink 3 Miniature; Shrink 4 Microscopic. Não oferecem redução além do nível adquirido ou igual/maior que o tamanho natural.
+- Duração Permanente: incluídos na lista de exceções do Token Action HUD nativo, aba POWERS, sem liberar outros poderes permanentes.
+- Active Effect de Encolhimento separado do tamanho natural, com modificadores de tamanho conforme `CONFIG.MULTIVERSE_D616.sizeEffects`. Trocas não acumulam efeitos nem bônus, inclusive ao alternar Grow e Shrink.
+- Cancelamento e retorno ao normal preservam dados naturais; mudança manual de tamanho encerra Grow/Shrink. Sem alterações aos compêndios existentes e sem migração destrutiva.
+- Testes automatizados de categorias, opções por Rank do poder, HUD, não-acumulação, tamanho natural e regressão de Grow/movimentação. Publicar no GitHub somente após teste local no Foundry VTT v14.
+
+## 0.2.5 — Grow 1–4 na lista de atalhos (Foundry v14)
+
+- **Token Action HUD nativo, aba POWERS:** Grow 1, Grow 2, Grow 3 e Grow 4 aparecem nos atalhos mesmo quando `system.duration` é `Permanent` ou `Permanente`.
+- Clicar no atalho chama `item.roll()`, preservando a janela de tamanho, limitações por nível e efeitos implementados na v0.2.4.
+- A exceção é estritamente limitada aos quatro nomes oficiais Grow 1–4. Outros poderes permanentes continuam ocultos; poderes acionáveis não permanentes continuam visíveis.
+- Compêndios, fichas, atributos, migrações e controles de movimento permanecem inalterados. Atualização local sem publicação no GitHub; validar no Foundry VTT v14 antes de publicar.
+
+## 0.2.4 — Crescimento com escolha de tamanho (Foundry v14)
+
+- Ao usar **Grow 1–4** em fichas de personagens ou NPCs, abre uma janela de seleção antes do uso, com rótulo da categoria e intervalo de altura em metros.
+- **Grow 1:** Big / Huge; **Grow 2:** adiciona Gigantic; **Grow 3:** adiciona Titanic; **Grow 4:** adiciona Gargantuan. As opções respeitam também o tamanho natural do personagem. Sempre inclui retornar ao tamanho natural.
+- Cancelar o diálogo não altera Actor nem gasta recursos, cria chat ou registra ações. O valor selecionado é validado novamente contra o nível do poder.
+- O tamanho escolhido cria **um único Active Effect** próprio de Crescimento com modificadores oficiais, sem alterar `system.size` natural. Trocar de categoria substitui apenas o crescimento anterior; voltar ao normal o remove.
+- Efeitos naturais de tamanho (incluindo **Unusual Size**, Big e Small) são preservados; modificadores de defesa/dano de tamanho não são somados indevidamente quando já existe efeito natural.
+- A seleção manual de tamanho na ficha encerra qualquer Crescimento temporário para não deixar um override oculto.
+- Motor de tamanho/movimentação e todo o restante da v0.2.3 preservados; testes automatizados adicionais de limites por Grow e comportamento das trocas.
+- **Não publicada automaticamente no GitHub.** Validar no Foundry VTT v14.
+
+## 0.2.3 — Stilt Steps permanente, Flight 2 e Shield/Extended Reach (Foundry v14)
+
+- Stilt Steps: modificadores permanentes transferíveis à ficha (Corrida e Escalada ×2), inclusive fora de combate. Remove a criação e expiração de bônus temporários de turno da v0.2.2.
+- Flight 2: removida a alteração `system.movement.jump.active = false`. Ter Flight 2 não desativa nem exclui Jump.
+- Shield 1–4: DR de Saúde corresponde ao nível apenas durante a Concentração. Sem Concentração, não há DR automático do Shield. O maior valor ativo prevalece.
+- Extended Reach 1–2: modificadores migrados de `system.reach` MULTIPLY para `system.reachFactor` UPGRADE, usando apenas o maior (×4 ou ×10), integrado ao alcance ajustado por tamanho; mantém apoio a efeitos legados até a migração.
+- Migração de personagens antigos: atualiza efeitos embutidos (formatos v13/v14), restaura Jump, torna Stilt Steps permanente, desliga a transferência dos Shields, reatribui multiplicadores de alcance, remove efeitos temporários de Stilt da v0.2.2 e atualiza Shields que já estejam em Concentração.
+- Compêndio nativo e Charactermancer atualizados; testes automatizados com 58 cenários de movimento e 23 testes de migração/efeitos.
+- Sem publicação automática no GitHub. Validar primeiro no Foundry v14 real.
+
+## 0.2.2 — Auditoria de Poderes, modificadores e movimentação (Foundry v14)
+
+- Mighty, Accuracy, Brilliance, Discipline 1–4: efeitos permanentes UPGRADE (não acumulam níveis).
+- Flexible Bones 2: Health Damage Reduction 2.
+- Flight 1/2 e Speed Run 1/2: maior multiplicador não-combate; Speed Run 2 ×50 e Rank 3.
+- Speed Swim: multiplica velocidade normal de natação por Rank, fora de combate ×3.
+- Jump 2/3 (Spider-Powers, Super-Strength): efeitos de salto e multiplicadores fora de combate ×3/×50.
+- Stilt Steps: duração instantânea; bônus Run ×2 e Climb ×2 somente durante a ação de movimento, com limpeza ao avançar o turno.
+- Body Sheet: bônus DR Saúde 3 e planar 2× corrida regular apenas com Concentração ativa; ataques via Powers/armas impedidos durante o efeito.
+- Compêndio nativo LevelDB e dados do Charactermancer sincronizados para os poderes afetados.
+- Migração automática de poderes já adicionados a fichas existentes, com compatibilidade de efeitos antigos e repetição segura.
+- Testes automatizados de regressão de movimento/migração; integração dentro do Foundry VTT v14 ainda requer teste local.
+
 ## 0.2.1
 - Character sheet Speed block no longer shows the movement calculation explanation text.
 - Speed now displays out-of-combat movement by default and automatically switches to in-combat movement while the actor is in an active combat.

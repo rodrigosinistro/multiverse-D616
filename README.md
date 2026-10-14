@@ -4,11 +4,67 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 
 ## Versão
 
-- **Versão do sistema:** 0.1.97
+- **Versão do sistema:** 0.2.7
 - **Compatibilidade:** Foundry VTT v14 (`minimum: 14`, `verified: 14`)
 - **ID / pasta interna:** `multiverse-d616`
 - **Manifest:** `https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json`
 
+
+## Atualização v0.2.7 — Dimensões X/Y/Z do token automáticas
+
+- Grow, Shrink e a alteração manual de tamanho passam a atualizar **X/Y/Z** (largura, altura e profundidade da caixa do token na grade) na cena ativa e no token padrão de um personagem vinculado.
+- Tabela: Microscopic **0,1**; Miniature **0,3**; Tiny **0,5**; Little **0,7**; Small **0,9**; Average **1**; Big **2**; Huge **3**; Gigantic **5**; Titanic **8**; Gargantuan **10** em todos os três eixos.
+- Retornar ao normal respeita o tamanho natural configurado, incluindo Unusual Size. Tokens independentes (não vinculados) redimensionam apenas sua instância, sem alterar os demais NPCs do mesmo Actor.
+- Não altera `x/y` (posição), elevação nem escala da arte. Os novos valores mudam o espaço ocupado na grade do Foundry v14; teste colisões e movimento em combate.
+- Faz limpeza de modificadores legados de dimensões quando necessário; compêndios/Charactermancer preservados.
+
+## Atualização v0.2.6 — Encolhimento com escolha de tamanho e atalhos
+
+- **Shrink 1–4:** janela de seleção de categoria ao usar o poder, tanto por ficha de PC/NPC quanto por atalho **POWERS**.
+- **Tamanhos disponíveis:** Shrink 1 até Little (45,72 cm), Shrink 2 até Tiny (10,16 cm), Shrink 3 até Miniature (2,54 cm), Shrink 4 até Microscopic (6,35 mm). Níveis superiores incluem as categorias inferiores, limitadas também pelo tamanho natural.
+- **Duração Permanente:** Shrink 1–4 aparecem na lista de atalhos como exceção, como Grow 1–4. Outros poderes Permanentes continuam ocultos.
+- **Sem acumulação:** um único efeito de Grow ou Shrink por personagem. Alternar entre os dois substitui o anterior, preservando tamanho natural e os modificadores de tamanho já configurados na ficha.
+- **Tamanho normal** remove o redimensionamento temporário, e **Cancelar** não altera a ficha nem consome recursos. Selecionar tamanho natural manualmente remove ambos os efeitos temporários.
+- **Instalação:** atualize a pasta `multiverse-d616`, reinicie o Foundry VTT v14 e teste com cópia de segurança do mundo.
+- **Publicação:** após validar localmente, criar release `v0.2.6` e anexar `multiverse-d616-v0.2.6.zip`; o GitHub não foi alterado automaticamente.
+
+## Atualização v0.2.5 — Crescimento nos atalhos
+
+- **Grow 1–4** aparecem na aba **POWERS** do Token Action HUD nativo, apesar de duração Permanente, e utilizam a mesma janela de seleção de tamanho da v0.2.4.
+- Outros poderes permanentes continuam ocultos na lista, sem alterar seus modificadores.
+- **Validação:** `node --test tests/*.test.mjs` e teste visual no Foundry VTT v14.
+- **Publicação:** criar release `v0.2.5` e anexar `multiverse-d616-v0.2.5.zip` apenas após testar localmente.
+
+## Atualização v0.2.4 — Crescimento controlado por categoria
+
+- **Grow 1–4:** janela ao usar o poder nas fichas de PCs/NPCs, com seleção de tamanho dentro dos limites permitidos e faixas de altura em metros.
+- **Normalizar:** opção para restaurar o tamanho natural; cancelar não cria efeitos nem registra uso.
+- **Tamanho escolhido:** efeito ativo independente, trocando os bônus de tamanho sem acumular etapas e preservando tamanho natural, alcance, movimentação e os demais efeitos.
+- **Validação:** `node tests/grow-size.test.mjs`, `node tests/movement.test.mjs` e `node --test tests/*.test.mjs`.
+- **Distribuição:** atualizar a versão 0.2.4 no GitHub somente após testes locais, criando release/tag v0.2.4.
+
+## Atualização v0.2.3 — Correções de Poderes
+
+- **Stilt Steps:** transferência permanente de Run ×2 e Climb ×2, sempre visíveis na ficha.
+- **Flight 2:** Jump permanece disponível; não é mais desativado pelo voo.
+- **Shield 1–4:** Health DR apenas com a Concentração do poder ativa; remover a Concentração remove o benefício.
+- **Extended Reach 1–2:** x4 e x10 são alternativas, não multiplicadores acumulativos. Alcance respeita o tamanho.
+- **Migração:** converte poderes antigos de fichas existentes; reforça backup antes de instalar.
+- **GitHub:** o `download` v0.2.3 do manifesto só passa a funcionar após criar uma release `v0.2.3` e anexar o ZIP completo.
+
+## Atualização v0.2.2 — Auditoria de Power Modifiers e movimentação
+
+- **Bônus sem acumulação:** Mighty, Accuracy, Brilliance e Discipline 1–4 agora usam `UPGRADE`; prevalece o maior benefício, em vez da soma dos níveis inferiores.
+- **Flexible Bones 2:** redução de dano à Saúde 2 adicionada.
+- **Flight 1/2, Speed Run 1/2:** maior multiplicador de deslocamento fora de combate prevalece. Speed Run 2 atualizado para ×50 e Rank 3.
+- **Speed Swim:** aumenta a velocidade de natação **normal** × Rank; deslocamento fora de combate ×3.
+- **Jump 2/3:** efeitos de velocidade adicionados nas árvores Spider-Powers e Super-Strength, com ×3/×50 fora de combate, sem acumular níveis.
+- **Stilt Steps:** corrigido para **ação de movimento instantânea**. Durante seu uso no turno de combate, aplica Run ×2 e Climb ×2, expirando na mudança de turno; fora de combate exibe orientação e não deixa efeito permanente.
+- **Body Sheet:** bônus de redução de dano à Saúde 3 e Glide ×2 da corrida normal aplicados **apenas enquanto a condição do Power em Concentração estiver ativa**. Ataques por armas/Powers ficam bloqueados durante a condição.
+- **Migração de fichas:** atualização automática e repetível dos efeitos antigos em Actors existentes, preservando os itens e IDs dos poderes. O Mestre primário executa a migração ao entrar na mesa; recomenda-se backup do mundo.
+- **Testes offline:** `node tests/movement.test.mjs` e `node --test tests/*test.mjs`. Teste com Foundry VTT v14 real continua recomendado.
+- **Distribuição:** o ZIP instalável contém `multiverse-d616/`. Não é necessário instalar o Charactermancer separadamente.
+- **Publicação futura:** o endereço de `download` da v0.2.2 foi previsto para sua respectiva release; para esta versão, use v0.2.3 após validar os testes.
 
 ## Atualização v0.1.97 — Controle de Turno e Concentração
 

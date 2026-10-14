@@ -3,8 +3,11 @@
  *
  * Replaces token-action-hud-core + token-action-hud-multiverse-d616 with a
  * small system-owned HUD containing the two actions used by this system:
- * ABILITIES and non-permanent POWERS.
+ * ABILITIES and actionable POWERS, including Grow/Shrink 1–4 even though Permanent.
  */
+
+import { growPowerLevel } from "./grow-size.mjs";
+import { shrinkPowerLevel } from "./shrink-size.mjs";
 
 const SYSTEM_ID = "multiverse-d616";
 const LEGACY_HUD_MODULE_ID = "token-action-hud-multiverse-d616";
@@ -92,6 +95,14 @@ function isPermanentPower(item) {
   return durationValues(item?.system?.duration)
     .map(normalizeText)
     .some((value) => value === "permanent" || value === "permanente");
+}
+
+/** Grow/Shrink 1–4 are Permanent on the item, but must remain clickable to choose size.
+ * Other Permanent powers are still omitted from the action shortcuts.
+ */
+function isPowerAvailableForHud(item) {
+  return item?.type === "power" &&
+    (!isPermanentPower(item) || growPowerLevel(item) > 0 || shrinkPowerLevel(item) > 0);
 }
 
 function compareNames(left, right) {
@@ -402,7 +413,7 @@ class NativeActionHud {
     body.classList.add("is-powers");
     const canUse = userCanUseActor(actor);
     const powers = getActorItems(actor)
-      .filter((item) => item?.type === "power" && !isPermanentPower(item))
+      .filter(isPowerAvailableForHud)
       .sort((left, right) => compareNames(left.name, right.name));
     if (!powers.length) {
       const empty = document.createElement("p");
@@ -585,6 +596,7 @@ export {
   ABILITY_ORDER,
   NativeActionHud,
   isPermanentPower,
+  isPowerAvailableForHud,
   nativeActionHud,
   rollAbility,
 };

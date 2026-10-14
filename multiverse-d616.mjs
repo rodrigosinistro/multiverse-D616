@@ -12,7 +12,11 @@
  *
  */
 import { prepareD616Movement } from "./scripts/movement-calculator.mjs";
+import { growPowerLevel, promptGrowChoice, applyGrowChoice } from "./scripts/grow-size.mjs";
+import { shrinkPowerLevel, promptShrinkChoice, applyShrinkChoice } from "./scripts/shrink-size.mjs";
+import { syncActorTokenSize, registerTokenSizeHooks, RESIZE_SKIP_OPTION } from "./scripts/token-size.mjs";
 import { handleConcentrationOnUse } from "./scripts/concentration.js";
+import { hasActiveBodySheet, isAttackItem } from "./scripts/activated-movement-powers.mjs";
 import { calculateD616Damage } from "./scripts/damage-calculation.js";
 import { buildItemRollFormula } from "./scripts/roll-formula.mjs";
 import {
@@ -531,6 +535,32 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
    * @private
    */
   async roll() {
+    // Grow 1–4: prompt BEFORE spending Focus/Concentration or announcing use.
+    // Cancel keeps the actor and combat state unchanged.
+    let growSelection;
+    if (growPowerLevel(this)) {
+      try {
+        growSelection = await promptGrowChoice(this, this.actor);
+      } catch (error) {
+        console.error('[multiverse-d616] Falha ao selecionar Crescimento:', error);
+        ui.notifications?.error?.('Não foi possível abrir a seleção de Crescimento.');
+        return;
+      }
+      if (growSelection === null) return;
+    }
+    // Shrink 1–4 has the same deliberate, size-limited choice workflow as Grow.
+    // This includes use from the native POWERS shortcuts (item.roll()).
+    let shrinkSelection;
+    if (shrinkPowerLevel(this)) {
+      try {
+        shrinkSelection = await promptShrinkChoice(this, this.actor);
+      } catch (error) {
+        console.error('[multiverse-d616] Falha ao selecionar Encolhimento:', error);
+        ui.notifications?.error?.('Não foi possível abrir a seleção de Encolhimento.');
+        return;
+      }
+      if (shrinkSelection === null) return;
+    }
     const isCombatTrickery = mmD616IsCombatTrickeryItem(this);
     if (isCombatTrickery) {
       const check = mmD616CanArmCombatTrickery(this.actor);
@@ -538,6 +568,12 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         ui.notifications?.warn?.(check.message);
         return;
       }
+    }
+
+    // While Body Sheet is maintained, the character cannot make attacks.
+    if (hasActiveBodySheet(this.actor) && isAttackItem(this)) {
+      ui.notifications?.warn?.("Body Sheet ativo: o personagem não pode realizar ataques enquanto mantiver essa Concentração.");
+      return;
     }
 
     // Secret Wars: a shield that was hurled is unavailable until the start of
@@ -554,6 +590,29 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
     // If the user cancels or doesn't have enough Focus, abort the use (no chat message).
     const preFocus = await mmPreSpendFocusForPowerUse(this.actor, this);
     if (preFocus === null) return;
+
+    let growFeedback = '';
+    if (growSelection !== undefined) {
+      try {
+        const result = await applyGrowChoice(this.actor, this, growSelection, CONFIG.MULTIVERSE_D616);
+        growFeedback = `<p><strong>Tamanho escolhido:</strong> ${result.label} — ${result.range}.</p>`;
+      } catch (error) {
+        console.error('[multiverse-d616] Falha ao aplicar Crescimento:', error);
+        ui.notifications?.error?.('Não foi possível aplicar o tamanho escolhido.');
+        return;
+      }
+    }
+
+    if (shrinkSelection !== undefined) {
+      try {
+        const result = await applyShrinkChoice(this.actor, this, shrinkSelection, CONFIG.MULTIVERSE_D616);
+        growFeedback = `<p><strong>Tamanho escolhido:</strong> ${result.label} — ${result.range}.</p>`;
+      } catch (error) {
+        console.error('[multiverse-d616] Falha ao aplicar Encolhimento:', error);
+        ui.notifications?.error?.('Não foi possível aplicar o tamanho escolhido.');
+        return;
+      }
+    }
 
     // Assisted turn tracking must never prevent an Item from being used.
     try {
@@ -581,7 +640,7 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       flavor: label,
       content: `<div>${this.system.description}</div><div>${
         this.system.effect ? this.system.effect : ""
-      }</div>${mmAttackEdgeModeCardHtml(this)}`,
+      }</div>${growFeedback}${mmAttackEdgeModeCardHtml(this)}`,
     }, messageMode));
 
     // The throw itself makes the shield unavailable even if the attack misses.
@@ -1093,16 +1152,6 @@ MULTIVERSE_D616.sizeEffects = {
         mode: 2,
         value: 2,
       },
-      {
-        key: "prototypeToken.width",
-        mode: 5,
-        value: 0.25,
-      },
-      {
-        key: "prototypeToken.height",
-        mode: 5,
-        value: 0.25,
-      },
     ],
     description: "",
     transfer: true,
@@ -1198,16 +1247,6 @@ MULTIVERSE_D616.sizeEffects = {
         mode: 2,
         value: 2,
       },
-      {
-        key: "prototypeToken.width",
-        mode: 5,
-        value: 5,
-      },
-      {
-        key: "prototypeToken.height",
-        mode: 5,
-        value: 5,
-      },
     ],
     description: "",
     transfer: true,
@@ -1237,16 +1276,6 @@ MULTIVERSE_D616.sizeEffects = {
         key: "system.abilities.mle.damageMultiplier",
         mode: 2,
         value: 4,
-      },
-      {
-        key: "prototypeToken.width",
-        mode: 5,
-        value: 20,
-      },
-      {
-        key: "prototypeToken.height",
-        mode: 5,
-        value: 20,
       },
     ],
     description: "",
@@ -1278,16 +1307,6 @@ MULTIVERSE_D616.sizeEffects = {
         mode: 2,
         value: 6,
       },
-      {
-        key: "prototypeToken.width",
-        mode: 5,
-        value: 80,
-      },
-      {
-        key: "prototypeToken.height",
-        mode: 5,
-        value: 80,
-      },
     ],
     description: "",
     transfer: true,
@@ -1317,16 +1336,6 @@ MULTIVERSE_D616.sizeEffects = {
         key: "system.abilities.mle.damageMultiplier",
         mode: "2",
         value: "8",
-      },
-      {
-        key: "prototypeToken.width",
-        mode: 5,
-        value: 320,
-      },
-      {
-        key: "prototypeToken.height",
-        mode: 5,
-        value: 320,
       },
     ],
     description: "",
@@ -3785,16 +3794,17 @@ render(force = false, options = {}) {
     if (!Object.hasOwn(CONFIG.MULTIVERSE_D616.sizeEffects, effectKey)) return;
     const knownNames = new Set(Object.values(CONFIG.MULTIVERSE_D616.sizeEffects).map(e => e.name));
     const current = this.actor.effects.contents.filter(effect => {
-      if (effect.flags?.["multiverse-d616"]?.managedSize) return true;
+      if (effect.flags?.["multiverse-d616"]?.managedSize || effect.flags?.["multiverse-d616"]?.growChoice || effect.flags?.["multiverse-d616"]?.shrinkChoice) return true;
       const changes = effect.system?.changes ?? effect.changes ?? [];
       return knownNames.has(effect.name) && changes.some(c => c.key === "system.size");
     });
-    if (current.length) await this.actor.deleteEmbeddedDocuments("ActiveEffect", current.map(e => e.id));
+    if (current.length) await this.actor.deleteEmbeddedDocuments("ActiveEffect", current.map(e => e.id), {[RESIZE_SKIP_OPTION]:true});
     // Persist the natural size for Unusual Size. Temporary Resize effects do
     // not change the saved natural size; they only override it while active.
-    await this.actor.update({ "system.size": effectKey });
+    await this.actor.update({ "system.size": effectKey }, {[RESIZE_SKIP_OPTION]:true});
     const effect = foundry.utils.deepClone(CONFIG.MULTIVERSE_D616.sizeEffects[effectKey]);
-    await this.actor.createEmbeddedDocuments("ActiveEffect", [effect]);
+    await this.actor.createEmbeddedDocuments("ActiveEffect", [effect], {[RESIZE_SKIP_OPTION]:true});
+    await syncActorTokenSize(this.actor, effectKey);
   }
 
   /**
@@ -4299,16 +4309,17 @@ render(force = false, options = {}) {
     if (!Object.hasOwn(CONFIG.MULTIVERSE_D616.sizeEffects, effectKey)) return;
     const knownNames = new Set(Object.values(CONFIG.MULTIVERSE_D616.sizeEffects).map(e => e.name));
     const current = this.actor.effects.contents.filter(effect => {
-      if (effect.flags?.["multiverse-d616"]?.managedSize) return true;
+      if (effect.flags?.["multiverse-d616"]?.managedSize || effect.flags?.["multiverse-d616"]?.growChoice || effect.flags?.["multiverse-d616"]?.shrinkChoice) return true;
       const changes = effect.system?.changes ?? effect.changes ?? [];
       return knownNames.has(effect.name) && changes.some(c => c.key === "system.size");
     });
-    if (current.length) await this.actor.deleteEmbeddedDocuments("ActiveEffect", current.map(e => e.id));
+    if (current.length) await this.actor.deleteEmbeddedDocuments("ActiveEffect", current.map(e => e.id), {[RESIZE_SKIP_OPTION]:true});
     // Persist the natural size for Unusual Size. Temporary Resize effects do
     // not change the saved natural size; they only override it while active.
-    await this.actor.update({ "system.size": effectKey });
+    await this.actor.update({ "system.size": effectKey }, {[RESIZE_SKIP_OPTION]:true});
     const effect = foundry.utils.deepClone(CONFIG.MULTIVERSE_D616.sizeEffects[effectKey]);
-    await this.actor.createEmbeddedDocuments("ActiveEffect", [effect]);
+    await this.actor.createEmbeddedDocuments("ActiveEffect", [effect], {[RESIZE_SKIP_OPTION]:true});
+    await syncActorTokenSize(this.actor, effectKey);
   }
 
   /**
@@ -5182,6 +5193,12 @@ class MarvelMultiverseActorBase extends foundry.abstract
               initial: 5,
               min: 0,
             }),
+            // Strongest power's out-of-combat factor; never multiply tiers.
+            noncomFactor: new fields.NumberField({
+              ...requiredInteger,
+              initial: 1,
+              min: 0,
+            }),
             active: new fields.BooleanField({
               required: true,
               initial: CONFIG.MULTIVERSE_D616.movementTypes[movement].active,
@@ -5215,6 +5232,12 @@ class MarvelMultiverseActorBase extends foundry.abstract
       ...requiredInteger,
       initial: 1,
       min: 0,
+    });
+    // Highest permanent Extended Reach level (x4 or x10); never compound.
+    schema.reachFactor = new fields.NumberField({
+      ...requiredInteger,
+      initial: 1,
+      min: 1,
     });
     schema.defaultElement = new fields.StringField({
       required: true,
@@ -5769,6 +5792,7 @@ function _configureFonts() {
 /* -------------------------------------------- */
 
 Hooks.once("ready", () => {
+  registerTokenSizeHooks();
   // Wait to register hotbar drop hook on ready so that modules could register earlier if they want to
   Hooks.on("hotbarDrop", (bar, data, slot) => {
     const uuid = data?.uuid;

@@ -39,6 +39,9 @@ function applyCalc(base, calc, rank, runReference) {
     case 'triple': return safeSpeed(base * 3);
     case 'rank': return safeSpeed((base || 1) * rank);
     case 'runspeed': return safeSpeed(runReference);
+    case 'run-double': return safeSpeed(runReference * 2);
+    case 'rank-swim': return safeSpeed(base * rank);
+    case 'double-climb': return safeSpeed(base * 2);
     default: return safeSpeed(base);
   }
 }
@@ -108,13 +111,40 @@ function combatFlightBase(base, naturalSize, unusual) {
   if (['huge','gigantic','titanic','gargantuan'].includes(naturalSize)) return safeSpeed(base + 1);
   return sizeRun(base, naturalSize);
 }
-function readOutOfCombatMultiplier(movement, raw) {
+/** Pick the strongest out-of-combat speed effect instead of multiplying
+ * Flight 1 × Flight 2 or Speed Run 1 × Speed Run 2.
+ *
+ * New v14 powers UPGRADE noncomFactor (base 1). Existing saved characters
+ * might still have legacy AEs that MULTIPLY the old noncom field (base 5).
+ * Discover those legacy multipliers without trusting their cumulative product.
+ */
+function readOutOfCombatMultiplier(movement, raw, actor, movementKey) {
+  const declared = number(movement?.noncomFactor, 1);
+  const legacyKey = `system.movement.${movementKey}.noncom`;
+  const oldFactors = [];
+  const effects = [
+    ...Array.from(actor?.effects?.contents ?? actor?.effects ?? []),
+    ...Array.from(actor?.items?.contents ?? actor?.items ?? [])
+      .flatMap(item => Array.from(item?.effects?.contents ?? item?.effects ?? [])
+        .filter(effect => effect.transfer !== false))
+  ];
+  for (const effect of effects) {
+    if (effect?.disabled === true) continue;
+    for (const change of changes(effect)) {
+      if (change.key !== legacyKey) continue;
+      const mode = String(change.type ?? '').toLowerCase();
+      if (mode !== 'multiply' && Number(change.mode) !== 1) continue;
+      const factor = number(change.value);
+      if (factor > 0) oldFactors.push(factor);
+    }
+  }
+  const maxPowerFactor = Math.max(1, declared, ...oldFactors);
+  if (maxPowerFactor > 1) return maxPowerFactor;
+  // Preserve manually configured, non-power movement bonuses and old sheets
+  // when no recognized multiplier is present.
   const rawValue = number(raw?.noncom, 5);
   const modifiedValue = number(movement?.noncom, rawValue);
-  // Existing AEs multiply the noncom field starting from 5 (e.g. 3, 50).
-  // Compare prepared to raw rather than treating the field as final speed.
-  if (rawValue <= 0) return 1;
-  return Math.max(0, modifiedValue / rawValue);
+  return rawValue > 0 ? Math.max(0, modifiedValue / rawValue) : 1;
 }
 
 export function prepareD616Movement(system, actor, labels = {}) {
@@ -158,10 +188,20 @@ export function prepareD616Movement(system, actor, labels = {}) {
     if (key === 'run') combat = finalRun;
     else if (['climb','jump','swim'].includes(key)) {
       const ordinary = Math.ceil(finalRun / 2);
-      const powerReference = neutralRunBySize;
-      const fromPower = greatestPowerSpeed(powerReference, key, movement.calc, rank, powerReference, actor);
-      // Mode powers do not stack with Run powers; use the highest separate result.
-      combat = calcCandidates(actor, key, movement.calc).length ? Math.max(ordinary, fromPower) : ordinary;
+      // Power-based adjustments are evaluated against each mode's NORMAL speed,
+      // independently of any Speed Run / Stilt Steps change to Run. A Jump
+      // power explicitly uses normal Run, while Speed Swim and Stilt Steps'
+      // Climb modifier use normal Swim/Climb (half the unchanged regular Run).
+      const normalMode = Math.ceil(neutralRunBySize / 2);
+      const formulas = calcCandidates(actor, key, movement.calc);
+      const candidateSpeed = (formula) => {
+        const f = String(formula).toLowerCase();
+        if (f === 'rank-swim' && key === 'swim') return safeSpeed(normalMode * rank);
+        if (f === 'double-climb' && key === 'climb') return safeSpeed(normalMode * 2);
+        return applyCalc(neutralRunBySize, formula, rank, neutralRunBySize);
+      };
+      // Each power competes independently with the inherited basic speed.
+      combat = formulas.length ? Math.max(ordinary, ...formulas.map(candidateSpeed)) : ordinary;
     } else if (key === 'flight') {
       // Flight size exception (Marvel 2024 FAQ, p.3) and Unusual Size natural size.
       combat = greatestPowerSpeed(flightReference, key, movement.calc, rank, flightReference, actor);
@@ -174,18 +214,47 @@ export function prepareD616Movement(system, actor, labels = {}) {
       combat = greatestPowerSpeed(regular, key, movement.calc, rank, neutralRunBySize, actor);
     }
     movement.value = safeSpeed(combat);
-    const multiplier = readOutOfCombatMultiplier(movement, rawMovement[key]);
+    const multiplier = readOutOfCombatMultiplier(movement, rawMovement[key], actor, key);
     movement.noncom = safeSpeed(movement.value * multiplier);
   }
 
   if (typeof system.reach === 'number' && raw.reach != null) {
-    // When the sheet's own size effects are the ONLY reach modifiers, use
-    // multiplicative reach instead of v0.1.x's absolute overwrite.
-    const otherReachEffect = Array.from(actor?.effects?.contents ?? actor?.effects ?? []).some(e =>
-      e?.disabled !== true && !isManagedSizeEffect(e) && changes(e).some(c => c.key === 'system.reach'));
-    if (!otherReachEffect) system.reach = size === 'small' ? number(raw.reach) : size === 'big'
-      ? safeSpeed(number(raw.reach) * 2)
-      : safeSpeed(number(raw.reach) * (SIZE_SPEED[size] ?? 1));
+    // Extended Reach 1/2 are different levels of the same power: x4 or x10,
+    // NEVER x40. Compute from the raw reach, after size, independent of AE order.
+    // Legacy-owned MULTIPLY reach AEs are read by name until migrated.
+    const ownItems = Array.from(actor?.items?.contents ?? actor?.items ?? []);
+    const actorEffects = Array.from(actor?.effects?.contents ?? actor?.effects ?? []);
+    const activeItemEffects = ownItems.flatMap(item =>
+      Array.from(item?.effects?.contents ?? item?.effects ?? [])
+        .filter(e => e?.disabled !== true && e?.transfer !== false).map(e => ({e, item})));
+    const allEffects = [
+      ...actorEffects.filter(e => e?.disabled !== true).map(e => ({e, item:null})),
+      ...activeItemEffects,
+    ];
+    const extenderFactor = Math.max(1, number(system.reachFactor, 1),
+      ...allEffects.flatMap(({e, item}) => {
+        const sourceName = String(item?.name ?? e?.name ?? '');
+        const isExtendedReach = /^(Extended Reach [12]|Reach x(?:4|10))$/.test(sourceName);
+        if (!isExtendedReach) return [];
+        return changes(e).filter(c => c.key === 'system.reachFactor' ||
+          (c.key === 'system.reach' && (c.type === 'multiply' || Number(c.mode) === 1)))
+          .map(c => number(c.value, 1)).filter(f => f === 4 || f === 10);
+      }));
+    const otherReachEffect = allEffects.some(({e, item}) =>
+      !isManagedSizeEffect(e) &&
+      !(item?.system?.powerSet === 'Plasticity' && /^Extended Reach [12]$/.test(String(item.name))) &&
+      !/^Reach x(?:4|10)$/.test(String(e.name)) &&
+      changes(e).some(c => c.key === 'system.reach'));
+    // AE-prepared reach already includes non-power effects. When only
+    // Extended Reach/size are changing reach, ignore their prepared product.
+    const base = number(raw.reach);
+    const resized = size === 'small' ? base : size === 'big' ? base * 2 : base * (SIZE_SPEED[size] ?? 1);
+    const hasLegacyReach = allEffects.some(({e,item}) =>
+      (item?.system?.powerSet === 'Plasticity' && /^Extended Reach [12]$/.test(String(item.name)) ||
+        /^Reach x(?:4|10)$/.test(String(e.name))) &&
+      changes(e).some(c=>c.key==='system.reach'));
+    const baseReach = otherReachEffect && !hasLegacyReach ? number(system.reach) : resized;
+    system.reach = safeSpeed(baseReach * extenderFactor);
   }
 
   // Presentation data only; no new persisted Actor fields or migration required.

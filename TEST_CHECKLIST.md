@@ -1,3 +1,7 @@
+## Checklist adicional — v0.2.7: redimensionamento automático de tokens
+
+Consulte `TEST_CHECKLIST_V0.2.7.md` para todas as 11 categorias e os casos de Grow/Shrink, PC/NPC, tokens vinculados e não vinculados e restauração do tamanho natural.
+
 ## Testes adicionados na v0.1.97 (Foundry VTT v14)
 
 - [ ] Como GM, **fechar/minimizar** o Controle de Turno, criar combate e adicionar um personagem: a janela deve abrir restaurada no GM e nos jogadores conectados que tenham o combate ativo.

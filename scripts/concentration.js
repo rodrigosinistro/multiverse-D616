@@ -171,7 +171,49 @@ function getAutoAnimationsFlags(item) {
   }
 }
 
-function concentrationPowerEffectData(item, countsTowardLevel) {
+/** Body Sheet is Concentration, not a permanently transferred item bonus.
+ * Mirror its item-owned nontransferable modifiers onto the actor's existing
+ * power-specific concentration condition. The condition's deletion immediately
+ * ends DR/Glide. v14 documents may store typed changes in system.changes;
+ * older world documents store mode-based changes in changes.
+ */
+export function bodySheetConcentrationChanges(item) {
+  if (item?.name !== "Body Sheet" || item?.system?.powerSet !== "Plasticity") return [];
+  const selected = [];
+  for (const effect of item?.effects ?? []) {
+    if (effect?.disabled === true) continue;
+    for (const raw of effect?.system?.changes ?? effect?.changes ?? []) {
+      if (raw.key === "system.healthDamageReduction" && Number(raw.value) === 3) {
+        selected.push({ key: raw.key, type: "upgrade", mode: 4, value: 3, phase: "initial", priority: null });
+      } else if (raw.key === "system.movement.glide.active") {
+        selected.push({ key: raw.key, type: "override", mode: 5, value: true, phase: "initial", priority: null });
+      } else if (raw.key === "system.movement.glide.calc") {
+        selected.push({ key: raw.key, type: "override", mode: 5, value: "run-double", phase: "initial", priority: null });
+      }
+    }
+  }
+  return selected;
+}
+
+/** Shield 1–4 grant Health DR only while maintaining that Shield's own
+ * Concentration. The power-owned effect does not transfer permanently.
+ * UPGRADE makes the strongest active Shield/other DR source prevail.
+ */
+export function shieldConcentrationChanges(item) {
+  if (item?.system?.powerSet !== "Shield Bearer" || !/^Shield [1-4]$/.test(String(item?.name ?? ""))) return [];
+  const rank = Number(String(item.name).slice(-1));
+  for (const effect of item?.effects ?? []) {
+    if (effect?.disabled) continue;
+    if ((effect?.system?.changes ?? effect?.changes ?? []).some(change =>
+      change.key === "system.healthDamageReduction" && Number(change.value) === rank)) {
+      return [{ key: "system.healthDamageReduction", type: "upgrade", mode: 4,
+        value: rank, phase: "initial", priority: null }];
+    }
+  }
+  return [];
+}
+
+export function concentrationPowerEffectData(item, countsTowardLevel) {
   const statusId = concentrationPowerStatusId(item);
   const description = String(item?.system?.description ?? "").trim();
   const flags = {
@@ -190,11 +232,16 @@ function concentrationPowerEffectData(item, countsTowardLevel) {
   const autoAnimationsFlags = getAutoAnimationsFlags(item);
   if (autoAnimationsFlags) effectFlags.autoanimations = autoAnimationsFlags;
 
+  const activated = [...bodySheetConcentrationChanges(item), ...shieldConcentrationChanges(item)];
   return {
     name: item?.name ?? "Power em Concentração",
     img: item?.img || `systems/${MODULE_ID}/icons/m.svg`,
     disabled: false,
-    changes: [],
+    // Keep the existing v13-style changes for compatibility with Foundry's
+    // ActiveEffect document; also supply typed v14 system changes for this
+    // system's newer AE preparation and movement calculation pipeline.
+    changes: activated.map(c => ({ key: c.key, mode: c.mode, value: String(c.value), priority: c.priority })),
+    system: { changes: activated.map(c => ({ key: c.key, type: c.type, value: c.value, phase: c.phase, priority: c.priority })) },
     statuses: [statusId],
     flags: effectFlags,
   };

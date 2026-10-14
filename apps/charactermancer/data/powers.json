@@ -692,13 +692,13 @@
           "changes": [
             {
               "key": "system.abilities.mle.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "1",
               "priority": null
             },
             {
               "key": "system.abilities.mle.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "1",
               "priority": null
             }
@@ -784,13 +784,13 @@
             {
               "key": "system.movement.swim.calc",
               "mode": 5,
-              "value": "rank",
+              "value": "rank-swim",
               "priority": null
             },
             {
-              "key": "system.movement.swim.noncom",
-              "mode": 1,
+              "key": "system.movement.swim.noncomFactor",
               "value": "3",
+              "mode": 4,
               "priority": null
             }
           ],
@@ -1599,7 +1599,7 @@
             }
           ],
           "description": "",
-          "transfer": true,
+          "transfer": false,
           "statuses": [],
           "flags": {},
           "tint": "#ffffff",
@@ -3839,13 +3839,13 @@
           "changes": [
             {
               "key": "system.abilities.log.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "4",
               "priority": null
             },
             {
               "key": "system.abilities.log.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "4",
               "priority": null
             }
@@ -4310,13 +4310,13 @@
           "changes": [
             {
               "key": "system.abilities.ego.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "1",
               "priority": null
             },
             {
               "key": "system.abilities.ego.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "1",
               "priority": null
             }
@@ -4593,13 +4593,13 @@
           "changes": [
             {
               "key": "system.abilities.mle.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "4",
               "priority": null
             },
             {
               "key": "system.abilities.mle.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "4",
               "priority": null
             }
@@ -5162,7 +5162,7 @@
             }
           ],
           "description": "",
-          "transfer": true,
+          "transfer": false,
           "statuses": [],
           "flags": {},
           "tint": "#ffffff",
@@ -6803,13 +6803,13 @@
           "changes": [
             {
               "key": "system.abilities.agl.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "2",
               "priority": null
             },
             {
               "key": "system.abilities.agl.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "2",
               "priority": null
             }
@@ -7502,13 +7502,13 @@
           "changes": [
             {
               "key": "system.abilities.ego.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "4",
               "priority": null
             },
             {
               "key": "system.abilities.ego.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "4",
               "priority": null
             }
@@ -8625,13 +8625,13 @@
           "changes": [
             {
               "key": "system.abilities.agl.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "1",
               "priority": null
             },
             {
               "key": "system.abilities.agl.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "1",
               "priority": null
             }
@@ -9054,13 +9054,13 @@
           "changes": [
             {
               "key": "system.abilities.log.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "1",
               "priority": null
             },
             {
               "key": "system.abilities.log.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "1",
               "priority": null
             }
@@ -9337,7 +9337,7 @@
             }
           ],
           "description": "",
-          "transfer": true,
+          "transfer": false,
           "statuses": [],
           "flags": {},
           "tint": "#ffffff",
@@ -9375,19 +9375,13 @@
             },
             {
               "key": "system.movement.glide.calc",
+              "value": "run-double",
               "mode": 5,
-              "value": "runspeed",
-              "priority": null
-            },
-            {
-              "key": "system.movement.glide.calc",
-              "mode": 1,
-              "value": "2",
               "priority": null
             }
           ],
           "description": "",
-          "transfer": true,
+          "transfer": false,
           "statuses": [],
           "flags": {},
           "tint": "#ffffff",
@@ -9559,13 +9553,13 @@
       "system": {
         "description": "<p>O personagem corre tão rápido quanto um jato!</p>",
         "powerSet": "Super-Speed",
-        "prerequisites": "Speed Run 1, Rank 2",
+        "prerequisites": "Speed Run 1, Rank 3",
         "action": "",
         "trigger": "",
         "duration": "Permanent",
         "range": "",
         "cost": "",
-        "effect": "<p>Multiplique a Velocidade de Corrida regular do personagem pelo seu rank para obter sua nova Velocidade de Corrida. Fora de combate, ele pode se mover três vezes mais rápido.</p>",
+        "effect": "<p>Fora de combate, o personagem pode se mover até 50 vezes sua Velocidade de Corrida melhorada. Em combate, sua Velocidade de Corrida permanece igual à sua Velocidade de Corrida normal multiplicada pelo Rank.</p>",
         "numbered": 2,
         "quantity": 1,
         "ability": "",
@@ -9609,9 +9603,9 @@
               "priority": null
             },
             {
-              "key": "system.movement.run.noncom",
-              "mode": 1,
-              "value": "3",
+              "key": "system.movement.run.noncomFactor",
+              "mode": 4,
+              "value": "50",
               "priority": null
             }
           ],
@@ -10157,7 +10151,51 @@
           "sourceId": "Compendium.world.powers.Item.Slu5kOS3ApPfaXbQ"
         }
       },
-      "effects": [],
+      "effects": [
+        {
+          "name": "Jump 3 — Movimento de Salto",
+          "img": "icons/svg/aura.svg",
+          "disabled": false,
+          "transfer": true,
+          "origin": "Item.Slu5kOS3ApPfaXbQ",
+          "_id": "96d3869ce4051d8a",
+          "description": "",
+          "duration": {
+            "startTime": null,
+            "seconds": null,
+            "combat": null,
+            "rounds": null,
+            "turns": null,
+            "startRound": null,
+            "startTurn": null
+          },
+          "statuses": [],
+          "flags": {},
+          "type": "base",
+          "sort": 0,
+          "changes": [
+            {
+              "key": "system.movement.jump.active",
+              "value": "true",
+              "mode": 5,
+              "priority": null
+            },
+            {
+              "key": "system.movement.jump.calc",
+              "value": "rank",
+              "mode": 5,
+              "priority": null
+            },
+            {
+              "key": "system.movement.jump.noncomFactor",
+              "value": "50",
+              "mode": 4,
+              "priority": null
+            }
+          ],
+          "system": {}
+        }
+      ],
       "folder": "88848a43d8a58388",
       "_stats": {
         "coreVersion": "13.351",
@@ -10229,7 +10267,7 @@
         "prerequisites": "Extended Reach 1, Rank 2",
         "action": "Movement",
         "trigger": "",
-        "duration": "Concentration",
+        "duration": "Permanent",
         "range": "",
         "cost": "",
         "effect": "A Velocidade de Corrida do personagem é dobrada, assim como sua Velocidade de Escalada.",
@@ -10268,8 +10306,8 @@
           "changes": [
             {
               "key": "system.movement.run.calc",
-              "mode": 1,
-              "value": "2",
+              "value": "double",
+              "mode": 5,
               "priority": null
             }
           ],
@@ -10306,8 +10344,8 @@
           "changes": [
             {
               "key": "system.movement.climb.calc",
-              "mode": 1,
-              "value": "2",
+              "value": "double-climb",
+              "mode": 5,
               "priority": null
             }
           ],
@@ -10391,13 +10429,13 @@
           "changes": [
             {
               "key": "system.abilities.mle.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "3",
               "priority": null
             },
             {
               "key": "system.abilities.mle.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "3",
               "priority": null
             }
@@ -10624,8 +10662,8 @@
           "_id": "8e970b1af8c05839",
           "changes": [
             {
-              "key": "system.reach",
-              "mode": 1,
+              "key": "system.reachFactor",
+              "mode": 4,
               "value": "10",
               "priority": null
             }
@@ -11087,13 +11125,13 @@
           "changes": [
             {
               "key": "system.abilities.ego.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "3",
               "priority": null
             },
             {
               "key": "system.abilities.ego.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "3",
               "priority": null
             }
@@ -11272,8 +11310,8 @@
           "_id": "bea1573f91f7ac3a",
           "changes": [
             {
-              "key": "system.reach",
-              "mode": 1,
+              "key": "system.reachFactor",
+              "mode": 4,
               "value": "4",
               "priority": null
             }
@@ -11750,7 +11788,51 @@
           "sourceId": "Compendium.world.powers.Item.WpErC2aBVVJjvt7d"
         }
       },
-      "effects": [],
+      "effects": [
+        {
+          "name": "Jump 2 — Movimento de Salto",
+          "img": "icons/svg/aura.svg",
+          "disabled": false,
+          "transfer": true,
+          "origin": "Item.WpErC2aBVVJjvt7d",
+          "_id": "8abe702310218854",
+          "description": "",
+          "duration": {
+            "startTime": null,
+            "seconds": null,
+            "combat": null,
+            "rounds": null,
+            "turns": null,
+            "startRound": null,
+            "startTurn": null
+          },
+          "statuses": [],
+          "flags": {},
+          "type": "base",
+          "sort": 0,
+          "changes": [
+            {
+              "key": "system.movement.jump.active",
+              "value": "true",
+              "mode": 5,
+              "priority": null
+            },
+            {
+              "key": "system.movement.jump.calc",
+              "value": "rank",
+              "mode": 5,
+              "priority": null
+            },
+            {
+              "key": "system.movement.jump.noncomFactor",
+              "value": "3",
+              "mode": 4,
+              "priority": null
+            }
+          ],
+          "system": {}
+        }
+      ],
       "folder": "88848a43d8a58388",
       "_stats": {
         "coreVersion": "13.351",
@@ -12132,7 +12214,51 @@
           "sourceId": "Compendium.world.powers.Item.YJHm4A0kJqEr2f6A"
         }
       },
-      "effects": [],
+      "effects": [
+        {
+          "name": "Jump 3 — Movimento de Salto",
+          "img": "icons/svg/aura.svg",
+          "disabled": false,
+          "transfer": true,
+          "origin": "Item.YJHm4A0kJqEr2f6A",
+          "_id": "ab76e04b6a560310",
+          "description": "",
+          "duration": {
+            "startTime": null,
+            "seconds": null,
+            "combat": null,
+            "rounds": null,
+            "turns": null,
+            "startRound": null,
+            "startTurn": null
+          },
+          "statuses": [],
+          "flags": {},
+          "type": "base",
+          "sort": 0,
+          "changes": [
+            {
+              "key": "system.movement.jump.active",
+              "value": "true",
+              "mode": 5,
+              "priority": null
+            },
+            {
+              "key": "system.movement.jump.calc",
+              "value": "rank",
+              "mode": 5,
+              "priority": null
+            },
+            {
+              "key": "system.movement.jump.noncomFactor",
+              "value": "50",
+              "mode": 4,
+              "priority": null
+            }
+          ],
+          "system": {}
+        }
+      ],
       "folder": "a8b9ae895259d5bf",
       "_stats": {
         "coreVersion": "13.351",
@@ -12529,13 +12655,13 @@
           "changes": [
             {
               "key": "system.abilities.log.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "2",
               "priority": null
             },
             {
               "key": "system.abilities.log.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "2",
               "priority": null
             }
@@ -13146,7 +13272,7 @@
             }
           ],
           "description": "",
-          "transfer": true,
+          "transfer": false,
           "statuses": [],
           "flags": {},
           "tint": "#ffffff",
@@ -13468,13 +13594,13 @@
           "changes": [
             {
               "key": "system.abilities.mle.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "2",
               "priority": null
             },
             {
               "key": "system.abilities.mle.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "2",
               "priority": null
             }
@@ -13776,7 +13902,51 @@
           "sourceId": "Compendium.world.powers.Item.bomm8Jlthfh9RQju"
         }
       },
-      "effects": [],
+      "effects": [
+        {
+          "name": "Jump 2 — Movimento de Salto",
+          "img": "icons/svg/aura.svg",
+          "disabled": false,
+          "transfer": true,
+          "origin": "Item.bomm8Jlthfh9RQju",
+          "_id": "95a82850ff05cd35",
+          "description": "",
+          "duration": {
+            "startTime": null,
+            "seconds": null,
+            "combat": null,
+            "rounds": null,
+            "turns": null,
+            "startRound": null,
+            "startTurn": null
+          },
+          "statuses": [],
+          "flags": {},
+          "type": "base",
+          "sort": 0,
+          "changes": [
+            {
+              "key": "system.movement.jump.active",
+              "value": "true",
+              "mode": 5,
+              "priority": null
+            },
+            {
+              "key": "system.movement.jump.calc",
+              "value": "rank",
+              "mode": 5,
+              "priority": null
+            },
+            {
+              "key": "system.movement.jump.noncomFactor",
+              "value": "3",
+              "mode": 4,
+              "priority": null
+            }
+          ],
+          "system": {}
+        }
+      ],
       "folder": "a8b9ae895259d5bf",
       "_stats": {
         "coreVersion": "13.351",
@@ -14747,20 +14917,14 @@
               "priority": null
             },
             {
-              "key": "system.movement.jump.active",
-              "mode": 5,
-              "value": "false",
-              "priority": null
-            },
-            {
               "key": "system.movement.flight.calc",
               "mode": 5,
               "value": "rank",
               "priority": null
             },
             {
-              "key": "system.movement.flight.noncom",
-              "mode": 1,
+              "key": "system.movement.flight.noncomFactor",
+              "mode": 4,
               "value": "50",
               "priority": null
             }
@@ -15142,8 +15306,8 @@
               "priority": null
             },
             {
-              "key": "system.movement.run.noncom",
-              "mode": 1,
+              "key": "system.movement.run.noncomFactor",
+              "mode": 4,
               "value": "3",
               "priority": null
             }
@@ -15935,13 +16099,13 @@
           "changes": [
             {
               "key": "system.abilities.ego.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "2",
               "priority": null
             },
             {
               "key": "system.abilities.ego.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "2",
               "priority": null
             }
@@ -16230,8 +16394,8 @@
               "priority": null
             },
             {
-              "key": "system.movement.flight.noncom",
-              "mode": 1,
+              "key": "system.movement.flight.noncomFactor",
+              "mode": 4,
               "value": "3",
               "priority": null
             }
@@ -17593,13 +17757,13 @@
           "changes": [
             {
               "key": "system.abilities.agl.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "3",
               "priority": null
             },
             {
               "key": "system.abilities.agl.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "3",
               "priority": null
             }
@@ -18670,7 +18834,7 @@
             }
           ],
           "description": "",
-          "transfer": true,
+          "transfer": false,
           "statuses": [],
           "flags": {},
           "tint": "#ffffff",
@@ -18823,7 +18987,46 @@
           "sourceId": "Compendium.world.powers.Item.tdZP26lpAxILt7kG"
         }
       },
-      "effects": [],
+      "effects": [
+        {
+          "name": "Health Damage Reduction 2",
+          "img": "icons/svg/aura.svg",
+          "duration": {
+            "startTime": null,
+            "seconds": null,
+            "combat": null,
+            "rounds": null,
+            "turns": null,
+            "startRound": null,
+            "startTurn": null
+          },
+          "disabled": false,
+          "origin": "Item.tdZP26lpAxILt7kG",
+          "_id": "fb2UpgradeAE0001",
+          "changes": [
+            {
+              "key": "system.healthDamageReduction",
+              "mode": 4,
+              "value": "2",
+              "priority": null
+            }
+          ],
+          "description": "",
+          "transfer": true,
+          "statuses": [],
+          "flags": {},
+          "tint": "#ffffff",
+          "_stats": {
+            "coreVersion": "13.351",
+            "systemId": "multiverse-d616",
+            "systemVersion": "0.1.60",
+            "lastModifiedBy": null
+          },
+          "type": "base",
+          "system": {},
+          "sort": 0
+        }
+      ],
       "folder": "b660cb39178688a5",
       "_stats": {
         "coreVersion": "13.351",
@@ -19417,13 +19620,13 @@
           "changes": [
             {
               "key": "system.abilities.agl.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "4",
               "priority": null
             },
             {
               "key": "system.abilities.agl.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "4",
               "priority": null
             }
@@ -19606,13 +19809,13 @@
           "changes": [
             {
               "key": "system.abilities.log.damageMultiplier",
-              "mode": 2,
+              "mode": 4,
               "value": "3",
               "priority": null
             },
             {
               "key": "system.abilities.log.noncom",
-              "mode": 2,
+              "mode": 4,
               "value": "3",
               "priority": null
             }
