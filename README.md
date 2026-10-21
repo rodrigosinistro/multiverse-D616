@@ -1,14 +1,164 @@
+**v0.2.68 (Foundry VTT v14):** Banging Heads derruba os alvos atingidos no Fantástico depois de confirmar cada dano; Deafen aplica Surdo por um turno e somente permite dano no Fantástico; Flare e Dazzle também recebem dano normal apenas no Fantástico. Barreira física usa a constante moderna de sentidos v14. `system.json` aponta para a release `v0.2.68` **a ser publicada manualmente após validação**. ZIP único com pasta `multiverse-d616/`: para atualizar o repositório copie o **conteúdo** dessa pasta para a raiz, mantendo `system.json` na raiz. A URL `download` no manifesto só funcionará depois de criar a release e enviar o ZIP de nome correspondente. Não houve publicação automática. Consulte CHANGELOG para detalhes.
+
+**v0.2.65 (Foundry v14):** ataques adicionais opcionais para Unstoppable Assault e Unrelenting Smash (novos 15 Focus por rolagem, Movimento limitado e sem repetir alvos); ações sustentadas de Hellfire Chains (teste por rodada contra alvo preso, dano Health e Focus) e Coiling Crush (Movimento para esmagar por Melee vs Resilience). Atalhos e botões dependem da situação e respeitam as configurações do Mestre. Não substituem posicionamento nem decisões de alcance especial. Ver CHANGELOG.
+
+**v0.2.56 (Foundry v14):** Refinamento de ataques contra múltiplos alvos: condições distintas com o mesmo valor líquido de Edge/Trouble deixam de gerar revisão manual desnecessária. O card passa a mostrar as origens por alvo. Modificadores realmente divergentes continuam sob decisão do Mestre, preservando uma única rolagem, Focus, DR e dano por alvo. Testes e detalhes no CHANGELOG.
+
+**v0.2.49 (Foundry v14):** Ajustes na duração de condições de poderes (inclusive efeitos aplicados durante o turno do alvo e retrocesso de turnos), identificação do token afetado e interrupção automática de Concentração ao receber Atordoado ou Desmoralizado. Mantidos os encerramentos por Concentração, atalhos de condição e automações de veneno/sangramento da v0.2.48. ZIP completo para instalação e teste; ver CHANGELOG.
+
+**v0.2.48 (Foundry v14):** Escapar de poderes de Grab permite escolher Ação Padrão ou Reação (quando disponíveis). O HUD oferece testes para encerrar Sangrando (Logic TN 10) e Em Chamas (Agility TN 10); Sangrando também termina ao recuperar Health. Envenenado agora pede Resilience TN 18 no início do turno e aplica perda de 1 Health na falha ou cura em Sucesso Fantástico. Correção do aviso de `Roll.evaluate` no Foundry v14. Compêndios e demais rotinas preservados. Ver CHANGELOG para regras, escopo e testes.
+
+**v0.2.47 (Foundry v14):** adiciona condições automáticas para Venom Burst, Headshot, Penance Stare, Double Tap, Growing Attack, Snap Shooting e Spider-Strike, respeitando confirmação de dano, Saúde/Focus, rerrolagens e aplicação por alvo. Mantidos compêndios e interface da v0.2.46; cálculo especial de dano continua manual quando necessário.
+
+**v0.2.46 (Foundry v14):** corrige no compêndio Powers o nome duplicado de Venom Bash para **Venom Burst** (descarga bioelétrica em área). Mantidos o ID, conteúdo e pré-requisito. Todas as automações e funcionalidades da v0.2.45 foram preservadas.
+
+## Configurações de automação — v0.2.54 (Foundry VTT v14)
+
+Acesse **Configurações do Jogo → Multiverse-D616**. As opções são de **mundo**, alteráveis pelo Mestre, e são lidas durante o uso: não é necessário reinstalar o sistema ao alterar uma configuração.
+
+- **Automações — DESATIVAR TODAS**: marcada, prevalece sobre os controles abaixo. Desmarcada por padrão.
+- **Condições automáticas de poderes**: efeitos aplicados por rolagens e confirmação de dano de poderes.
+- **Efeitos elementais fantásticos**: condições elementais e Force/Earth aplicados automaticamente em Sucessos Fantásticos.
+- **Dano contínuo e Envenenado**: dano no fim do turno e testes de veneno no começo do turno. A opção anterior “Aplicar dano de condições automaticamente no fim do turno” continua funcionando em conjunto (ambas devem estar ativadas para dano contínuo).
+- **Recuperação automática de condições**: remoção de Sangrando quando Health é recuperada. Testes iniciados manualmente continuam disponíveis.
+- **Concentração e manutenção de Focus**: criação, controle de limite, interrupções automáticas e manutenção por turno.
+- **Consumo automático de Ações e Movimento**: registra o gasto espontâneo no Controle de Turno, sem desativar os botões de controle manual.
+
+Os seis grupos ficam **ligados por padrão**, preservando as mesas de versões anteriores. A chave geral se aplica apenas a **automações opcionais dos grupos descritos**: rolagens, cálculo de dano, confirmação manual de dano, custo inicial de Focus, movimentação básica do Foundry, criação de fichas, edição manual de condições e controle manual de recursos não são desligados. Efeitos já ativos ainda precisam expirar/ser removidos normalmente para evitar condições permanentes indevidas.
+
+O **Template de Ficha (cor)** também está agora nas opções do **Multiverse-D616**, em vez de “Não Mapeado”. Na primeira abertura pelo Mestre, a cor global antiga é copiada automaticamente, sem sobrescrever uma nova escolha já definida.
+
+## Versão 0.2.45 — Sucessos Fantásticos e Condições por Poder (Foundry v14)
+
+A v0.2.45 adiciona automações de **condições** para 16 poderes: Smash, Reverse Punch, Telekinetic Attack, Disrupt Person, Bolts of Balthakk, Focused Strike, Mental Punch, Telepathic Blast, Venom Bash, Venom Blast, Point-Blank Parry, Telekinetic Toss, Flying Double Kick, Dance of Death, Orchestra of Overkill e Unrelenting Smash.
+
+Marque os alvos antes de rolar o poder. Após um acerto fantástico, o Mestre usa o card **DAMAGE** e confirma a aplicação. Somente os alvos atingidos e confirmados recebem o status. **Venom Bash** e **Venom Blast** exigem perda efetiva de Health. Rerrolar Edge/Trouble após a confirmação invalida os efeitos deste card; use um novo card de dano. Status colocados manualmente pelo Mestre não são alterados.
+
+As fórmulas de dano, as opções de ataques adicionais e outras exceções particulares dos poderes não são modificadas nesta versão. Consulte o CHANGELOG para a delimitação desta entrega.
+
+## Versão 0.2.41 — Estabilização Geral (Foundry v14)
+
+- Efeitos transitórios de Concentração gerados em formato v14 (`type: "base"`, `system.changes` com `type` textual), sem `mode` numérico; efeitos de Body Sheet e Shield e custos existentes preservados.
+- No Controle de Turno, pedidos de consumo de recursos são validados pelo Mestre e rejeitam consumos repetidos, valores inválidos ou ações e reações já esgotadas. Pedidos concorrentes continuam serializados por combatente.
+- Resolução de ID de combate sem substituição silenciosa pelo combate atualmente aberto; pedidos atrasados de encontros encerrados não afetam outro combate.
+- Fichas, HUD, Charactermancer, design e compêndios permanecem intactos. Algumas mensagens de console de módulos de terceiros e arquivos de imagem que não existem no servidor não fazem parte desta correção.
+- Executar testes reais de Reações Mestre/Jogador, Concentração Shield, Combat Reflexes e alternância entre combates.
+
+## Versão 0.2.40 — HUD e Controle de Turno 2.0 (Foundry v14)
+
+- Título **Atributos** restaurado no painel de atributos.
+- Poderes e Traços & Tags alinhados no topo com colunas em grid, independente do tamanho das listas.
+- Textura original vermelha repetida por toda a altura dos painéis, inclusive em listas extensas.
+- Ficha de NPC da v0.2.34 preservada integralmente.
+
+## Versão 0.2.34 — Fichas de Personagens e NPCs em ApplicationV2
+
+- Corrigida a listagem do grupo selecionado: poderes com o mesmo nome em outros grupos (ex.: Jump 1/2/3 de Spider-Powers e Super-Strength) não aparecem misturados.
+- Mantidos todos os poderes e variantes legítimas no catálogo geral; o filtro afeta somente a visualização do grupo ativo.
+- Preservados o Charactermancer 2.0, as seis etapas e os mecanismos de criação e importação.
+- Teste recomendado: alternar entre Spider-Powers e Super-Strength; cada grupo deve exibir apenas suas próprias progressões Jump.
+
+## Versão 0.2.31 — Correção do Charactermancer 2.0
+
+Correção da colisão de `state` com a propriedade de ciclo de vida (somente leitura) da `ApplicationV2` no Foundry v14. Os dados de criação usam `mmcState`, sem mudar as regras, os passos ou os poderes.
+
 # Multiverse-D616
 
-Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616), com fichas de personagem/NPC, rolagem personalizada de dados Marvel, automações auxiliares e ferramentas integradas usadas pela mesa.
+**Sistema para Foundry VTT v14**. Versão atual: **0.2.45**.
 
-## Versão
+## v0.2.30 — Charactermancer 2.0 (ApplicationV2)
+- Janela migrada da antiga ApplicationV1 para ApplicationV2 do Foundry v14; seis etapas e motor de criação preservados.
+- Interface vermelho/preto/branco inspirada no Controle de Turno, com cabeçalho de progresso e rolagem interna.
+- Os dois antigos shims V1 do Charactermancer deixam de ser carregados.
+- Nenhuma alteração em compêndios, poderes, pré-requisitos, atributos, criação de atores ou exportação PDF.
+- Validar no Foundry v14 real: criação completa de personagem, navegação e fechamento, poderes repetidos, popup de efeito.
 
-- **Versão do sistema:** 0.2.7
-- **Compatibilidade:** Foundry VTT v14 (`minimum: 14`, `verified: 14`)
-- **ID / pasta interna:** `multiverse-d616`
-- **Manifest:** `https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json`
+## v0.2.29 — Diálogos modernos do Foundry v14
 
+- Migrados para `DialogV2.wait` os fluxos de seleção de alvos, teste situacional, convite de Escapar como Reação e escolha de Focus variável (antes da ação e ao recalcular a rolagem no chat).
+- Visual unificado com a identidade do Controle de Turno: vermelho, preto e branco. O comportamento padrão de seleção manual de alvos permanece inalterado.
+- A seleção, confirmação, cancelamento e validação de valores de Focus acontecem antes de alterar recursos. Fechar um diálogo não consome recursos.
+- Migração limitada a essas janelas para evitar regressões nas fichas/Charactermancer. Outras interfaces V1 permanecem para conversão separada e testável.
+- Compêndios e lógica de Combat Trickery, concentração, condições e automações permanecem idênticos à versão aprovada.
+
+## v0.2.28 — Combat Trickery: ataques com metadados legados
+
+- Corrigido o reconhecimento de ataques de poderes como **Double Tap**, cujo registro antigo traz `attack: false`, apesar de definir atributo, defesa e tipo de ataque.
+- O poder preparado agora afeta a **próxima rolagem de ataque válida**, convertendo seu dado Marvel em MARVEL (1), respeitando o Rank dos alvos e o limite de uma vez por batalha.
+- A notificação esclarece que rolagens anteriores não são alteradas. Os demais poderes, compêndios e a seleção de alvos não foram modificados.
+
+## Correção de alcance para mapas sem grade — v0.2.25 (Foundry VTT v14)
+
+- Em cenas sem grade, o Foundry v14 pode retornar `spaces: 0` para quaisquer duas posições. Agora o sistema converte corretamente a distância real da régua pela distância de um espaço da cena e verifica o alcance mesmo sem grade visual.
+- Melhora a busca do token atacante em cenas com atores sintéticos/não vinculados. Se houver alvos, mas não for possível localizar o atacante, o sistema avisa explicitamente que o alcance não foi verificado.
+- Regra permanece de **aviso, com escolha de continuar ou cancelar** antes de gastar Focus; não cria bloqueios rígidos.
+
+## Combate Inteligente — v0.2.24 (Foundry VTT v14)
+
+- Antes de gastar Focus, trocar Concentração ou rolar dados, ataques direcionados com alvos marcados verificam **alcance conhecido** e **eventuais obstáculos à linha de visão**. O sistema só adverte quando encontra uma condição concreta; não bloqueia irrevogavelmente um poder porque o mapa não é perfeito.
+- Usa `attackRange` quando positivo, senão o campo `range` (ex.: `10 spaces`, `10 espaços`, `Reach`, `5 spaces per rank`, `10 espaços vezes o rank do personagem`) e a distância medida no mapa. Alcances não declarados ou ambíguos continuam sem validação automática, em vez de inferências arriscadas. O alcance maior de `system.reach` funciona para ataques Reach.
+- Para ataques à distância, verifica paredes de visão pelo `PointSourcePolygon.testCollision` nativo da API Foundry v14. Diferenças de altura e APIs indisponíveis não são tratadas como obstrução confirmada: nesses casos o Mestre avalia.
+- Se encontrar possível problema: **Trocar alvos**, **Cancelar** ou **Continuar mesmo assim**. Cancelamento não gasta Focus nem substitui Concentração. Continuar registra a advertência no chat para o Mestre. Ao escolher novo alvo, usa a interface da v0.2.22 sem reativar memória de últimos alvos.
+- Elemental Prison/Sphere mantêm o desenho de Regiões e as regras de barreira já validadas: a posição do centro da área não é um alvo comum, portanto não se inventa alcance direto a partir dos tokens marcados.
+- Nesta entrega, validação de alcance/visão e avisos foram priorizados. Os aprimoramentos mais amplos de dano e ataque multi-alvo ficam para versão posterior, após testes em Foundry real.
+
+## Condições e tentativas de escape — v0.2.20 (Foundry v14)
+
+- No HUD nativo, aba POWERS, o dono de um personagem afetado pode escolher **Escapar: [Poder]**. O teste rola Melee, usa TN 20 para Elemental Grab, Telekinetic Grab, Crimson Bands e Hellfire Chains, TN 16 para Webgrabbing/Webcasting e a defesa Melee atual do controlador em Coiling Crush.
+- Tentativas em combate consomem uma Ação Padrão no Controle de Turno e só são realizadas no turno do personagem (o Mestre pode administrar exceções). Falha mantém as condições; sucesso remove somente os efeitos de contenção desse poder/card, nunca efeitos manuais ou consequências elementais com duração própria.
+- Mists of Morpheus: o Sucesso Fantástico adiciona o indicador **Sono profundo** à condição Atordoado, até cessar a Concentração. O livro não especifica número-alvo para despertar; a decisão permanece com o Mestre.
+- Rolagens e remoções automáticas dos efeitos são processadas pelo Mestre ativo; não há cobrança de Focus para o teste de escape. Os demais controles das v0.2.19 permanecem intactos.
+
+## Sphere e Prison — v0.2.19 (Foundry v14)
+
+- **Controles de Poder para jogadores:** o proprietário do personagem pode usar **Desenhar área** mesmo se o card do chat tiver sido criado pelo Mestre; pedidos remotos são conferidos novamente pelo Mestre ativo para impedir uso não autorizado.
+- **Desenho sobre tokens:** durante a operação de desenho, o sistema intercepta o mouse antes da seleção de tokens. Clique e arraste sobre qualquer parte do mapa, inclusive em cima de um token, para dimensionar a Região. Solte para confirmar; Esc ou clique direito para cancelar; os eventos são limpos automaticamente.
+- **Interface:** removida a linha redundante de Proteção/Defesa abaixo do botão. A descrição do poder mantém as regras, e o painel aparece apenas uma vez.
+- **Proteção automática:** preservadas Regiões, intercepção por posição, Concentração, defesa Ego, absorção de dano e remoção da Região. As outras automações continuam inalteradas.
+
+## Poderes Elementais — v0.2.16 (histórico)
+
+- **Elemental Push:** setas visuais de direção (↖ ↑ ↗ ← → ↙ ↓ ↘), quantidade de espaços e permissão ao autor do ataque. Quando o token de terceiro pertence a outro jogador, o Mestre ativo executa a atualização validada. Um mesmo card movimenta cada alvo apenas uma vez.
+- **Sucesso Fantástico do Push:** o card oferece DAMAGE mesmo sendo um teste sem dano em sucessos normais. O Mestre confirma o dano; depois, Caído e o especial elemental são aplicados, sem duplicidade.
+- **Sphere/Prison:** botão **Desenhar área** no chat do poder. Sphere centralizada no conjurador; Prison pede clique no ponto desejado. A área é um template circular **editável** do Foundry (não é parede, barreira física de colisão ou alvo de ataque próprio), de raio padrão até 5 espaços por Rank. O template é removido ao encerrar a Concentração correspondente.
+- **Proteções:** Elemental Protection e Sphere ativas no token interceptam ataques confirmados no card de dano; o Mestre pode escolher atacar diretamente o alvo ou especificamente a estrutura (incluindo Prison). A defesa para o ataque à estrutura é Ego do criador. Ataques de dano bruto até 10×Protection são absorvidos; se exceder, a proteção se quebra, mas o ataque não fere o protegido. O ícone M traz o nome do efeito ativo.
+- **Segurança:** dano/efeitos especiais não são duplicados ao reaplicar o mesmo card. A geometria do template não rastreia automaticamente obstáculos ou personagens na área; cabe ao Mestre direcionar a resolução contra a estrutura, quando apropriado. Faça backup antes de atualizar.
+
+## Poderes Elementais Avançados — v0.2.15
+
+- Elemental Prison, Elemental Sphere, Elemental Suffocation e Elemental Push possuem fluxos de rolagem distintos e efeitos em acertos normais/Fantásticos.
+- O Mestre confirma danos e controla a estrutura/posicionamento no card. Sem criar paredes, objetos ou áreas físicas automaticamente no mapa.
+- Elemental Prison/Sphere herdam custo e resistência de Elemental Protection; o sistema aplica condições especiais respeitando a Concentração e os alvos marcados.
+
+## Resize Other — v0.2.14
+
+Marque **exatamente um token-alvo** na cena, deixe o token do personagem próximo o suficiente para tocar e use **Resize Other** pela ficha ou pela aba POWERS. A janela permite selecionar apenas tamanhos alcançáveis pelos níveis de Grow/Shrink que o personagem possui (Rank 3 e Grow 2 ou Shrink 2 no mínimo), e confirmar se o alvo concorda. Um alvo resistente precisa estar **Agarrado** antes da ativação. Quando o alvo não pertence ao jogador e é declarado voluntário, o Mestre confirma a concordância. O poder custa **10 Focus**, sem rolagem própria de ataque.
+
+A escolha muda os atributos derivados e o X/Y/Z do token-alvo, preservando o tamanho natural. **Restaurar tamanho anterior** remove Resize Other e recupera um Grow/Shrink próprio anterior, quando houver. A aplicação no token-alvo de outro proprietário passa pelo Mestre ativo. **Resize Object não recebe automação**: continua interpretativo, pois objetos podem não existir como elementos de mapa. Faça backup do mundo antes de atualizar.
+
+## Condições dos Poderes — v0.2.11
+
+Ao usar um dos 23 poderes mapeados com um alvo marcado, o Mestre ativo aplica automaticamente ao token atingido uma condição visível (por exemplo, Atordoado, Cego, Caído, Agarrado ou Sangrando). O sistema distingue acerto normal e fantástico, reconhece modificações posteriores da rolagem por Edge/Trouble e remove somente as condições que pertencem ao card. Condições temporárias expiram no combate pelo turno apropriado; as que dependem de Concentração acompanham a Concentração. Condições sem término fixo (como Sangrando/Agarrado) continuam até remoção manual do Mestre.
+
+**Importante:** o jogador deve marcar os alvos **antes de rolar**. A atribuição automática requer um Mestre online. Fora do combate, a expiração é manual. O efeito do status na ficha/token é automático, mas as penalidades específicas das condições (ex.: Trouble, dano contínuo ou encerrar outras Concentrações) ainda podem exigir decisão do Mestre. Poderes que dependam de causar dano real, teste de fuga ou consequência opcional não foram automatizados indiscriminadamente. Faça backup do mundo antes de testar.
+
+## Rolagens de Poderes — v0.2.10
+
+Os Poderes com testes definidos agora usam o atributo correto e avaliam, quando aplicável, a defesa do token marcado ou o número-alvo (TN) fixo. O card diferencia sucesso normal, falha, Sucesso Fantástico e Falha Fantástica, sem confundir o dado Marvel M com um acerto automático. Poderes sem dano não oferecem DAMAGE (exceto a possibilidade prevista de dano com Sucesso Fantástico em Jinx You e Flare). As rolagens situacionais pedem confirmação antes de gastar Focus/Concentração. Os controles **Teste sem dano** e **TN fixo** ficam na ficha do Poder. Registros incompletos de personagens antigos recebem valores de referência no uso, preservando alterações manuais.
+
+**Importante:** o motor de Focus, Concentração e as funcionalidades de Grow/Shrink da v0.2.9 continuam preservados. Modificadores e efeitos especiais narrativos de muitos poderes ainda requerem decisão do Narrador. Faça backup do mundo antes de testar esta atualização.
+
+## Motor de Focus — v0.2.9
+
+O uso de poderes reconhece custos em `Focus` e `Foco`, fixos e variáveis. Quando houver Concentração, o jogador escolhe/valida o custo antes de confirmar mudanças. Efeitos com custo `por turno` ou `per round` debitam automaticamente a manutenção no começo dos turnos seguintes do ator no combate, uma vez por turno. O chat oferece **Encerrar manutenção**; encerrar a Concentração também encerra a cobrança. Sem Focus suficiente, o efeito é encerrado. Em poderes com duração por Rank, a manutenção termina ao esgotar a duração. Fora do combate a manutenção deve ser administrada manualmente.
+
+**Instalação:** faça backup do mundo, substitua a pasta `Data/systems/multiverse-d616` pelo conteúdo deste ZIP e reinicie o Foundry. Faça os primeiros testes como Mestre em um mundo de teste. O ZIP contém o sistema completo; o GitHub não é alterado.
+
+## Atualização v0.2.8 — Poderes permanentes acionáveis nos atalhos
+
+A aba **POWERS** do Token Action HUD nativo inclui **Resize Object** e **Resize Other** (também aceita a grafia `Resize Others`), além de 11 outros poderes com duração Permanente que demandam uso deliberado ou teste de dados: Charmed Life, Disguise, Domination, Edit Memory, Flexible Fingers, Levitation, Memory Blip, Orders, Rubberneck, Shape-Shift e Teleport Object. Grow/Shrink 1–4 continuam disponíveis. Modificadores puramente passivos como Mighty, Flight e Sturdy permanecem ocultos.
+
+A função do botão é executar o fluxo original `Item.roll()` da ficha. A atualização não cria novas janelas de seleção de alvos/objetos nem automatiza efeitos que ainda são narrativos. 
 
 ## Atualização v0.2.7 — Dimensões X/Y/Z do token automáticas
 
@@ -40,7 +190,7 @@ Sistema de jogo para **Foundry VTT v14** baseado no Marvel Multiverse RPG (D616)
 - **Grow 1–4:** janela ao usar o poder nas fichas de PCs/NPCs, com seleção de tamanho dentro dos limites permitidos e faixas de altura em metros.
 - **Normalizar:** opção para restaurar o tamanho natural; cancelar não cria efeitos nem registra uso.
 - **Tamanho escolhido:** efeito ativo independente, trocando os bônus de tamanho sem acumular etapas e preservando tamanho natural, alcance, movimentação e os demais efeitos.
-- **Validação:** `node tests/grow-size.test.mjs`, `node tests/movement.test.mjs` e `node --test tests/*.test.mjs`.
+- **Validação interna:** `node --test tests/*.test.mjs`.
 - **Distribuição:** atualizar a versão 0.2.4 no GitHub somente após testes locais, criando release/tag v0.2.4.
 
 ## Atualização v0.2.3 — Correções de Poderes
@@ -384,3 +534,30 @@ A v0.2.1 preserva as fichas existentes; instale substituindo a pasta inteira `Da
 O sistema aplica automaticamente o bônus de Agility ao Run, e a regra de tamanho à velocidade terrestre; o Flight normal não muda ao encolher ou crescer temporariamente, exceto pela referência de tamanho natural do traço Unusual Size. Efeitos antigos de tamanho continuam reconhecidos. Fichas legadas em que Run já estava manualmente calculado como `5 + floor(Agility/5)` não recebem o mesmo bônus novamente.
 
 Testes isolados: `node tests/movement.test.mjs`. Esses testes não substituem a validação visual e multiplayer no Foundry VTT v14.
+
+
+## Multiverse-D616 v0.2.21 — Alvos Inteligentes e Reação
+
+Nas configurações do cliente, escolha o modo de **Seleção inteligente de alvos**: confirmar o último, reutilizar automaticamente ou utilizar seleção manual. Ao selecionar novos alvos no mapa, clique nos tokens desejados e confirme; `Enter` confirma e `Esc` cancela. A seleção ocorre antes de gastar Focus e iniciar Concentração.
+
+Condições de restrição criadas por poderes habilitados podem abrir uma janela ao jogador afetado oferecendo o teste de escape imediato como Reação; em combate, essa tentativa consome a Reação disponível e segue as regras próprias de cada poder. A Ação Padrão posterior permanece disponível. Requer um Mestre conectado para validar gastos de Reação de jogadores.
+
+
+## Multiverse-D616 v0.2.22 — Seleção de alvos
+
+**Seleção manual do Foundry** é o padrão; nenhuma janela extra aparece. Opcionalmente, ative **Perguntar antes de ataques** nas configurações individuais do cliente para abrir uma janela com o tema do sistema, oferecendo alvos já marcados, seleção no mapa ou ação sem alvo. O botão para reutilizar o último alvo foi removido. Na primeira execução após atualizar, a configuração antiga é migrada uma única vez para Manual; depois, a preferência escolhida pelo jogador é mantida.
+
+
+## Multiverse-D616 v0.2.23 — Condições e rolagens
+
+Condições ativas oferecem Edge/Trouble no momento de rolar ações e ataques. O chat identifica a origem; Trouble único é aplicado pelo sistema, enquanto Edge usa os botões existentes para o jogador escolher o dado. Acúmulos e ações que dependem de sentidos precisam de decisão do Mestre, e o sistema não impõe modificadores conflitantes numa rolagem contra alvos distintos. A versão é candidata até validação no Foundry v14 real.
+
+**v0.2.26:** configuração global "Cancelar Combate Inteligente" (marcada por padrão); migração gradual de APIs v14 de efeitos e do chat.
+
+**v0.2.27:** mesclagem segura do catálogo do Charactermancer, preservação de poderes homônimos de conjuntos/efeitos diferentes, progressões numeradas por conjunto e correção de pré-requisitos exibidos nos botões bloqueados.
+
+### Agarrado — Poder (regra da mesa; v0.2.42)
+
+A condição `Agarrado — Poder` diferencia uma contenção remota (Elemental Grab, Telekinetic Grab, Webgrabbing, Hellfire Chains e o especial Plants) do agarrão físico. O alvo não pode se deslocar voluntariamente, os ataques contra ele ganham **1 Edge** por essa contenção, e o usuário do poder não fica Agarrado. O status não multiplica Edge quando dois efeitos iguais estão presentes. O Mestre pode reposicionar manualmente o alvo em caso de deslocamento forçado.
+
+**Agarrado físico** continua usando seus modificadores tradicionais. Um alvo pode manter os dois efeitos de fontes diferentes: não se confunde o agarrão corporal com a contenção à distância. Testes de Escapar e duração mantêm as regras de seus respectivos poderes. Proteções Elemental Protection e barreiras Sphere/Prison continuam interceptando antes da DR usual do personagem, mesmo nos cards legados, com o Mestre confirmando a aplicação.

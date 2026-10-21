@@ -1,13 +1,18 @@
+import { resolveConditionEdges, resolveConditionReroll } from "./condition-edge.mjs";
 /**
  * Multiverse-D616 — native Token Action HUD
  *
  * Replaces token-action-hud-core + token-action-hud-multiverse-d616 with a
  * small system-owned HUD containing the two actions used by this system:
- * ABILITIES and actionable POWERS, including Grow/Shrink 1–4 even though Permanent.
+ * ABILITIES and actionable POWERS, including manually usable Permanent powers such as Grow/Shrink and Resize.
  */
 
 import { growPowerLevel } from "./grow-size.mjs";
 import { shrinkPowerLevel } from "./shrink-size.mjs";
+import { listPowerEscapes, choosePowerEscape } from "./power-escapes.mjs";
+import { listConditionRecoveryActions, attemptConditionRecovery } from "./condition-actions.mjs";
+import { hasFaltineFlames, extinguishFaltine, hasHealingFactor, nextHealingHealth, healOutsideCombat } from "./ongoing-power-effects.mjs";
+import { availableHeldPowers, useHeldFollowUp } from "./repeat-power-attacks.mjs";
 
 const SYSTEM_ID = "multiverse-d616";
 const LEGACY_HUD_MODULE_ID = "token-action-hud-multiverse-d616";
@@ -97,12 +102,45 @@ function isPermanentPower(item) {
     .some((value) => value === "permanent" || value === "permanente");
 }
 
-/** Grow/Shrink 1–4 are Permanent on the item, but must remain clickable to choose size.
- * Other Permanent powers are still omitted from the action shortcuts.
+/**
+ * The compendium marks some usable actions as Permanent because their RESULTS
+ * persist. Those powers still require a deliberate click (and often an action,
+ * a target and/or a Logic roll). Keep an explicit allowlist instead of matching
+ * arbitrary Standard/Reaction text: e.g. Lightning Actions, Stilt Steps and
+ * passive movement/defense powers should NOT clutter the HUD.
+ *
+ * This list only changes shortcut visibility. item.roll() continues to own
+ * rolls, Focus, turn tracking and chat cards; there is no new automation here.
  */
+const ACTIONABLE_PERMANENT_POWERS = new Set([
+  "charmed life",      // choose when to announce the once-per-round Edge
+  "disguise",          // choose a disguise (Standard)
+  "domination",        // Logic check against target
+  "edit memory",       // Logic check against target
+  "flexible fingers",  // open locks / form a tool (Standard in effect text)
+  "levitation",        // deliberate movement (Standard)
+  "memory blip",       // Logic check against target
+  "orders",            // Logic check against target
+  "resize object",     // deliberate size change and Focus cost
+  "resize other",      // compendium spelling; touch target and Focus cost
+  "resize others",     // alias used by some imported character sheets
+  "rubberneck",        // extend head to gain line of sight
+  "shape shift",       // change shape (Standard or Reaction)
+  "teleport object",   // deliberate teleport and Focus cost
+]);
+
+function canonicalPowerName(name) {
+  return normalizeText(name)
+    .replace(/[‐‑‒–—-]/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+/** Only explicitly actionable Permanent powers bypass the standard filter. */
 function isPowerAvailableForHud(item) {
-  return item?.type === "power" &&
-    (!isPermanentPower(item) || growPowerLevel(item) > 0 || shrinkPowerLevel(item) > 0);
+  if (item?.type !== "power") return false;
+  if (!isPermanentPower(item)) return true;
+  return growPowerLevel(item) > 0 || shrinkPowerLevel(item) > 0 ||
+    ACTIONABLE_PERMANENT_POWERS.has(canonicalPowerName(item.name));
 }
 
 function compareNames(left, right) {
@@ -166,16 +204,20 @@ async function rollAbility(actor, abilityKey) {
   const speaker = ChatMessage.getSpeaker({ actor });
   const messageMode = game.settings.get("core", "messageMode");
   const RollClass = CONFIG.Dice?.MarvelMultiverseRoll ?? Roll;
-  const roll = new RollClass(formula, actor.getRollData());
-  await roll.toMessage(
+  const conditionEdges=resolveConditionEdges({actor,ability:key,action:'standard'});
+  const roll=new RollClass(formula,actor.getRollData(),conditionEdges.edgeMode?{edgeMode:conditionEdges.edgeMode}:{});
+  const message=await roll.toMessage(
     {
       author: game.user?.id,
       speaker,
       flavor: `ability: ${label}`,
       title: label,
+      flags:{'multiverse-d616':{conditionEdges}},
     },
     { messageMode }
   );
+  if(conditionEdges.sources.length&&conditionEdges.autoCount)
+    await resolveConditionReroll(message,conditionEdges);
   return roll;
 }
 
@@ -190,6 +232,12 @@ class NativeActionHud {
 
     Hooks.on("controlToken", () => this.scheduleRender(true));
     Hooks.on("canvasReady", () => this.scheduleRender(true));
+    // Hold conditions live on the TARGET, not on the selected caster.
+    Hooks.on("updateCombat", () => this.scheduleRender(true));
+    for(const hook of ['createActiveEffect','updateActiveEffect','deleteActiveEffect']){
+      Hooks.on(hook, () => this.scheduleRender(true));
+    }
+    Hooks.on('updateChatMessage', () => this.scheduleRender(true));
     Hooks.on("canvasTearDown", () => this.remove());
     Hooks.on("updateActor", (actor) => {
       if (this.isSelectedActor(actor)) this.scheduleRender(true);
@@ -197,6 +245,13 @@ class NativeActionHud {
     Hooks.on("createItem", (item) => this.onItemChange(item));
     Hooks.on("updateItem", (item) => this.onItemChange(item));
     Hooks.on("deleteItem", (item) => this.onItemChange(item));
+    for (const kind of ["createActiveEffect", "deleteActiveEffect", "updateActiveEffect"]) {
+      Hooks.on(kind, (effect) => {
+        const parent = effect?.parent;
+        // Effects may be on the Actor or embedded in one of its Items.
+        if (this.isSelectedActor(parent?.actor ?? parent)) this.scheduleRender(true);
+      });
+    }
     Hooks.on("updateToken", (token) => {
       if (this.isSelectedToken(token)) this.scheduleRender(true);
     });
@@ -332,6 +387,8 @@ class NativeActionHud {
       userCanUseActor(actor),
       abilities,
       powers,
+      listPowerEscapes(actor).map(e=>e.id),
+      availableHeldPowers(actor),
     ]);
   }
 
@@ -376,9 +433,15 @@ class NativeActionHud {
     }
 
     const body = root.querySelector(".mmrpg-native-action-hud__body");
+    // Preserve scroll when another client updates the selected Actor, or a
+    // combat status changes mid-turn. Do not throw the player's list to top.
+    const previousScroll = body.scrollTop;
+    const previousTab = body.dataset.currentTab;
     body.replaceChildren();
+    body.dataset.currentTab = tab;
     if (tab === "powers") this.renderPowers(body, actor);
     else this.renderAbilities(body, actor);
+    if (previousTab === tab) body.scrollTop = previousScroll;
     this.applyStoredPosition();
     requestAnimationFrame(() => this.positionWithinViewport());
   }
@@ -415,7 +478,65 @@ class NativeActionHud {
     const powers = getActorItems(actor)
       .filter(isPowerAvailableForHud)
       .sort((left, right) => compareNames(left.name, right.name));
-    if (!powers.length) {
+    const escapes=listPowerEscapes(actor);
+    const recoveries=listConditionRecoveryActions(actor);
+    const naturalHealing=hasHealingFactor(actor)&&!game.combat?.started &&
+      nextHealingHealth(actor)>Number(actor.system?.health?.value??0);
+    if(naturalHealing){
+      const button=document.createElement('button');button.type='button';
+      button.className='mmrpg-native-action-hud__action power';
+      button.dataset.action='healing-factor-outside';button.disabled=!canUse;
+      const img=document.createElement('img');img.src=`systems/${SYSTEM_ID}/icons/m.svg`;img.alt='';
+      const label=document.createElement('span');label.className='name';
+      label.textContent='Healing Factor: recuperar';
+      button.title='Fora de combate: recuperar Health igual a Resilience por turno narrativo, sob controle do Mestre.';
+      button.append(img,label);body.appendChild(button);
+    }
+    const burning=hasFaltineFlames(actor);
+    if(burning){
+      const button=document.createElement('button');button.type='button';
+      button.className='mmrpg-native-action-hud__action power';
+      button.dataset.action='extinguish-faltine';button.disabled=!canUse;
+      const img=document.createElement('img');img.src=`systems/${SYSTEM_ID}/icons/four-elements.svg`;img.alt='';
+      const label=document.createElement('span');label.className='name';label.textContent='Apagar: Chamas de Faltine';
+      button.title='Ação Padrão para apagar as chamas. Fora de combate, o Mestre define o tempo necessário.';
+      button.append(img,label);body.appendChild(button);
+    }
+    for(const name of availableHeldPowers(actor)){
+      const button=document.createElement('button');button.type='button';
+      button.className='mmrpg-native-action-hud__action power';
+      button.dataset.action='held-follow-up';button.dataset.powerName=name;button.disabled=!canUse;
+      const img=document.createElement('img');img.src=`systems/${SYSTEM_ID}/icons/m.svg`;img.alt='';
+      const label=document.createElement('span');label.className='name';
+      label.textContent=name==='Hellfire Chains'?'Atacar: Correntes Infernais':'Esmagar: Coiling Crush';
+      button.title=name==='Hellfire Chains'
+        ?'Rodadas seguintes: escolha alvo agarrado, teste Ego vs Resilience; Health e Focus no mesmo ataque.'
+        :'Turnos seguintes: gasta Movimento, teste Melee vs Resilience, dano Health.';
+      button.append(img,label);body.appendChild(button);
+    }
+    for(const escape of escapes){
+      const button=document.createElement('button');button.type='button';
+      button.className='mmrpg-native-action-hud__action power';
+      button.dataset.action='escape';button.dataset.escapeId=escape.id;
+      button.disabled=!canUse;
+      const img=document.createElement('img');img.src=`systems/${SYSTEM_ID}/icons/m.svg`;img.alt='';
+      const label=document.createElement('span');label.className='name';
+      label.textContent=`Escapar: ${escape.power}`;
+      button.title=`Escolher Ação Padrão ou Reação — Melee contra ${escape.tn ? 'TN '+escape.tn : 'Melee do controlador'}`;
+      button.append(img,label);body.appendChild(button);
+    }
+    for(const recovery of recoveries){
+      const button=document.createElement('button');button.type='button';
+      button.className='mmrpg-native-action-hud__action power';
+      button.dataset.action='condition-recovery';button.dataset.conditionId=recovery.id;
+      button.disabled=!canUse;
+      const img=document.createElement('img');img.src=`systems/${SYSTEM_ID}/icons/m.svg`;img.alt='';
+      const label=document.createElement('span');label.className='name';
+      label.textContent=`Remover: ${recovery.label}`;
+      button.title=`Ação Padrão — ${recovery.abilityLabel} TN ${recovery.tn}`;
+      button.append(img,label);body.appendChild(button);
+    }
+    if (!powers.length && !escapes.length && !recoveries.length && !burning && !naturalHealing) {
       const empty = document.createElement("p");
       empty.className = "mmrpg-native-action-hud__empty";
       empty.textContent = localize("MULTIVERSE_D616.ActionHud.NoPowers");
@@ -461,7 +582,7 @@ class NativeActionHud {
       return;
     }
 
-    const actionButton = event.target.closest?.("[data-action='ability'], [data-action='power']");
+    const actionButton = event.target.closest?.("[data-action='ability'], [data-action='power'], [data-action='escape'], [data-action='condition-recovery'], [data-action='extinguish-faltine'], [data-action='healing-factor-outside'], [data-action='held-follow-up']");
     if (!actionButton || actionButton.disabled) return;
     const actor = this.selectedActor;
     if (!actor) return;
@@ -470,6 +591,16 @@ class NativeActionHud {
     try {
       if (actionButton.dataset.action === "ability") {
         await rollAbility(actor, actionButton.dataset.ability);
+      } else if(actionButton.dataset.action === 'escape') {
+        await choosePowerEscape(actor,actionButton.dataset.escapeId);
+      } else if(actionButton.dataset.action === 'condition-recovery') {
+        await attemptConditionRecovery(actor,actionButton.dataset.conditionId);
+      } else if(actionButton.dataset.action === 'extinguish-faltine') {
+        await extinguishFaltine(actor);
+      } else if(actionButton.dataset.action === 'healing-factor-outside') {
+        await healOutsideCombat(actor);
+      } else if(actionButton.dataset.action === 'held-follow-up') {
+        await useHeldFollowUp(actor,actionButton.dataset.powerName);
       } else {
         const item = actor.items?.get?.(actionButton.dataset.itemId);
         if (item?.type === "power") await item.roll();

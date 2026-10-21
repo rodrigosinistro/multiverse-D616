@@ -1,3 +1,27 @@
+## Publicação manual da v0.2.68 no GitHub (após testar)
+1. Extraia `multiverse-d616-v0.2.68.zip` e copie **todos os arquivos do interior da pasta `multiverse-d616/`** para a raiz do repositório (onde fica `system.json`); não crie uma pasta `multiverse-d616/` dentro da raiz do projeto.
+2. Confira que `system.json` tem `version: 0.2.68`, as entradas `esmodules`, `styles`, `packs` referenciam arquivos existentes e o manifesto aponta para a tag `v0.2.68`.
+3. Faça commit/push **manualmente**. Crie a release GitHub `v0.2.68` e anexe o arquivo `multiverse-d616-v0.2.68.zip` com o nome exato. Até que a release exista, a URL de download do manifesto aponta a um arquivo ainda não publicado.
+4. Mantenha o ZIP anterior aprovado para rollback. Não substitua compêndios já importados sem validar a compatibilidade; esta atualização não altera os dados dos packs.
+
+## v0.2.10 — Rolagens de Poderes
+
+As fichas antigas não são substituídas. Poderes cuja habilidade/defesa de teste esteja vazia recebem o padrão ao usar o poder (por nome), preservando escolhas explícitas do Narrador. Os poderes importados do compêndio na v0.2.10 já possuem os campos atualizados. Os controles Teste sem dano / TN fixo ficam disponíveis na ficha do Poder. Não há mudanças obrigatórias nos personagens. Faça backup antes de atualizar.
+
+## v0.2.9 — Motor de Focus
+
+Não há alterações destrutivas em fichas ou compêndios. Para os onze poderes de custo recorrente, a manutenção automática começa **quando o poder é usado novamente** depois da atualização: efeitos de Concentração legados em execução antes do upgrade não são debitados retroativamente. O novo acompanhamento de Focus usa os Active Effects do ator. Ao encerrar uma Concentração, a manutenção associada também é encerrada. Faça backup antes de atualizar.
+
+# Atualização 0.2.8 (sobre v0.2.7)
+
+Esta versão muda **somente a visibilidade dos poderes no HUD nativo**. Não requer migração dos itens, da ficha, dos Active Effects nem dos compêndios. As fichas já existentes com poderes nomeados `Resize Object` ou `Resize Other` passam a exibi-los nos atalhos automaticamente; o alias `Resize Others` também é reconhecido.
+
+O clique executa `item.roll()` já existente, incluindo custo de Focus, rolagens configuradas e chat. Efeitos narrativos, como transformar objetos ou escolher aparências, continuam sujeitos ao mestre e às operações manuais existentes. Não altera Crescimento/Encolhimento, token X/Y/Z ou Concentration.
+
+Testar localmente no Foundry VTT v14 antes de publicar. O GitHub não foi alterado automaticamente.
+
+---
+
 # Atualização 0.2.7 (sobre v0.2.6)
 
 - **Backup recomendado:** redimensionamentos de token alteram documentos de tokens em cena e o token padrão do Actor vinculado.

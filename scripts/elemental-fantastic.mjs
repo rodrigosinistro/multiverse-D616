@@ -1,5 +1,10 @@
+import { automationEnabled } from './automation-settings.mjs';
+import { POWER_GRABBED_STATUS } from './power-grabbed.mjs';
 const SYSTEM_ID = "multiverse-d616";
 const FLAG_KEY = "elementalFantastic";
+// Foundry v14: ALWAYS=2. A custom effect with no native duration would
+// otherwise use CONDITIONAL=1 and lose its Token overlay icon.
+const ALWAYS_SHOW_EFFECT_ICON = 2;
 
 /**
  * Automation metadata for Elemental Control Fantastic effects.
@@ -10,7 +15,7 @@ export const ELEMENTAL_FANTASTIC_RULES = Object.freeze({
   plants: {
     label: "Plants",
     text: "O alvo fica Agarrado.",
-    statusId: "mmrpg.grabbed",
+    statusId: POWER_GRABBED_STATUS,
     icon: "systems/multiverse-d616/icons/statuses/grappled.svg",
   },
   air: {
@@ -197,7 +202,56 @@ function effectName(rule) {
   return `Elemental — ${rule.label}`;
 }
 
-async function replaceElementalEffect(actor, rule, metadata = {}) {
+/**
+ * Foundry v14 registers temporary ActiveEffects for expiry. It may queue a
+ * duration.expired update on the same turn that a system hook runs. Do not
+ * delete its document while that update is still in flight (stale _id error).
+ * A manually dismissed custom effect is instead disabled; it is reusable.
+ */
+export async function retireElementalFantasticEffect(actor, effect) {
+  if (!actor || !effect?.id) return false;
+  const current = (actor.effects?.get?.(effect.id)) ??
+    (actor.effects?.contents ?? Array.from(actor.effects ?? [])).find(e => e?.id === effect.id);
+  const flag = effectFlag(current);
+  if (!current || !flag?.custom || flag.source !== "fantastic" || current.disabled || current.duration?.expired === true) return false;
+  await current.update({ disabled: true });
+  return true;
+}
+
+/** Locate the caster, not the affected target, as the expiration anchor.
+ * Prioritize the exact token in the attack card (linked actors may have
+ * several combatants). A document whose author cannot be resolved is never
+ * assigned silently to the character who happens to have the current turn.
+ */
+export function findElementalSourceCombatant(combat, speaker = null, actorUuid = null) {
+  const combatants = Array.from(combat?.combatants?.contents ?? combat?.combatants ?? []);
+  const scene = speaker?.scene ?? null;
+  const token = speaker?.token ?? null;
+  if (token) {
+    const exact = combatants.find(c => c.tokenId === token && (!scene || !c.sceneId || c.sceneId === scene));
+    if (exact) return exact.id;
+  }
+  const sourceActorId = String(actorUuid ?? speaker?.actor ?? '').split('.').at(-1);
+  if (!sourceActorId) return null;
+  const matches = combatants.filter(c => c.actorId === sourceActorId || c.actor?.id === sourceActorId || c.actor?.uuid === actorUuid);
+  return matches.length === 1 ? matches[0].id : null;
+}
+
+/** When reusing a dismissed effect, reset the v14 combat-based clock too. */
+export function currentElementalEffectStart(combat = globalThis.game?.combat, worldTime = globalThis.game?.time?.worldTime) {
+  const active = combat?.combatant;
+  const numericOrNull = v => v == null || !Number.isFinite(Number(v)) ? null : Number(v);
+  return {
+    time: Number(worldTime) || 0,
+    combat: combat?.id ?? null,
+    combatant: active?.id ?? null,
+    initiative: numericOrNull(active?.initiative),
+    round: numericOrNull(combat?.round),
+    turn: numericOrNull(combat?.turn),
+  };
+}
+
+export async function replaceElementalEffect(actor, rule, metadata = {}) {
   if (!actor || !rule || rule.noteOnly) return null;
 
   const allEffects = actor.effects?.contents ?? Array.from(actor.effects ?? []);
@@ -205,14 +259,9 @@ async function replaceElementalEffect(actor, rule, metadata = {}) {
     const flag = effectFlag(effect);
     return flag?.element === metadata.key && flag?.source === "fantastic";
   });
-  if (existingOwned.length) {
-    try {
-      await actor.deleteEmbeddedDocuments("ActiveEffect", existingOwned.map((effect) => effect.id));
-    } catch (error) {
-      console.warn(`[${SYSTEM_ID}] Could not refresh existing elemental effect`, error);
-    }
-  }
 
+  const combat = game.combat?.started ? game.combat : null;
+  const sourceCombatantId = findElementalSourceCombatant(combat, metadata.sourceSpeaker, metadata.sourceActorUuid);
   const flagData = {
     [SYSTEM_ID]: {
       [FLAG_KEY]: {
@@ -221,12 +270,50 @@ async function replaceElementalEffect(actor, rule, metadata = {}) {
         custom: rule.custom ?? null,
         sourceMessageId: metadata.sourceMessageId ?? null,
         sourceActorUuid: metadata.sourceActorUuid ?? null,
-        appliedRound: game.combat?.round ?? null,
-        appliedTurn: game.combat?.turn ?? null,
+        appliedRound: combat?.round ?? null,
+        appliedTurn: combat?.turn ?? null,
+        combatId: combat?.id ?? null,
+        sourceCombatantId,
         rounds: Number(rule.rounds ?? 0) || 0,
       },
     },
   };
+
+  // Earth/Force have no native timer. Foundry's round timer expires on the
+  // victim's next turn, but D616's "1 rodada" must end when the attacker's
+  // turn returns. The D616 combat hook owns this exact expiration instead.
+  if (rule.custom) {
+    const reusable = existingOwned.find(effect => effectFlag(effect)?.custom === rule.custom);
+    if (reusable) {
+      await reusable.update({
+        name: effectName(rule),
+        img: rule.icon ?? "systems/multiverse-d616/icons/four-elements.svg",
+        disabled: false,
+        statuses: [],
+        showIcon: ALWAYS_SHOW_EFFECT_ICON,
+        duration: buildDuration(null),
+        start: currentElementalEffectStart(),
+        flags: flagData,
+      });
+      // Older builds may have left duplicate custom effects. Deactivate the
+      // redundant records (do not delete registry-tracked documents).
+      for (const other of existingOwned) {
+        if (other.id !== reusable.id && !other.disabled && other.duration?.expired !== true)
+          await other.update({ disabled: true });
+      }
+      return reusable;
+    }
+  }
+
+  // Native statuses still use their existing replacement logic. Custom
+  // effects never enter this deletion path.
+  if (existingOwned.length && !rule.custom) {
+    try {
+      await actor.deleteEmbeddedDocuments("ActiveEffect", existingOwned.map(effect => effect.id));
+    } catch (error) {
+      console.warn(`[${SYSTEM_ID}] Could not refresh existing elemental effect`, error);
+    }
+  }
 
   // Prefer Foundry's native status API for actual D616 conditions. This uses
   // CONFIG.statusEffects (installed by conditions-hud.js) and is the same path
@@ -264,6 +351,14 @@ async function replaceElementalEffect(actor, rule, metadata = {}) {
     }
   }
 
+  // Old custom versions with the same element must not remain active when
+  // the effect definition changes between system versions.
+  if (rule.custom) {
+    for (const old of existingOwned) {
+      if (!old.disabled && old.duration?.expired !== true) await old.update({ disabled: true });
+    }
+  }
+
   // Fallback and custom elemental effects (Earth / Force). Keep this payload
   // deliberately core-compatible; no custom ActiveEffect DataModel is required.
   const data = {
@@ -272,7 +367,8 @@ async function replaceElementalEffect(actor, rule, metadata = {}) {
     disabled: false,
     transfer: false,
     statuses: rule.statusId ? [rule.statusId] : [],
-    duration: buildDuration(rule.rounds),
+    ...(rule.custom ? { showIcon: ALWAYS_SHOW_EFFECT_ICON } : {}),
+    duration: buildDuration(rule.custom ? null : rule.rounds),
     flags: flagData,
   };
 
@@ -294,8 +390,8 @@ async function resolveActor(ref = {}) {
   return null;
 }
 
-export async function applyElementalFantasticFromDamageMessage(message, action = "full") {
-  if (!message || action === "heal") return [];
+export async function applyElementalFantasticFromDamageMessage(message, action = "full", blockedTargetUuids = new Set()) {
+  if (!automationEnabled('elementalEffects') || !message || action === "heal") return [];
 
   const scoped = message.flags?.[SYSTEM_ID] ?? {};
   let meta = message.getFlag?.(SYSTEM_ID, "elementalFantastic") ?? scoped.elementalFantastic ?? null;
@@ -312,6 +408,10 @@ export async function applyElementalFantasticFromDamageMessage(message, action =
     damageApplication.sourceMessageId ??
     null;
   const sourceMessage = sourceMessageId ? game.messages?.get?.(sourceMessageId) : null;
+  // v0.2.15: these four powers are reconciled by the roll-condition engine
+  // after the GM confirms damage, preventing double M statuses.
+  if (['Elemental Prison','Elemental Sphere','Elemental Suffocation','Elemental Push'].includes(
+    sourceMessage?.getFlag?.(SYSTEM_ID,'advancedElemental')?.name)) return [];
   if (!meta?.key && sourceMessage) {
     meta = sourceMessage.getFlag?.(SYSTEM_ID, "elementalFantastic") ?? null;
   }
@@ -350,6 +450,7 @@ export async function applyElementalFantasticFromDamageMessage(message, action =
 
   const applied = [];
   for (const entry of entries) {
+    if (blockedTargetUuids.has(entry.targetUuid)) continue;
     const targetKey = entry.actorUuid || entry.targetUuid;
     if (!targetKey || already.has(targetKey)) continue;
     const actor = await resolveActor(entry);
@@ -359,7 +460,9 @@ export async function applyElementalFantasticFromDamageMessage(message, action =
       await replaceElementalEffect(actor, rule, {
         key: meta.key,
         sourceMessageId: message.id,
-        sourceActorUuid: message.speaker?.actor ? `Actor.${message.speaker.actor}` : null,
+        sourceActorUuid: (sourceMessage?.speaker?.actor ?? message.speaker?.actor)
+          ? `Actor.${sourceMessage?.speaker?.actor ?? message.speaker.actor}` : null,
+        sourceSpeaker: sourceMessage?.speaker ?? message.speaker ?? null,
       });
       applied.push({ actor, targetKey, rule });
       already.add(targetKey);
@@ -396,29 +499,55 @@ function isPrimaryGM() {
   return activeGM ? activeGM.id === game.user?.id : !!game.user?.isGM;
 }
 
-async function cleanupExpiredElementalEffects(combat) {
+/** True only when the next turn of the caster has actually begun.
+ * Native Foundry v14 ActiveEffect duration math is intentionally NOT used for
+ * Earth/Force: a duration of one round can expire when the target acts first.
+ */
+export function shouldExpireElementalFantasticEffect(effect, combat) {
+  const data = effectFlag(effect);
+  if (!combat || !data || data.source !== 'fantastic' || !data.custom ||
+      !Number.isFinite(Number(data.rounds)) || Number(data.rounds) <= 0 ||
+      !Number.isFinite(Number(data.appliedRound)) || data.appliedRound == null) return false;
+  if (data.combatId && data.combatId !== combat.id) return false;
+  const now = Number(combat.round);
+  const applied = Number(data.appliedRound);
+  // Also protects against a GM rewinding initiative / combat rounds.
+  if (!Number.isFinite(now) || now <= applied || !combat.combatant) return false;
+  const currentId = combat.combatant.id;
+  const sourceId = data.sourceCombatantId ?? findElementalSourceCombatant(
+    combat, null, data.sourceActorUuid
+  );
+  if (sourceId) {
+    const stillHere = Array.from(combat.combatants?.contents ?? combat.combatants ?? [])
+      .some(combatant => combatant.id === sourceId);
+    // If the caster left initiative, do not leave an immortal effect.
+    return !stillHere || currentId === sourceId && now >= applied + Number(data.rounds);
+  }
+  // Never guess that the target is the source. Without an identifiable caster,
+  // an active effect stays until GM removal, rather than vanishing too early.
+  return false;
+}
+
+// An updateCombat hook may be delivered more than once by the socket/GM. Only
+// one update to a given ActiveEffect can be pending at a time.
+const expiringCustomIds = new Set();
+export async function cleanupExpiredElementalEffects(combat) {
   if (!isPrimaryGM() || !combat) return;
   const actors = new Set();
-  for (const combatant of combat.combatants ?? []) {
+  for (const combatant of combat.combatants?.contents ?? combat.combatants ?? []) {
     if (combatant?.actor) actors.add(combatant.actor);
   }
-
   for (const actor of actors) {
-    const expiredIds = [];
-    for (const effect of actor.effects?.contents ?? []) {
-      const flag = effectFlag(effect);
-      if (!flag || flag.source !== "fantastic") continue;
-      const duration = effect.duration;
-      if (duration?.expired === true || (Number.isFinite(duration?.remaining) && duration.remaining <= 0)) {
-        expiredIds.push(effect.id);
-      }
-    }
-    if (expiredIds.length) {
-      try {
-        await actor.deleteEmbeddedDocuments("ActiveEffect", expiredIds);
-      } catch (error) {
-        console.warn(`[${SYSTEM_ID}] Failed to remove expired elemental effects`, error);
-      }
+    for (const effect of actor.effects?.contents ?? Array.from(actor.effects ?? [])) {
+      const data = effectFlag(effect);
+      if (!data?.custom || data.source !== 'fantastic' || effect.disabled || effect.duration?.expired === true) continue;
+      if (!shouldExpireElementalFantasticEffect(effect, combat)) continue;
+      const key = `${actor.uuid ?? actor.id ?? ''}:${effect.id}`;
+      if (expiringCustomIds.has(key)) continue;
+      expiringCustomIds.add(key);
+      try { await retireElementalFantasticEffect(actor, effect); }
+      catch (error) { console.warn(`[${SYSTEM_ID}] Failed to expire elemental effect`, error); }
+      finally { expiringCustomIds.delete(key); }
     }
   }
 }

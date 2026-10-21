@@ -26,3 +26,13 @@
   line-height: 1.25;
   font-weight: 800;
 }
+
+/* v0.2.10 — fixed-target-number power checks (Foundry v14 chat). */
+.m616-power-check-tn {
+  margin: 0.4rem 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--color-border-light-primary, #777);
+  border-radius: 4px;
+  font-weight: 600;
+  text-align: center;
+}

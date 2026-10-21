@@ -1,3 +1,4 @@
+import {isEffectChangeType} from './active-effect-types.mjs';
 import { syncActorTokenSize, RESIZE_SKIP_OPTION } from "./token-size.mjs";
 /**
  * Shrink 1–4: select an allowed smaller category on use (Foundry VTT v14).
@@ -93,12 +94,12 @@ export async function applyShrinkChoice(actor, item, choice, config) {
   const naturalEffect = effects(actor).find(e => !e.disabled && isNaturalSizeEffect(e) &&
     changes(e).some(c => c.key === 'system.size' && asSize(c.value) === natural));
   const naturalBonuses = new Map(changes(naturalEffect).filter(c =>
-    c.key?.startsWith('system.abilities.') && Number(c.mode) === 2)
+    c.key?.startsWith('system.abilities.') && isEffectChangeType(c, 'add'))
     .map(c => [c.key,Number(c.value) || 0]));
   const entries = template.changes ?? template.system?.changes ?? [];
   for (const c of entries) {
     if (c.key === 'system.size') { c.priority = 1000; continue; }
-    if (naturalBonuses.has(c.key) && Number(c.mode) === 2) {
+    if (naturalBonuses.has(c.key) && isEffectChangeType(c, 'add')) {
       c.value = Number(c.value) - naturalBonuses.get(c.key);
     }
   }
@@ -108,7 +109,7 @@ export async function applyShrinkChoice(actor, item, choice, config) {
     ...template.flags?.[SYSTEM_ID], managedSize:false,shrinkChoice:true,
     shrinkSelectedSize:choice,shrinkPowerLevel:shrinkPowerLevel(item),shrinkSourceItemId:item.id ?? null,
   }};
-  if (oldResize.length) await actor.deleteEmbeddedDocuments('ActiveEffect',oldResize.map(e => e.id));
+  if (oldResize.length) await actor.deleteEmbeddedDocuments('ActiveEffect',oldResize.map(e => e.id), {[RESIZE_SKIP_OPTION]:true});
   await actor.createEmbeddedDocuments('ActiveEffect',[template], {[RESIZE_SKIP_OPTION]:true});
   await syncActorTokenSize(actor,choice);
   return choices.find(c => c.key === choice);

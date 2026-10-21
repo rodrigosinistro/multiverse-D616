@@ -155,7 +155,7 @@
                   {{/each}}
                 </div>
               </div>
-              <div class="mm-stat-corner-block {{#if editable}}rollable roll-initiative{{/if}}" {{#if editable}}data-action="rollInitiative"{{/if}}>
+              <div class="mm-stat-corner-block {{#if editable}}rollable roll-initiative{{/if}}" {{#if editable}}data-mm-roll-initiative="true"{{/if}}>
                 <label class="mm-label -sm">Initative</label>
                 <div class="mm-input">
                   {{system.attributes.init.value}} {{#if system.attributes.init.edge }}<span>E</span>{{/if}}
@@ -164,8 +164,8 @@
             </div>
           </div>
           {{!-- Abilities --}}
-          <div class="flexrow mm-styled-container mm-abilities-block">
-            <h3>Abilities</h3>
+          <div class="flexrow mm-styled-container mm-abilities-block mm-v2-character-attributes">
+            <h3 class="mm-v2-character-attributes-title">Atributos</h3>
             <ul class="mm-styled-container-body mm-ability-rows">
               <li>
                 <div></div>
@@ -223,7 +223,7 @@
     {{!-- Powers + Traits & Tags --}}
     <div class="tab" data-group="primary" data-tab="abilities">
 
-      <div class="flexrow -gap-sm -nowrap">
+      <div class="flexrow -gap-sm -nowrap mm-v2-character-columns">
         {{!-- Powers --}}
         <div class="mm-styled-container mm-powers-block">
           <h3>Powers</h3>

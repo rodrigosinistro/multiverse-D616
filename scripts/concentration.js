@@ -149,6 +149,16 @@ function findConcentrationPowerEffect(actor, item) {
   }) ?? null;
 }
 
+/** Walls drawn by the D616 barrier controls already have their own scene visual.
+ * Their Concentration status is bookkeeping, not an additional projectile or
+ * destination for Automated Animations. Otherwise global/name-based animations
+ * can try to stretch a beam from the caster to the same caster (distance zero).
+ * Do NOT disable animations on the owned Power item or on other effects.
+ */
+export function usesNativeWallVisual(item) {
+  return item?.name === "Elemental Barrier" || item?.name === "Telekinetic Barrier";
+}
+
 /**
  * AutoAnimations stores each Item's custom animation under flags.autoanimations.
  * A Power maintained by Concentration is represented by a separate transient
@@ -184,11 +194,11 @@ export function bodySheetConcentrationChanges(item) {
     if (effect?.disabled === true) continue;
     for (const raw of effect?.system?.changes ?? effect?.changes ?? []) {
       if (raw.key === "system.healthDamageReduction" && Number(raw.value) === 3) {
-        selected.push({ key: raw.key, type: "upgrade", mode: 4, value: 3, phase: "initial", priority: null });
+        selected.push({ key: raw.key, type: "upgrade", value: 3, phase: "initial", priority: null });
       } else if (raw.key === "system.movement.glide.active") {
-        selected.push({ key: raw.key, type: "override", mode: 5, value: true, phase: "initial", priority: null });
+        selected.push({ key: raw.key, type: "override", value: true, phase: "initial", priority: null });
       } else if (raw.key === "system.movement.glide.calc") {
-        selected.push({ key: raw.key, type: "override", mode: 5, value: "run-double", phase: "initial", priority: null });
+        selected.push({ key: raw.key, type: "override", value: "run-double", phase: "initial", priority: null });
       }
     }
   }
@@ -206,7 +216,7 @@ export function shieldConcentrationChanges(item) {
     if (effect?.disabled) continue;
     if ((effect?.system?.changes ?? effect?.changes ?? []).some(change =>
       change.key === "system.healthDamageReduction" && Number(change.value) === rank)) {
-      return [{ key: "system.healthDamageReduction", type: "upgrade", mode: 4,
+      return [{ key: "system.healthDamageReduction", type: "upgrade",
         value: rank, phase: "initial", priority: null }];
     }
   }
@@ -229,18 +239,28 @@ export function concentrationPowerEffectData(item, countsTowardLevel) {
     [MODULE_ID]: { concentrationPower: flags },
   };
 
-  const autoAnimationsFlags = getAutoAnimationsFlags(item);
-  if (autoAnimationsFlags) effectFlags.autoanimations = autoAnimationsFlags;
+  // The wall is rendered in the scene (Wall + colored ray), not on the
+  // transient Concentration effect. Explicitly disable only this effect's AA
+  // hook, even if global auto-recognition matches the barrier power name.
+  // The actual item and its ordinary casting animations remain untouched.
+  if (usesNativeWallVisual(item)) {
+    effectFlags.autoanimations = { isEnabled: false };
+  } else {
+    const autoAnimationsFlags = getAutoAnimationsFlags(item);
+    if (autoAnimationsFlags) effectFlags.autoanimations = autoAnimationsFlags;
+  }
 
   const activated = [...bodySheetConcentrationChanges(item), ...shieldConcentrationChanges(item)];
   return {
     name: item?.name ?? "Power em Concentração",
     img: item?.img || `systems/${MODULE_ID}/icons/m.svg`,
     disabled: false,
-    // Keep the existing v13-style changes for compatibility with Foundry's
-    // ActiveEffect document; also supply typed v14 system changes for this
-    // system's newer AE preparation and movement calculation pipeline.
-    changes: activated.map(c => ({ key: c.key, mode: c.mode, value: String(c.value), priority: c.priority })),
+    showIcon: 2, // Foundry v14: display each active power's named M status on its token.
+    // V14: the canonical modifiers belong to system.changes with string types.
+    // Clear legacy top-level changes when refreshing an effect created by an
+    // older system version; never generate numeric mode-based changes again.
+    changes: [],
+    type: "base",
     system: { changes: activated.map(c => ({ key: c.key, type: c.type, value: c.value, phase: c.phase, priority: c.priority })) },
     statuses: [statusId],
     flags: effectFlags,
@@ -266,7 +286,7 @@ export async function createOrRefreshConcentrationPowerEffect(
 
     // If the Power no longer has an AutoAnimations customization, clear an old
     // copied configuration from the existing transient ActiveEffect.
-    if (!getAutoAnimationsFlags(item) && existing?.flags?.autoanimations) {
+    if (!usesNativeWallVisual(item) && !getAutoAnimationsFlags(item) && existing?.flags?.autoanimations) {
       updateData["flags.-=autoanimations"] = null;
     }
 
@@ -398,7 +418,54 @@ async function onConcentrationEffectDeleted(effect) {
   await setConcentrationLevel(actor, Math.max(0, current - 1));
 }
 
+/** Conditions whose descriptions explicitly end maintained Concentration.
+ * A normal one-round condition remains on the victim even after the powers
+ * are dismissed; manually applied copies are never removed here. */
+export const CONCENTRATION_BREAKING_CONDITIONS = new Set([
+  "mmrpg.stunned", "mmrpg.demoralized",
+]);
+export function breaksConcentration(effect) {
+  if (!effect || effect.disabled) return false;
+  const statuses = effectStatusIds(effect);
+  const legacy = String(effect.flags?.core?.statusId ?? "");
+  return statuses.some(id => CONCENTRATION_BREAKING_CONDITIONS.has(id)) ||
+    CONCENTRATION_BREAKING_CONDITIONS.has(legacy);
+}
+const concentrationBreaksPending = new Set();
+export async function interruptConcentrationForCondition(effect) {
+  const actor = effect?.parent;
+  if (!actor || !breaksConcentration(effect)) return false;
+  const gm = game.users?.activeGM;
+  if (!game.user?.isGM || (gm && gm.id !== game.user.id)) return false;
+  const key = actorKey(actor);
+  if (concentrationBreaksPending.has(key)) return false;
+  if (!getConcentrationLevel(actor) && !getConcentrationPowerEffects(actor,{activeOnly:true}).length) return false;
+  concentrationBreaksPending.add(key);
+  try {
+    await queueActorOperation(actor, async () => {
+      // The actor may have lost Concentration while waiting for a prior operation.
+      if (getConcentrationLevel(actor) || getConcentrationPowerEffects(actor,{activeOnly:true}).length)
+        await clearConcentration(actor);
+    });
+    return true;
+  } finally { concentrationBreaksPending.delete(key); }
+}
+
 export function registerConcentrationEffectHooks() {
+  Hooks.on("createActiveEffect", (effect) => {
+    if (game.multiverseD616?.automationEnabled?.('concentration') !== false && breaksConcentration(effect))
+      void interruptConcentrationForCondition(effect).catch(e =>
+        console.error(`[${MODULE_ID}] Concentration interruption failed`, e));
+  });
+  Hooks.on("updateActiveEffect", (effect, changes) => {
+    // Only an activation or the addition of a new status should interrupt.
+    if (changes?.statuses !== undefined || changes?.disabled === false ||
+      changes?.["flags.core.statusId"] !== undefined) {
+      if (game.multiverseD616?.automationEnabled?.('concentration') !== false && breaksConcentration(effect))
+        void interruptConcentrationForCondition(effect).catch(e =>
+          console.error(`[${MODULE_ID}] Concentration interruption failed`, e));
+    }
+  });
   Hooks.on("deleteActiveEffect", (effect, _options, userId) => {
     const actor = effect?.parent;
     if (!actor || isInternalOperation(actor)) return;
@@ -906,6 +973,7 @@ export function registerConcentrationChatHooks() {
  * @returns {Promise<boolean>} true to continue, false to cancel
  */
 export async function handleConcentrationOnUse(actor, item) {
+  if (game.multiverseD616?.automationEnabled?.('concentration') === false) return true;
   if (!actor || !item) return true;
   if (!itemHasConcentration(item)) return true;
 

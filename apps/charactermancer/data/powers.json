@@ -32,14 +32,16 @@
         "cost": "",
         "effect": "O personagem troca os itens que possui com os itens de outra pessoa que ele possa ver dentro de 2 espaços por rank do personagem. Esses itens podem incluir armas, roupas ou qualquer outra coisa que esteja na outra pessoa mas não esteja presa a ela. Quando o efeito termina, os itens trocados retornam para as pessoas que os possuíam originalmente. O personagem pode trocar todas as suas posses, ou pode ser tão seletivo quanto quiser. Os itens devem geralmente ser trocados em uma base igual, mas é possível trocar algo por nada. Por exemplo, o personagem poderia trocar o que está em suas mãos pelo que está nas mãos do alvo. Se ele não estiver segurando nada e o alvo tiver uma pistola, ele pode trocar a pistola por nada. Se a pessoa com quem está trocando não estiver disposta, o personagem deve fazer um teste de Ego contra a defesa de Vigilance dessa pessoa para ter sucesso.",
         "quantity": 1,
-        "ability": "",
+        "ability": "ego",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "attackTarget": "vig",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -173,7 +175,7 @@
         "cost": "",
         "effect": "<p>Quando o personagem encontra um código desconhecido pela primeira vez, ele pode fazer um teste de ação de Lógica vs. TN 13 para decifrá-lo. Se ele já conhecer qualquer outra versão da língua na qual o código se baseia, terá vantagem. Em caso de sucesso, ele entende e pode se comunicar no código. Em um sucesso Fantástico, ele passa a entendê-lo e utilizá-lo permanentemente e nunca mais precisará fazer um teste para isso novamente. A comunicação de dados digitais é considerada uma forma de código, e o personagem pode usar esse poder para entender tais dados também.</p>",
         "quantity": 1,
-        "ability": "",
+        "ability": "log",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
@@ -183,7 +185,9 @@
         "isElemental": false,
         "attackTarget": "",
         "attackKind": "",
-        "attackEdgeMode": ""
+        "attackEdgeMode": "",
+        "rollTargetNumber": 13,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -518,7 +522,8 @@
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -1323,7 +1328,8 @@
         "attackRange": 0,
         "attackMultiplier": 0,
         "isElemental": false,
-        "attackEdgeMode": ""
+        "attackEdgeMode": "",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -1652,7 +1658,8 @@
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -1836,14 +1843,16 @@
         "cost": "15 Focus",
         "effect": "Com um toque, o personagem pode curar quaisquer aflições temporárias que um alvo esteja sofrendo. O personagem faz um teste de Ego contra TN 12. Em caso de sucesso, os efeitos da aflição terminam imediatamente. Em caso de sucesso Fantástico, trate o resultado como um teste de recuperação, e o alvo recupera a mesma quantidade de Health e Focus perdidos devido à condição. Isso pode afetar condições como em chamas, sangrando, cego, corroendo, surdo, desmoralizado, paralisado, envenenado e inconsciente. Se o alvo estava desmoralizado, ele agora tem 1 Focus, e se estava inconsciente, agora tem 1 Health. (Eles podem ter mais se o personagem obtiver um sucesso Fantástico e recuperar mais para eles.) Observe que isso só funciona em condições e doenças agudas, aquelas que o alvo contraiu recentemente e que, em circunstâncias ideais, se resolveriam em breve, mantendo-o vivo. Não afeta doenças crônicas ou permanentes, nem doenças graves que provavelmente seriam fatais. Por exemplo, pode curar surdez temporária mas não surdez permanente. Pode parar um ataque de alergia mas não curar as alergias em si. Pode curar veneno mas não câncer. Não tem efeito contra o vírus Tecno-Orgânico, o vírus Transmode, o vírus Legado ou doenças semelhantes.",
         "quantity": 1,
-        "ability": "",
+        "ability": "ego",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "rollTargetNumber": 12,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -2407,7 +2416,8 @@
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -2738,17 +2748,18 @@
         "cost": "",
         "effect": "<p>O personagem realiza um ataque de Agility contra um inimigo. Se o ataque for bem-sucedido, a teia causa dano em Health. Em um Sucesso Fantástico, o ataque também causa sangramento.</p>",
         "quantity": 1,
-        "ability": "",
-        "attack": false,
+        "ability": "agl",
+        "attack": true,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
         "isElemental": false,
-        "attackTarget": "",
+        "attackTarget": "agl",
         "attackKind": "",
-        "attackEdgeMode": ""
+        "attackEdgeMode": "",
+        "powerCheck": false
       },
       "flags": {
         "scene-packer": {
@@ -3299,14 +3310,16 @@
         "cost": "5 Focus",
         "effect": "O personagem invoca correntes cobertas de fogo infernal e pode usá-las para prender ou esmagar alvos. Ele pode atacar qualquer inimigo dentro de 10 espaços por rank e em sua linha de visão. Faça um ataque de Ego. Em caso de sucesso, o alvo sofre dano normal em Health. Em um sucesso Fantástico, o alvo também é agarrado e paralisado. Se um alvo estiver agarrado pelas correntes infernais, em cada rodada subsequente o personagem pode fazer um teste de Ego contra a defesa de Resilience do alvo para causar dano normal em Health e em Focus. Libertar-se das correntes infernais requer um teste de Melee com CD 20.",
         "quantity": 1,
-        "ability": "",
-        "attack": false,
+        "ability": "ego",
+        "attack": true,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "attackTarget": "ego",
+        "powerCheck": false
       },
       "flags": {
         "scene-packer": {
@@ -3660,7 +3673,7 @@
         "cost": "5 Focus",
         "effect": "<p>Ao atravessar uma pessoa em fase, o personagem pode tentar embaralhar o sistema nervoso dela. O personagem faz um teste de Ego contra a defesa de Resiliência do alvo. Em caso de sucesso, o alvo fica atordoado por uma rodada. Em um Sucesso Fantástico, o alvo também cai no chão (prone).</p>",
         "quantity": 1,
-        "ability": "",
+        "ability": "ego",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
@@ -3668,9 +3681,10 @@
         "attackRange": 0,
         "attackMultiplier": 0,
         "isElemental": false,
-        "attackTarget": "",
+        "attackTarget": "res",
         "attackKind": "",
-        "attackEdgeMode": ""
+        "attackEdgeMode": "",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -4472,7 +4486,8 @@
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -4743,14 +4758,17 @@
         "cost": "",
         "effect": "O personagem faz uma piada às custas do inimigo. Faça um ataque de Ego. Em caso de sucesso, causa dano normal de Focus. Em um Sucesso Fantástico, o dano é dobrado e o alvo fica atordoado por uma rodada.",
         "quantity": 1,
-        "ability": "",
-        "attack": false,
+        "ability": "ego",
+        "attack": true,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "attackTarget": "ego",
+        "powerCheck": false,
+        "damageType": "focus"
       },
       "folder": "bbe663a787c7ec04",
       "flags": {
@@ -5447,14 +5465,16 @@
         "cost": "15 or more Focus",
         "effect": "O personagem escolhe outro personagem em até 20 espaços e faz um ataque de Ego contra ele. Em caso de sucesso, remove todos os poderes do alvo. Se os poderes do alvo tiverem custos, o personagem deve pagar o maior deles, ou no mínimo 15 Focus.",
         "quantity": 1,
-        "ability": "",
+        "ability": "ego",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "attackTarget": "ego",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -6586,7 +6606,8 @@
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
-        "attackMultiplier": 0
+        "attackMultiplier": 0,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -7086,17 +7107,18 @@
         "cost": "",
         "effect": "<p>Com um toque, o personagem pode corromper uma pessoa e comandar sua lealdade absoluta. Em combate, isso requer um ataque de Melee bem-sucedido que cause pelo menos 1 ponto de dano. As roupas de um alvo corrompido parecem negativos fotográficos de suas cores normais. Se o alvo tiver a tag Heroic, substitua-a por Villainous e remova sua Karma. O alvo fica completamente dominado e seguirá as ordens do personagem corruptor. Se alguma ordem envolver ferir alguém, o alvo pode fazer um teste de ação de Ego contra a defesa de Ego do personagem corruptor para encerrar a dominação. Se o alvo originalmente tivesse a tag Heroic, ele recebe edge nesse teste. Se a ordem causaria dano a si mesmo, o alvo também recebe edge no teste, e se originalmente tivesse a tag Heroic, recebe double edge. Se um alvo com a tag Heroic se libertar desse poder, sua Karma é imediatamente restaurada ao valor normal antes da dominação.</p>",
         "quantity": 1,
-        "ability": "",
-        "attack": false,
+        "ability": "mle",
+        "attack": true,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
         "isElemental": false,
-        "attackTarget": "",
+        "attackTarget": "mle",
         "attackKind": "",
-        "attackEdgeMode": ""
+        "attackEdgeMode": "",
+        "powerCheck": false
       },
       "flags": {
         "scene-packer": {
@@ -7841,14 +7863,15 @@
         "cost": "10 focus",
         "effect": "O personagem produz uma maldição para ajudar a se proteger. Faça um teste de Ego. O resultado agora é a defesa do personagem contra qualquer ataque. Se o resultado não for tão alto quanto o personagem gostaria, ele pode encerrar a maldição e tentar novamente mais tarde. Em um sucesso Fantástico, a maldição também concede Redução de Dano de Health 1 por sua duração.",
         "quantity": 1,
-        "ability": "",
+        "ability": "ego",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -7932,8 +7955,8 @@
         "range": "",
         "cost": "10 Focus",
         "effect": "O personagem faz um teste de Ego com vantagem contra a defesa de Melee de um alvo em sua linha de visão. Se o ataque for bem-sucedido, as faixas carmesim paralisam o alvo. Em um sucesso Fantástico, o alvo também pode ser imobilizado. Escapar das faixas carmesim requer um teste de Melee com número-alvo 20.",
-        "ability": "log",
-        "attackTarget": "log",
+        "ability": "ego",
+        "attackTarget": "mle",
         "attackEdgeMode": "edge",
         "attackKind": "ranged",
         "quantity": 1,
@@ -7943,7 +7966,8 @@
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -8077,14 +8101,16 @@
         "cost": "",
         "effect": "O personagem pode alcançar com sua mente para sentir a presença de pessoas, lugares ou coisas sobrenaturais dentro de 100 espaços por rank. Isso informa a localização da coisa sobrenatural e seu estado geral. Se um alvo ou alvos desejarem permanecer indetectados, o personagem deve fazer um teste de Ego e compará-lo com a defesa de Vigilance de cada alvo. Se tiver sucesso, ele sente o alvo. Em um sucesso Fantástico, ele também pode identificar se o alvo está amaldiçoado ou é demoníaco.",
         "quantity": 1,
-        "ability": "",
+        "ability": "ego",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "attackTarget": "vig",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -8123,14 +8149,16 @@
         "cost": "5 Focus",
         "effect": "O personagem dá uma ordem a um alvo com quem tenha estabelecido um Vínculo Telepático. O personagem faz um teste de Lógica contra a defesa de Lógica do alvo. Em caso de sucesso, o alvo obedece à ordem. Em um Sucesso Fantástico, o personagem ganha uma vantagem na próxima vez que usar este poder contra o mesmo alvo. A ordem deve ser algo que possa ser concluído em uma única ação. Se envolver ferir alguém, o personagem tem desvantagem no teste. Se envolver o alvo se ferir, o personagem tem dupla desvantagem no teste.",
         "quantity": 1,
-        "ability": "",
+        "ability": "log",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "attackTarget": "log",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -9989,14 +10017,15 @@
         "cost": "",
         "effect": "O personagem pode se comunicar telepaticamente com uma máquina por vez, e deve já tê-la encontrado ou visto antes. A comunicação pode ser verbal, visual ou até mais complexa, como transmitir informações de localização. Não há limite de distância para a comunicação, contanto que o personagem e a máquina estejam na mesma dimensão. Máquinas simples não têm muito a oferecer em termos de conversa, mas geralmente obedecem a pedidos. Máquinas complexas — como computadores, smartphones e outros eletrônicos — também costumam obedecer, mas se tiverem algum tipo de segurança, normalmente se recusam a se comunicar com estranhos. Um teste de Lógica pode permitir que o personagem ultrapasse essa segurança, e o Narrador deve definir a CD de acordo com a força da proteção.",
         "quantity": 1,
-        "ability": "",
+        "ability": "log",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -12853,7 +12882,7 @@
         "cost": "5 Focus",
         "effect": "<p>Quando alguém se comunica em uma forma ativa que o personagem consiga entender — verbalmente, telepaticamente, usando linguagem de sinais e assim por diante — o personagem pode fazer um teste de Ego contra a defesa de Ego do comunicador. Em caso de sucesso, o personagem sabe se o comunicador está mentindo. Em um sucesso Fantástico, ele também sabe (se possível) por que o comunicador está mentindo. Este poder não permite ao personagem saber a verdade, embora ele possa deduzi-la detectando mentiras. Além disso, só funciona em comunicadores que sabem que estão mentindo. Se eles acreditarem no que estão dizendo — mesmo que esteja errado — nenhuma mentira poderá ser detectada.</p>",
         "quantity": 1,
-        "ability": "",
+        "ability": "ego",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
@@ -12861,9 +12890,10 @@
         "attackRange": 0,
         "attackMultiplier": 0,
         "isElemental": false,
-        "attackTarget": "",
+        "attackTarget": "ego",
         "attackKind": "",
-        "attackEdgeMode": ""
+        "attackEdgeMode": "",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -12956,12 +12986,13 @@
         "damageType": "health",
         "attackKind": "close",
         "quantity": 1,
-        "attack": false,
+        "attack": true,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
-        "attackMultiplier": 0
+        "attackMultiplier": 0,
+        "powerCheck": false
       },
       "flags": {
         "scene-packer": {
@@ -13461,14 +13492,15 @@
         "cost": "5 Focus",
         "effect": "O personagem cria uma duplicata ilusória de som e imagem por rank de uma pessoa que já tenha conhecido (incluindo a si mesmo). As duplicatas parecem e soam exatamente como o original e estão sob o controle total do personagem. Elas começam no mesmo espaço que o personagem e se movem instantaneamente para qualquer espaço livre ao redor, até 2 espaços de distância, momento em que o personagem pode trocar de lugar com qualquer uma das duplicatas. Se o personagem estiver duplicando a si mesmo, o jogador deve registrar secretamente qual deles é o verdadeiro. As duplicatas podem se mover até 10 espaços de distância do personagem e podem fingir atacar (e errar) os oponentes. Qualquer ataque que atinja uma duplicata a remove instantaneamente. Se o personagem atacar com sucesso alguém ou fizer algo que revele a verdade, a ilusão termina. Este feitiço também pode ser usado para ver através da ilusão de outra pessoa. Quando usado dessa forma, concede ao personagem uma vantagem dupla em seu teste de Ego.",
         "quantity": 1,
-        "ability": "",
+        "ability": "ego",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -13792,14 +13824,15 @@
         "cost": "20 ou mais Focus",
         "effect": "O personagem pode tentar trazer um alvo de volta da morte se isso for feito logo após a morte do alvo. Para tentar isso, deve ser possível tocar o corpo morto do alvo, e esse corpo deve estar relativamente intacto—ao menos o suficiente para que, se a pessoa voltasse à vida, não morresse instantaneamente de novo. O personagem faz um teste de Ego contra uma CD igual a 10 mais 1 para cada hora que o alvo esteve morto. Por exemplo, se o alvo esteve morto por quatro horas, a CD é 14. Em caso de sucesso, o alvo é restaurado com 1 de Vida. Em um sucesso Fantástico, o alvo é restaurado com Vida total. Com qualquer tipo de sucesso, o personagem que usou esse poder é então reduzido a 1 de Focus. Em uma falha, ele só precisa pagar o custo mínimo de 20 Focus.",
         "quantity": 1,
-        "ability": "",
+        "ability": "ego",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -13977,14 +14010,16 @@
         "cost": "5 Focus per turn",
         "effect": "O personagem faz um teste de Melee para tocar o alvo. Em caso de sucesso, o poder entra em efeito e aquele inimigo sofre desvantagem em todos os testes de ação feitos durante a duração do poder. Em um sucesso Fantástico, o alvo também recebe dano normal (não dobrado) de Melee. O personagem deve pagar o custo de Focus no início de cada um de seus turnos subsequentes de concentração para manter o poder ativo.",
         "quantity": 1,
-        "ability": "",
+        "ability": "mle",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "attackTarget": "mle",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -14213,14 +14248,16 @@
         "cost": "10 Focus",
         "effect": "O personagem faz um teste de Ego e compara contra a defesa de Vigilance de todos os inimigos dentro de 5 espaços. Cada inimigo superado fica cego por um turno. Em um sucesso Fantástico, o clarão também causa dano normal.",
         "quantity": 1,
-        "ability": "",
+        "ability": "ego",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "attackTarget": "vig",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -14354,14 +14391,16 @@
         "cost": "5 Focus",
         "effect": "Como uma ação padrão, o personagem pode abrir pequenos teleportais pelos quais pode atacar ou de outra forma afetar itens dentro de 10 vezes seu rank em espaços usando a mesma ação. Como uma reação, ele pode abrir um pequeno teleportal contra um ataque físico, desviando-o ou redirecionando-o para outro alvo. Ele pode desviar automaticamente qualquer ataque desse tipo que não seja um sucesso Fantástico. Redirecionar um ataque para outro alvo exige que o personagem faça um teste de Agility contra a defesa de Agility do novo alvo. Em caso de sucesso, use o dano do ataque original contra o novo alvo. Em um sucesso Fantástico, o dano é dobrado. Em caso de falha, o ataque original atinge o personagem em vez disso.",
         "quantity": 1,
-        "ability": "",
+        "ability": "agl",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "attackTarget": "agl",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -14498,7 +14537,7 @@
         "cost": "",
         "effect": "<p>Quando o personagem encontra uma forma desconhecida de comunicação pela primeira vez—uma que não dependa de audição, visão ou código—ele pode fazer um teste de Logic contra TN 13 para decifrá-la. Se já conhecer alguma outra versão da comunicação, terá vantagem. Em caso de sucesso, ele entende e pode usar essa forma de comunicação. Em um sucesso Fantástico, ele a compreende permanentemente, podendo usá-la sem precisar realizar novos testes no futuro. Isso funciona com formas de comunicação que incluam outros sentidos, como olfato, tato, paladar e similares.</p>",
         "quantity": 1,
-        "ability": "",
+        "ability": "log",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
@@ -14508,7 +14547,9 @@
         "isElemental": false,
         "attackTarget": "",
         "attackKind": "",
-        "attackEdgeMode": ""
+        "attackEdgeMode": "",
+        "rollTargetNumber": 13,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -15117,7 +15158,7 @@
         "cost": "",
         "effect": "<p>Quando o personagem encontra uma cultura pela primeira vez, ele pode fazer um teste de Logic contra TN 13 para decifrar sua linguagem corporal. Se ele já conhece alguma outra versão da língua dessa cultura, ele tem vantagem. Em um sucesso, ele entende e pode imitar a linguagem corporal. Em um sucesso Fantástico, ele a entende permanentemente e pode usá-la, nunca precisando fazer um teste para isso novamente. Isso cobre não apenas qualquer potencial linguagem corporal usada por uma espécie alienígena, mas também a linguagem corporal de espécies que usam outras formas de comunicação. Com tais espécies, compreender sua linguagem corporal permite ao personagem entender mais do que as palavras do alvo poderiam comunicar, como se a pessoa está agressiva, tímida, ansiosa, imprudente e assim por diante.</p>",
         "quantity": 1,
-        "ability": "",
+        "ability": "log",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
@@ -15127,7 +15168,9 @@
         "isElemental": false,
         "attackTarget": "",
         "attackKind": "",
-        "attackEdgeMode": ""
+        "attackEdgeMode": "",
+        "rollTargetNumber": 13,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -15408,7 +15451,7 @@
         "cost": "",
         "effect": "<p>Quando o personagem encontra uma linguagem de sinais desconhecida pela primeira vez, ele pode fazer um teste de Logic contra TN para decifrá-la. Se já conhecer alguma outra versão da língua, ele recebe edge. Em caso de sucesso, ele compreende e pode se comunicar na linguagem de sinais. Em um sucesso Fantástico, ele passa a compreender e se comunicar permanentemente, nunca precisando realizar o teste novamente.</p>",
         "quantity": 1,
-        "ability": "",
+        "ability": "log",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
@@ -15418,7 +15461,8 @@
         "isElemental": false,
         "attackTarget": "",
         "attackKind": "",
-        "attackEdgeMode": ""
+        "attackEdgeMode": "",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -15736,7 +15780,7 @@
         "ability": "log",
         "attackTarget": "log",
         "attackKind": "close",
-        "attack": true,
+        "attack": false,
         "damageType": "focus",
         "quantity": 1,
         "formula": "{1d6,1dm,1d6}",
@@ -15744,7 +15788,9 @@
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "powerCheck": true,
+        "attackEdgeMode": "trouble"
       },
       "flags": {
         "scene-packer": {
@@ -15878,14 +15924,16 @@
         "cost": "",
         "effect": "O personagem troca de lugar com outra pessoa que possa ver a até 2 espaços por rank do personagem. Quando o efeito termina, o personagem e a outra pessoa trocam de lugar novamente. Se a pessoa for relutante, o personagem deve fazer um teste de Ego contra a defesa de Vigilance dela para ter sucesso.",
         "quantity": 1,
-        "ability": "",
+        "ability": "ego",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "attackTarget": "vig",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -16919,7 +16967,8 @@
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
-        "attackMultiplier": 0
+        "attackMultiplier": 0,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -17110,7 +17159,8 @@
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
-        "attackMultiplier": 0
+        "attackMultiplier": 0,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -18480,7 +18530,8 @@
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
-        "attackMultiplier": 0
+        "attackMultiplier": 0,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -19249,14 +19300,16 @@
         "cost": "10 Focus",
         "effect": "O personagem conjura ventos giratórios que controla. Todo movimento de um inimigo dentro de 10 espaços por rank do personagem é reduzido pela metade. O personagem também pode usar essa magia para afastar fumaça, névoa ou neblina. Se tal coisa foi criada por um poder, o personagem faz um teste de Ego com edge contra a defesa de Ego do controlador adversário. Em caso de sucesso, o poder do controlador termina. Em um sucesso fantástico, o controlador é derrubado. Além disso, os Winds of Watoomb podem ser usados para reforçar o Shield of the Seraphim. O personagem pode transferir qualquer dano de Health que atravesse a proteção do Shield of the Seraphim para seu Focus, deixando o Shield of the Seraphim intacto.",
         "quantity": 1,
-        "ability": "",
+        "ability": "ego",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "attackTarget": "ego",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -20061,15 +20114,16 @@
         "ability": "log",
         "attackTarget": "mle",
         "attackKind": "ranged",
-        "attack": true,
-        "damageType": "health",
+        "attack": false,
+        "damageType": "",
         "quantity": 1,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -20675,14 +20729,16 @@
         "cost": "20 Focus",
         "effect": "O personagem pode trazer um alvo de volta de um estado despedaçado. Para tentar isso, o personagem faz um teste de Ego vs TN 20. Em um sucesso, o alvo é restaurado a 1 Focus. Em um Sucesso Fantástico, o alvo é restaurado ao Focus total. Com qualquer tipo de sucesso, o personagem que usou este poder é reduzido a 1 Focus. Em caso de falha, ele deve pagar apenas o custo mínimo de 20 Focus.",
         "quantity": 1,
-        "ability": "",
+        "ability": "ego",
         "attack": false,
         "formula": "{1d6,1dm,1d6}",
         "modifiers": [],
         "numbered": 0,
         "attackRange": 0,
         "attackMultiplier": 0,
-        "isElemental": false
+        "isElemental": false,
+        "rollTargetNumber": 20,
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {
@@ -20778,7 +20834,8 @@
         "attackMultiplier": 0,
         "element": "",
         "attackKind": "",
-        "attackEdgeMode": ""
+        "attackEdgeMode": "",
+        "powerCheck": true
       },
       "flags": {
         "scene-packer": {

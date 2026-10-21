@@ -1,8 +1,11 @@
 
 import { loadTraitsAndTags } from "./utils/mmc-load-traits-tags.js";
+import {dedupePowerCatalog, reconcilePowerCatalog, prepareCharacterPowers, powerIdentity, samePower, powersInSelectedSet} from "./utils/mmc-power-catalog.mjs";
 
-/* Marvel Multiverse — Charactermancer v0.6.10 */
-class MMCCharactermancer extends foundry.appv1.api.Application {
+/* Marvel Multiverse — Charactermancer v0.2.33 (Foundry v14 ApplicationV2) */
+// Keep the six established DOM-driven creation steps; only the application
+// lifecycle and window are migrated. Rules and character generation stay intact.
+class MMCCharactermancer extends foundry.applications.api.ApplicationV2 {
 
   /**
    * Localize a key with a safe fallback.
@@ -79,29 +82,7 @@ class MMCCharactermancer extends foundry.appv1.api.Application {
   }
 
   static _mmcDedupPowersByNameAndSet(arr){
-    try{
-      const map = new Map();
-      for (const it of arr||[]){
-        const nm = String(it?.name||"").toLowerCase().trim();
-        const set = String(it?.system?.powerSet||"").toLowerCase().trim();
-        if (!nm) continue;
-        const key = nm + "::" + set;
-        if (!map.has(key)) map.set(key, it);
-        else {
-          const cur = map.get(key);
-          const curWorld = String(cur?.pack||"").startsWith("world.");
-          const nowWorld = String(it?.pack||"").startsWith("world.");
-          if (nowWorld && !curWorld) map.set(key, it);
-          else {
-            const curT = Number(cur?._stats?.modifiedTime||0);
-            const nowT = Number(it?._stats?.modifiedTime||0);
-            if (nowT > curT) map.set(key, it);
-            else map.set(key, it);
-          }
-        }
-      }
-      return Array.from(map.values()).sort((a,b)=> (a?.name||"").localeCompare(b?.name||""));
-    }catch(e){ return Array.from(arr||[]); }
+    return dedupePowerCatalog(arr);
   }
 static async _mmcEnsureType(stub, fallback){
     try{
@@ -164,7 +145,7 @@ static async _mmcEnsureType(stub, fallback){
   }
 
   _clearPackCache(kind){
-    try { this.state = this.state || {}; this.state.cache = this.state.cache || {}; delete this.state.cache["packs_"+kind]; } catch(e){}
+    try { this.mmcState = this.mmcState || {}; this.mmcState.cache = this.mmcState.cache || {}; delete this.mmcState.cache["packs_"+kind]; } catch(e){}
   }
 
   /**
@@ -191,28 +172,14 @@ static async _mmcEnsureType(stub, fallback){
     try{
       const worldPowers = await this._getWorldItems("power"); const _wC = (worldPowers||[]).length;
       const packPowers  = await this._getPackItems("power"); const _pC = (packPowers||[]).length; console.info('[mmc] refresh powers: world=',_wC,'packs=',_pC);
-      const override = new Map();
-      for (const original of [...worldPowers, ...packPowers]){
-        const it = this._mmcUseCorrectedPowerCatalog(original);
-        if (!it?.name) continue;
-        override.set(String(it.name).toLowerCase(), it);
-      }
-      const base = Array.from(this.state.data.powers || []);
-      const merged = [];
-      const seen = new Set();
-      for (const it of base){
-        const key = String(it?.name||"").toLowerCase();
-        if (override.has(key)){ merged.push(override.get(key)); seen.add(key); }
-        else merged.push(it);
-      }
-      for (const [k, it] of override){
-        if (!seen.has(k)) merged.push(it);
-      }
-      this.state.data.powers = MMCCharactermancer._mmcDedupPowersByNameAndSet(merged);
+      const merged = reconcilePowerCatalog(
+        this.mmcState.data.powers || [], packPowers, worldPowers,
+        this._mmcCanonicalPowerCorrections || new Map());
+      this.mmcState.data.powers = merged;
     // Normalize powerSet labels across sources (fixes small punctuation/whitespace differences)
     try{
       const canon = s => String(s||"").replace(/[–—]/g,"-").replace(/\s+/g," ").trim();
-      this.state.data.powers = (this.state.data.powers||[]).map(p=>{
+      this.mmcState.data.powers = (this.mmcState.data.powers||[]).map(p=>{
         try{
           if (p?.system) p.system.powerSet = canon(p.system.powerSet);
         }catch(e){}
@@ -221,10 +188,10 @@ static async _mmcEnsureType(stub, fallback){
     }catch(e){} 
 
       if (renderAfter){
-        const panes = this.element?.[0]?.querySelectorAll?.('.mmc-scroll');
+        const panes = this.element?.querySelectorAll?.('.mmc-scroll');
         const scrolls = panes ? Array.from(panes).map(p=>p.scrollTop) : [];
         await this.render(false);
-        if (panes) Array.from(this.element?.[0]?.querySelectorAll?.('.mmc-scroll')||[]).forEach((p,i)=> p.scrollTop = scrolls[i]||0);
+        if (panes) Array.from(this.element?.querySelectorAll?.('.mmc-scroll')||[]).forEach((p,i)=> p.scrollTop = scrolls[i]||0);
       }
     }catch(e){ console.warn("[mmc] _refreshPowersFromCompendia failed", e); }
   }
@@ -330,7 +297,7 @@ static async _mmcEnsureType(stub, fallback){
 
   _restoreFocus(key){ try{ const sel = this._focus?.[key]; if(!sel) return; const el = this.element?.querySelector(sel.q); if(!el) return; el.focus(); if(typeof sel.pos==='number'){ try{ el.selectionStart=el.selectionEnd=Math.min(sel.pos, el.value?.length??0);}catch(e){} } }catch(e){} }
 
-  _restoreScroll(el, key){ try{ el.scrollTop = (this.state?.scroll?.[key] ?? 0); requestAnimationFrame(()=>{ try{ el.scrollTop = (this.state?.scroll?.[key] ?? 0); setTimeout(()=>{ try{ el.scrollTop = (this.state?.scroll?.[key] ?? 0); }catch(e){} }, 0); }catch(e){} }); }catch(e){} }
+  _restoreScroll(el, key){ try{ el.scrollTop = (this.mmcState?.scroll?.[key] ?? 0); requestAnimationFrame(()=>{ try{ el.scrollTop = (this.mmcState?.scroll?.[key] ?? 0); setTimeout(()=>{ try{ el.scrollTop = (this.mmcState?.scroll?.[key] ?? 0); }catch(e){} }, 0); }catch(e){} }); }catch(e){} }
 
   _justUpdateChips=false;
 
@@ -365,22 +332,28 @@ static async _mmcEnsureType(stub, fallback){
 
 
 
-  static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {
-      id: "mmc-app",
-      classes: ["mmc-app","sheet"],
-      title: "Marvel Multiverse — Charactermancer",
-      template: null,
-      width: 1100,
-      height: 700,
-      resizable: true
-    });
-  }
+  static DEFAULT_OPTIONS = {
+    id: 'mmc-app',
+    classes: ['mmc-app', 'sheet'],
+    tag: 'div',
+    window: {
+      frame: true,
+      positioned: true,
+      title: 'Marvel Multiverse — Charactermancer',
+      icon: 'fa-solid fa-mask',
+      resizable: true,
+      minimizable: true
+    },
+    position: { width: 1100, height: 700 }
+  };
+
   constructor(options={}) {
     super(options);
     this.steps = ["rank-abilities","occupation","origin","traits-tags","powers","review"];
     this.step = 0;
-    this.state = {
+    // ApplicationV2.state is a read-only lifecycle property in Foundry v14.
+    // Keep all six steps of the character creation wizard in independent state.
+    this.mmcState = {
       rank: 1,
       maxAbility: 4,
       abilityPointsByRank: {1:5,2:10,3:15,4:20,5:25,6:30}, // visual only; ajustável
@@ -416,22 +389,22 @@ static async _mmcEnsureType(stub, fallback){
       this._loadJSON(base+"powers.json").catch(()=>({items:[]})),
       this._loadJSON(base+"actor-modelo.json").catch(()=>({}))
     ]);
-    this.state.data.items = items.items ?? [];
-    this.state.data.occupations = occupations.items ?? [];
-    this.state.data.origins = origins.items ?? [];
-    this.state.data.traits = traits.items ?? [];
-    this.state.data.tags = tags.items ?? [];
-    this.state.data.powers = powers.items ?? [];
+    this.mmcState.data.items = items.items ?? [];
+    this.mmcState.data.occupations = occupations.items ?? [];
+    this.mmcState.data.origins = origins.items ?? [];
+    this.mmcState.data.traits = traits.items ?? [];
+    this.mmcState.data.tags = tags.items ?? [];
+    this.mmcState.data.powers = powers.items ?? [];
     const correctedPowerIds = new Set(["8MaB6fHzANxJzpbq", "zFthXeiXzdI646hT", "V29Yrxdf0uiGQgMF", "nnmvCBn8OGU03QvH", "UbhhYpzKg4XTis2V", "491xrGpqoQAbGdGo", "JowNvBE3za7LGiV4", "fIYIWtQcvFzwnjNg", "fd3AyzufIQFe4TqS", "KQxISBVt5QDnkh6C", "IBkz80gRi2Kq3Tgt", "2bWg8lf2ZwkyiKiB", "6PApDX5qMnMqgRa3", "KOGbtsAQoEHQm7gg", "KdVAEjrKMnvmyfIV", "UQG3sZnzI8JvK34o", "VLbgw5shFgAQcYDI", "WUKnnYcEInYLJBfp", "YknqhTMOfiRP7aZX", "ZughvwBl1xGSpx6Q", "ZzRySxUQjMJ6rZ7S", "iEWHhcouN1guY3TE", "n7LkZDiJaeOk3ChY", "v4wnQsxkb32CNQay", "vvAff82Tqkg2SS1q"]);
     this._mmcCanonicalPowerCorrections = new Map(
-      (this.state.data.powers || []).filter(p=>correctedPowerIds.has(p._id)).map(p=>[
+      (this.mmcState.data.powers || []).filter(p=>correctedPowerIds.has(p._id)).map(p=>[
         p._id, { name:p.name, prerequisites:p.system?.prerequisites || '' }
       ])
     );
     // Normalize powerSet labels across sources (fixes small punctuation/whitespace differences)
     try{
       const canon = s => String(s||"").replace(/[–—]/g,"-").replace(/\s+/g," ").trim();
-      this.state.data.powers = (this.state.data.powers||[]).map(p=>{
+      this.mmcState.data.powers = (this.mmcState.data.powers||[]).map(p=>{
         try{
           if (p?.system) p.system.powerSet = canon(p.system.powerSet);
         }catch(e){}
@@ -439,7 +412,7 @@ static async _mmcEnsureType(stub, fallback){
       });
     }catch(e){} 
 
-    this.state.actorModel = actorModel;
+    this.mmcState.actorModel = actorModel;
 
     // Sort everything by name
     const byName = (a,b)=> (a?.name||"").localeCompare(b?.name||"");
@@ -448,30 +421,13 @@ static async _mmcEnsureType(stub, fallback){
     try{
       const worldPowers = await this._getWorldItems("power"); const _wC = (worldPowers||[]).length;
       const packPowers = await this._preloadKindFromPacks("power");
-      const override = new Map();
-      for (const original of [...worldPowers, ...packPowers]){
-        const it = this._mmcUseCorrectedPowerCatalog(original);
-        if (!it?.name) continue;
-        override.set(String(it.name).toLowerCase(), it);
-      }
-      if (override.size){
-        const base = Array.from(this.state.data.powers || []);
-        const merged = [];
-        const seen = new Set();
-        for (const it of base){
-          const key = String(it?.name||"").toLowerCase();
-          if (override.has(key)){ merged.push(override.get(key)); seen.add(key); }
-          else merged.push(it);
-        }
-        // Include any extra powers that exist only in packs/world
-        for (const [k, it] of override){
-          if (!seen.has(k)) merged.push(it);
-        }
-        this.state.data.powers = MMCCharactermancer._mmcDedupPowersByNameAndSet(merged);
+      this.mmcState.data.powers = reconcilePowerCatalog(
+        this.mmcState.data.powers || [], packPowers, worldPowers,
+        this._mmcCanonicalPowerCorrections || new Map());
     // Normalize powerSet labels across sources (fixes small punctuation/whitespace differences)
     try{
       const canon = s => String(s||"").replace(/[–—]/g,"-").replace(/\s+/g," ").trim();
-      this.state.data.powers = (this.state.data.powers||[]).map(p=>{
+      this.mmcState.data.powers = (this.mmcState.data.powers||[]).map(p=>{
         try{
           if (p?.system) p.system.powerSet = canon(p.system.powerSet);
         }catch(e){}
@@ -479,32 +435,80 @@ static async _mmcEnsureType(stub, fallback){
       });
     }catch(e){} 
 
-      }
     }catch(e){ console.warn("[mmc] merge powers from packs/world failed", e); }
 
     // Atualiza poderes a partir de Compêndios/Mundo
     await this._refreshPowersFromCompendia(false);
-for (const k of ["items","occupations","origins","traits","tags","powers"]) this.state.data[k].sort(byName);
+for (const k of ["items","occupations","origins","traits","tags","powers"]) this.mmcState.data[k].sort(byName);
 
     // Power sets
-    const sets = Array.from(new Set((this.state.data.powers||[]).map(p=>p.system?.powerSet).filter(Boolean))).sort();
-    this.state.powerSets = sets.filter(s=>s!=="Basic");
-    this.state.powerSet = this.state.powerSets[0] ?? "";
+    const sets = Array.from(new Set((this.mmcState.data.powers||[]).map(p=>p.system?.powerSet).filter(Boolean))).sort();
+    this.mmcState.powerSets = sets.filter(s=>s!=="Basic");
+    this.mmcState.powerSet = this.mmcState.powerSets[0] ?? "";
 
     // Prefill bio from model
     const m = actorModel?.system||{};
     const bioKeys = ["codename","realname","height","weight","gender","eyes","hair","size","teams","history","personality"];
-    for (const k of bioKeys) this.state.bio[k] = m[k] ?? this.state.bio[k];
+    for (const k of bioKeys) this.mmcState.bio[k] = m[k] ?? this.mmcState.bio[k];
 
     this._loaded = true;
   }
 
-  getData(){ return {}; }
+  async render(force, opts) {
+    // Data must be loaded before the first ApplicationV2 render; keep the
+    // old call pattern used by the directory button and step navigation.
+    await this._ensureData();
+    return super.render(force, opts);
+  }
 
-  async render(force, opts){ await this._ensureData(); return super.render(force, opts); }
+  async _renderHTML(context, options) {
+    return this._renderInner(context);
+  }
+
+  _replaceHTML(element, content, options) {
+    // ApplicationV2 expects a native HTMLElement (never a jQuery collection).
+    content.replaceChildren(element);
+  }
+
+  async _onRender(context, options) {
+    await super._onRender?.(context, options);
+    const body = this.element?.querySelector('.mmc-body');
+    if (body && Number.isFinite(this._mmcBodyScroll)) {
+      body.scrollTop = this._mmcBodyScroll;
+    }
+    if (this.step === 4 && this._focus?.['powers-basic']) {
+      this._restoreFocus('powers-basic');
+    }
+  }
+
+  _onClose(options) {
+    this._mmcClosePowerEffect();
+    super._onClose?.(options);
+  }
 
   async _renderInner(data) {
-    const wrap = document.createElement("div");
+    this._mmcBodyScroll = this.element?.querySelector('.mmc-body')?.scrollTop ?? 0;
+    const wrap = document.createElement('div');
+    wrap.className = 'mmc-shell';
+
+    const heading = document.createElement('header');
+    heading.className = 'mmc-heading';
+    const intro = document.createElement('div');
+    intro.className = 'mmc-heading-copy';
+    const eyebrow = document.createElement('span');
+    eyebrow.className = 'mmc-eyebrow';
+    eyebrow.textContent = 'MARVEL MULTIVERSE RPG';
+    const title = document.createElement('h2');
+    title.textContent = 'Criação de Personagem';
+    const subheading = document.createElement('p');
+    subheading.textContent = 'Defina seu herói em seis etapas.';
+    intro.append(eyebrow, title, subheading);
+    const progress = document.createElement('div');
+    progress.className = 'mmc-progress';
+    progress.setAttribute('aria-live', 'polite');
+    progress.textContent = `ETAPA ${this.step + 1} DE ${this.steps.length}`;
+    heading.append(intro, progress);
+    wrap.appendChild(heading);
 
     // Header / Steps
     const stepsBar = document.createElement("div");
@@ -514,6 +518,7 @@ for (const k of ["items","occupations","origins","traits","tags","powers"]) this
       el.className = "mmc-step"+(i===this.step?" active":"");
       const label = this._labelFor(s);
       el.textContent = `${i+1}. ${label}`;
+      if (i === this.step) el.setAttribute('aria-current', 'step');
       stepsBar.appendChild(el);
     });
     wrap.appendChild(stepsBar);
@@ -540,7 +545,7 @@ for (const k of ["items","occupations","origins","traits","tags","powers"]) this
     nav.appendChild(back); nav.appendChild(next);
     wrap.appendChild(nav);
 
-    return $(wrap);
+    return wrap;
   }
 
   _refreshPowerChips(){
@@ -577,7 +582,7 @@ for (const k of ["items","occupations","origins","traits","tags","powers"]) this
 
 
 _getChosenSetsCount(){
-  const sets = new Set(this.state.chosenPowers.map(x=> (x.system?.powerSet ?? "Basic")).filter(s=> s !== "Basic"));
+  const sets = new Set(this.mmcState.chosenPowers.map(x=> (x.system?.powerSet ?? "Basic")).filter(s=> s !== "Basic"));
   return sets.size;
 }
 
@@ -586,8 +591,8 @@ _getChosenSetsCount(){
     // Powers granted by Occupation and Origin (and possibly Tags in future)
     const out = [];
     const pushAll = (arr,src)=>{ if (Array.isArray(arr)) for (const p of arr) if (p) { const q=foundry.utils.deepClone(p); q._grantedFrom=src; out.push(q);} };
-    try{ pushAll(this.state.occupation?.system?.powers || [], 'occupation'); }catch(e){}
-    try{ pushAll(this.state.origin?.system?.powers || [], 'origin'); }catch(e){}
+    try{ pushAll(this.mmcState.occupation?.system?.powers || [], 'occupation'); }catch(e){}
+    try{ pushAll(this.mmcState.origin?.system?.powers || [], 'origin'); }catch(e){}
     // Deduplicate by _id or name
     const seen = new Set(); const seenN = new Set(); const uniq=[];
     for (const p of out){ const id=p._id||null; const nm=(p.name||'').toLowerCase(); if ((id && seen.has(id))||(nm && seenN.has(nm))) continue; if(id) seen.add(id); if(nm) seenN.add(nm); uniq.push(p); }
@@ -603,8 +608,8 @@ _getChosenSetsCount(){
   }
 
 _computePowerLimit(){
-  const r = this.state.rank || 1;
-  const m = this.state.powerLimitMatrix?.[r];
+  const r = this.mmcState.rank || 1;
+  const m = this.mmcState.powerLimitMatrix?.[r];
   if (!m) return 4;
   const n = this._getChosenSetsCount();
   // Resolve key based on chosen set count
@@ -636,11 +641,9 @@ async _renderStep(){
 
 
   _getMaxAttributeForRank(rank){
-    const r = Number(rank || this.state.rank || 1);
+    const r = Number(rank || this.mmcState.rank || 1);
     return Math.max(1, r + 3);
   }
-
-  activateListeners(html){ try{ const pad=8; const w=Math.max(640, window.innerWidth-pad*2); const h=Math.max(480, window.innerHeight-pad*2); }catch(e){} super.activateListeners?.(html); }
 
   
 _renderRankStep(){
@@ -654,7 +657,7 @@ _renderRankStep(){
     const S = this._rankSummaries();
     [1,2,3,4,5,6].forEach(r=>{
       const row = document.createElement("div"); row.className="mmc-pwr";
-      const active = (this.state.rank===r) ? ' style="border:1px solid var(--mmc-accent);border-radius:8px;padding:6px;"' : "";
+      const active = (this.mmcState.rank===r) ? ' style="border:1px solid var(--mmc-accent);border-radius:8px;padding:6px;"' : "";
       row.innerHTML = `<div class="name"${active}>Rank ${r}</div>
       <div class="desc mmc-small">Máx. atributo: ${S[r].maxAbility} • Limite de poderes: ${S[r].powerLimit} ${S[r].note?("• "+S[r].note):""}</div>
       <div><button class="mmc-btn" data-pick-rank="${r}">Selecionar</button></div>`;
@@ -662,8 +665,8 @@ _renderRankStep(){
     });
     left.appendChild(list);
     // restore scroll (immediate + next tick)
-    try{ if (this.state.scroll && this.state.scroll.rankList!=null) list.scrollTop = this.state.scroll.rankList; }catch(e){}
-    try{ const prev = (this.state?.scroll?.rankList ?? null); if (prev!=null) requestAnimationFrame(()=>{ try{ const ll = left.querySelector('.mmc-list'); if (ll) ll.scrollTop = prev; }catch(e){} }); }catch(e){}
+    try{ if (this.mmcState.scroll && this.mmcState.scroll.rankList!=null) list.scrollTop = this.mmcState.scroll.rankList; }catch(e){}
+    try{ const prev = (this.mmcState?.scroll?.rankList ?? null); if (prev!=null) requestAnimationFrame(()=>{ try{ const ll = left.querySelector('.mmc-list'); if (ll) ll.scrollTop = prev; }catch(e){} }); }catch(e){}
     wrap.appendChild(left);
 
     // Right: Attributes as dropdowns
@@ -671,12 +674,12 @@ _renderRankStep(){
     right.innerHTML = `<h3>Atributos (M.A.R.V.E.L.)</h3>`;
     const labels = {mle:"Melee", agl:"Agility", res:"Resilience", vig:"Vigilance", ego:"Ego", log:"Logic"};
     const keys = ["mle","agl","res","vig","ego","log"];
-    const pointsBudget = this.state.abilityPointsByRank[this.state.rank] ?? 0;
-    const maxA = this._getMaxAttributeForRank(this.state.rank);
+    const pointsBudget = this.mmcState.abilityPointsByRank[this.mmcState.rank] ?? 0;
+    const maxA = this._getMaxAttributeForRank(this.mmcState.rank);
     const allowedFor = (name) => {
       const out = [];
       for (let v=-3; v<=maxA; v++){
-        const cur = {...(this.state.abilities||{})};
+        const cur = {...(this.mmcState.abilities||{})};
         cur[name] = Number(v||0);
         let pos=0, neg=0;
         for (const k of keys){ const val = Number(cur[k]||0); if (val>=0) pos+=val; else neg+=-val; }
@@ -688,7 +691,7 @@ _renderRankStep(){
       const field = document.createElement("div"); field.className="mmc-field";
       const sel = document.createElement("select"); sel.name=k; sel.className="mmc-attr-select";
       const allowed = allowedFor(k);
-      const current = Number((this.state.abilities||{})[k] ?? 0);
+      const current = Number((this.mmcState.abilities||{})[k] ?? 0);
       for (const v of allowed){
         const opt = document.createElement("option");
         opt.value = String(v);
@@ -698,25 +701,25 @@ _renderRankStep(){
       }
       // Garantir que um valor apareça no controle
       if (allowed.includes(current)) sel.value = String(current);
-      else if (allowed.includes(0)) { sel.value = "0"; this.state.abilities[k] = 0; }
-      else if (allowed.length) { sel.value = String(allowed[0]); this.state.abilities[k] = allowed[0]; }
+      else if (allowed.includes(0)) { sel.value = "0"; this.mmcState.abilities[k] = 0; }
+      else if (allowed.length) { sel.value = String(allowed[0]); this.mmcState.abilities[k] = allowed[0]; }
       
       // Garantir que um valor apareça no controle
       if (allowed.includes(current)) sel.value = String(current);
-      else if (allowed.includes(0)) { sel.value = "0"; this.state.abilities[k] = 0; }
-      else if (allowed.length) { sel.value = String(allowed[0]); this.state.abilities[k] = Number(allowed[0]||0); }
+      else if (allowed.includes(0)) { sel.value = "0"; this.mmcState.abilities[k] = 0; }
+      else if (allowed.length) { sel.value = String(allowed[0]); this.mmcState.abilities[k] = Number(allowed[0]||0); }
 sel.addEventListener("change", (ev)=>{
         const v = Number(ev.target.value||0);
-        this.state.abilities[k] = v;
-        try{ this.state.scroll = this.state.scroll || {}; this.state.scroll.rankList = list.scrollTop; }catch(e){}
+        this.mmcState.abilities[k] = v;
+        try{ this.mmcState.scroll = this.mmcState.scroll || {}; this.mmcState.scroll.rankList = list.scrollTop; }catch(e){}
         this._refreshPowerChips();
       });
       field.innerHTML = `<label>${labels[k]}</label>`;
       field.appendChild(sel);
       right.appendChild(field);
     }
-    const sumPos = Object.values(this.state.abilities||{}).reduce((a,b)=>a + (b>0?b:0),0);
-    const refund = Object.values(this.state.abilities||{}).reduce((a,b)=>a + (b<0?(-b):0),0);
+    const sumPos = Object.values(this.mmcState.abilities||{}).reduce((a,b)=>a + (b>0?b:0),0);
+    const refund = Object.values(this.mmcState.abilities||{}).reduce((a,b)=>a + (b<0?(-b):0),0);
     const rest = pointsBudget + refund - sumPos;
     const restEl = document.createElement("div"); restEl.className="mmc-small"; restEl.textContent = `Pontos restantes: ${rest}`;
     right.appendChild(restEl);
@@ -725,11 +728,11 @@ sel.addEventListener("change", (ev)=>{
     // Listeners
     left.querySelectorAll("[data-pick-rank]").forEach(btn=> btn.addEventListener("click", ev=>{
       const rank = Number(ev.currentTarget.dataset.pickRank||ev.currentTarget.getAttribute("data-pick-rank"));
-      const was = this.state.rank;
-      this.state.rank = rank;
-      this.state.maxAbility = this._getMaxAttributeForRank(rank);
-      if (rank !== was) { this.state.abilities = {mle:0, agl:0, res:0, vig:0, ego:0, log:0}; }
-      try{ this.state.scroll = this.state.scroll || {}; this.state.scroll.rankList = list.scrollTop; }catch(e){}
+      const was = this.mmcState.rank;
+      this.mmcState.rank = rank;
+      this.mmcState.maxAbility = this._getMaxAttributeForRank(rank);
+      if (rank !== was) { this.mmcState.abilities = {mle:0, agl:0, res:0, vig:0, ego:0, log:0}; }
+      try{ this.mmcState.scroll = this.mmcState.scroll || {}; this.mmcState.scroll.rankList = list.scrollTop; }catch(e){}
       this._refreshPowerChips();
     }));
 
@@ -766,9 +769,9 @@ _renderSelectionDetails(kind, sel){
 }
 async _preloadKindFromPacks(kind){
     try{
-      this.state = this.state || {};
-      this.state.cache = this.state.cache || {};
-      if (this.state.cache["packs_"+kind]) return this.state.cache["packs_"+kind];
+      this.mmcState = this.mmcState || {};
+      this.mmcState.cache = this.mmcState.cache || {};
+      if (this.mmcState.cache["packs_"+kind]) return this.mmcState.cache["packs_"+kind];
       const packs = Array.from(game.packs||[]).filter(p=> p.documentName==="Item");
       let results = [];
       for (const p of packs){
@@ -781,7 +784,7 @@ async _preloadKindFromPacks(kind){
           }
         }catch(e){}
       }
-      this.state.cache["packs_"+kind] = results;
+      this.mmcState.cache["packs_"+kind] = results;
       return results;
     }catch(e){ return []; }
   }
@@ -805,14 +808,14 @@ async _preloadKindFromPacks(kind){
     wrap.appendChild(left);
 
     // RIGHT column
-    const right = this._renderSelectionDetails(kind, (kind==="occupation"?this.state.occupation:this.state.origin) || null);
+    const right = this._renderSelectionDetails(kind, (kind==="occupation"?this.mmcState.occupation:this.mmcState.origin) || null);
     wrap.appendChild(right);
 
     const keyOf = (o)=> String(o?.name || "").toLowerCase().trim();
     const collator = new Intl.Collator(game.i18n?.lang || "pt-BR", { sensitivity: "base" });
 
     // Data sources
-    const base = (kind==="occupation"?(this.state.data.occupations||[]):(this.state.data.origins||[]));
+    const base = (kind==="occupation"?(this.mmcState.data.occupations||[]):(this.mmcState.data.origins||[]));
     let packsItems = [];
     let worldItems = [];
     try { worldItems = (game.items?.contents ?? []).filter(i=> i?.type===kind).map(i=> i.toObject()); } catch(e) {}
@@ -834,7 +837,7 @@ async _preloadKindFromPacks(kind){
         const row = document.createElement("div"); row.className="mmc-pwr";
         const pickKey = keyOf(o);
         const minimumRank = kind === "origin" ? Number(o.system?.minimumRank ?? 0) || 0 : 0;
-        const rankBlocked = minimumRank > Number(this.state.rank ?? 1);
+        const rankBlocked = minimumRank > Number(this.mmcState.rank ?? 1);
         const action = rankBlocked
           ? `<button class="mmc-btn" disabled title="Requer Rank ${minimumRank}">Rank ${minimumRank}</button>`
           : `<button class="mmc-btn" data-pick="${pickKey}">${MMCCharactermancer.mmcLocalize("MMC.Select", "Selecionar")}</button>`;
@@ -844,7 +847,7 @@ async _preloadKindFromPacks(kind){
       list.querySelectorAll("[data-pick]").forEach(btn=> btn.addEventListener("click", (ev)=>{
         const k = ev.currentTarget.dataset.pick;
         const obj = src.find(x=> keyOf(x)===k) ?? null;
-        if (kind==="occupation") this.state.occupation=obj; else this.state.origin=obj;
+        if (kind==="occupation") this.mmcState.occupation=obj; else this.mmcState.origin=obj;
         const html = this._renderSelectionDetails(kind, obj).innerHTML;
         const currentRight = wrap.querySelector(".mmc-selected");
         if (currentRight) currentRight.innerHTML = html;
@@ -870,18 +873,18 @@ _renderTraitsTags(){
     const wrap = document.createElement("div"); 
     wrap.className="mmc-grid";
 
-    this.state.search = this.state.search || {};
-    this.state.scroll = this.state.scroll || {};
-    this.state.selectedTraits = this.state.selectedTraits || [];
-    this.state.selectedTags = this.state.selectedTags || [];
+    this.mmcState.search = this.mmcState.search || {};
+    this.mmcState.scroll = this.mmcState.scroll || {};
+    this.mmcState.selectedTraits = this.mmcState.selectedTraits || [];
+    this.mmcState.selectedTags = this.mmcState.selectedTags || [];
 
     const grantedTraits = [
-      ...(this.state.occupation?.system?.traits || []),
-      ...(this.state.origin?.system?.traits || [])
+      ...(this.mmcState.occupation?.system?.traits || []),
+      ...(this.mmcState.origin?.system?.traits || [])
     ].filter(Boolean);
     const grantedTags = [
-      ...(this.state.occupation?.system?.tags || []),
-      ...(this.state.origin?.system?.tags || [])
+      ...(this.mmcState.occupation?.system?.tags || []),
+      ...(this.mmcState.origin?.system?.tags || [])
     ].filter(Boolean);
 
     const traitIdSet = new Set(grantedTraits.map(t=>t?._id).filter(Boolean));
@@ -898,15 +901,15 @@ _renderTraitsTags(){
     const isGrantedTrait = (t)=> traitIdSet.has(t?._id) || traitNameSet.has(String(t?.name||"").toLowerCase());
     const isGrantedTag = (t)=> tagIdSet.has(t?._id) || tagNameSet.has(String(t?.name||"").toLowerCase());
 
-    const extraAllowed = Number(this.state.rank || 1);
-    const used = (this.state.selectedTraits || []).length;
+    const extraAllowed = Number(this.mmcState.rank || 1);
+    const used = (this.mmcState.selectedTraits || []).length;
     const remaining = Math.max(0, extraAllowed - used);
 
     // ===== Left column: Traits list
     const left = document.createElement("div"); left.className="mmc-card";
     left.innerHTML = `<h3>Traços</h3>
       <div id="mmc-traits-remaining" class="mmc-small">Traços extras restantes: ${remaining} (de ${extraAllowed})</div>
-      <input class="mmc-search" name="search-traits" placeholder="Buscar..." value="${this.state.search?.traits || ""}"> `;
+      <input class="mmc-search" name="search-traits" placeholder="Buscar..." value="${this.mmcState.search?.traits || ""}"> `;
     const listT = document.createElement("div"); listT.className="mmc-list"; listT.setAttribute("data-kind","traits");
     left.appendChild(listT);
     wrap.appendChild(left);
@@ -914,12 +917,12 @@ _renderTraitsTags(){
     const renderListTraits = () => {
       const prev = listT.scrollTop;
       listT.innerHTML = "";
-      const tq = (this.state.search?.traits || "").toLowerCase();
-      const remainingNow = Math.max(0, Number(this.state.rank || 1) - (this.state.selectedTraits || []).length);
+      const tq = (this.mmcState.search?.traits || "").toLowerCase();
+      const remainingNow = Math.max(0, Number(this.mmcState.rank || 1) - (this.mmcState.selectedTraits || []).length);
       const remEl = left.querySelector("#mmc-traits-remaining");
-      if (remEl) remEl.textContent = `Traços extras restantes: ${remainingNow} (de ${Number(this.state.rank || 1)})`;
+      if (remEl) remEl.textContent = `Traços extras restantes: ${remainingNow} (de ${Number(this.mmcState.rank || 1)})`;
 
-      (this.state.data?.traits || [])
+      (this.mmcState.data?.traits || [])
         .filter(t => {
           const name = String(t?.name || "").toLowerCase();
           const desc = String(t?.system?.description || "").toLowerCase();
@@ -931,7 +934,7 @@ _renderTraitsTags(){
           const row = document.createElement("div"); row.className="mmc-pwr";
           const repeatable = isRepeatable(t);
           const granted = isGrantedTrait(t);
-          const picked = (this.state.selectedTraits || []).some(x=>sameItem(x,t));
+          const picked = (this.mmcState.selectedTraits || []).some(x=>sameItem(x,t));
           const disableByGrant = granted && !repeatable;
           const disableByPicked = picked && !repeatable;
           const disabled = disableByGrant || disableByPicked || remainingNow <= 0;
@@ -953,35 +956,35 @@ _renderTraitsTags(){
 
       listT.querySelectorAll("[data-add-trait]").forEach(btn=> btn.addEventListener("click", ev=>{
         const id = ev.currentTarget.dataset.addTrait;
-        const obj = (this.state.data?.traits||[]).find(x=>x._id===id);
+        const obj = (this.mmcState.data?.traits||[]).find(x=>x._id===id);
         if (!obj) return;
 
-        const remainingAtClick = Math.max(0, Number(this.state.rank || 1) - (this.state.selectedTraits || []).length);
+        const remainingAtClick = Math.max(0, Number(this.mmcState.rank || 1) - (this.mmcState.selectedTraits || []).length);
         if (remainingAtClick <= 0) {
           ui.notifications?.warn("Você já escolheu todos os Traços bônus.");
           return;
         }
 
         if (!isRepeatable(obj)) {
-          const duplicate = (this.state.selectedTraits||[]).some(x=>sameItem(x,obj));
+          const duplicate = (this.mmcState.selectedTraits||[]).some(x=>sameItem(x,obj));
           if (duplicate) return;
         }
 
-        this.state.selectedTraits.push(foundry.utils.deepClone(obj));
-        this.state.scroll["traits"] = listT.scrollTop;
+        this.mmcState.selectedTraits.push(foundry.utils.deepClone(obj));
+        this.mmcState.scroll["traits"] = listT.scrollTop;
         this._refreshPowerChips();
       }));
     };
     renderListTraits();
-    if (this.state.scroll["traits"]!=null) {
-      listT.scrollTop = this.state.scroll["traits"];
-      requestAnimationFrame(()=>{ listT.scrollTop = this.state.scroll["traits"]; });
+    if (this.mmcState.scroll["traits"]!=null) {
+      listT.scrollTop = this.mmcState.scroll["traits"];
+      requestAnimationFrame(()=>{ listT.scrollTop = this.mmcState.scroll["traits"]; });
     }
 
     // ===== Right column: Tags list
     const rightTop = document.createElement("div"); rightTop.className="mmc-card";
     rightTop.innerHTML = `<h3>Tags</h3>
-      <input class="mmc-search" name="search-tags" placeholder="Buscar..." value="${this.state.search?.tags || ""}"> `;
+      <input class="mmc-search" name="search-tags" placeholder="Buscar..." value="${this.mmcState.search?.tags || ""}"> `;
     const listG = document.createElement("div"); listG.className="mmc-list"; listG.setAttribute("data-kind","tags");
     rightTop.appendChild(listG);
     wrap.appendChild(rightTop);
@@ -989,8 +992,8 @@ _renderTraitsTags(){
     const renderListTags = () => {
       const prev = listG.scrollTop;
       listG.innerHTML = "";
-      const gq = (this.state.search?.tags || "").toLowerCase();
-      (this.state.data?.tags || [])
+      const gq = (this.mmcState.search?.tags || "").toLowerCase();
+      (this.mmcState.data?.tags || [])
         .filter(t => {
           const name = String(t?.name || "").toLowerCase();
           const desc = String(t?.system?.description || "").toLowerCase();
@@ -1000,7 +1003,7 @@ _renderTraitsTags(){
           const row = document.createElement("div"); row.className="mmc-pwr";
           const repeatable = isRepeatable(t);
           const granted = isGrantedTag(t);
-          const picked = (this.state.selectedTags || []).some(x=>sameItem(x,t));
+          const picked = (this.mmcState.selectedTags || []).some(x=>sameItem(x,t));
           const disabled = !repeatable && (granted || picked);
 
           const actionLabel = repeatable && (granted || picked) ? "Selecionar novamente" : "Selecionar";
@@ -1020,16 +1023,16 @@ _renderTraitsTags(){
 
       listG.querySelectorAll("[data-add-tag]").forEach(btn=> btn.addEventListener("click", ev=>{
         const id = ev.currentTarget.dataset.addTag;
-        const obj = (this.state.data?.tags||[]).find(x=>x._id===id);
+        const obj = (this.mmcState.data?.tags||[]).find(x=>x._id===id);
         if (!obj) return;
 
         if (!isRepeatable(obj)) {
-          const duplicate = (this.state.selectedTags||[]).some(x=>sameItem(x,obj));
+          const duplicate = (this.mmcState.selectedTags||[]).some(x=>sameItem(x,obj));
           if (duplicate || isGrantedTag(obj)) return;
         }
 
-        this.state.selectedTags.push(foundry.utils.deepClone(obj));
-        this.state.scroll["tags"] = listG.scrollTop;
+        this.mmcState.selectedTags.push(foundry.utils.deepClone(obj));
+        this.mmcState.scroll["tags"] = listG.scrollTop;
         this._refreshPowerChips();
       }));
     };
@@ -1037,19 +1040,19 @@ _renderTraitsTags(){
 
     // === Live-load Traits & Tags from World/Compendia (no cache), then refresh lists ===
     try {
-      const prevT = this.state?.scroll?.["traits"] ?? listT.scrollTop;
-      const prevG = this.state?.scroll?.["tags"] ?? listG.scrollTop;
+      const prevT = this.mmcState?.scroll?.["traits"] ?? listT.scrollTop;
+      const prevG = this.mmcState?.scroll?.["tags"] ?? listG.scrollTop;
       loadTraitsAndTags().then(({traits, tags}) => {
         const mergeByName = (base, fresh) => {
           const map = new Map((base||[]).map(o => [String(o?.name||"").toLowerCase(), o]));
           for (const it of (fresh||[])) map.set(String(it?.name||"").toLowerCase(), it);
           return Array.from(map.values()).sort((a,b)=> (a?.name||"").localeCompare(b?.name||""));
         };
-        this.state.data = this.state.data || {};
-        const baseTraits = this.state.data.traits || [];
-        const baseTags = this.state.data.tags || [];
-        this.state.data.traits = mergeByName(baseTraits, traits);
-        this.state.data.tags = mergeByName(baseTags, tags);
+        this.mmcState.data = this.mmcState.data || {};
+        const baseTraits = this.mmcState.data.traits || [];
+        const baseTags = this.mmcState.data.tags || [];
+        this.mmcState.data.traits = mergeByName(baseTraits, traits);
+        this.mmcState.data.tags = mergeByName(baseTags, tags);
         if (typeof renderListTraits === "function") renderListTraits();
         if (typeof renderListTags === "function") renderListTags();
         listT.scrollTop = prevT; requestAnimationFrame(()=>{ listT.scrollTop = prevT; });
@@ -1059,9 +1062,9 @@ _renderTraitsTags(){
       console.warn("MMC | Step 4 live load falhou:", e);
     }
 
-    if (this.state.scroll["tags"]!=null) {
-      listG.scrollTop = this.state.scroll["tags"];
-      requestAnimationFrame(()=>{ listG.scrollTop = this.state.scroll["tags"]; });
+    if (this.mmcState.scroll["tags"]!=null) {
+      listG.scrollTop = this.mmcState.scroll["tags"];
+      requestAnimationFrame(()=>{ listG.scrollTop = this.mmcState.scroll["tags"]; });
     }
 
     // ===== Bottom-left: Selected Traits
@@ -1072,7 +1075,7 @@ _renderTraitsTags(){
       const c = document.createElement("div"); c.className="mmc-tag mmc-tag-granted"; c.textContent = x.name;
       chipsT.appendChild(c);
     });
-    (this.state.selectedTraits || []).forEach((x,index)=>{
+    (this.mmcState.selectedTraits || []).forEach((x,index)=>{
       const c = document.createElement("div"); c.className="mmc-tag";
       c.innerHTML = `${x.name} <button type="button" class="mmc-chip-x" data-remove-trait-index="${index}" title="Remover uma ocorrência">×</button>`;
       chipsT.appendChild(c);
@@ -1088,7 +1091,7 @@ _renderTraitsTags(){
       const c = document.createElement("div"); c.className="mmc-tag mmc-tag-granted"; c.textContent = x.name;
       chipsG.appendChild(c);
     });
-    (this.state.selectedTags || []).forEach((x,index)=>{
+    (this.mmcState.selectedTags || []).forEach((x,index)=>{
       const c = document.createElement("div"); c.className="mmc-tag";
       c.innerHTML = `${x.name} <button type="button" class="mmc-chip-x" data-remove-tag-index="${index}" title="Remover uma ocorrência">×</button>`;
       chipsG.appendChild(c);
@@ -1120,11 +1123,11 @@ _renderTraitsTags(){
     }
 
     left.querySelector('input[name="search-traits"]').addEventListener("input", (ev)=>{
-      this.state.search.traits = ev.target.value || "";
+      this.mmcState.search.traits = ev.target.value || "";
       renderListTraits();
     });
     rightTop.querySelector('input[name="search-tags"]').addEventListener("input", (ev)=>{
-      this.state.search.tags = ev.target.value || "";
+      this.mmcState.search.tags = ev.target.value || "";
       renderListTags();
     });
 
@@ -1134,14 +1137,14 @@ _renderTraitsTags(){
       ev.preventDefault(); ev.stopPropagation();
       const index = Number(ev.currentTarget.dataset.removeTraitIndex);
       if (!Number.isInteger(index) || index < 0) return;
-      this.state.selectedTraits = (this.state.selectedTraits || []).filter((_,i)=>i!==index);
+      this.mmcState.selectedTraits = (this.mmcState.selectedTraits || []).filter((_,i)=>i!==index);
       this._refreshPowerChips();
     }));
     selTags.querySelectorAll("[data-remove-tag-index]").forEach(btn=> btn.addEventListener("click", ev=>{
       ev.preventDefault(); ev.stopPropagation();
       const index = Number(ev.currentTarget.dataset.removeTagIndex);
       if (!Number.isInteger(index) || index < 0) return;
-      this.state.selectedTags = (this.state.selectedTags || []).filter((_,i)=>i!==index);
+      this.mmcState.selectedTags = (this.mmcState.selectedTags || []).filter((_,i)=>i!==index);
       this._refreshPowerChips();
     }));
 
@@ -1155,30 +1158,30 @@ _renderTraitsTags(){
   // === Step 4 live refresh helper: reload Traits/Tags and rebuild lists, preserving scroll
   async _mmc_step4RefreshData(){
     try{
-      const el = this.element?.[0] || this.element;
+      const el = this.element;
       const listT = el?.querySelector?.(".mmc-list[data-kind='traits']") || el?.querySelector?.(".mmc-list");
       const listG = el?.querySelector?.(".mmc-list[data-kind='tags']") || el?.querySelectorAll?.(".mmc-list")?.[1];
-      const prevT = this.state?.scroll?.["traits"] ?? (listT?.scrollTop||0);
-      const prevG = this.state?.scroll?.["tags"] ?? (listG?.scrollTop||0);
+      const prevT = this.mmcState?.scroll?.["traits"] ?? (listT?.scrollTop||0);
+      const prevG = this.mmcState?.scroll?.["tags"] ?? (listG?.scrollTop||0);
       const { traits, tags } = await loadTraitsAndTags();
       const mergeByName = (base, fresh) => {
         const map = new Map((base||[]).map(o => [String(o?.name||"").toLowerCase(), o]));
         for (const it of (fresh||[])) map.set(String(it?.name||"").toLowerCase(), it);
         return Array.from(map.values()).sort((a,b)=> (a?.name||"").localeCompare(b?.name||""));
       };
-      this.state.data = this.state.data || {};
-      this.state.data.traits = mergeByName(this.state.data.traits||[], traits);
-      this.state.data.tags   = mergeByName(this.state.data.tags||[], tags);
+      this.mmcState.data = this.mmcState.data || {};
+      this.mmcState.data.traits = mergeByName(this.mmcState.data.traits||[], traits);
+      this.mmcState.data.tags   = mergeByName(this.mmcState.data.tags||[], tags);
       // re-render only step body
       if (typeof this._renderTraitsTags === "function"){
         // minimal re-render of application keeping outer scrolls if any
-        const panes = this.element?.[0]?.querySelectorAll?.('.mmc-scroll');
+        const panes = this.element?.querySelectorAll?.('.mmc-scroll');
         const scrolls = panes ? Array.from(panes).map(p=>p.scrollTop) : [];
         await this.render(false);
-        if (panes) Array.from(this.element?.[0]?.querySelectorAll?.('.mmc-scroll')||[]).forEach((p,i)=> p.scrollTop = scrolls[i]||0);
+        if (panes) Array.from(this.element?.querySelectorAll?.('.mmc-scroll')||[]).forEach((p,i)=> p.scrollTop = scrolls[i]||0);
       }
       // restore list scrolls
-      const el2 = this.element?.[0] || this.element;
+      const el2 = this.element;
       const lt2 = el2?.querySelector?.(".mmc-list[data-kind='traits']") || el2?.querySelector?.(".mmc-list");
       const lg2 = el2?.querySelector?.(".mmc-list[data-kind='tags']") || el2?.querySelectorAll?.(".mmc-list")?.[1];
       if (lt2){ lt2.scrollTop = prevT; requestAnimationFrame(()=>{ lt2.scrollTop = prevT; }); }
@@ -1295,7 +1298,7 @@ _renderTraitsTags(){
     // ===== LEFT: Básicos =====
     const left = document.createElement("div"); left.className="mmc-card";
     left.innerHTML = `<h3>Poderes Básicos</h3>
-      <input class="mmc-search" name="search-powers-basic" placeholder="Buscar..." value="${this.state.search?.powers||""}"> `;
+      <input class="mmc-search" name="search-powers-basic" placeholder="Buscar..." value="${this.mmcState.search?.powers||""}"> `;
     const listBasic = document.createElement("div"); listBasic.className="mmc-list";
     left.appendChild(listBasic);
     wrap.appendChild(left);
@@ -1304,8 +1307,8 @@ _renderTraitsTags(){
     const right = document.createElement("div"); right.className="mmc-card";
     right.innerHTML = `<h3>Power Sets</h3>`;
     const setSel = document.createElement("select"); setSel.name="powerSet"; setSel.className="mmc-search mmc-select mmc-select-tall";
-    (this.state.powerSets||[]).forEach(s=>{ const opt=document.createElement("option"); opt.value=s; opt.textContent=s; setSel.appendChild(opt); });
-    setSel.value=this.state.powerSet||"";
+    (this.mmcState.powerSets||[]).forEach(s=>{ const opt=document.createElement("option"); opt.value=s; opt.textContent=s; setSel.appendChild(opt); });
+    setSel.value=this.mmcState.powerSet||"";
     right.appendChild(setSel);
     const listSet = document.createElement("div"); listSet.className="mmc-list";
     right.appendChild(listSet);
@@ -1316,26 +1319,27 @@ _renderTraitsTags(){
     const _filterList = (list, q)=>{ q=(q||"").toLowerCase(); Array.from(list.children||[]).forEach(ch=>{ const nm=ch?.dataset?.nameLc||""; ch.style.display = nm.includes(q)?"":"none"; }); };
 
     // ===== DATA / filtros =====
-    const q = (this.state.search?.powers||"").toLowerCase();
-    const allP = MMCCharactermancer._mmcDedupPowersByNameAndSet(this.state.data.powers||[]).filter(p=>(p.name||"").toLowerCase().includes(q));
-    const setName = this.state.powerSet||"";
+    const q = (this.mmcState.search?.powers||"").toLowerCase();
+    const allP = MMCCharactermancer._mmcDedupPowersByNameAndSet(this.mmcState.data.powers||[]).filter(p=>(p.name||"").toLowerCase().includes(q));
+    const setName = this.mmcState.powerSet||"";
     const minRankFromPrereq = (txt)=>{ if(!txt) return 0; let max=0; const re=/Rank\\s*(\\d+)/gi; let m; while((m=re.exec(txt))){ const n=parseInt(m[1]); if(!isNaN(n)) max=Math.max(max,n);} return max; };
 
     const buildRow = (p)=>{
       const row=document.createElement("div"); row.className="mmc-pwr"; row.dataset.nameLc = (p.name||"").toLowerCase();
       const pre = p.system?.prerequisites||"";
       const reqRank = minRankFromPrereq(pre);
-      const picked = !!(this.state.chosenPowers||[]).find(x=>x._id===p._id || (x.name||"").toLowerCase()===(p.name||"").toLowerCase());
-      const granted = grantedIdSet.has(p._id) || grantedNameSet.has((p.name||"").toLowerCase());
+      const picked = (this.mmcState.chosenPowers || []).some(x=>samePower(x,p));
+      const granted = grantedPowers.some(x=>samePower(x,p));
       let actionHTML="";
       if (granted){ actionHTML = `<button class="mmc-btn" disabled>Concedido</button>`; }
       else if (picked){ actionHTML = `<button class="mmc-btn" disabled>Selecionado</button>`; }
-      else if (reqRank && (Number(this.state.rank||1) < reqRank)){ actionHTML = `<button class="mmc-btn" disabled title="Requer Rank ${reqRank}">Rank ${reqRank}</button>`; }
-      else if ( (this.state.chosenPowers||[]).length >= Math.max(0, limit - (originConsume?.length||0)) ){ actionHTML = `<button class="mmc-btn" disabled title="Limite atingido">Limite</button>`; }
+      else if (reqRank && (Number(this.mmcState.rank||1) < reqRank)){ actionHTML = `<button class="mmc-btn" disabled title="Requer Rank ${reqRank}">Rank ${reqRank}</button>`; }
+      else if ( (this.mmcState.chosenPowers||[]).length >= Math.max(0, limit - (originConsume?.length||0)) ){ actionHTML = `<button class="mmc-btn" disabled title="Limite atingido">Limite</button>`; }
       else {
-        const result = this._meetsAllPrereqs(pre, this.state, { allP: this.state.data.powers || [], grantedNameSet, grantedIdSet, chosen: this.state.chosenPowers });
+        const result = this._meetsAllPrereqs(pre, this.mmcState, { allP: this.mmcState.data.powers || [], grantedNameSet, grantedIdSet, chosen: this.mmcState.chosenPowers });
         if (!result.ok) { 
-          const tt = (result.missing&&result.missing.length) ? ` title="Falta: ${'${result.missing.join(', ')}'}"` : '';
+          const missingText = (result.missing || []).join(', ').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+          const tt = missingText ? ` title="Falta: ${missingText}"` : '';
           actionHTML = `<button class="mmc-btn" disabled${tt}>Bloqueado</button>`; 
         } else { 
           actionHTML = `<button class="mmc-btn" data-add-power="${p._id}">Selecionar</button>`; 
@@ -1357,21 +1361,16 @@ _renderTraitsTags(){
     // Render SET list
     
 listSet.innerHTML = "";
-    // Family-aware listing: if a base name appears in the selected set,
-    // include all numbered siblings of that base from any set (e.g., Jump 1/2/3 across Super-Strength and Spider-Powers).
-    const _mmcBaseName = (n)=> String(n||"").replace(/\s*\d+$/, "").trim().toLowerCase();
-    const setLower = String(setName||"").toLowerCase().trim();
-    const inCurrentSet = (allP||[]).filter(p=> String(p.system?.powerSet||"").toLowerCase().trim() === setLower);
-    const baseNames = new Set(inCurrentSet.map(p=> _mmcBaseName(p?.name)));
-    const crossList = (allP||[]).filter(p=> baseNames.has(_mmcBaseName(p?.name)));
-    const shownList = MMCCharactermancer._mmcDedupPowersByNameAndSet(crossList);
+    // Restrict listing to the selected Power Set. A shared name, such as Jump
+    // from Spider-Powers and Super-Strength, must never include the other set.
+    // Preserve all distinct catalog entries; this is a view-only filter.
+    const shownList = powersInSelectedSet(allP, setName);
     shownList.forEach(p=> listSet.appendChild(buildRow(p)));
     this._restoreScroll(listSet,'powers-set');
-this._restoreScroll(listSet,'powers-set');
 
     // ===== Bottom panel 'Selecionados — Poderes (x / limit)' =====
     const selCard = document.createElement("div"); selCard.className="mmc-card";
-    const chosenCount = (this.state.chosenPowers||[]).length + (originConsume?.length||0);
+    const chosenCount = (this.mmcState.chosenPowers||[]).length + (originConsume?.length||0);
     selCard.innerHTML = `<h3>Selecionados — Poderes (${chosenCount} / ${limit})</h3>`;
     const selGrid = document.createElement("div"); selGrid.className="mmc-grid";
     // left: Básicos
@@ -1389,20 +1388,20 @@ this._restoreScroll(listSet,'powers-set');
     container.appendChild(selCard);
 
     // Render chips content
-    const chosenBasic = (this.state.chosenPowers||[]).filter(p=> (p.system?.powerSet??"Basic")==="Basic");
+    const chosenBasic = (this.mmcState.chosenPowers||[]).filter(p=> (p.system?.powerSet??"Basic")==="Basic");
     const grantBasic = grantedPowers.filter(p=> (p.system?.powerSet??"Basic")==="Basic");
     chipsBasic.innerHTML="";
     grantBasic.forEach(p=>{ const c=document.createElement("div"); c.className="mmc-tag mmc-tag-granted"; c.textContent=p.name; chipsBasic.appendChild(c); });
     chosenBasic.forEach(p=>{ const c=document.createElement("div"); c.className="mmc-tag"; c.innerHTML = `${p.name} <button type="button" class="mmc-chip-x" data-remove-power="${p._id}" title="Remover">×</button>`; chipsBasic.appendChild(c); });
 
-    const chosenNonBasic = (this.state.chosenPowers||[]).filter(p=> (p.system?.powerSet??"Basic")!=="Basic");
+    const chosenNonBasic = (this.mmcState.chosenPowers||[]).filter(p=> (p.system?.powerSet??"Basic")!=="Basic");
     const grantNonBasic = grantedPowers.filter(p=> (p.system?.powerSet??"Basic")!=="Basic");
     chipsSet.innerHTML="";
     grantNonBasic.forEach(p=>{ const c=document.createElement("div"); c.className="mmc-tag mmc-tag-granted"; c.textContent = `${p.system?.powerSet? p.system.powerSet+': ' : ''}${p.name}`; chipsSet.appendChild(c); });
     chosenNonBasic.forEach(p=>{ const c=document.createElement("div"); c.className="mmc-tag"; c.innerHTML = `${p.system?.powerSet? p.system.powerSet+': ' : ''}${p.name} <button type="button" class="mmc-chip-x" data-remove-power="${p._id}" title="Remover">×</button>`; chipsSet.appendChild(c); });
 
     // Eventos de busca e select
-    const deb = MMCCharactermancer.mmcDebounce((val)=>{ this.state.search.powers = val||""; this.state.scroll['powers-basic']=listBasic.scrollTop; this.state.scroll['powers-set']=listSet.scrollTop; this._focus={...(this._focus||{}), 'powers-basic':{ q:"input[name='search-powers-basic']", pos:(val||"").length } }; this.render(true); }, 500);
+    const deb = MMCCharactermancer.mmcDebounce((val)=>{ this.mmcState.search.powers = val||""; this.mmcState.scroll['powers-basic']=listBasic.scrollTop; this.mmcState.scroll['powers-set']=listSet.scrollTop; this._focus={...(this._focus||{}), 'powers-basic':{ q:"input[name='search-powers-basic']", pos:(val||"").length } }; this.render(true); }, 500);
     const inputBasic = left.querySelector('input[name="search-powers-basic"]');
     if(this._focus?.['powers-basic']){ try{ inputBasic.focus(); inputBasic.selectionStart=inputBasic.selectionEnd=inputBasic.value.length; }catch(e){} }
     inputBasic.addEventListener("input", ev=>{ const v=ev.target.value||""; _filterList(listBasic, v); deb(v); });
@@ -1411,45 +1410,45 @@ this._restoreScroll(listSet,'powers-set');
       if (ev.key === "Escape"){ ev.preventDefault(); inputBasic.value=""; deb(""); }
       if ((ev.ctrlKey||ev.metaKey) && ev.key.toLowerCase()==="f"){ ev.preventDefault(); inputBasic.focus(); inputBasic.select(); }
     });
-    setSel.addEventListener("change", ev=>{ this.state.powerSet = ev.target.value||""; this.state.scroll['powers-basic']=listBasic.scrollTop; this.state.scroll['powers-set']=listSet.scrollTop; this.render(true); });
+    setSel.addEventListener("change", ev=>{ this.mmcState.powerSet = ev.target.value||""; this.mmcState.scroll['powers-basic']=listBasic.scrollTop; this.mmcState.scroll['powers-set']=listSet.scrollTop; this.render(true); });
 
     // Popup de efeito dos Powers
     container.querySelectorAll("[data-power-info]").forEach(btn=> btn.addEventListener("click", ev=>{
       ev.preventDefault();
       ev.stopPropagation();
       const id = ev.currentTarget.dataset.powerInfo;
-      const p = (this.state.data.powers||[]).find(x=>x._id===id);
+      const p = (this.mmcState.data.powers||[]).find(x=>x._id===id);
       if (p) this._mmcShowPowerEffect(p);
     }));
 
     // Add/remove listeners
     container.querySelectorAll("[data-add-power]").forEach(btn=> btn.addEventListener("click", ev=>{
       const id = ev.currentTarget.dataset.addPower;
-      const p = (this.state.data.powers||[]).find(x=>x._id===id);
+      const p = (this.mmcState.data.powers||[]).find(x=>x._id===id);
       if (!p) return;
-      const check = this._meetsAllPrereqs(p.system?.prerequisites, this.state, {
-        allP: this.state.data.powers || [], chosen: this.state.chosenPowers,
+      const check = this._meetsAllPrereqs(p.system?.prerequisites, this.mmcState, {
+        allP: this.mmcState.data.powers || [], chosen: this.mmcState.chosenPowers,
         grantedNameSet, grantedIdSet
       });
       if (!check.ok) {
         ui.notifications?.warn?.('Pré-requisito ausente: ' + check.missing.join(', '));
         return;
       }
-      if ((this.state.rank||1) === 1){
-        const chosenSets = new Set((this.state.chosenPowers||[]).map(x=>x.system?.powerSet ?? "Basic").filter(s=>s!=="Basic"));
+      if ((this.mmcState.rank||1) === 1){
+        const chosenSets = new Set((this.mmcState.chosenPowers||[]).map(x=>x.system?.powerSet ?? "Basic").filter(s=>s!=="Basic"));
         const pSet = p.system?.powerSet ?? "Basic";
         if (chosenSets.size>=1 && pSet!=="Basic" && !chosenSets.has(pSet)) { ui.notifications?.warn("Rank 1: Somente Basic + 1 Power Set."); return; }
       }
       const curLim = this._computePowerLimit();
-      const originTake = (this._originGrantSubset(curLim)||[]).length; const avail = Math.max(0, curLim - originTake); if ((this.state.chosenPowers||[]).length >= avail) { ui.notifications?.warn(`Limite de poderes: ${curLim} (Origem consumiu ${originTake})`); return; }
-      this.state.chosenPowers = [...(this.state.chosenPowers||[]), p];
-      this.state.scroll['powers-basic']=listBasic.scrollTop; this.state.scroll['powers-set']=listSet.scrollTop;
+      const originTake = (this._originGrantSubset(curLim)||[]).length; const avail = Math.max(0, curLim - originTake); if ((this.mmcState.chosenPowers||[]).length >= avail) { ui.notifications?.warn(`Limite de poderes: ${curLim} (Origem consumiu ${originTake})`); return; }
+      this.mmcState.chosenPowers = [...(this.mmcState.chosenPowers||[]), p];
+      this.mmcState.scroll['powers-basic']=listBasic.scrollTop; this.mmcState.scroll['powers-set']=listSet.scrollTop;
       this.render(true);
     }));
     container.querySelectorAll("[data-remove-power]").forEach(btn=> btn.addEventListener("click", ev=>{
       const id = ev.currentTarget.dataset.removePower;
-      this.state.chosenPowers = (this.state.chosenPowers||[]).filter(x=>x._id!==id);
-      this.state.scroll['powers-basic']=listBasic.scrollTop; this.state.scroll['powers-set']=listSet.scrollTop;
+      this.mmcState.chosenPowers = (this.mmcState.chosenPowers||[]).filter(x=>x._id!==id);
+      this.mmcState.scroll['powers-basic']=listBasic.scrollTop; this.mmcState.scroll['powers-set']=listSet.scrollTop;
       this.render(true);
     }));
 
@@ -1457,29 +1456,29 @@ this._restoreScroll(listSet,'powers-set');
   }
 _renderReview(){
     const wrap = document.createElement("div"); wrap.className="mmc-card mmc-review";
-    const bio = this.state.bio;
+    const bio = this.mmcState.bio;
 
     // Status & warnings
     const limit = this._computePowerLimit();
-    const chosenCount = (this.state.chosenPowers||[]).length + (this._originGrantSubset(limit)?.length||0);
+    const chosenCount = (this.mmcState.chosenPowers||[]).length + (this._originGrantSubset(limit)?.length||0);
     const chosenSets = this._getChosenSetsCount();
     const warnings = [];
-    if ((this.state.rank||1)===1 && chosenSets>1) warnings.push("Rank 1: apenas Basic + 1 Power Set.");
+    if ((this.mmcState.rank||1)===1 && chosenSets>1) warnings.push("Rank 1: apenas Basic + 1 Power Set.");
     if (chosenCount>limit) warnings.push(`Poderes escolhidos (${chosenCount}) excedem o limite (${limit}).`);
 
     // Granted powers (for summary display)
     const grantedPowers = [ ...(this._getGrantedPowers()||[]).filter(p=>p._grantedFrom!=='origin'), ...this._originGrantSubset(this._computePowerLimit()) ];
 
     wrap.innerHTML = `<h3>Revisão</h3>
-      <div class="mmc-rank-display">RANK ${this.state.rank}</div>
+      <div class="mmc-rank-display">RANK ${this.mmcState.rank}</div>
       ${warnings.length?`<div class="mmc-warn">${warnings.map(w=>`<div>⚠️ ${w}</div>`).join("")}</div>`:""}
       <ul class="mmc-summary">
-        <li><strong>Atributos:</strong> M${this.state.abilities.mle} A${this.state.abilities.agl} R${this.state.abilities.res} V${this.state.abilities.vig} E${this.state.abilities.ego} L${this.state.abilities.log}</li>
-        <li><strong>Ocupação:</strong> ${this.state.occupation?.name||"—"}</li>
-        <li><strong>Origem:</strong> ${this.state.origin?.name||"—"}</li>
-        <li><strong>Traços:</strong> ${MMCCharactermancer._mmcFormatNamesWithCounts([...(this.state.occupation?.system?.traits||[]), ...(this.state.origin?.system?.traits||[]), ...(this.state.selectedTraits||[])])||"—"}</li>
-        <li><strong>Tags:</strong> ${MMCCharactermancer._mmcFormatNamesWithCounts([...(this.state.occupation?.system?.tags||[]), ...(this.state.origin?.system?.tags||[]), ...(this.state.selectedTags||[])])||"—"}</li>
-        <li><strong>Poderes (granteds + escolhidos):</strong> ${[...grantedPowers, ...(this.state.chosenPowers||[])].map(p=>p.name).join(", ")||"—"}</li>
+        <li><strong>Atributos:</strong> M${this.mmcState.abilities.mle} A${this.mmcState.abilities.agl} R${this.mmcState.abilities.res} V${this.mmcState.abilities.vig} E${this.mmcState.abilities.ego} L${this.mmcState.abilities.log}</li>
+        <li><strong>Ocupação:</strong> ${this.mmcState.occupation?.name||"—"}</li>
+        <li><strong>Origem:</strong> ${this.mmcState.origin?.name||"—"}</li>
+        <li><strong>Traços:</strong> ${MMCCharactermancer._mmcFormatNamesWithCounts([...(this.mmcState.occupation?.system?.traits||[]), ...(this.mmcState.origin?.system?.traits||[]), ...(this.mmcState.selectedTraits||[])])||"—"}</li>
+        <li><strong>Tags:</strong> ${MMCCharactermancer._mmcFormatNamesWithCounts([...(this.mmcState.occupation?.system?.tags||[]), ...(this.mmcState.origin?.system?.tags||[]), ...(this.mmcState.selectedTags||[])])||"—"}</li>
+        <li><strong>Poderes (granteds + escolhidos):</strong> ${[...grantedPowers, ...(this.mmcState.chosenPowers||[])].map(p=>p.name).join(", ")||"—"}</li>
         <li><strong>Limite / Escolhidos:</strong> ${chosenCount} / ${limit}</li>
       </ul>
       <hr>
@@ -1498,12 +1497,12 @@ _renderReview(){
     
     // listeners
     wrap.querySelectorAll("[data-bio]").forEach(inp=> {
-      const handler = (ev)=> { const key = ev.currentTarget.dataset.bio; this.state.bio[key] = ev.currentTarget.value; };
+      const handler = (ev)=> { const key = ev.currentTarget.dataset.bio; this.mmcState.bio[key] = ev.currentTarget.value; };
       inp.addEventListener("input", handler);
       inp.addEventListener("change", handler);
     });
-    wrap.querySelector('textarea[name="bio.history"]').addEventListener("input", ev=> this.state.bio.history=ev.target.value);
-    wrap.querySelector('textarea[name="bio.personality"]').addEventListener("input", ev=> this.state.bio.personality=ev.target.value);
+    wrap.querySelector('textarea[name="bio.history"]').addEventListener("input", ev=> this.mmcState.bio.history=ev.target.value);
+    wrap.querySelector('textarea[name="bio.personality"]').addEventListener("input", ev=> this.mmcState.bio.personality=ev.target.value);
     return wrap;
   
   }
@@ -1521,42 +1520,42 @@ _bioInput(key,label,val){
   async _onNext(){
     if (this.step < this.steps.length-1) { this.step+=1; return this._refreshPowerChips(); }
     // Apply to actor
-    const actorData = foundry.utils.deepClone(this.state.actorModel ?? {});
+    const actorData = foundry.utils.deepClone(this.mmcState.actorModel ?? {});
     if (!actorData?.system) { ui.notifications?.error("Ator modelo ausente em data/actor-modelo.json"); return; }
 
     // Rank and Abilities
-    actorData.system.attributes.rank.value = this.state.rank;
-    for (const k of Object.keys(this.state.abilities)) actorData.system.abilities[k].value = this.state.abilities[k];
+    actorData.system.attributes.rank.value = this.mmcState.rank;
+    for (const k of Object.keys(this.mmcState.abilities)) actorData.system.abilities[k].value = this.mmcState.abilities[k];
     const calc = (v)=> Math.max(10, (v??0)*30);
     actorData.system.health = actorData.system.health||{};
     actorData.system.focus = actorData.system.focus||{};
-    actorData.system.health.max = calc(this.state.abilities.res);
+    actorData.system.health.max = calc(this.mmcState.abilities.res);
     actorData.system.health.value = actorData.system.health.max;
-    actorData.system.focus.max = calc(this.state.abilities.vig);
+    actorData.system.focus.max = calc(this.mmcState.abilities.vig);
     actorData.system.focus.value = actorData.system.focus.max;
 
     // Biography
-    for (const [k,v] of Object.entries(this.state.bio)) actorData.system[k] = v;
+    for (const [k,v] of Object.entries(this.mmcState.bio)) actorData.system[k] = v;
 
-    actorData.name = (this.state.bio.codename?.trim()) || (this.state.bio.realname?.trim()) || actorData.name || "Herói";
+    actorData.name = (this.mmcState.bio.codename?.trim()) || (this.mmcState.bio.realname?.trim()) || actorData.name || "Herói";
     actorData.prototypeToken = actorData.prototypeToken || {};
     actorData.prototypeToken.name = actorData.name;
-    if (this.state.bio?.size) actorData.system.size = String(this.state.bio.size).toLowerCase();
+    if (this.mmcState.bio?.size) actorData.system.size = String(this.mmcState.bio.size).toLowerCase();
     const actor = await Actor.create(actorData, {renderSheet:true});
     const items = [];
-    if (this.state.occupation) items.push(this.state.occupation);
-    if (this.state.origin) items.push(this.state.origin);
+    if (this.mmcState.occupation) items.push(this.mmcState.occupation);
+    if (this.mmcState.origin) items.push(this.mmcState.origin);
     const grantedTraits = [
-      ...(this.state.occupation?.system?.traits || []),
-      ...(this.state.origin?.system?.traits || [])
+      ...(this.mmcState.occupation?.system?.traits || []),
+      ...(this.mmcState.origin?.system?.traits || [])
     ];
     const grantedTags = [
-      ...(this.state.occupation?.system?.tags || []),
-      ...(this.state.origin?.system?.tags || [])
+      ...(this.mmcState.occupation?.system?.tags || []),
+      ...(this.mmcState.origin?.system?.tags || [])
     ];
     const preparedTraits = MMCCharactermancer._mmcDedupRepeatAware([
       ...grantedTraits,
-      ...(this.state.selectedTraits || [])
+      ...(this.mmcState.selectedTraits || [])
     ]).map(it => {
       const clone = foundry.utils.deepClone(it ?? {});
       if (!clone.mmcKind) clone.mmcKind = "trait";
@@ -1565,7 +1564,7 @@ _bioInput(key,label,val){
     });
     const preparedTags = MMCCharactermancer._mmcDedupRepeatAware([
       ...grantedTags,
-      ...(this.state.selectedTags || [])
+      ...(this.mmcState.selectedTags || [])
     ]).map(it => {
       const clone = foundry.utils.deepClone(it ?? {});
       if (!clone.mmcKind) clone.mmcKind = "tag";
@@ -1573,33 +1572,11 @@ _bioInput(key,label,val){
       return clone;
     });
     const grantedPowers = [ ...(this._getGrantedPowers()||[]).filter(p=>p._grantedFrom!=='origin'), ...this._originGrantSubset(this._computePowerLimit()) ];
-    // Deduplicate by name to avoid duplicates with chosen
-    const byName = new Set(grantedPowers.map(p=>(p.name||'').toLowerCase()));
-    const chosen = (this.state.chosenPowers||[]).filter(p=> !byName.has((p.name||'').toLowerCase()));
-    
-    // Collapse numeric series: keep only the highest numbered version for each base name.
-    const collapseNumericSeries = (arr) => {
-      const best = new Map(); // baseName -> {num, item}
-      for (const it of arr||[]){
-        const name = String(it?.name||"");
-        const m = name.match(/^(.*?)(?:\s+(\d+))$/);
-        if (!m){
-          const base = name.toLowerCase();
-          const prev = best.get(base);
-          if (!prev) best.set(base, {num:null, item:it});
-          continue;
-        }
-        const base = m[1].toLowerCase();
-        const num = Number(m[2]||0);
-        const prev = best.get(base);
-        if (!prev || (prev.num ?? -1) < num) best.set(base, {num, item:it});
-      }
-      return Array.from(best.values()).map(v=>v.item);
-    };
-    const cleanedPowers = collapseNumericSeries([ ...grantedPowers, ...chosen ]);
-    const cleanedNames = new Set(cleanedPowers.map(p=>(p.name||'').toLowerCase()));
-    const keptChosen = (chosen||[]).filter(p => cleanedNames.has((p.name||'').toLowerCase()));
-    const keptGranted = (grantedPowers||[]).filter(p => cleanedNames.has((p.name||'').toLowerCase()));
+    // Preserve distinct homonyms from different power sets. Collapse only
+    // numbered series from the same set, keeping the highest selected tier.
+    const cleanedPowers = prepareCharacterPowers(grantedPowers, this.mmcState.chosenPowers || []);
+    const keptGranted = cleanedPowers.filter(p=>grantedPowers.includes(p));
+    const keptChosen = cleanedPowers.filter(p=>!grantedPowers.includes(p));
     items.push(...preparedTraits, ...preparedTags, ...keptGranted, ...keptChosen);
     if (items.length) {
       // Ensure every item has a type (system v2.2.0 requires it)
@@ -1634,6 +1611,9 @@ Hooks.on("renderActorDirectory", (app, htmlOrElement, data)=>{
     const btn = document.createElement("button");
     btn.className="mmc-btn"; btn.innerHTML = `<i class="fas fa-magic"></i> ${MMCCharactermancer.mmcLocalize("MMC.Open", "Charactermancer")}`;
     btn.addEventListener("click", ()=> new MMCCharactermancer().render(true));
-    actions.appendChild(btn);
+    if (!actions.querySelector('.mmc-open-charactermancer')) {
+      btn.classList.add('mmc-open-charactermancer');
+      actions.appendChild(btn);
+    }
   } catch(e){ console.error("MMC renderActorDirectory", e); }
 });

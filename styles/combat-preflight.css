@@ -1,0 +1,27 @@
+/* D616 v0.2.24 — informative pre-attack warning, consistent with Turn Tracker. */
+.m616-combat-preflight-dialog {
+  color: #f5f5f6;
+  background: #18191e;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(0,0,0,.56);
+  overflow: hidden;
+}
+.m616-combat-preflight-dialog .window-header {
+  background: linear-gradient(90deg,#74241e,#3b2021 64%,#272329);
+  color:#fff;
+  border-bottom:1px solid rgba(255,255,255,.14);
+}
+.m616-combat-preflight-dialog .window-title {color:#fff;font-weight:750;}
+.m616-combat-preflight-dialog .window-header .header-button {color:#f3dfdc;}
+.m616-combat-preflight-dialog .window-content,
+.m616-combat-preflight-dialog .dialog-content {background:#18191e;color:#f5f5f6;box-shadow:none;}
+.m616-combat-preflight {font-size:13px;line-height:1.55;}
+.m616-combat-preflight p {margin:0 0 10px;}
+.m616-combat-preflight ul {margin:8px 0 12px;padding:10px 10px 10px 25px;border:1px solid rgba(255,255,255,.16);border-left:3px solid #d33a2c;background:rgba(255,255,255,.05);border-radius:6px;}
+.m616-combat-preflight li {padding:3px 0;}
+.m616-combat-preflight-dialog .dialog-buttons {display:flex;flex-wrap:wrap;gap:6px;border:0;}
+.m616-combat-preflight-dialog .dialog-buttons button {flex:1 1 125px;min-width:0;min-height:40px;height:auto;line-height:1.25;font-size:12px;font-weight:700;white-space:normal;background:#8f2c27;color:#fff;border:1px solid #cf554c;border-radius:5px;padding:7px;}
+.m616-combat-preflight-dialog .dialog-buttons button:hover {background:#b33931;color:#fff;border-color:#ee837a;}
+.m616-combat-preflight-dialog .dialog-buttons button[data-button="cancel"] {background:#35353c;border-color:rgba(255,255,255,.25);}
+.m616-combat-preflight-chat {margin-top:7px;padding:7px;border-left:3px solid #d33a2c;background:rgba(125,30,20,.1);font-size:12px;line-height:1.4;}

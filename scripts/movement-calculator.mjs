@@ -3,6 +3,8 @@
  * Receives a prepared DataModel (AE changes have already been applied) and the Actor.
  * No DOM/Foundry APIs are used here, so rule cases can be regression-tested in Node.
  */
+import {isEffectChangeType} from './active-effect-types.mjs';
+
 export const SIZE_SPEED = Object.freeze({
   microscopic: 0, miniature: 0, tiny: 0, little: 0.25,
   small: -1, average: 1, big: 1, huge: 5,
@@ -79,11 +81,9 @@ function undoLegacySizeSpeed(preparedRun, effects, rawRun) {
   const oldChanges = effects.flatMap(e => changes(e).filter(c => c.key === 'system.movement.run.value'));
   for (const change of oldChanges.reverse()) {
     const v = number(change.value);
-    const type = String(change.type ?? '').toLowerCase();
-    const mode = Number(change.mode);
-    if (type === 'multiply' || mode === 1) restored = v === 0 ? rawRun : restored / v;
-    else if (type === 'add' || mode === 2) restored -= v;
-    else if (type === 'override' || mode === 5) restored = rawRun;
+    if (isEffectChangeType(change, 'multiply')) restored = v === 0 ? rawRun : restored / v;
+    else if (isEffectChangeType(change, 'add')) restored -= v;
+    else if (isEffectChangeType(change, 'override')) restored = rawRun;
   }
   return Math.max(0, restored);
 }
@@ -132,8 +132,7 @@ function readOutOfCombatMultiplier(movement, raw, actor, movementKey) {
     if (effect?.disabled === true) continue;
     for (const change of changes(effect)) {
       if (change.key !== legacyKey) continue;
-      const mode = String(change.type ?? '').toLowerCase();
-      if (mode !== 'multiply' && Number(change.mode) !== 1) continue;
+      if (!isEffectChangeType(change, 'multiply')) continue;
       const factor = number(change.value);
       if (factor > 0) oldFactors.push(factor);
     }
@@ -237,7 +236,7 @@ export function prepareD616Movement(system, actor, labels = {}) {
         const isExtendedReach = /^(Extended Reach [12]|Reach x(?:4|10))$/.test(sourceName);
         if (!isExtendedReach) return [];
         return changes(e).filter(c => c.key === 'system.reachFactor' ||
-          (c.key === 'system.reach' && (c.type === 'multiply' || Number(c.mode) === 1)))
+          (c.key === 'system.reach' && isEffectChangeType(c, 'multiply')))
           .map(c => number(c.value, 1)).filter(f => f === 4 || f === 10);
       }));
     const otherReachEffect = allEffects.some(({e, item}) =>

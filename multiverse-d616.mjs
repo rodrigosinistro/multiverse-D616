@@ -11,14 +11,37 @@
  * @param {(number)} [options.targetValue]       Assign a target value against which the result of this roll should be
  *
  */
+import { isRicochetPower, ricoOriginalContext, registerRicoShieldHooks } from "./scripts/rico-shield-chain.mjs";
+import { originalRepeatContext, installRepeatPowerHooks } from "./scripts/repeat-power-attacks.mjs";
+import { registerHeldConcentrationHooks } from "./scripts/held-concentration.mjs";
+import { casterTokenForItem } from "./scripts/combat-preflight.mjs";
+import { registerAutomationSettings, automationEnabled } from "./scripts/automation-settings.mjs";
 import { prepareD616Movement } from "./scripts/movement-calculator.mjs";
+import { chooseD616Dialog, promptD616FocusExtra } from "./scripts/dialog-v14.mjs";
 import { growPowerLevel, promptGrowChoice, applyGrowChoice } from "./scripts/grow-size.mjs";
 import { shrinkPowerLevel, promptShrinkChoice, applyShrinkChoice } from "./scripts/shrink-size.mjs";
+import { isResizeOtherPower, promptResizeOtherChoice, requestResizeOther, registerResizeOtherSocket } from "./scripts/resize-other.mjs";
+import { registerPowerGrabbedHooks } from "./scripts/power-grabbed.mjs";
 import { syncActorTokenSize, registerTokenSizeHooks, RESIZE_SKIP_OPTION } from "./scripts/token-size.mjs";
 import { handleConcentrationOnUse } from "./scripts/concentration.js";
+import { parseFocusCost, focusAvailable, focusSpendLimit, validateFocusSpend } from "./scripts/focus-cost.mjs";
+import { beginFocusMaintenance, registerFocusMaintenanceHooks } from "./scripts/focus-maintenance.mjs";
+import { registerPowerConditionHooks, getMarvelOutcome, normalizeConditionDefense } from "./scripts/power-conditions.mjs";
+import {adjudicateTargetOutcome, targetResultsReady, filterHitTargets, rollSignature, MULTI_TARGET_DECISION_KEY} from "./scripts/multi-target-combat.mjs";
+import { registerPowerEscapeHooks } from "./scripts/power-escapes.mjs";
+import { registerConditionRecoveryHooks } from "./scripts/condition-actions.mjs";
+import { registerPoisonTurnHooks } from "./scripts/poisoned-turn.mjs";
+import { registerOngoingPowerHooks } from "./scripts/ongoing-power-effects.mjs";
+import { registerSmartTargetSettings, migrateSmartTargetSettings, chooseSmartTargets, shouldPromptForTargets } from "./scripts/smart-targets.mjs";
+import { confirmAttackPreflight, registerCombatIntelligenceSettings } from "./scripts/combat-preflight.mjs";
+import { findCrossingElementalBarrier, guardTargetDefense } from "./scripts/elemental-shields.mjs";
+import { resolveConditionEdges, localTargetActors, resolveConditionReroll, registerConditionEdgeHooks } from "./scripts/condition-edge.mjs";
+import { isAdvancedElementalPower, areaPowerProtection, resolvedAdvancedFocusItem, validateAdvancedElementalTargets, registerElementalAdvancedHooks, advancedNeedsDamage } from "./scripts/elemental-advanced.mjs";
 import { hasActiveBodySheet, isAttackItem } from "./scripts/activated-movement-powers.mjs";
 import { calculateD616Damage } from "./scripts/damage-calculation.js";
+import { calculatePowerDamage } from "./scripts/power-fantastic-damage.mjs";
 import { buildItemRollFormula } from "./scripts/roll-formula.mjs";
+import { resolvePowerRoll, checkPowerOutcome, hasNaturalUltimateFantastic, powerDamageReductionCategory } from "./scripts/power-rolls.mjs";
 import {
   canUseShieldBearerPower,
   markShieldThrown,
@@ -26,7 +49,6 @@ import {
 } from "./scripts/secret-wars-rules.mjs";
 import {
   getElementalFantasticMetadata,
-  getElementalEdgeMode,
   hasElementalHalfMovement,
   registerElementalFantasticHooks,
 } from "./scripts/elemental-fantastic.mjs";
@@ -517,7 +539,7 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
     // formula rendered on the chat card and the evaluated total.
     rollData.formula = buildItemRollFormula(
       this.system.formula ?? rollData.formula,
-      this.system.ability
+      resolvePowerRoll(this).ability ?? this.system.ability
     );
 
     // Quit early if there's no parent actor
@@ -535,6 +557,37 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
    * @private
    */
   async roll() {
+    // Smart targeting is shared by weapons and targeted powers. Cancel before
+    // Focus, Concentration, effects or chat; self-use powers are never prompted.
+    if (shouldPromptForTargets(this,resolvePowerRoll(this))) {
+      try {
+        const confirmed=await chooseSmartTargets(this);
+        if(!confirmed)return;
+      } catch(error) {
+        console.error('[D616] Falha na seleção inteligente de alvos',error);
+        ui.notifications?.warn?.('Não foi possível confirmar os alvos. A ação foi cancelada.');
+        return;
+      }
+    }
+    // Rico-Shield makes one attack per ricochet, never a multi-target roll.
+    // Check before paying Focus and recording a Standard Action.
+    if (isRicochetPower(this) &&
+        mmD616CollectLocalTargets().length !== 1) {
+      ui.notifications?.warn?.('Ricochete: marque exatamente um alvo antes do ataque.');
+      return;
+    }
+    // v0.2.24: Warn about reliably-detectable out-of-range attacks and sight
+    // walls before any Focus, Concentration, turn use or chat is committed.
+    // Override is deliberate and recorded on the originating roll card.
+    let preflight = { ok: true, results: [], overridden: [] };
+    try { preflight = await confirmAttackPreflight(this, resolvePowerRoll(this)); }
+    catch(error) {
+      console.error('[D616] Verificação de alcance/visão falhou:',error);
+      // A broken validator must never silently consume an action/Focus.
+      ui.notifications?.warn?.('Falha na verificação do combate. A ação foi cancelada.');
+      return;
+    }
+    if (!preflight.ok) return;
     // Grow 1–4: prompt BEFORE spending Focus/Concentration or announcing use.
     // Cancel keeps the actor and combat state unchanged.
     let growSelection;
@@ -561,6 +614,55 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       }
       if (shrinkSelection === null) return;
     }
+    // Resize Other uses a targeted, non-damaging size choice. A resistant target
+    // must already be grabbed; cancel or invalid targeting spends no Focus.
+    let resizeOtherSelection;
+    if (isResizeOtherPower(this)) {
+      try { resizeOtherSelection = await promptResizeOtherChoice(this, this.actor); }
+      catch (error) {
+        console.warn('[multiverse-d616] Resize Other:', error);
+        ui.notifications?.warn?.(String(error?.message ?? error));
+        return;
+      }
+      if (!resizeOtherSelection) return;
+    }
+    // Advanced Elemental Control: validate prerequisites and immutable intended
+    // targets BEFORE Focus or Concentration. Area/shape placement stays with the
+    // Narrator; only the targets intentionally marked when casting are checked.
+    let advancedSelection = null;
+    if (isAdvancedElementalPower(this.name)) {
+      const targets = Array.from(game.user?.targets??[]).map(t=>t.document??t);
+      const check = validateAdvancedElementalTargets(this.name,this.actor,targets);
+      if (!check.ok) { ui.notifications?.warn?.(check.reason); return; }
+      const protection = areaPowerProtection(this.name,this.actor);
+      if (['Elemental Prison','Elemental Sphere','Telekinetic Sphere','Elemental Barrier','Telekinetic Barrier'].includes(this.name)) {
+        const names=targets.length?targets.map(t=>foundry.utils.escapeHTML(t.name??'Alvo')).join(', '):'nenhum alvo hostil';
+        const confirmed=await foundry.applications.api.DialogV2.confirm({
+          window:{title:`${this.name} — Alvos e proteção`},rejectClose:false,
+          content:`<p><b>Alvos afetados:</b> ${names}.</p><p>${this.name.endsWith('Barrier')?'Parede de até 2 espaços por Rank dentro de 10 espaços por Rank.':'Esfera de até 5 espaços por Rank ao redor do conjurador, ou prisão centrada no ponto escolhido.'}</p><p><b>Absorção:</b> ${protection.threshold} de dano por ataque; custo ${protection.cost} Focus.</p><p>A estrutura será mantida por Concentração e desenhada pelo Mestre como Região editável.</p>`,
+        });
+        if(!confirmed)return;
+      }
+      advancedSelection={name:this.name,protection:protection??null};
+    }
+    const powerRoll = resolvePowerRoll(this);
+    // Some powers only require a check against unwilling targets or under a
+    // particular circumstance. Ask before spending Focus/Concentration so an
+    // unused optional check never causes an unintended resource change.
+    let requestPowerRoll = true;
+    if (powerRoll.optional && powerRoll.canRoll) {
+      requestPowerRoll = await chooseD616Dialog({
+        title: `${this.name} — Teste situacional`,
+        content: '<p>Este poder só exige um teste em situações específicas. Deseja rolar ou usar o poder sem teste?</p>',
+        buttons: [
+          {action:'roll',label:'Rolar teste',value:true},
+          {action:'noRoll',label:'Usar sem teste',value:false},
+          {action:'cancel',label:'Cancelar',value:null},
+        ],
+        defaultAction:'roll',width:440,className:'m616-power-check-dialog',
+      });
+      if (requestPowerRoll === null || requestPowerRoll === undefined) return;
+    }
     const isCombatTrickery = mmD616IsCombatTrickeryItem(this);
     if (isCombatTrickery) {
       const check = mmD616CanArmCombatTrickery(this.actor);
@@ -580,16 +682,42 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
     // this character's next turn.
     if (!canUseShieldBearerPower(this.actor, this)) return;
 
-    // Concentração: incrementa condição no token até o Rank (mmrpg.concentration.X)
+    // v0.2.9: resolve Focus selection and availability BEFORE making any
+    // Concentration changes. Cancelling an expenditure never replaces an
+    // existing Concentration. The deduction commits only after acceptance.
+    const preFocus = await mmPreSpendFocusForPowerUse(this.actor, advancedSelection ? resolvedAdvancedFocusItem(this,this.actor) : this);
+    if (preFocus === null) return;
     const __okConc = await handleConcentrationOnUse(this.actor, this);
     if (!__okConc) return;
+    const focusCommitted = await mmCommitFocusForPowerUse(this.actor, preFocus);
+    if (!focusCommitted) return;
+    let resizeOtherFeedback = '';
+    if (resizeOtherSelection) {
+      try {
+        const result = await requestResizeOther(this.actor,this,resizeOtherSelection);
+        resizeOtherFeedback = `<p><strong>Resize Other:</strong> ${result.label} — ${result.range}.</p>`;
+      } catch(error) {
+        console.error('[multiverse-d616] Resize Other não pôde ser aplicado:',error);
+        // The target was not modified (or GM could not be reached), so refund
+        // this activation. Concentration is not used by this Permanent power.
+        if (Number(preFocus?.spent??0)>0) {
+          try { await this.actor.update({'system.focus.value':focusAvailable(this.actor)+Number(preFocus.spent)}); }
+          catch(refundError){console.error('[multiverse-d616] Falha ao estornar Focus de Resize Other:',refundError);}
+        }
+        ui.notifications?.error?.(String(error?.message ?? error));
+        return;
+      }
+    }
 
-    // Focus cost handling (Power only):
-    // - Fixed cost: auto-deduct.
-    // - Variable cost ("X or more Focus"): prompt immediately for the rolling user.
-    // If the user cancels or doesn't have enough Focus, abort the use (no chat message).
-    const preFocus = await mmPreSpendFocusForPowerUse(this.actor, this);
-    if (preFocus === null) return;
+    // An Active Effect holds ongoing upkeep across Foundry reloads. For
+    // Concentration powers, reuse the already-created power-specific effect.
+    try {
+      await beginFocusMaintenance(this.actor, this);
+    } catch (error) {
+      console.error('[multiverse-d616] Falha ao iniciar manutenção de Focus:', error);
+      ui.notifications?.error?.('Não foi possível iniciar a manutenção de Focus deste poder.');
+      return;
+    }
 
     let growFeedback = '';
     if (growSelection !== undefined) {
@@ -625,8 +753,8 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const messageMode = mmGetMessageMode();
     const abilityLabel =
-      CONFIG.MULTIVERSE_D616.damageAbility[this.system.ability] ??
-      this.system.ability ??
+      CONFIG.MULTIVERSE_D616.damageAbility[powerRoll.ability] ??
+      powerRoll.ability ??
       "";
     let label = abilityLabel
       ? `ability: ${abilityLabel}<br/>${this.type}: ${this.name}`
@@ -634,13 +762,20 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
     label = this.system.damageType
       ? `${label}<br/>damagetype: ${this.system.damageType}`
       : label;
+    const preflightNotes = preflight.overridden.length
+      ? `<div class="m616-combat-preflight-chat"><strong>Verificação de combate (aviso aceito):</strong> ${
+          preflight.overridden.map(r=>`${foundry.utils.escapeHTML(r.name)}: ${r.warning.map(w=>foundry.utils.escapeHTML(w)).join('; ')}`).join(' | ')
+        }</div>` : '';
 
     ChatMessage.create(mmApplyMessageMode({
       speaker: speaker,
       flavor: label,
+      ...(advancedSelection && ['Elemental Sphere','Elemental Prison','Telekinetic Sphere','Elemental Barrier','Telekinetic Barrier'].includes(this.name)
+        ? {flags:{'multiverse-d616':{itemId:this.id,elementalAreaPower:this.name}}}
+        : {}),
       content: `<div>${this.system.description}</div><div>${
         this.system.effect ? this.system.effect : ""
-      }</div>${growFeedback}${mmAttackEdgeModeCardHtml(this)}`,
+      }</div>${growFeedback}${resizeOtherFeedback}${preflightNotes}${mmAttackEdgeModeCardHtml(this)}`,
     }, messageMode));
 
     // The throw itself makes the shield unavailable even if the attack misses.
@@ -653,7 +788,7 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       return this;
     }
 
-    if (this.system.formula && this.system.ability) {
+    if (this.system.formula && powerRoll.canRoll && requestPowerRoll) {
       // Retrieve roll data.
       const rollData = this.getRollData();
       // Invoke the roll and submit it to chat.
@@ -667,14 +802,28 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       const useUltimateFantastic = combatTrickery.apply
         ? false
         : await maybeRequestUltimateFantastic(this.actor);
-      const elementalEdgeMode = getElementalEdgeMode(this.actor, this);
+      // Base item Edge/Trouble is separate from temporary Force; the latter
+      // is counted by the condition resolver exactly once.
+      const itemEdgeMode = String(powerRoll.edgeMode || this.system.attackEdgeMode || '').toLowerCase();
+      const elementalEdgeMode = itemEdgeMode==='edge'?1:itemEdgeMode==='trouble'?-1:0;
       const rollOptions = useUltimateFantastic ? { forceMarvelM: true } : {};
       if (combatTrickery.apply) {
         rollOptions.forceMarvelM = true;
         rollOptions.combatTrickery = true;
         rollOptions.lockMarvelTrouble = true;
       }
-      if (elementalEdgeMode) rollOptions.edgeMode = elementalEdgeMode;
+      // Condition Edge/Trouble is computed from active statuses at the instant
+      // of the roll, without changing the original power's static Edge mode.
+      // Only one identical target modifier is valid for a shared multi-target roll.
+      const conditionEdges = resolveConditionEdges({
+        actor: this.actor, targetActors: localTargetActors(),
+        ability: powerRoll.ability, attack: powerRoll.attack,
+        kind: this.system.attackKind,
+        action: this.system.action || 'standard',
+        targeted: Boolean(game.user?.targets?.size),
+        baseMode: elementalEdgeMode,
+      });
+      if (conditionEdges.edgeMode) rollOptions.edgeMode = conditionEdges.edgeMode;
       const roll = new CONFIG.Dice.MarvelMultiverseRoll(
         rollData.formula,
         rollData.actor,
@@ -682,13 +831,13 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       );
       // If you need to store the value first, uncomment the next line.
       // const result = await roll.evaluate();
-      const modLabel = `${label}, [ability] ${this.system.ability}`;
+      const modLabel = `${label}, [ability] ${powerRoll.ability}${preflight.overridden.length ? '<br/>Aviso de alcance/visão aceito pelo jogador' : ''}`;
 
       // Damage Multiplier context.
       // IMPORTANT (book rule): weapon Damage Multiplier bonuses DO NOT STACK with any other DM *bonus*.
       // We use the GREATER of (weapon bonus) and (other bonus). Penalties (negative deltas) still apply.
       // IMPORTANT (system rule): weapon bonus applies ONLY when rolling THIS weapon AND it is equipped.
-      const abilityKey = this.system.ability;
+      const abilityKey = powerRoll.ability;
       const dmgCtx = mmGetDamageMultiplierContext(this.actor, abilityKey);
       const weaponBonus =
         this.type === "weapon" && this.system.equipped
@@ -710,9 +859,16 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         // independent in Marvel Multiverse (e.g. Logic vs Agility). Persist
         // both so HIT/MISS always compares against the defense configured on
         // the item, including after Edge/Trouble re-renders.
-        attackTarget: this.system.attackTarget ?? null,
+        attackTarget: powerRoll.attackTarget ?? null,
+        powerCheck: powerRoll.checkOnly,
+        fantasticDamageOnly: powerRoll.fantasticDamage,
+        powerTargetNumber: powerRoll.targetNumber || null,
+        combatPreflight: preflight.overridden.length ? {
+          warningAccepted:true,
+          affected:preflight.overridden.map(r=>({name:r.name,warnings:r.warning})),
+        } : null,
         damageType:
-          String(this.system.damageType ?? "").toLowerCase() === "focus"
+          String(powerRoll.damageType ?? "").toLowerCase() === "focus"
             ? "focus"
             : "health",
         damageMultiplier: {
@@ -725,8 +881,51 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         },
       };
 
+      if(['Unstoppable Assault','Unrelenting Smash'].includes(this.name)){
+        const scene=canvas?.scene;
+        const token=scene?casterTokenForItem(this.actor,scene,canvas.tokens?.placeables??[]):null;
+        const targets=Array.from(game.user?.targets??[]).map(t=>t?.document??t).filter(t=>t?.uuid);
+        const repeat=originalRepeatContext(this,this.actor,targets,token);
+        if(repeat)systemFlags.repeatAttack=repeat;
+      }
+      if(['Hellfire Chains','Coiling Crush'].includes(this.name)&&game.combat?.started){
+        systemFlags.repeatInitial={combatId:game.combat.id,round:Number(game.combat.round),
+          turn:Number(game.combat.turn),combatantId:game.combat.combatant?.id??null};
+      }
+      if(isRicochetPower(this)){
+        const targets=mmD616CollectLocalTargets();
+        const scene=canvas?.scene;
+        const token=scene?casterTokenForItem(this.actor,scene,canvas.tokens?.placeables??[]):null;
+        systemFlags.ricoShield=ricoOriginalContext(this,this.actor,targets,token,scene,canvas?.grid);
+      }
+
+      if (conditionEdges.sources.length || conditionEdges.ambiguousTargets || conditionEdges.targetSourcesDiffer) {
+        systemFlags.conditionEdges = conditionEdges;
+      }
+      if(conditionEdges.ambiguousTargets || conditionEdges.targetSourcesDiffer){
+        // Snapshot each target's own sources. This also covers equivalent net
+        // modifiers from DIFFERENT conditions, without asking for a GM ruling.
+        // Statuses may change while the GM is adjudicating the same card.
+        const separate={};
+        for(const token of Array.from(game.user?.targets??[])){
+          const tokenDoc=token?.document??token;
+          const targetActor=token?.actor??tokenDoc?.actor;
+          if(!tokenDoc?.uuid||!targetActor)continue;
+          const perTarget=resolveConditionEdges({
+            actor:this.actor,targetActors:[targetActor],
+            ability:powerRoll.ability,attack:powerRoll.attack,
+            kind:this.system.attackKind,action:this.system.action||'standard',
+            targeted:true,baseMode:elementalEdgeMode,
+          });
+          separate[tokenDoc.uuid]={net:perTarget.net,sources:perTarget.sources,
+            edgeMode:perTarget.edgeMode};
+        }
+        systemFlags.targetConditionEdges=separate;
+      }
+
       const elementalFantastic = getElementalFantasticMetadata(this, this.actor);
       if (elementalFantastic) systemFlags.elementalFantastic = elementalFantastic;
+      if (advancedSelection) systemFlags.advancedElemental=advancedSelection;
 
       if (combatTrickery.apply) {
         systemFlags.combatTrickery = {
@@ -767,10 +966,15 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       };
 
       // Await message creation so any downstream code that depends on flags can rely on it.
-      await roll.toMessage(msgData, {
+      const createdRollMessage = await roll.toMessage(msgData, {
         messageMode,
         itemId: this._id,
       });
+      // A mandatory single Trouble rerolls the best die. Edge lets the
+      // player choose which die using the existing EDGE buttons on the card.
+      if (conditionEdges.sources.length && conditionEdges.autoCount) {
+        await resolveConditionReroll(createdRollMessage, conditionEdges);
+      }
 
       if (combatTrickery.apply) {
         await mmD616ConsumeCombatTrickery(this.actor);
@@ -779,7 +983,7 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         );
       }
 
-      if (this.system.attack) {
+      if (powerRoll.attack) {
         Hooks.callAll("multiverse-d616.rollAttack", this, roll);
         Hooks.callAll("multiverse-d616.calcDamage", this, roll);
       }
@@ -1372,36 +1576,13 @@ function mmStripHtml(value) {
 }
 
 function mmParseFocusCost(costText) {
-  const raw = String(costText ?? "").trim();
-  const lower = raw.toLowerCase();
-  if (!raw) return { hasFocus: false, raw };
-  if (!lower.includes("focus")) return { hasFocus: false, raw };
-  const m = lower.match(/(\d+)/);
-  const n = m ? Number.parseInt(m[1], 10) : 0;
-  const variable = /(or\s+more|ou\s+mais|\+|minimum|minimo|mínimo)/i.test(lower);
-  if (variable) {
-    return {
-      hasFocus: n > 0,
-      type: "variable",
-      min: Math.max(0, Number.isFinite(n) ? n : 0),
-      raw,
-    };
-  }
-  return {
-    hasFocus: n > 0,
-    type: "fixed",
-    fixed: Math.max(0, Number.isFinite(n) ? n : 0),
-    min: Math.max(0, Number.isFinite(n) ? n : 0),
-    raw,
-  };
+  return parseFocusCost(costText);
 }
 
 /**
- * Spend Focus for a Power use BEFORE rolling.
- * - Fixed cost: auto-deduct.
- * - Variable cost ("X or more Focus"): prompt the rolling user for the total spend.
- *
- * Returns { spent, bonus, summary } or null if the use is cancelled/invalid.
+ * Prepare Focus spending without mutating the actor. This lets a user cancel
+ * variable-cost choices or Concentration replacement without paying anything.
+ * Returns { spent, bonus, summary } or null on cancellation/invalid input.
  */
 async function mmPreSpendFocusForPowerUse(actor, item) {
   try {
@@ -1436,7 +1617,6 @@ async function mmPreSpendFocusForPowerUse(actor, item) {
         return null;
       }
       const { bonus, summary } = mmComputeFocusDamageBonus(item.system?.effect ?? "", spend);
-      await actor.update({ "system.focus.value": available - spend });
       return { spent: spend, bonus: bonus ?? 0, summary: summary ?? "" };
     }
 
@@ -1456,43 +1636,9 @@ async function mmPreSpendFocusForPowerUse(actor, item) {
       ? `Este poder escala: +${scaling.per} bônus de dano${scaling.ability ? ` ${scaling.ability}` : ""} a cada ${scaling.step} Focus gasto.`
       : "Não consegui identificar automaticamente o escalonamento no campo EFEITO.";
 
-    const chosen = await new Promise((resolve) => {
-      new Dialog(
-        {
-          title: `Gastar Focus — ${item.name}`,
-          content: `
-            <form>
-              <p><strong>Custo mínimo:</strong> ${min} Focus</p>
-              <p><strong>Limite por uso:</strong> ${maxSpend} (5×Rank)</p>
-              <p><strong>Disponível:</strong> ${available} Focus</p>
-              <hr/>
-              <div class="form-group">
-                <label>Quanto a mais você quer gastar além do mínimo? (0–${maxExtra})</label>
-                <input type="number" name="extra" value="0" min="0" max="${maxExtra}" step="1"/>
-              </div>
-              <p style="margin-top:8px">${scalingHelp}</p>
-            </form>
-          `,
-          buttons: {
-            ok: {
-              label: "Aplicar",
-              callback: (html) => {
-                const form = html[0].querySelector("form");
-                const extra = Number.parseInt(form?.extra?.value ?? "0", 10);
-                const extraClamped = mmClampNumber(extra, 0, maxExtra);
-                resolve(min + extraClamped);
-              },
-            },
-            cancel: {
-              label: "Cancelar",
-              callback: () => resolve(null),
-            },
-          },
-          default: "ok",
-          close: () => resolve(null),
-        },
-        { width: 420 }
-      ).render(true);
+    const chosen = await promptD616FocusExtra({
+      title:`Gastar Focus — ${item.name}`,
+      min,maxTotal,available,maxSpend,currentExtra:0,scalingHelp,
     });
 
     if (chosen === null) return null;
@@ -1512,11 +1658,29 @@ async function mmPreSpendFocusForPowerUse(actor, item) {
     }
 
     const { bonus, summary } = mmComputeFocusDamageBonus(item.system?.effect ?? "", spend);
-    await actor.update({ "system.focus.value": available - spend });
     return { spent: spend, bonus: bonus ?? 0, summary: summary ?? "" };
   } catch (e) {
     console.error("[multiverse-d616] mmPreSpendFocusForPowerUse error", e);
     return null;
+  }
+}
+
+/** Commit the validated Focus amount exactly once, after Concentration prompts. */
+async function mmCommitFocusForPowerUse(actor, prepared) {
+  const spent = Number(prepared?.spent ?? 0);
+  const check = validateFocusSpend(actor, spent);
+  if (!check.ok) {
+    ui.notifications?.warn?.(check.reason);
+    return false;
+  }
+  if (!spent) return true;
+  try {
+    await actor.update({ "system.focus.value": focusAvailable(actor) - spent });
+    return true;
+  } catch (error) {
+    console.error('[multiverse-d616] Falha ao descontar Focus:', error);
+    ui.notifications?.error?.('Não foi possível descontar o Focus. O poder não foi usado.');
+    return false;
   }
 }
 
@@ -1742,7 +1906,7 @@ async function mmD616ArmCombatTrickery(actor, item) {
   };
   await actor.setFlag(M616_SYSTEM_ID, M616_COMBAT_TRICKERY_FLAG, next);
   ui.notifications?.info?.(
-    "Combat Trickery preparado: o próximo ataque válido terá o dado Marvel = MARVEL (1)."
+    "Combat Trickery preparado! Faça agora um ataque contra alvo(s) de Rank igual ou maior: o dado Marvel desse ataque será MARVEL (1). A rolagem anterior não é alterada."
   );
   return true;
 }
@@ -1764,7 +1928,10 @@ function mmD616LocalTargetActors() {
 
 function mmD616CombatTrickeryAttackContext(actor, item) {
   const state = mmD616GetCombatTrickeryState(actor);
-  if (!state?.armed || !item?.system?.attack || mmD616IsCombatTrickeryItem(item)) {
+  // Many legacy offensive powers (for example Double Tap) have attack:false
+  // in their compendium records, even though they roll against a defense.
+  // Use the shared semantic attack classifier instead of the stale flag.
+  if (!state?.armed || !isAttackItem(item) || mmD616IsCombatTrickeryItem(item)) {
     return { armed: false, apply: false, state };
   }
 
@@ -2253,12 +2420,46 @@ class ChatMessageMarvel extends ChatMessage {
           actionRow.appendChild(keepButton);
         }
       }
-      const damageButton = html.querySelector("button.damage");
-      if (isInitiative) {
-        // Initiative is an ordering roll, never an attack or damage roll.
-        // Remove the generic DAMAGE action inherited from the shared roll template.
+      let damageButton = html.querySelector("button.damage");
+      // Follow-up rolls must have their own independent DAMAGE action, even
+      // when the original roll template does not render that button.
+      const repeatedOrHeld = Boolean(this.getFlag(M616_SYSTEM_ID,'repeatAttack')?.step ||
+        this.getFlag(M616_SYSTEM_ID,'heldFollowUp'));
+      if (!damageButton && repeatedOrHeld) {
+        const row = html.querySelector('.mm-roll-actions') ?? html.querySelector('.message-content');
+        if(row){
+          damageButton=document.createElement('button');
+          damageButton.className='damage';damageButton.type='button';
+          damageButton.textContent='DAMAGE';row.appendChild(damageButton);
+        }
+      }
+      // Power checks often render without a DAMAGE button in the base template.
+      // Create it explicitly on a Fantastic roll; the handler still verifies
+      // the target's defense and filters out normal successes/failures.
+      const pendingFantastic = this.getFlag("multiverse-d616", "fantasticDamageOnly") === true &&
+        getMarvelOutcome(this.rolls?.[0],1)?.fantastic === true;
+      if (!damageButton && pendingFantastic) {
+        const row = html.querySelector('.mm-roll-actions') ?? html.querySelector('.message-content');
+        if (row) {
+          damageButton = document.createElement('button');
+          damageButton.className = 'damage';
+          damageButton.type = 'button';
+          damageButton.textContent = 'DAMAGE';
+          row.appendChild(damageButton);
+        }
+      }
+      const isPowerCheck = this.getFlag("multiverse-d616", "powerCheck") === true;
+      const fantasticDamageOnly = this.getFlag("multiverse-d616", "fantasticDamageOnly") === true;
+      const fantasticRoll = getMarvelOutcome(this.rolls?.[0],1)?.fantastic === true;
+      // Jinx You and Flare cause damage ONLY on Fantastic success; preserve
+      // their action then, with an explicit reminder of that rule.
+      if (isInitiative || (isPowerCheck && !(fantasticDamageOnly && fantasticRoll))) {
+        // Initiative and non-damaging power checks never generate a damage action.
         damageButton?.remove();
       } else {
+        if (isPowerCheck && damageButton) {
+          damageButton.title = "Aplicar dano apenas com Sucesso Fantástico, conforme a descrição do poder";
+        }
         damageButton?.addEventListener(
           "click",
           this._onClickDamageButton.bind(this)
@@ -2331,7 +2532,7 @@ class ChatMessageMarvel extends ChatMessage {
    */
   async _enrichAttackTargets(html) {
     // Remove any prior evaluation block (re-renders happen after retro Edge/Trouble).
-    for (const el of html.querySelectorAll("ul.multiverse-d616.evaluation")) {
+    for (const el of html.querySelectorAll("ul.multiverse-d616.evaluation, .m616-power-check-tn")) {
       el.remove();
     }
 
@@ -2395,16 +2596,20 @@ class ChatMessageMarvel extends ChatMessage {
       }
     }
 
-    // Legacy/special-case fallback: if an item has no explicit target defense,
-    // preserve the historical behavior of comparing against the attack ability.
-    if (!attackTargetAbr) attackTargetAbr = abilityAbr;
+    // Unopposed power checks (fixed TN or Narrator-defined difficulty) must
+    // NEVER be measured against an unrelated marked target's ability defense.
+    // Preserve the old same-ability fallback only for real attacks.
+    const powerCheckOnly = this.getFlag("multiverse-d616", "powerCheck") === true;
+    if (!attackTargetAbr && !powerCheckOnly) attackTargetAbr = abilityAbr;
 
     // Determine targets: always use the targets saved on the message (set at roll time by the rolling user).
     // If missing, ONLY the message author will auto-capture their current local targets and persist them,
     // so every client sees the same target list.
-    let targets = this.getFlag("multiverse-d616", "targets") ?? [];
+    let targets = powerCheckOnly && !attackTargetAbr
+      ? []
+      : (this.getFlag("multiverse-d616", "targets") ?? []);
 
-    if (!targets?.length) {
+    if (!targets?.length && (!powerCheckOnly || attackTargetAbr)) {
       const authorId = this.author?.id ?? null;
       if (authorId && game.user?.id === authorId) {
         const localTargets = mmD616CollectLocalTargets();
@@ -2422,7 +2627,8 @@ class ChatMessageMarvel extends ChatMessage {
       }
     }
 
-    if (!targets?.length) return;
+    const fixedTN = Number(this.getFlag("multiverse-d616", "powerTargetNumber") ?? 0);
+    if (!targets?.length && !(fixedTN > 0)) return;
 
     // Determine whether the *kept* Marvel die result is Fantastic (after retro Edge/Trouble).
     let isFantastic = false;
@@ -2455,7 +2661,18 @@ class ChatMessageMarvel extends ChatMessage {
     }
 
     const total = Number.isFinite(attackRoll.total) ? attackRoll.total : 0;
+    const naturalUltimate = hasNaturalUltimateFantastic(attackRoll, isFantastic);
+    const isCheck = this.getFlag("multiverse-d616", "powerCheck") === true;
     const esc = foundry.utils.escapeHTML;
+    const fixedTNResult = fixedTN > 0
+      ? checkPowerOutcome(total, fixedTN, {fantastic: isFantastic, ultimate: naturalUltimate})
+      : null;
+    if (fixedTNResult) {
+      const info = document.createElement("div");
+      info.classList.add("m616-power-check-tn");
+      info.textContent = `TESTE — TN ${fixedTN} | Total ${total} | ${fixedTNResult.label}`;
+      html.querySelector(".message-content")?.appendChild(info);
+    }
     const isGM = !!game.user?.isGM;
     const hitText = game.i18n.localize("MULTIVERSE_D616.hit");
     const missText = game.i18n.localize("MULTIVERSE_D616.miss");
@@ -2511,42 +2728,72 @@ class ChatMessageMarvel extends ChatMessage {
       return def;
     };
 
-        const resolved = await Promise.all(
+        const decisionSignature=this.getFlag('multiverse-d616','multiTargetDecisionRollSignature');
+    const targetDecisions=decisionSignature===rollSignature(attackRoll)
+      ?(this.getFlag("multiverse-d616",MULTI_TARGET_DECISION_KEY)??{}):{};
+    const mixedConditions=this.getFlag("multiverse-d616","conditionEdges")?.ambiguousTargets===true;
+    const resolved = await Promise.all(
       targets.map(async (t) => {
         const tokenDoc = await resolveTokenDocFromUuid(t.uuid);
         const a = tokenDoc?.actor ?? null;
-
-        // Defense value is only computed for GM to avoid leaking defenses.
-        // Apply trait-based defense swaps (Brawling/Evasion/Wisdom/Integrity) on the target.
-        const defenseAbr =
-          isGM && (abilityAbr || attackTargetAbr)
-            ? mmD616ResolveDefenseAbility(abilityAbr, attackTargetAbr, a)
-            : null;
-        const currentAc =
-          isGM && defenseAbr && a?.system?.abilities?.[defenseAbr]?.defense != null
-            ? a.system.abilities[defenseAbr].defense
-            : null;
-
-        const name = tokenDoc?.name ?? t.name ?? a?.name ?? "Target";
-        const img = tokenDoc?.texture?.src ?? t.img ?? a?.img ?? "";
-        const targetValue = Number(currentAc ?? 0);
-        const isHit = isGM ? (isFantastic || total >= targetValue) : false;
-
-        const resultText = isGM ? (isHit ? hitText : missText) : targetText;
-        const outcomeClass = isGM ? (isHit ? "hit" : "miss") : "";
-
-        return `
-        <li data-uuid="${esc(t.uuid ?? "")}" class="target ${outcomeClass}">
-          <img src="${esc(img ?? "")}" alt="${esc(name ?? "Target")}">
-          <div class="name-stacked">
-            <span class="title">${esc(name ?? "Target")}</span>
-          </div>
+        const defenseAbr = isGM && (abilityAbr || attackTargetAbr)
+          ? mmD616ResolveDefenseAbility(abilityAbr, attackTargetAbr, a) : null;
+        const currentAc = isGM && defenseAbr && a?.system?.abilities?.[defenseAbr]?.defense != null
+          ? a.system.abilities[defenseAbr].defense : null;
+        const crossing = isGM && tokenDoc
+          ? findCrossingElementalBarrier(tokenDoc.parent,
+            game.scenes?.get?.(this.speaker?.scene)?.tokens?.get?.(this.speaker?.token),tokenDoc)
+          : null;
+        const name=tokenDoc?.name??t.name??a?.name??'Target';
+        const shownName=crossing?`${name} — ${crossing.guard.name}`:name;
+        const img=tokenDoc?.texture?.src??t.img??a?.img??'';
+        const defense=crossing?guardTargetDefense(crossing.actor,crossing.guard)
+          :(currentAc==null?null:Number(currentAc));
+        const calculated=isGM && defense!=null
+          ? checkPowerOutcome(total,defense,{fantastic:isFantastic,ultimate:naturalUltimate}):null;
+        const result=calculated?adjudicateTargetOutcome(calculated,{
+          requiresReview:mixedConditions&&!crossing,
+          decision:targetDecisions[t.uuid],
+        }):null;
+        const resultText=result
+          ?(result.pending?'REVISAR EDGE/TROUBLE':isCheck?result.label:result.success?hitText:missText)
+          :targetText;
+        const outcomeClass=result&&!result.pending?(result.success?'hit':'miss'):'';
+        const perTargetEdges=this.getFlag('multiverse-d616','targetConditionEdges')?.[t.uuid];
+        const separateModifier=perTargetEdges
+          ? `<small class="m616-target-condition-note">${perTargetEdges.net>0?`${perTargetEdges.net} Edge`:
+              perTargetEdges.net<0?`${Math.abs(perTargetEdges.net)} Trouble`:'Edge/Trouble cancelados'} — ${esc((perTargetEdges.sources??[]).map(x=>x.source).join(', ')||'Poder/condições')}</small>`:'';
+        const decisionNote=mixedConditions&&targetDecisions[t.uuid]&&isGM
+          ? `<span class="m616-target-decided">Mestre: ${esc(targetDecisions[t.uuid])}</span>`:'';
+        const reviewControls=result?.pending && isGM
+          ? `${separateModifier}<div class="m616-target-review"> <button type="button" data-target-decision="hit" data-target-uuid="${esc(t.uuid)}">Confirmar acerto</button><button type="button" data-target-decision="miss" data-target-uuid="${esc(t.uuid)}">Confirmar falha</button></div>`
+          : `${separateModifier}${decisionNote}`;
+        return `<li data-uuid="${esc(t.uuid??'')}" class="target ${outcomeClass}">
+          <img src="${esc(img??'')}" alt="${esc(name)}">
+          <div class="name-stacked"><span class="title">${esc(shownName)}</span>${reviewControls}</div>
           <div class="result">${esc(resultText)}</div>
         </li>`;
       })
     );
-
     evaluation.innerHTML = resolved.join("");
+
+    // The GM must resolve target-specific Edge/Trouble before applying damage.
+    // Buttons are bound to this message only; no extra attack or Focus is spent.
+    if(isGM)for(const button of evaluation.querySelectorAll('[data-target-decision]')){
+      button.addEventListener('click',async (event)=>{
+        event.preventDefault();event.stopPropagation();button.disabled=true;
+        try{
+          const uuid=button.dataset.targetUuid;
+          const decision=button.dataset.targetDecision;
+          if(!['hit','miss'].includes(decision)||!uuid)return;
+          const signature=rollSignature(this.rolls?.[0]);
+          const current=this.getFlag('multiverse-d616','multiTargetDecisionRollSignature')===signature
+            ?(this.getFlag('multiverse-d616',MULTI_TARGET_DECISION_KEY)??{}):{};
+          await this.update({'flags.multiverse-d616.multiTargetDecisionRollSignature':signature,
+            'flags.multiverse-d616.multiTargetDecisions':{...current,[uuid]:decision}});
+        }catch(error){console.error('[D616] Falha ao decidir resultado individual',error);ui.notifications?.error?.('Não foi possível registrar a decisão do Mestre.');button.disabled=false;}
+      });
+    }
 
     const messageContent = html.querySelector(".message-content");
     messageContent?.appendChild(evaluation);
@@ -2682,43 +2929,9 @@ class ChatMessageMarvel extends ChatMessage {
       ;
 
       // Ask "extra" beyond minimum.
-      newSpent = await new Promise((resolve) => {
-        new Dialog(
-          {
-            title: `Gastar Focus — ${item.name}`,
-            content: `
-              <form>
-                <p><strong>Custo mínimo:</strong> ${min} Focus</p>
-                <p><strong>Limite por uso:</strong> ${maxSpend} (5×Rank)</p>
-                <p><strong>Disponível:</strong> ${available} Focus</p>
-                <hr/>
-                <div class="form-group">
-                  <label>Quanto a mais você quer gastar além do mínimo? (0–${maxExtra})</label>
-                  <input type="number" name="extra" value="${currentExtra}" min="0" max="${maxExtra}" step="1"/>
-                </div>
-                <p style="margin-top:8px">${scalingHelp}</p>
-              </form>
-            `,
-            buttons: {
-              ok: {
-                label: "Aplicar",
-                callback: (html) => {
-                  const form = html[0].querySelector("form");
-                  const extra = Number.parseInt(form?.extra?.value ?? "0", 10);
-                  const extraClamped = mmClampNumber(extra, 0, maxExtra);
-                  resolve(min + extraClamped);
-                },
-              },
-              cancel: {
-                label: "Cancelar",
-                callback: () => resolve(null),
-              },
-            },
-            default: "ok",
-            close: () => resolve(null),
-          },
-          { width: 420 }
-        ).render(true);
+      newSpent = await promptD616FocusExtra({
+        title:`Gastar Focus — ${item.name}`,
+        min,maxTotal,available,maxSpend,currentExtra,scalingHelp,
       });
 
       if (newSpent === null) return;
@@ -3020,23 +3233,76 @@ class ChatMessageMarvel extends ChatMessage {
       focusSpent > 0
         ? ` + Focus bonus ${focusBonus} (spent ${focusSpent})`
         : "";
+    const advanced = chatMessage.getFlag("multiverse-d616", "advancedElemental");
+    const attackTarget=chatMessage.getFlag("multiverse-d616","attackTarget")??item?.system?.attackTarget??abilityAbr;
+    const fixedTargetNumber=Number(chatMessage.getFlag("multiverse-d616","powerTargetNumber")??0)||0;
+    const mixedConditions=chatMessage.getFlag("multiverse-d616","conditionEdges")?.ambiguousTargets===true;
+    const decisions=chatMessage.getFlag('multiverse-d616','multiTargetDecisionRollSignature')===rollSignature(roll)
+      ?(chatMessage.getFlag("multiverse-d616",MULTI_TARGET_DECISION_KEY)??{}):{};
+    const attackerToken=chatMessage.speaker?.scene&&chatMessage.speaker?.token
+      ?game.scenes?.get?.(chatMessage.speaker.scene)?.tokens?.get?.(chatMessage.speaker.token):null;
+    const outcomes=new Map();
+    for(const {ref,document,actor:target} of resolvedTargets){
+      const boundary=attackerToken&&document?.documentName==='Token'
+        ?findCrossingElementalBarrier(document.parent,attackerToken,document):null;
+      const key=normalizeConditionDefense(attackTarget,target);
+      const defense=boundary?guardTargetDefense(boundary.actor,boundary.guard)
+        :fixedTargetNumber||Number(target.system?.abilities?.[key]?.defense??0);
+      const base=getMarvelOutcome(roll,defense);
+      const outcome=adjudicateTargetOutcome(base,{
+        requiresReview:mixedConditions&&!boundary,
+        decision:decisions[ref.uuid],
+      });
+      outcomes.set(ref.uuid,outcome);
+    }
+    if(!targetResultsReady([...outcomes.values()])){
+      ui.notifications?.warn?.('Há alvos com Edge/Trouble diferentes. O Mestre deve confirmar seus resultados no card do ataque antes de calcular dano.');
+      return;
+    }
+    let damageTargets=resolvedTargets.length?filterHitTargets(resolvedTargets,outcomes):resolvedTargets;
+    if(advanced?.name && isAdvancedElementalPower(advanced.name)){
+      damageTargets=damageTargets.filter(({ref,document})=>advancedNeedsDamage(advanced.name,outcomes.get(ref.uuid),{
+        displaced:Boolean(chatMessage.getFlag('multiverse-d616',`elementalMoved_${document?.id??''}`)),
+      }));
+    }
+    if(resolvedTargets.length&&!damageTargets.length){
+      ui.notifications?.warn?.('Nenhum alvo marcado foi atingido ou cumpriu a condição de dano deste poder.');
+      return;
+    }
+    // Venom Burst only knocks targets down on an ordinary success. It deals
+    // half normal Health damage exclusively on a successful Fantastic hit.
+    // Do not create an ordinary DAMAGE card for a nondamaging hit.
+    if (item?.name === 'Coiling Crush' && automationEnabled('fantasticDamage') &&
+        !chatMessage.getFlag('multiverse-d616','heldFollowUp') &&
+        !damageTargets.some(({ref})=>outcomes.get(ref.uuid)?.fantastic)) {
+      ui.notifications?.info?.('Coiling Crush: a imobilização inicial não causa dano em sucesso comum.');
+      return;
+    }
+    if (item?.name === 'Venom Burst' && automationEnabled('fantasticDamage') &&
+        !damageTargets.some(({ref})=>outcomes.get(ref.uuid)?.fantastic)) {
+      ui.notifications?.info?.('Venom Burst: sucesso comum derruba o alvo; dano somente no Sucesso Fantástico.');
+      return;
+    }
     const damageEntries = [];
-    const damageContent = resolvedTargets.map(({ ref, document, actor: target }) => {
-      const rawDamageReduction =
-        damageType === "focus"
-          ? target.system?.focusDamageReduction
-          : target.system?.healthDamageReduction;
+    const damageContent = damageTargets.map(({ ref, document, actor: target }) => {
+      // Suppressive/Covering/Return Fire damage Focus but subtract HEALTH
+      // Damage Reduction, as explicitly required by their descriptions.
+      const drCategory=powerDamageReductionCategory(item?.type==='power'?item.name:null,damageType);
+      const rawDamageReduction=drCategory==='focus'
+        ?target.system?.focusDamageReduction
+        :target.system?.healthDamageReduction;
+      const targetFantastic=Boolean(outcomes.get(ref.uuid)?.fantastic);
       const {
-        damage,
-        damageReduction,
-        effectiveDamageMultiplier,
-      } = calculateD616Damage({
-        marvelDie: marvelTotal,
-        damageMultiplier,
-        damageReduction: rawDamageReduction,
-        ability: abilityValue,
-        bonus: focusBonus,
-        fantastic: isFantastic,
+        damage, rawDamage, damageReduction, effectiveDamageMultiplier,
+        powerDamageFactor, specialDamage,
+      } = calculatePowerDamage({
+        powerName:chatMessage.getFlag('multiverse-d616','heldFollowUp')?.name==='Coiling Crush'
+          ?null:(item?.type==='power'?item.name:null),
+        marvelDie:marvelTotal,
+        damageMultiplier,damageReduction:rawDamageReduction,
+        ability:abilityValue,bonus:focusBonus,
+        fantastic:targetFantastic,
+        suppressFantastic:Boolean(advanced?.name && advanced.name!=="Elemental Suffocation"),
       });
 
       const targetName =
@@ -3044,7 +3310,11 @@ class ChatMessageMarvel extends ChatMessage {
       const targetUuid = ref.uuid;
       const actorUuid = target.uuid ?? ref.actorUuid ?? "";
 
+      // Shield powers compare the incoming raw attack before ordinary DR.
+      // The target still receives the DR-adjusted value if not protected.
+
       damageEntries.push({
+        rawDamage,
         targetUuid,
         actorUuid,
         name: targetName,
@@ -3052,6 +3322,11 @@ class ChatMessageMarvel extends ChatMessage {
         damage,
         damageReduction,
         effectiveDamageMultiplier,
+        hit: true,
+        fantastic: targetFantastic,
+        damageFactor: powerDamageFactor,
+        specialDamage,
+        defense: Number(outcomes.get(ref.uuid)?.targetNumber ?? 0) || undefined,
       });
 
       return `<p><b>${esc(targetName)}</b> takes <b>${damage} ${
@@ -3060,7 +3335,9 @@ class ChatMessageMarvel extends ChatMessage {
         marvelTotal
       } &#42; damage multiplier: &#40; ${baseDamageMultiplier} + bonus: ${effectiveBonus} &#61; ${damageMultiplier} - damageReduction: ${damageReduction} &#61; ${effectiveDamageMultiplier} &#41; + ${esc(
         ability
-      )} score ${abilityValue} of damage${esc(focusExplain)}.</p>`;
+      )} score ${abilityValue} of damage${esc(focusExplain)}${specialDamage
+        ? `; regra especial de ${esc(item.name)}: ${powerDamageFactor}× dano normal`
+        : ''}.</p>`;
     });
 
     if (damageContent.length === 0) {
@@ -3085,7 +3362,7 @@ class ChatMessageMarvel extends ChatMessage {
       );
     }
 
-    const preservedTargets = resolvedTargets.map(({ ref, actor: target }) => ({
+    const preservedTargets = damageTargets.map(({ ref, actor: target }) => ({
       uuid: ref.uuid,
       actorUuid: target.uuid ?? ref.actorUuid ?? "",
       name: ref.name ?? target.name ?? "Target",
@@ -3110,6 +3387,8 @@ class ChatMessageMarvel extends ChatMessage {
             version: 1,
             sourceMessageId: chatMessage.id,
             isFantastic,
+            rollSignature: rollSignature(roll),
+            targetDecisionSignature: JSON.stringify(decisions),
             entries: damageEntries,
           },
           elementalFantastic: chatMessage.getFlag("multiverse-d616", "elementalFantastic") ?? null,
@@ -3406,7 +3685,7 @@ function onManageActiveEffect(event, owner) {
   const effect = li.dataset.effectId
     ? owner.effects.get(li.dataset.effectId)
     : null;
-  switch (a.dataset.action) {
+  switch (a.dataset.effectAction ?? a.dataset.action) {
     case 'create':
       return owner.createEmbeddedDocuments('ActiveEffect', [
         {
@@ -3480,7 +3759,10 @@ function actorHasOpenCombat(actor) {
 }
 
 function rerenderOpenD616ActorSheets() {
-  for (const app of Object.values(ui.windows ?? {})) {
+  const apps = new Set([...Object.values(ui.windows ?? {}),
+    ...(MarvelMultiverseCharacterSheet.instances?.values?.() ?? []),
+    ...(MarvelMultiverseNPCSheet.instances?.values?.() ?? [])]);
+  for (const app of apps) {
     if (
       app instanceof MarvelMultiverseCharacterSheet ||
       app instanceof MarvelMultiverseNPCSheet
@@ -3490,7 +3772,7 @@ function rerenderOpenD616ActorSheets() {
   }
 }
 
-class MarvelMultiverseCharacterSheet extends foundry.appv1.sheets.ActorSheet {
+class LegacyMarvelMultiverseCharacterSheet extends foundry.appv1.sheets.ActorSheet {
   /** @override */
   static get defaultOptions() {
     // biome-ignore lint/complexity/noThisInStatic: <explanation>
@@ -3966,23 +4248,28 @@ render(force = false, options = {}) {
       }
 
       const useUltimateFantastic = await maybeRequestUltimateFantastic(this.actor);
-      const actorEdgeMode = getElementalEdgeMode(this.actor);
+      const actorEdgeMode = 0; // Force is included by resolveConditionEdges
+      const conditionEdges = resolveConditionEdges({actor:this.actor, ability:dataset.label,
+        action:'standard', baseMode:actorEdgeMode});
       const rollOptions = useUltimateFantastic ? { forceMarvelM: true } : {};
-      if (actorEdgeMode) rollOptions.edgeMode = actorEdgeMode;
+      if (conditionEdges.edgeMode) rollOptions.edgeMode = conditionEdges.edgeMode;
       const roll = new CONFIG.Dice.MarvelMultiverseRoll(
         dataset.formula,
         this.actor.getRollData(),
         rollOptions
       );
 
-      roll.toMessage(
+      const message = await roll.toMessage(
         {
           speaker: speaker,
           flavor: label,
           title: title,
+          flags:{'multiverse-d616':{conditionEdges}},
         },
         { messageMode, itemId: itemId }
       );
+      if(conditionEdges.sources.length && conditionEdges.autoCount)
+        await resolveConditionReroll(message,conditionEdges);
       return roll;
     }
   }
@@ -3992,7 +4279,7 @@ render(force = false, options = {}) {
  * Extend the basic ActorSheet with some very simple modifications
  * @extends {ActorSheet}
  */
-class MarvelMultiverseNPCSheet extends foundry.appv1.sheets.ActorSheet {
+class LegacyMarvelMultiverseNPCSheet extends foundry.appv1.sheets.ActorSheet {
   /** @override */
   static get defaultOptions() {
     // biome-ignore lint/complexity/noThisInStatic: <explanation>
@@ -4456,33 +4743,439 @@ render(force = false, options = {}) {
         : label;
 
       const useUltimateFantastic = await maybeRequestUltimateFantastic(this.actor);
-      const actorEdgeMode = getElementalEdgeMode(this.actor);
+      const actorEdgeMode = 0; // Force is included by resolveConditionEdges
+      const conditionEdges = resolveConditionEdges({actor:this.actor, ability:dataset.label,
+        action:'standard', baseMode:actorEdgeMode});
       const rollOptions = useUltimateFantastic ? { forceMarvelM: true } : {};
-      if (actorEdgeMode) rollOptions.edgeMode = actorEdgeMode;
+      if (conditionEdges.edgeMode) rollOptions.edgeMode = conditionEdges.edgeMode;
       const roll = new CONFIG.Dice.MarvelMultiverseRoll(
         dataset.formula,
         this.actor.getRollData(),
         rollOptions
       );
 
-      roll.toMessage(
+      const message = await roll.toMessage(
         {
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
           flavor: label,
           title: title,
+          flags:{'multiverse-d616':{conditionEdges}},
         },
         { messageMode: mmGetMessageMode() }
       );
+      if(conditionEdges.sources.length && conditionEdges.autoCount)
+        await resolveConditionReroll(message,conditionEdges);
       return roll;
     }
   }
+}
+
+
+/* -------------------------------------------------------------------------- */
+/* D616 Actor Sheets — Foundry VTT v14 ApplicationV2                          */
+/* -------------------------------------------------------------------------- */
+/* Keep existing Handlebars layouts and combat handlers. The old sheet classes
+ * remain unregistered as behavior references while the sheet lifecycle,
+ * forms, drag/drop and tabs use the native ActorSheetV2 API. */
+const D616ActorSheetV2Base = foundry.applications.api.HandlebarsApplicationMixin(
+  foundry.applications.sheets.ActorSheetV2
+);
+
+const D616_SHEET_TEMPLATES = Object.freeze({
+  character: 'systems/multiverse-d616/templates/actor/actor-character-sheet.hbs',
+  npc: 'systems/multiverse-d616/templates/actor/actor-npc-sheet.hbs',
+});
+
+async function d616ActorSheetContext(sheet, context, legacy) {
+  const actor = sheet.actor;
+  // A snapshot prevents the legacy display helpers from mutating a live
+  // DataModel while maintaining the original template contract.
+  const snapshot = actor.toObject(false);
+  context.actor = actor;
+  context.data = snapshot;
+  context.items = actor.items.map(item => item.toObject(false));
+  context.system = foundry.utils.deepClone(actor.system.toObject?.(false) ?? snapshot.system);
+  context.flags = snapshot.flags ?? {};
+  context.editable = sheet.isEditable;
+  context.cssClass = sheet.isEditable ? 'editable' : 'locked';
+  context.showCombatMovement = actorHasOpenCombat(actor);
+  context.rollData = actor.getRollData();
+  context.sizes = CONFIG.MULTIVERSE_D616.sizes;
+  context.sizeSelection = Object.fromEntries(
+    Object.entries(CONFIG.MULTIVERSE_D616.sizes).map(([key, size]) =>
+      [key, game.i18n.localize(size.label)]));
+  context.teamManeuverTypes = Object.fromEntries(
+    CONFIG.MULTIVERSE_D616.teamManeuvers.map(t => [t.maneuverType.toLowerCase(), t.maneuverType]));
+  context.teamManeuverLevels = {1:'1',2:'2',3:'3'};
+  context.elements = Object.fromEntries(Object.entries(CONFIG.MULTIVERSE_D616.elements)
+    .map(([key, element]) => [key, element.label]));
+  context.effects = prepareActiveEffectCategories(actor.allApplicableEffects());
+  legacy._prepareItems.call(sheet, context);
+  // Keep the add-item controls available on newly created, empty Actors.
+  context.gear ??= [];
+  context.origins ??= [];
+  context.occupations ??= [];
+  context.weapons ??= [];
+  context.traits ??= [];
+  context.tags ??= [];
+  context.powers ??= Object.fromEntries(Object.keys(CONFIG.MULTIVERSE_D616.reverseSetList)
+    .map(key => [key, []]));
+  if (actor.type === 'character') {
+    if (legacy === LegacyMarvelMultiverseNPCSheet.prototype)
+      legacy._prepareCharacterData.call(sheet, context);
+    else legacy._prepareData.call(sheet, context);
+  }
+  // Display biography from the stored Actor data, never from a form editor
+  // that may be inactive when ApplicationV2 re-renders the sheet.
+  if (actor.type === 'character') {
+    const editor = foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
+    context.enrichedBiography = {};
+    for (const field of ['history', 'personality', 'distinguishingFeatures']) {
+      const raw = String(context.system[field] ?? '');
+      try {
+        context.enrichedBiography[field] = typeof editor?.enrichHTML === 'function'
+          ? await editor.enrichHTML(raw, {secrets:actor.isOwner,relativeTo:actor})
+          : (foundry.utils.escapeHTML?.(raw) ?? raw);
+      } catch (error) {
+        console.warn(`[multiverse-d616] Erro ao preparar Biografia (${field}):`,error);
+        context.enrichedBiography[field] = foundry.utils.escapeHTML?.(raw) ?? '';
+      }
+    }
+  }
+  // The original actor templates use data.*, system.*, items and editable.
+  return context;
+}
+
+function d616GetLimitedActor(sheet) {
+  if (game.user?.isGM) return false;
+  const ownership = sheet.actor?.ownership ?? {};
+  const level = ownership[game.userId] ?? ownership[game.user?.id]
+    ?? ownership.default ?? CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE;
+  return level === CONST.DOCUMENT_OWNERSHIP_LEVELS.LIMITED;
+}
+
+async function d616LimitedArtwork(sheet) {
+  if (!sheet.actor?.img) return ui.notifications?.warn?.('Imagem do personagem não encontrada.');
+  if (sheet._mmLimitedArtPopout?.rendered) return sheet._mmLimitedArtPopout.bringToTop();
+  sheet._mmLimitedArtPopout = new ImagePopout(sheet.actor.img,
+    {title:sheet.actor.name,shareable:false});
+  return sheet._mmLimitedArtPopout.render(true);
+}
+
+
+/** Attach the metadata consumed by the existing global D616 hover-tooltip
+ * listener. Supports every rendered Item, including powers on NPC sheets. */
+function d616ActivateSheetTooltips(sheet, root) {
+  const capitalize = value => value ? value.charAt(0).toUpperCase() + value.slice(1) : 'Item';
+  for (const row of root.querySelectorAll('[data-item-id]')) {
+    const item = sheet.actor?.items?.get?.(row.dataset.itemId);
+    if (!item) continue;
+    const sys = item.system ?? {};
+    row.dataset.mmhtType = capitalize(item.type ?? 'item');
+    row.dataset.mmhtTitle = item.name ?? '';
+    for (const [attribute, value] of Object.entries({
+      cost:sys.cost?.value ?? sys.cost,
+      range:sys.range ?? sys.distance,
+      action:sys.action ?? sys.activation,
+      trigger:sys.trigger,
+      duration:sys.duration,
+      desc:sys.description ?? sys.desc ?? sys.details,
+      effect:sys.effect ?? sys.effects
+    })) {
+      const key = 'mmht' + attribute[0].toUpperCase() + attribute.slice(1);
+      if (value != null && value !== '') row.dataset[key] = typeof value === 'string' ? value : JSON.stringify(value);
+      else delete row.dataset[key];
+    }
+  }
+}
+
+function d616ActivateTab(sheet, tab) {
+  if (!['abilities','biography','gear'].includes(tab)) return;
+  sheet.tabGroups.primary = tab;
+  const root = sheet.element;
+  if (!root) return;
+  root.querySelectorAll('.sheet-tabs [data-tab]').forEach(node => {
+    const active = node.dataset.tab === tab;
+    node.classList.toggle('active',active);
+    node.setAttribute('aria-selected',String(active));
+  });
+  root.querySelectorAll('.sheet-body > .tab[data-tab]').forEach(node => {
+    const active = node.dataset.tab === tab;
+    node.classList.toggle('active',active);
+    node.hidden = !active;
+    node.style.display = active ? '' : 'none';
+  });
+}
+
+async function d616DropActorItem(sheet, item) {
+  if (!sheet.isEditable || !item) return null;
+  const data = item.toObject(false);
+  if (sheet.actor.items.some(existing => existing.name === data.name)) return null;
+  if (data.type === 'power' && data.system?.powerSet === 'Elemental Control') {
+    data.system ??= {};
+    data.system.element ||= sheet.actor.system.defaultElement;
+  }
+  if (['origin','occupation'].includes(data.type)) {
+    const embedded = [];
+    for (const type of ['tags','traits',...(data.type === 'origin' ? ['powers'] : [])]) {
+      for (const child of data.system?.[type] ?? []) {
+        if (!child?.name) continue;
+        const childType = {tags:'tag',traits:'trait',powers:'power'}[type];
+        if (sheet.actor.items.some(it => it.type === childType && it.name === child.name && !child.system?.multiple)) continue;
+        const record = {...foundry.utils.deepClone(child),type:childType};
+        if (childType === 'power' && record.system?.powerSet === 'Elemental Control')
+          record.system.element ||= sheet.actor.system.defaultElement;
+        embedded.push(record);
+      }
+    }
+    if (embedded.length) await sheet.actor.createEmbeddedDocuments('Item',embedded);
+  }
+  if (data.type === 'trait' && ['Big','Small'].includes(data.name))
+    await sheet._changeSizeEffect(data.name.toLowerCase());
+  return sheet.actor.createEmbeddedDocuments('Item',[data]);
+}
+
+class D616ActorSheetV2Common extends D616ActorSheetV2Base {
+  static DEFAULT_OPTIONS = {
+    classes:['multiverse-d616','sheet','actor','mm-actor-v2'],
+    position:{width:690,height:980},
+    window:{resizable:true},
+    // Unlike V1, the legacy nested Handlebars <form> does not automatically
+    // submit through ActorSheetV2. Each field is saved independently below.
+    // Never submit the complete stale form: it can revert Health/Focus after
+    // damage or accidentally overwrite a rich biography editor.
+    form:{submitOnChange:false,closeOnSubmit:false},
+  };
+  tabGroups = {primary:'abilities'};
+  _d616ScrollTop = null;
+
+  async render(options={}, additionalOptions={}) {
+    if (d616GetLimitedActor(this)) {
+      if (options === true || options?.force) await d616LimitedArtwork(this);
+      return this;
+    }
+    return super.render(options,additionalOptions);
+  }
+
+  async _prepareContext(options) {
+    const context = await super._prepareContext(options);
+    return d616ActorSheetContext(this,context,this._d616LegacyPrototype);
+  }
+
+  async _onRender(context, options) {
+    await super._onRender(context,options);
+    const root = this.element;
+    if (!root) return;
+    const scrollArea = root.querySelector('.window-content');
+    if (scrollArea && Number.isFinite(this._d616ScrollTop))
+      scrollArea.scrollTop = this._d616ScrollTop;
+    // Old templates use V1 tab markup without data-action=tab.
+    root.querySelectorAll('.sheet-tabs [data-tab]').forEach(link => {
+      link.addEventListener('click',event => {
+        event.preventDefault();
+        d616ActivateTab(this,link.dataset.tab);
+      });
+    });
+    d616ActivateTab(this,this.tabGroups.primary || 'abilities');
+    // V14 ActorSheetV2 does not invoke the legacy renderActorSheet hook used by
+    // hover-tooltips.js. Populate the same attributes directly after rendering.
+    d616ActivateSheetTooltips(this, root);
+    if (this.isEditable) {
+      // ActorSheetV2 uses separate render parts; its V1-like form markup is not
+      // implicitly submitted. Persist one scalar value per change (PC + NPC).
+      // Exclude size, which requires the token-size/Active Effect workflow.
+      root.querySelectorAll('form input[name], form select[name], form textarea[name]').forEach(control => {
+        if (control.type === 'hidden' || control.name === 'system.size') return;
+        control.addEventListener('change',event => this._d616SaveActorField(event));
+      });
+      root.querySelectorAll('form').forEach(form => form.addEventListener('submit',event => {
+        event.preventDefault(); // no outdated full-form submissions
+      }));
+      root.querySelectorAll('.mm-actor-bio-edit').forEach(button =>
+        button.addEventListener('click',event => {
+          event.preventDefault();
+          this._d616OpenBiography(button.closest('.mm-actor-bio-panel'));
+        }));
+      root.querySelectorAll('.mm-actor-bio-cancel').forEach(button =>
+        button.addEventListener('click',event => {
+          event.preventDefault();
+          this._d616CancelBiography(button.closest('.mm-actor-bio-panel'));
+        }));
+      root.querySelectorAll('.mm-actor-bio-save').forEach(button =>
+        button.addEventListener('click',async event => {
+          event.preventDefault();
+          try {
+            await this._d616SaveBiography(button.closest('.mm-actor-bio-panel'));
+          } catch (error) {
+            console.error('[multiverse-d616] Falha ao salvar Biografia:',error);
+            ui.notifications?.error?.('Não foi possível salvar a Biografia. Veja o console.');
+          }
+        }));
+      root.querySelectorAll('.item-edit').forEach(link => link.addEventListener('click',event => {
+        event.preventDefault();
+        const id = event.currentTarget.closest('.item')?.dataset.itemId;
+        this.actor.items.get(id)?.sheet.render(true);
+      }));
+      root.querySelectorAll('.item-create').forEach(link => link.addEventListener('click',
+        event => this._onItemCreate(event)));
+      root.querySelectorAll('.item-delete').forEach(link => link.addEventListener('click',async event => {
+        event.preventDefault();
+        const id = event.currentTarget.closest('.item')?.dataset.itemId;
+        if (id) await this.actor.deleteEmbeddedDocuments('Item',[id]);
+      }));
+      root.querySelectorAll('.effect-control').forEach(link => link.addEventListener('click',event => {
+        event.preventDefault();
+        const row = event.currentTarget.closest('li');
+        const parent = row?.dataset.parentId;
+        const document = parent === this.actor.id ? this.actor : this.actor.items.get(parent);
+        if (document) onManageActiveEffect(event,document);
+      }));
+      root.querySelectorAll('.rollable').forEach(link => link.addEventListener('click',
+        event => this._onRoll(event)));
+      root.querySelectorAll('select[name="system.size"]').forEach(select =>
+        select.addEventListener('change',event => this._onSizeChange(event)));
+      root.querySelectorAll('.roll-initiative').forEach(link => link.addEventListener('click',event => {
+        event.preventDefault();
+        this.actor.rollInitiative({createCombatants:true});
+      }));
+      root.querySelectorAll('li.item:not(.inventory-header)').forEach(li => {
+        li.setAttribute('draggable','true');
+        // Native ActorSheetV2 provides the document drag-and-drop lifecycle.
+      });
+      root.querySelectorAll('img[data-edit="img"]').forEach(img => img.addEventListener('click',event => {
+        event.preventDefault();
+        const Picker = foundry.applications?.apps?.FilePicker?.implementation ?? globalThis.FilePicker;
+        if (!Picker) return;
+        new Picker({type:'image',current:this.actor.img,
+          callback:path => this.actor.update({img:path})}).render(true);
+      }));
+    }
+    // The v1 getActorSheetHeaderButtons hook no longer runs on V2 sheets.
+    const header = root.querySelector('.window-header');
+    if (header && this.actor.type === 'character' &&
+        !header.querySelector('.m616-export-inline') && typeof globalThis.multiverseD616ExportPDF === 'function') {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'm616-export-inline';
+      button.title = 'Exportar PDF (M616)';
+      button.innerHTML = '<i class="fas fa-file-pdf"></i> PDF (M616)';
+      button.addEventListener('click',event=>{
+        event.preventDefault();
+        globalThis.multiverseD616ExportPDF(this.actor).catch(err=>{
+          console.error('[M616] exportação PDF falhou',err);
+          ui.notifications?.error('Export PDF falhou. Veja o console.');
+        });
+      });
+      header.querySelector('.window-title')?.after(button);
+    }
+  }
+
+  // The same persistence strategy already proven by ItemSheetV2 is used for
+  // Actors. Keep data changes isolated; never submit untouched fields.
+  async _d616SaveActorField(event) {
+    if (!this.isEditable) return;
+    const control = event?.currentTarget;
+    const field = String(control?.name ?? '');
+    if (field !== 'name' && !/^system\.[a-zA-Z][a-zA-Z0-9_.]*$/.test(field)) return;
+    if (['system.size','system.history','system.personality',
+         'system.distinguishingFeatures','system.karma.max'].includes(field)) return;
+    let value = control.type === 'checkbox' ? !!control.checked : control.value;
+    if (control.type === 'number' || control.dataset?.dtype === 'Number' ||
+        field === 'system.teamManeuver.level') {
+      value = value === '' ? null : Number(value);
+      if (value !== null && !Number.isFinite(value)) return;
+    }
+    try {
+      this._d616ScrollTop = this.element?.querySelector('.window-content')?.scrollTop ?? null;
+      await this.actor.update({[field]:value});
+    } catch (error) {
+      console.error(`[multiverse-d616] Falha ao salvar ${field}:`,error);
+      ui.notifications?.error?.(`Não foi possível salvar ${field}.`);
+    }
+  }
+
+  _d616OpenBiography(panel) {
+    if (!this.isEditable || !panel) return;
+    const box = panel.querySelector('.mm-actor-bio-editor');
+    const content = panel.querySelector('.mm-actor-bio-content');
+    const preview = panel.querySelector('.mm-actor-bio-preview');
+    if (!box || !content || !preview) return;
+    content.innerHTML = preview.innerHTML;
+    box.hidden = false;
+    panel.dataset.editing = 'true';
+    panel.querySelector('.mm-actor-bio-edit')?.setAttribute('aria-expanded','true');
+    content.focus();
+  }
+
+  _d616CancelBiography(panel) {
+    if (!panel) return;
+    const box = panel.querySelector('.mm-actor-bio-editor');
+    if (box) box.hidden = true;
+    delete panel.dataset.editing;
+    panel.querySelector('.mm-actor-bio-edit')?.setAttribute('aria-expanded','false');
+  }
+
+  async _d616SaveBiography(panel) {
+    if (!this.isEditable || !panel || panel.dataset.editing !== 'true') return;
+    const field = String(panel.dataset.field ?? '');
+    if (!['history','personality','distinguishingFeatures'].includes(field)) return;
+    const editable = panel.querySelector('.mm-actor-bio-content');
+    if (!editable) return;
+    const value = editable.innerHTML;
+    if (value !== String(this.actor.system?.[field] ?? '')) {
+      this._d616ScrollTop = this.element?.querySelector('.window-content')?.scrollTop ?? null;
+      await this.actor.update({[`system.${field}`]:value});
+    }
+    const preview = panel.querySelector('.mm-actor-bio-preview');
+    if (preview) {
+      const editor = foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
+      preview.innerHTML = typeof editor?.enrichHTML === 'function'
+        ? await editor.enrichHTML(value,{secrets:this.actor.isOwner,relativeTo:this.actor})
+        : value;
+    }
+    this._d616CancelBiography(panel);
+  }
+
+  async _preClose(options) {
+    if (this.isEditable) {
+      for (const panel of this.element?.querySelectorAll?.('.mm-actor-bio-panel[data-editing="true"]') ?? [])
+        await this._d616SaveBiography(panel);
+    }
+    return super._preClose?.(options);
+  }
+
+  async _onDropItem(event,item) {
+    if (item?.parent?.id === this.actor.id) return super._onDropItem(event,item);
+    return d616DropActorItem(this,item);
+  }
+
+  async _onItemCreate(event) {
+    const proto = this._d616LegacyPrototype;
+    return proto._onItemCreate.call(this,event);
+  }
+  _onRoll(event) { return this._d616LegacyPrototype._onRoll.call(this,event); }
+  _onSizeChange(event) { return this._d616LegacyPrototype._onSizeChange.call(this,event); }
+  _changeSizeEffect(size) { return this._d616LegacyPrototype._changeSizeEffect.call(this,size); }
+  _prepareItems(context) { return this._d616LegacyPrototype._prepareItems.call(this,context); }
+}
+
+class MarvelMultiverseCharacterSheet extends D616ActorSheetV2Common {
+  static DEFAULT_OPTIONS = {position:{width:690,height:980}};
+  static PARTS = {sheet:{template:D616_SHEET_TEMPLATES.character}};
+  get _d616LegacyPrototype() {return LegacyMarvelMultiverseCharacterSheet.prototype;}
+}
+
+class MarvelMultiverseNPCSheet extends D616ActorSheetV2Common {
+  static DEFAULT_OPTIONS = {position:{width:900,height:760}};
+  static PARTS = {sheet:{template:D616_SHEET_TEMPLATES.npc}};
+  get _d616LegacyPrototype() {return LegacyMarvelMultiverseNPCSheet.prototype;}
 }
 
 /**
  * Extend the basic ItemSheet with some very simple modifications
  * @extends {ItemSheet}
  */
-class MarvelMultiverseItemSheet extends foundry.appv1.sheets.ItemSheet {
+class LegacyMarvelMultiverseItemSheet extends foundry.appv1.sheets.ItemSheet {
   /** @override */
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
@@ -5020,6 +5713,286 @@ class MarvelMultiverseItemSheet extends foundry.appv1.sheets.ItemSheet {
   }
 }
 
+
+/* -------------------------------------------------------------------------- */
+/* D616 ItemSheetV2 — Foundry 14                                              */
+/* -------------------------------------------------------------------------- */
+/* Preserve the original power, weapon, occupation, origin, trait and tag
+ * template contracts; modernize the document sheet lifecycle instead of
+ * rewriting fields or Active Effects. The V1 sheet remains opt-in. */
+const D616ItemSheetV2Base = foundry.applications.api.HandlebarsApplicationMixin(
+  foundry.applications.sheets.ItemSheetV2
+);
+const D616_ITEM_TEMPLATE_DIR = 'systems/multiverse-d616/templates/item';
+const D616_ITEM_TYPES = new Set(['power','weapon','trait','tag','origin','occupation','item']);
+
+function d616ItemSheetInitialTab(type) {
+  return ['power','weapon','trait'].includes(type) ? 'attributes' : 'description';
+}
+
+function d616ItemSheetTemplate(type) {
+  const safeType = D616_ITEM_TYPES.has(type) ? type : 'item';
+  return `${D616_ITEM_TEMPLATE_DIR}/item-${safeType}-sheet.hbs`;
+}
+
+function d616ActivateItemTab(sheet,tab) {
+  const root = sheet.element;
+  if (!root) return;
+  const tabs = [...root.querySelectorAll('.sheet-tabs [data-tab]')];
+  if (tabs.length && !tabs.some(el=>el.dataset.tab===tab))
+    tab = tabs[0].dataset.tab;
+  sheet.tabGroups.primary = tab;
+  for (const el of tabs) {
+    const active = el.dataset.tab === tab;
+    el.classList.toggle('active',active);
+    el.setAttribute('aria-selected',String(active));
+  }
+  root.querySelectorAll('.sheet-body > .tab[data-tab]').forEach(el=>{
+    const active = el.dataset.tab===tab;
+    el.classList.toggle('active',active);
+    el.hidden = !active;
+    el.style.display = active ? '' : 'none';
+  });
+}
+
+class MarvelMultiverseItemSheet extends D616ItemSheetV2Base {
+  static DEFAULT_OPTIONS = {
+    classes: ['multiverse-d616','sheet','item','mm-item-v2'],
+    position: {width:600,height:680},
+    window: {resizable:true},
+    form: {submitOnChange:false,closeOnSubmit:false},
+  };
+  static PARTS = {sheet:{template:`${D616_ITEM_TEMPLATE_DIR}/item-item-sheet.hbs`}};
+  tabGroups = {primary:null};
+
+  async _prepareContext(options) {
+    const context=await super._prepareContext(options);
+    const snapshot=this.item.toObject(false);
+    context.item=this.item;
+    context.document=this.item;
+    context.data=snapshot;
+    context.system=foundry.utils.deepClone(this.item.system.toObject?.(false) ?? snapshot.system ?? {});
+    // Preserve the DocumentSheetV2 `source` contract supplied by super.
+    // The item's raw HTML is kept separately from its enriched read-only view:
+    // showing it must never depend on whether ProseMirror has been activated.
+    context.richTextSource=foundry.utils.deepClone(this.item._source?.system ?? snapshot.system ?? {});
+    context.enriched={};
+    const editor=foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
+    for (const key of ['description','effect']) {
+      const html=String(context.richTextSource[key] ?? '');
+      try {
+        context.enriched[key]=typeof editor?.enrichHTML==='function'
+          ? await editor.enrichHTML(html,{secrets:this.item.isOwner,relativeTo:this.item})
+          : (foundry.utils.escapeHTML?.(html) ?? html);
+      } catch (error) {
+        console.warn(`[multiverse-d616] Could not enrich Item ${key}:`,error);
+        context.enriched[key]=foundry.utils.escapeHTML?.(html) ?? '';
+      }
+    }
+    context.flags=snapshot.flags ?? {};
+    context.rollData=this.item.getRollData();
+    context.editable=this.isEditable;
+    context.owner=this.item.isOwner;
+    context.cssClass=this.isEditable ? 'editable' : 'locked';
+    context.effects=prepareActiveEffectCategories(this.item.effects);
+    if (['power','weapon'].includes(this.item.type)) {
+      context.elements=Object.fromEntries(Object.entries(CONFIG.MULTIVERSE_D616.elements)
+        .map(([id,el])=>[id,el.label]));
+      context.selectedElement=context.system.element;
+      context.damageTypes={health:{label:'Health'},focus:{label:'Focus'}};
+      context.attackKinds={ranged:{label:'Ranged'},close:{label:'Close'}};
+      context.attackEdgeModes={edge:{label:'Edge'},normal:{label:'Normal'},trouble:{label:'Trouble'}};
+      context.abilities=Object.fromEntries(Object.entries(CONFIG.MULTIVERSE_D616.abilities)
+        .map(([id,label])=>[id,{label:game.i18n.localize(label)}]));
+    }
+    return context;
+  }
+
+
+  async _onRender(context,options) {
+    await super._onRender(context,options);
+    const root=this.element;
+    if (!root) return;
+    root.querySelectorAll('.sheet-tabs [data-tab]').forEach(tab=>
+      tab.addEventListener('click',event=>{
+        event.preventDefault();
+        d616ActivateItemTab(this,tab.dataset.tab);
+      }));
+    d616ActivateItemTab(this,this.tabGroups.primary ?? d616ItemSheetInitialTab(this.item.type));
+
+    if (this.isEditable) {
+      // Deliberately do not submit the entire form on change: a rich-text
+      // editor may still contain an inactive/empty form value and otherwise
+      // overwrite the stored description/effect (v0.2.37 regression).
+      root.querySelectorAll('input[name], select[name], textarea[name]').forEach(control=>{
+        control.addEventListener('change',event=>this._d616SaveSimpleField(event));
+      });
+      // Explicit, always-visible rich-text controls avoid ProseMirror form
+      // lifecycle issues. Every field saves independently on its own Item.
+      root.querySelectorAll('.mm-item-richtext-edit').forEach(button=>
+        button.addEventListener('click',event=>{
+          event.preventDefault();
+          this._d616OpenRichText(button.closest('.mm-item-richtext'));
+        }));
+      root.querySelectorAll('.mm-item-cancel-richtext').forEach(button=>
+        button.addEventListener('click',event=>{
+          event.preventDefault();
+          this._d616CancelRichText(button.closest('.mm-item-richtext'));
+        }));
+      root.querySelectorAll('.mm-item-save-richtext').forEach(button=>
+        button.addEventListener('click',async event=>{
+          event.preventDefault();
+          const panel=button.closest('.mm-item-richtext');
+          try {
+            await this._d616SaveRichTextPanel(panel);
+            ui.notifications?.info?.(`${panel?.dataset.field === 'effect' ? 'Efeito' : 'Descrição'} salvo(a).`);
+          } catch(error) {
+            console.error('[multiverse-d616] Item rich-text save failed:',error);
+            ui.notifications?.error?.('Não foi possível salvar o texto do poder. Veja o console.');
+          }
+        }));
+      root.querySelectorAll('img[data-edit="img"]').forEach(img=>
+        img.addEventListener('click',event=>{
+          event.preventDefault();
+          const Picker=foundry.applications?.apps?.FilePicker?.implementation ?? globalThis.FilePicker;
+          if (Picker) new Picker({type:'image',current:this.item.img,
+            callback:path=>this.item.update({img:path})}).render(true);
+        }));
+      root.querySelectorAll('.effect-control').forEach(link=>
+        link.addEventListener('click',event=>onManageActiveEffect(event,this.item)));
+    }
+    if (this.item.type!=='occupation') return;
+    root.querySelectorAll('.mm-occ-view').forEach(el=>el.addEventListener('click',event=>
+      LegacyMarvelMultiverseItemSheet.prototype._onOccupationView.call(this,event)));
+    root.querySelectorAll('.mm-occ-add').forEach(el=>el.addEventListener('click',event=>
+      LegacyMarvelMultiverseItemSheet.prototype._onOccupationAdd.call(this,event)));
+    if (this.isEditable) root.querySelectorAll('.mm-occ-remove').forEach(el=>
+      el.addEventListener('click',event=>
+        LegacyMarvelMultiverseItemSheet.prototype._onOccupationRemove.call(this,event)));
+    for (const zone of root.querySelectorAll('.mm-occ-drop')) {
+      for (const type of ['dragenter','dragover']) zone.addEventListener(type,event=>{
+        event.preventDefault(); event.stopPropagation();
+        if (event.dataTransfer) event.dataTransfer.dropEffect='copy';
+      });
+      zone.addEventListener('drop',event=>{
+        event.preventDefault();event.stopPropagation();
+        this._onOccupationDrop({originalEvent:event,currentTarget:zone});
+      });
+    }
+  }
+
+  async _d616SaveSimpleField(event) {
+    if (!this.isEditable) return;
+    const control=event.currentTarget;
+    const field=String(control?.name ?? '');
+    if (field !== 'name' && !/^system\.[a-zA-Z][a-zA-Z0-9_.]*$/.test(field)) return;
+    // Rich-text saves are handled only by the editor's explicit save event.
+    if (['system.description','system.effect'].includes(field)) return;
+    let value=control.type==='checkbox' ? !!control.checked : control.value;
+    if (control.type==='number' || control.dataset.dtype==='Number') {
+      value = value === '' ? null : Number(value);
+      if (value !== null && !Number.isFinite(value)) return;
+    }
+    try {
+      await this.item.update({[field]:value});
+    } catch(error) {
+      console.error(`[multiverse-d616] Item field ${field} save failed:`,error);
+      ui.notifications?.error?.(`Não foi possível salvar ${field}.`);
+    }
+  }
+
+  _d616OpenRichText(panel) {
+    if (!this.isEditable || !panel) return;
+    const edit=panel.querySelector('.mm-item-richtext-editor');
+    const content=panel.querySelector('.mm-item-richtext-editable');
+    const preview=panel.querySelector('.mm-item-richtext-readonly');
+    if (!edit || !content || !preview) return;
+    // The visible text was enriched/sanitized by Foundry when rendered.
+    // Reuse that safe HTML in a simple inline WYSIWYG editing surface.
+    content.innerHTML=preview.innerHTML;
+    edit.hidden=false;
+    panel.dataset.editing='true';
+    panel.querySelector('.mm-item-richtext-edit')?.setAttribute('aria-expanded','true');
+    content.focus();
+  }
+
+  _d616CancelRichText(panel) {
+    if (!panel) return;
+    const edit=panel.querySelector('.mm-item-richtext-editor');
+    if (edit) edit.hidden=true;
+    delete panel.dataset.editing;
+    panel.querySelector('.mm-item-richtext-edit')?.setAttribute('aria-expanded','false');
+  }
+
+  async _d616SaveRichTextPanel(panel) {
+    if (!this.isEditable || !panel || panel.dataset.editing!=='true') return;
+    const field=String(panel.dataset.field ?? '');
+    if (!['description','effect'].includes(field)) return;
+    const content=panel.querySelector('.mm-item-richtext-editable');
+    if (!content) return;
+    // Persist this one field only: other text fields and Element are untouched.
+    const value=content.innerHTML;
+    if (value !== String(this.item.system?.[field] ?? ''))
+      await this.item.update({[`system.${field}`]:value});
+    const preview=panel.querySelector('.mm-item-richtext-readonly');
+    if (preview) {
+      const editor=foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
+      preview.innerHTML=typeof editor?.enrichHTML==='function'
+        ? await editor.enrichHTML(value,{secrets:this.item.isOwner,relativeTo:this.item})
+        : value;
+    }
+    this._d616CancelRichText(panel);
+  }
+
+  async _preClose(options) {
+    // A close through X also commits any actively edited content.
+    if (this.isEditable) for (const panel of this.element?.querySelectorAll?.('.mm-item-richtext[data-editing="true"]') ?? []) {
+      await this._d616SaveRichTextPanel(panel);
+    }
+    return super._preClose?.(options);
+  }
+
+  async _onDrop(event) {
+    const zone=event?.target?.closest?.('.mm-occ-drop');
+    if (this.item.type==='occupation' && zone)
+      return this._onOccupationDrop({originalEvent:event,currentTarget:zone});
+    return super._onDrop(event);
+  }
+
+  _onOccupationDrop(event) {
+    return LegacyMarvelMultiverseItemSheet.prototype._onOccupationDrop.call(this,event);
+  }
+}
+
+// One registered subclass per template: no shared static state when players
+// keep different Item sheets open simultaneously.
+class D616PowerItemSheet extends MarvelMultiverseItemSheet {
+  static PARTS={sheet:{template:d616ItemSheetTemplate('power')}};
+}
+class D616WeaponItemSheet extends MarvelMultiverseItemSheet {
+  static PARTS={sheet:{template:d616ItemSheetTemplate('weapon')}};
+}
+class D616TraitItemSheet extends MarvelMultiverseItemSheet {
+  static PARTS={sheet:{template:d616ItemSheetTemplate('trait')}};
+}
+class D616TagItemSheet extends MarvelMultiverseItemSheet {
+  static PARTS={sheet:{template:d616ItemSheetTemplate('tag')}};
+}
+class D616OriginItemSheet extends MarvelMultiverseItemSheet {
+  static PARTS={sheet:{template:d616ItemSheetTemplate('origin')}};
+}
+class D616OccupationItemSheet extends MarvelMultiverseItemSheet {
+  static PARTS={sheet:{template:d616ItemSheetTemplate('occupation')}};
+}
+class D616BasicItemSheet extends MarvelMultiverseItemSheet {
+  static PARTS={sheet:{template:d616ItemSheetTemplate('item')}};
+}
+const D616ItemSheetsByType={
+  power:D616PowerItemSheet,weapon:D616WeaponItemSheet,trait:D616TraitItemSheet,
+  tag:D616TagItemSheet,origin:D616OriginItemSheet,
+  occupation:D616OccupationItemSheet,item:D616BasicItemSheet
+};
+
 /**
  * Define a set of template paths to pre-load
  * Pre-loaded templates are compiled and cached for fast access when rendering
@@ -5472,6 +6445,9 @@ class MarvelMultiversePower extends MarvelMultiverseItemBase {
       initial: 0,
       min: 0,
     });
+    // Explicit non-damaging power check and optional fixed target number.
+    schema.powerCheck = new fields.BooleanField({ required: true, initial: false });
+    schema.rollTargetNumber = new fields.NumberField({ required: true, initial: 0, min: 0 });
     schema.attackTarget = new fields.StringField({ blank: true });
     schema.attackRange = new fields.NumberField({
       ...requiredInteger,
@@ -5611,6 +6587,11 @@ globalThis.MarvelMultiverse = {
 /* -------------------------------------------- */
 
 Hooks.once("init", () => {
+  registerSmartTargetSettings();
+  registerCombatIntelligenceSettings();
+  registerAutomationSettings();
+  game.multiverseD616 = game.multiverseD616 ?? {};
+  game.multiverseD616.automationEnabled = automationEnabled;
   // Add utility classes to the global game object so that they're more easily
   // accessible in global contexts.
   globalThis.MarvelMultiverse = game.MarvelMultiverse = Object.assign(
@@ -5681,21 +6662,33 @@ Hooks.once("init", () => {
   const ActorsCollection = foundry.documents?.collections?.Actors ?? globalThis.Actors;
   const ItemsCollection = foundry.documents?.collections?.Items ?? globalThis.Items;
 
-  ActorsCollection?.unregisterSheet?.("core", foundry.appv1.sheets.ActorSheet);
-  ActorsCollection?.registerSheet?.("multiverse-d616", MarvelMultiverseCharacterSheet, {
-    types: ["character"],
-    makeDefault: true,
-    label: "MULTIVERSE_D616.SheetLabels.Actor",
+  // Actor sheets use the v14 DocumentSheetConfig registration API.
+  const sheetConfig = foundry.applications.apps.DocumentSheetConfig;
+  sheetConfig.unregisterSheet(foundry.documents.Actor,"core",foundry.appv1.sheets.ActorSheet);
+  sheetConfig.registerSheet(foundry.documents.Actor,"multiverse-d616",MarvelMultiverseCharacterSheet,{
+    types:["character"],makeDefault:true,label:"MULTIVERSE_D616.SheetLabels.Actor"
   });
-  ActorsCollection?.registerSheet?.("multiverse-d616", MarvelMultiverseNPCSheet, {
-    types: ["npc"],
-    makeDefault: true,
-    label: "MULTIVERSE_D616.SheetLabels.NPC",
+  sheetConfig.registerSheet(foundry.documents.Actor,"multiverse-d616",MarvelMultiverseNPCSheet,{
+    types:["npc"],makeDefault:true,label:"MULTIVERSE_D616.SheetLabels.NPC"
   });
-  ItemsCollection?.unregisterSheet?.("core", foundry.appv1.sheets.ItemSheet);
-  ItemsCollection?.registerSheet?.("multiverse-d616", MarvelMultiverseItemSheet, {
-    makeDefault: true,
-    label: "MULTIVERSE_D616.SheetLabels.Item",
+  // Emergency compatibility option: selectable per sheet, never the default.
+  // This allows a GM to keep a game running if a third-party module does not
+  // yet support ActorSheetV2. Remove only after real-world migration tests.
+  sheetConfig.registerSheet(foundry.documents.Actor,"multiverse-d616-legacy",LegacyMarvelMultiverseCharacterSheet,{
+    types:["character"],makeDefault:false,label:"D616 Personagem (compatibilidade)"
+  });
+  sheetConfig.registerSheet(foundry.documents.Actor,"multiverse-d616-legacy",LegacyMarvelMultiverseNPCSheet,{
+    types:["npc"],makeDefault:false,label:"D616 NPC (compatibilidade)"
+  });
+  // Item sheets now use the same V14 sheet registry as Actor sheets.
+  sheetConfig.unregisterSheet(foundry.documents.Item,"core",foundry.appv1.sheets.ItemSheet);
+  for (const [type,ItemSheetClass] of Object.entries(D616ItemSheetsByType)) {
+    sheetConfig.registerSheet(foundry.documents.Item,"multiverse-d616",ItemSheetClass,{
+      types:[type],makeDefault:true,label:"MULTIVERSE_D616.SheetLabels.Item"
+    });
+  }
+  sheetConfig.registerSheet(foundry.documents.Item,"multiverse-d616-legacy",LegacyMarvelMultiverseItemSheet,{
+    makeDefault:false,label:"D616 Item (compatibilidade)"
   });
 
   // Preload Handlebars templates.
@@ -5792,7 +6785,21 @@ function _configureFonts() {
 /* -------------------------------------------- */
 
 Hooks.once("ready", () => {
+  void migrateSmartTargetSettings();
   registerTokenSizeHooks();
+  registerResizeOtherSocket();
+  registerFocusMaintenanceHooks();
+  registerPowerConditionHooks();
+  registerPowerGrabbedHooks();
+  registerPowerEscapeHooks();
+registerConditionRecoveryHooks();
+registerPoisonTurnHooks();
+registerOngoingPowerHooks();
+  registerRicoShieldHooks();
+  installRepeatPowerHooks();
+  registerHeldConcentrationHooks();
+  registerConditionEdgeHooks();
+  registerElementalAdvancedHooks();
   // Wait to register hotbar drop hook on ready so that modules could register earlier if they want to
   Hooks.on("hotbarDrop", (bar, data, slot) => {
     const uuid = data?.uuid;

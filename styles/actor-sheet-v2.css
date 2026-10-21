@@ -1,0 +1,230 @@
+/* D616 v0.2.34 — ApplicationV2 sheet layout and scroll restoration.
+   Only V2 sheets have .mm-actor-v2: legacy sheet CSS remains unchanged. */
+.multiverse-d616.sheet.actor.mm-actor-v2 .window-content {
+  overflow-y: auto !important;
+  overflow-x: auto;
+  min-height: 0;
+  scrollbar-gutter: stable;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 .window-content > form {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto !important;
+  min-height: 100%;
+  overflow: visible !important;
+  gap: 8px;
+  padding: 6px;
+  box-sizing: border-box;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 .sheet-header,
+.multiverse-d616.sheet.actor.mm-actor-v2 .sheet-body,
+.multiverse-d616.sheet.actor.mm-actor-v2 .sheet-body .tab[data-tab],
+.multiverse-d616.sheet.actor.mm-actor-v2 .sheet-body .tab[data-tab] > .flexrow {
+  height: auto !important;
+  min-height: 0;
+  overflow: visible;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 .sheet-header,
+.multiverse-d616.sheet.actor.mm-actor-v2 .sheet-body {flex: 0 0 auto;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-styled-container.mm-powers-block,
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-styled-container.mm-traitstags-block,
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-styled-container.mm-gear-block,
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-styled-container-body {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character nav.mm-tabs {position: sticky; top: -6px; z-index: 5;}
+/* Uniform columns prevent old flexible cell widths from drifting when
+   ApplicationV2 computes a different content width from the V1 window. */
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-abilities-block .mm-ability-rows {position:relative;}
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-abilities-block .mm-ability-rows::before {width:24%;}
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-abilities-block .mm-ability-rows li {
+  display: grid;
+  grid-template-columns: minmax(95px, 1.4fr) repeat(3, minmax(48px, 1fr));
+  align-items: center;
+  column-gap: 4px;
+  min-height: 34px;
+  padding: 1px 4px;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-abilities-block .mm-ability-rows li > div {
+  display:flex;
+  flex:auto;
+  width:100%;
+  min-width:0;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-abilities-block .mm-ability-rows li > div:first-child {justify-content:flex-start;}
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-abilities-block .mm-ability-rows li > div > input,
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-abilities-block .mm-ability-rows li > div > div,
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-abilities-block .mm-ability-rows li > div > span {
+  flex: 0 1 auto;
+  min-width:0;
+  width:clamp(38px, 85%, 55px);
+  margin:0 auto;
+  text-align:center;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-abilities-block .mm-ability-name {font-size:clamp(12px, 1.3vw, 18px); padding-inline-start:2px;}
+
+/* NPCs can be narrowed independently of the 690px legacy character sheet. */
+.multiverse-d616.sheet.actor.mm-actor-v2 .window-content:has(> form.mm-v2-npc) {min-width:0;}
+/* NPC: printed-sheet-inspired responsive dashboard in the same D616 palette. */
+.multiverse-d616.sheet.actor.mm-actor-v2 form.mm-v2-npc {
+  color:#f7f1ed;
+  container-type:inline-size;
+  font-family:'Roboto Condensed',sans-serif;
+  gap:12px;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-title {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 95px;
+  gap:12px;
+  align-items:center;
+  background:#17171b;
+  border:1px solid #b33b21;
+  border-top:4px solid #e53913;
+  padding:10px;
+  border-radius:6px;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-title .mm-styled-field {min-width:0;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-title .mm-v2-npc-rank {display:grid;gap:3px;text-align:center;font-size:11px;font-weight:700;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-rank input {text-align:center;font-size:24px;font-weight:800;height:42px;background:#fff5ee;color:#161316;border:2px solid #d43b16;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-top {display:grid;grid-template-columns:minmax(170px,0.95fr) minmax(235px,1.25fr) minmax(210px,1fr);gap:10px;align-items:stretch;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-card {min-width:0;background:rgba(20,18,21,.94);border:2px solid #c43819;border-radius:5px;padding:8px;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-card h3 {margin:0 0 8px;padding:5px 9px;background:#8b180d;color:#fff;text-transform:uppercase;font-size:16px;border:0;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-identity {display:flex;flex-direction:column;gap:8px;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-portrait {display:flex;flex:1 1 auto;align-items:center;justify-content:center;min-height:132px;max-height:205px;background:linear-gradient(140deg,#ae260b,#250f10);border:1px solid #b12d16;overflow:hidden;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-portrait img {width:100%;height:100%;max-height:200px;object-fit:contain;border:0;cursor:pointer;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-resources {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-resource {background:#fdf4ef;color:#161316;border:2px solid #c43819;padding:5px;min-width:0;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-resource.-focus {border-color:#087bbe;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-resource-heading {font-weight:700;font-size:11px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-numbers {display:flex;align-items:center;justify-content:center;gap:3px;margin-top:5px;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-numbers input {min-width:0;max-width:65px;width:47%;text-align:center;font-size:16px;font-weight:700;background:white;color:black;border:1px solid #555;padding:2px;height:29px;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-stat-head,
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-stat-row,
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-damage-head,
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-damage-row {display:grid;grid-template-columns:minmax(0,1.3fr) minmax(54px,.8fr) minmax(54px,.8fr);gap:6px;align-items:center;margin:4px 0;text-align:center;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-stat-head,
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-damage-head {font-size:10px;text-transform:uppercase;color:#ffccc2;font-weight:700;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-stat-name,
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-damage-row > span {text-align:left;font-size:clamp(13px,1.4vw,17px);font-weight:600;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-stat-row input,
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-stat-row output,
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-damage-row strong,
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-damage-row output {width:100%;min-width:0;height:32px;padding:3px;background:#fff7f1;color:#161316;border:1px solid #d44822;font-weight:700;font-size:17px;text-align:center;display:flex;justify-content:center;align-items:center;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-damage-row strong {gap:3px;white-space:nowrap;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-damage-row img {border:0;width:20px;height:20px;object-fit:contain;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-bottom {display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:12px;align-items:start;}
+.multiverse-d616.sheet.actor.mm-actor-v2 form.mm-v2-npc .mm-powers-block,
+.multiverse-d616.sheet.actor.mm-actor-v2 form.mm-v2-npc .mm-traitstags-block {margin:0;height:auto;min-height:0;overflow:visible;}
+.multiverse-d616.sheet.actor.mm-actor-v2 form.mm-v2-npc .mm-styled-container-body {overflow:visible;height:auto;}
+@container (max-width:760px) {
+  .multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-top {grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+  .multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-identity {grid-column:span 2;display:grid;grid-template-columns:minmax(160px,1fr) minmax(220px,1fr);}
+  .multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-bottom {grid-template-columns:minmax(0,1fr);}
+}
+@container (max-width:530px) {
+  .multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-top {grid-template-columns:minmax(0,1fr);}
+  .multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-identity {grid-column:auto;grid-template-columns:1fr;}
+  .multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-npc-portrait {max-height:170px;}
+}
+
+/* v0.2.35 — Fixes scoped only to the ApplicationV2 character sheet.
+   The approved NPC dashboard uses different rules and remains unchanged. */
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-v2-character-attributes {
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  height:auto !important;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-v2-character-attributes > h3.mm-v2-character-attributes-title {
+  display:flex !important;
+  align-items:center;
+  position:relative;
+  flex:0 0 30px !important;
+  min-height:30px;
+  height:30px;
+  padding-left:10px;
+  color:#fff !important;
+  font-weight:700;
+  line-height:1.2;
+  z-index:2;
+  visibility:visible !important;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-v2-character-attributes > .mm-ability-rows {
+  flex:0 0 auto;
+  height:auto !important;
+}
+/* Grid prevents the Traits & Tags panel from dropping to the bottom of the
+   taller Powers panel, even when either panel has a long item list. */
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-v2-character-columns {
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  align-items:start !important;
+  align-content:start;
+  width:100%;
+  min-width:0;
+  height:auto !important;
+  overflow:visible !important;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-v2-character-columns > .mm-styled-container {
+  display:flex;
+  flex-direction:column;
+  flex:initial !important;
+  width:100% !important;
+  min-width:0;
+  height:auto !important;
+  margin:0 !important;
+  align-self:start !important;
+  overflow:visible;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-v2-character-columns > .mm-styled-container > h3 {
+  flex:0 0 29px;
+  min-height:29px;
+  height:29px;
+}
+/* The old 1920px no-repeat texture covered only the beginning of a long list.
+   Repeat the existing crimson texture vertically while keeping the entire
+   gradient overlaid on the panel, so all items retain their background. */
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-v2-character-columns > .mm-styled-container > .mm-styled-container-body {
+  flex:0 0 auto;
+  height:auto !important;
+  min-height:0;
+  overflow:visible !important;
+  background-color:#781008;
+  background-image:linear-gradient(180deg,rgba(139,5,2,.28),rgba(70,7,4,.16)),url("../ui/official/mmrpg-crimson-bg.jpg");
+  background-position:center top,center top;
+  background-size:100% 100%,140% auto;
+  background-repeat:no-repeat,repeat-y;
+}
+
+/* v0.2.36 — Non-Combat Checks header matches the white-on-red headings. */
+.multiverse-d616.sheet.actor.mm-actor-v2 form.character .mm-abilities-block .mm-ability-rows li:first-of-type > div:nth-of-type(4) {
+  color:#fff !important;
+  background:#891d0f;
+  font-size:10px;
+  font-weight:600;
+  text-transform:uppercase;
+  line-height:1.15;
+  border-radius:3px;
+  position:relative;
+  z-index:1;
+}
+
+/* v0.2.43 — Biography editor supports the V2 Actor document lifecycle. */
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-actor-bio-panel {min-width:0;overflow:visible;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-actor-bio-panel .mm-styled-container-body {padding:10px;min-height:85px;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-actor-bio-preview {color:#fff;line-height:1.45;overflow-wrap:anywhere;min-height:32px;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-actor-bio-preview:empty::before {content:'Sem informações cadastradas';opacity:.65;font-style:italic;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-actor-bio-actions {display:flex;justify-content:flex-end;margin-bottom:7px;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-actor-bio-actions button,
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-actor-bio-buttons button {background:#8f2c27;color:white;border:1px solid #ce492d;border-radius:4px;cursor:pointer;padding:5px 12px;width:auto;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-actor-bio-content {min-height:120px;max-height:340px;overflow:auto;padding:10px;color:#18161a;background:#fff7f2;border:2px solid #c43819;border-radius:4px;white-space:normal;overflow-wrap:anywhere;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-actor-bio-buttons {display:flex;gap:8px;margin-top:7px;justify-content:flex-end;}
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-actor-bio-editor[hidden] {display:none!important;}

@@ -27,7 +27,7 @@ const changesOf = effect => effect?.system?.changes ?? effect?.changes ?? [];
 const effectsOf = actor => Array.from(actor?.effects?.contents ?? actor?.effects ?? []);
 const normalize = value => String(value ?? '').toLowerCase().trim();
 const isKnownSize = value => Object.hasOwn(TOKEN_SIZE_DIMENSIONS, value);
-const isResize = effect => resizeFlags(effect).growChoice === true || resizeFlags(effect).shrinkChoice === true;
+const isResize = effect => resizeFlags(effect).growChoice === true || resizeFlags(effect).shrinkChoice === true || resizeFlags(effect).resizeOtherChoice === true;
 const isLegacySize = effect => /^(?:Microscopic|Miniature|Tiny|Little|Small|Average|Big|Huge|Gigantic|Titanic|Gargantuan) Effects$/i.test(String(effect?.name ?? '')) &&
   changesOf(effect).some(change => change.key === 'system.size');
 const isSizeEffect = effect => isResize(effect) || resizeFlags(effect).managedSize === true || isLegacySize(effect);
@@ -44,7 +44,7 @@ export function effectiveActorTokenSize(actor) {
   const effects = effectsOf(actor);
   const choice = effects.find(effect => effect?.disabled !== true && isResize(effect));
   if (choice) {
-    const marked = normalize(resizeFlags(choice).growSelectedSize ?? resizeFlags(choice).shrinkSelectedSize);
+    const marked = normalize(resizeFlags(choice).growSelectedSize ?? resizeFlags(choice).shrinkSelectedSize ?? resizeFlags(choice).resizeOtherSelectedSize);
     const value = marked || normalize(changesOf(choice).find(c => c.key === 'system.size')?.value);
     if (isKnownSize(value)) return value;
   }
@@ -141,8 +141,23 @@ export function registerTokenSizeHooks() {
       // Only the originating user updates tokens; skip when the actor is not editable.
       const actor = effect.parent;
       if (!actor?.isOwner) return;
-      void syncActorTokenSize(actor,effectiveActorTokenSize(actor)).catch(error =>
-        console.error(`[${SYSTEM_ID}] Falha ao atualizar tamanho após efeito:`,error));
+      const previous = hook === 'deleteActiveEffect' && resizeFlags(effect).resizeOtherChoice===true
+        ? resizeFlags(effect).resizeOtherPreviousEffects??[] : [];
+      void (async()=>{
+        // If the Narrator manually deletes Resize Other, restore any Grow/Shrink
+        // that target already had before this power was applied.
+        if(previous.length){
+          const old=effectsOf(actor).filter(isResize);
+          if(!old.length){
+            const rows=previous.map(value=>{
+              const row=globalThis.foundry?.utils?.deepClone?.(value)??JSON.parse(JSON.stringify(value));
+              delete row._id;delete row.id;return row;
+            });
+            await actor.createEmbeddedDocuments('ActiveEffect',rows,{[RESIZE_SKIP_OPTION]:true});
+          }
+        }
+        await syncActorTokenSize(actor,effectiveActorTokenSize(actor));
+      })().catch(error=>console.error(`[${SYSTEM_ID}] Falha ao atualizar tamanho após efeito:`,error));
     });
   }
   Hooks.on('updateActor',(actor,changes,options={},userId) => {

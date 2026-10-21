@@ -98,6 +98,24 @@
 .mmdr-multi .mmdr-row { display: contents; }
 .mmdr-multi .tt { text-align:right; font-weight:700; }
 
+/* The elemental defense selection belongs to the target, not a single grid column.
+   The row above still uses the original ALVO/REDUÇÃO/DANO layout. */
+.mmdr-multi .tbl > .mmdr-guard-line {
+  grid-column: 1 / -1;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  font-size: .86em;
+}
+.mmdr-multi .tbl > .mmdr-guard-line .mmdr-guard-mode {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+
 
 /* MMDR 0.9.14: hide detailed breakdown box */
 .mmdr-breakdown { display: none !important; }

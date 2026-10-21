@@ -1,3 +1,4 @@
+import { automationEnabled } from '../automation-settings.mjs';
 import {
   TURN_TRACKER_RESOURCES,
   actorMovementMaximum,
@@ -8,7 +9,10 @@ import {
   movementSpacesFromHook,
   resetTurnState,
   sanitizeTurnState,
+  validateTurnConsumption,
 } from "./turn-tracker-core.mjs";
+import { resolveTurnResourceState } from "./reaction-limits.mjs";
+import { findCombatById } from "./combat-lookup.mjs";
 
 const SYSTEM_ID = "multiverse-d616";
 const FLAG_KEY = "turnTracker";
@@ -20,6 +24,20 @@ const POPUP_ID = "m616-turn-tracker-window";
 const STORAGE_KEY = `${SYSTEM_ID}.turnTrackerWindow.v1`;
 const IGNORED_MOVEMENT_METHODS = new Set(["config", "paste", "undo"]);
 const processedMovements = new Set();
+const spendAcks=new Map();
+const pendingSpendWrites=new Map();
+function serializeSpend(payload, user){
+  const key=`${payload.combatId}|${payload.combatantId}`;
+  const previous=pendingSpendWrites.get(key)??Promise.resolve();
+  const job=previous.catch(()=>{}).then(()=>applyRequest(payload,user));
+  pendingSpendWrites.set(key,job);
+  void job.then(
+    () => { if (pendingSpendWrites.get(key) === job) pendingSpendWrites.delete(key); },
+    () => { if (pendingSpendWrites.get(key) === job) pendingSpendWrites.delete(key); },
+  );
+  return job;
+}
+
 const processedDestinations = new Map();
 const pendingCoordinateOrigins = new Map();
 const COORDINATE_FALLBACK_DELAY_MS = 250;
@@ -88,10 +106,10 @@ function canControl(combatant, user = game.user) {
 
 function stateFor(combatant) {
   const movementMax = actorMovementMaximum(combatantActor(combatant));
-  return sanitizeTurnState(
+  return resolveTurnResourceState(sanitizeTurnState(
     combatant?.getFlag?.(SYSTEM_ID, FLAG_KEY) ?? {},
     movementMax
-  );
+  ), combatantActor(combatant));
 }
 
 function statesEqual(left, right) {
@@ -115,7 +133,7 @@ async function persistState(combatant, state) {
 }
 
 function combatForId(combatId) {
-  return game.combats?.get?.(combatId) ?? game.combat ?? null;
+  return findCombatById(game.combats, game.combat, combatId);
 }
 
 function resolveCombatant(combatId, combatantId) {
@@ -138,9 +156,10 @@ async function applyRequest(payload, requestingUser) {
       movementMax
     );
   } else if (payload.operation === "consume") {
-    const resources = (payload.resources ?? []).filter((resource) =>
-      TURN_TRACKER_RESOURCES.includes(resource)
-    );
+    const resources = payload.resources;
+    // Validate on the GM after each queued request. Reject stale, malformed,
+    // duplicate or already-exhausted spends before modifying combatant flags.
+    if (!validateTurnConsumption(current, resources, movementMax)) return false;
     next = consumeTurnResources(current, resources, movementMax);
   } else if (payload.operation === "reset") {
     next = resetTurnState(current, current.resetKey, movementMax);
@@ -152,7 +171,7 @@ async function applyRequest(payload, requestingUser) {
   return true;
 }
 
-async function requestUpdate(combatant, request) {
+async function requestUpdate(combatant, request, {waitForAck=false}={}) {
   if (!combatant || !canControl(combatant)) return false;
 
   const payload = {
@@ -163,7 +182,7 @@ async function requestUpdate(combatant, request) {
     ...request,
   };
 
-  if (game.user.isGM) return applyRequest(payload, game.user);
+  if (game.user.isGM) return serializeSpend(payload, game.user);
 
   if (!primaryGM()) {
     ui.notifications?.warn?.(
@@ -172,12 +191,22 @@ async function requestUpdate(combatant, request) {
     return false;
   }
 
-  game.socket.emit(SOCKET_NAME, payload);
-  return true;
+  if(!waitForAck){game.socket.emit(SOCKET_NAME,payload);return true;}
+  const requestId=foundry.utils.randomID();
+  payload.requestId=requestId;
+  return new Promise(resolve=>{
+    const timeout=setTimeout(()=>{spendAcks.delete(requestId);resolve(false);},5000);
+    spendAcks.set(requestId,result=>{clearTimeout(timeout);spendAcks.delete(requestId);resolve(result);});
+    try{game.socket.emit(SOCKET_NAME,payload);}catch(error){clearTimeout(timeout);spendAcks.delete(requestId);resolve(false);}
+  });
 }
 
 async function handleSocket(payload) {
   if (!payload?.type) return;
+  if(payload.type==='turnTrackerResult'){
+    if(payload.userId===game.user?.id&&spendAcks.has(payload.requestId))spendAcks.get(payload.requestId)(!!payload.success);
+    return;
+  }
 
   if (payload.type === "initiativePrompt") {
     if (game.user?.isGM) return;
@@ -197,7 +226,8 @@ async function handleSocket(payload) {
 
   try {
     if (payload.type === "turnTrackerRequest") {
-      await applyRequest(payload, requestingUser);
+      const success=await serializeSpend(payload, requestingUser);
+      if(payload.requestId)game.socket.emit(SOCKET_NAME,{type:'turnTrackerResult',requestId:payload.requestId,userId:requestingUser.id,success});
       return;
     }
     if (payload.type === "initiativeRollRequest") {
@@ -212,6 +242,12 @@ async function handleSocket(payload) {
       await applyUltimateFantasticConsumeRequest(payload, requestingUser);
     }
   } catch (error) {
+    if (payload.type === "turnTrackerRequest" && payload.requestId) {
+      game.socket.emit(SOCKET_NAME, {
+        type: "turnTrackerResult", requestId: payload.requestId,
+        userId: requestingUser.id, success: false,
+      });
+    }
     console.error(`[${SYSTEM_ID}] Turn Tracker socket update failed`, error);
   }
 }
@@ -1003,6 +1039,7 @@ async function chooseResource(item, resources) {
 }
 
 async function trackItemUse(item) {
+  if (!automationEnabled('turnActions')) return false;
   const combatant = combatantForActor(item?.actor);
   if (!combatant) return false;
 
@@ -1236,18 +1273,20 @@ function combatantImage(combatant) {
 function resourceButtonHtml(resource, state) {
   const used = state[`${resource}Used`];
   const label = RESOURCE_LABELS[resource];
+  const maximum = state[`${resource}Max`];
+  const exhausted = maximum > 0 && used >= maximum;
   const isGM = !!game.user?.isGM;
   const title = isGM
     ? `${label}: ${formatValue(used)} uso(s). Clique para adicionar; clique direito para desfazer.`
     : `${label}: ${formatValue(used)} uso(s).`;
   return `<button type="button"
-    class="m616-popup-resource${isGM ? "" : " is-readonly"}"
+    class="m616-popup-resource${isGM ? "" : " is-readonly"}${exhausted ? " is-exhausted" : ""}"
     data-m616-popup-resource="${resource}"
     title="${escapeHtml(title)}"
     ${isGM ? "" : 'disabled aria-disabled="true"'}>
     <span class="m616-popup-resource-short">${RESOURCE_SHORT[resource]}</span>
     <span class="m616-popup-resource-label">${escapeHtml(label)}</span>
-    <strong>${formatValue(used)}</strong>
+    <strong title="${escapeHtml(`${formatValue(used)} de ${formatValue(maximum)} usados`)}">${formatValue(used)}<small>/${formatValue(maximum)}</small></strong>
   </button>`;
 }
 
@@ -1658,6 +1697,7 @@ async function recordMovementForCombatant(combatant, spaces, source = "movement"
 }
 
 async function trackTokenMovement(tokenDocument, movement, _operation, _user) {
+  if (!automationEnabled('turnActions')) return;
   // The v14 moveToken hook fires on every connected client after the update.
   // Only the primary GM records it, preventing duplicate socket requests and
   // keeping Combatant flag updates on one authoritative client.
@@ -1802,6 +1842,9 @@ Hooks.once("ready", () => {
   game.multiverseD616 = game.multiverseD616 ?? {};
   game.multiverseD616.turnTracker = {
     trackItemUse,
+    consumeAction: (combatant) => requestUpdate(combatant, { operation: 'consume', resources: ['action'] }),
+    consumeMovement: (combatant) => requestUpdate(combatant, { operation: 'consume', resources: ['movement'] }, {waitForAck:true}),
+    consumeReaction: (combatant) => requestUpdate(combatant, { operation: 'consume', resources: ['reaction'] }, {waitForAck:true}),
     getState: stateFor,
     reset: (combatant) => requestUpdate(combatant, { operation: "reset" }),
     resolveInitiative: requestInitiativeResolution,
@@ -1829,6 +1872,34 @@ Hooks.once("ready", () => {
       );
     }, 500);
   }
+});
+
+// The maximum number of Reactions can change when a trait is added or
+// removed. Refresh on every client, without waiting for another turn/flag.
+function combatantsForChangedActor(actor) {
+  const combat = game.combat;
+  if (!combat || !actor) return [];
+  return combatantsArray(combat).filter((combatant) => {
+    const owner = combatantActor(combatant);
+    if (!owner) return false;
+    if (owner === actor || (owner.uuid && owner.uuid === actor.uuid)) return true;
+    // Match only the world Actor used by linked tokens. Unlinked/synthetic
+    // copies have their own data and must not share reaction limits.
+    return !owner.token && owner.id && owner.id === actor.id;
+  });
+}
+function refreshIfCombatActor(actor) {
+  if (combatantsForChangedActor(actor).length) schedulePopupRender({ force: true });
+}
+Hooks.on("updateActor", refreshIfCombatActor);
+for (const event of ["createItem", "updateItem", "deleteItem"]) {
+  Hooks.on(event, (item) => refreshIfCombatActor(item?.parent));
+}
+for (const event of ["createActiveEffect", "updateActiveEffect", "deleteActiveEffect"]) {
+  Hooks.on(event, (effect) => refreshIfCombatActor(effect?.parent?.actor ?? effect?.parent));
+}
+Hooks.on("updateToken", (token) => {
+  if (combatantForToken(token)) schedulePopupRender();
 });
 
 Hooks.on("updateCombatant", (combatant, changed) => {

@@ -108,6 +108,20 @@ export function adjustTurnState(
   return state;
 }
 
+/**
+ * Server-side guard for Action/Reaction costs.  All callers, including socket
+ * requests, must specify one or more distinct resources, and cannot spend a
+ * resource that is already exhausted.  Movement spends its remaining allowance.
+ */
+export function validateTurnConsumption(raw, resources, movementMaximum = raw?.movementMax ?? 5) {
+  if (!Array.isArray(resources) || resources.length === 0 || resources.length > TURN_TRACKER_RESOURCES.length) return false;
+  if (new Set(resources).size !== resources.length) return false;
+  if (resources.some(resource => !TURN_TRACKER_RESOURCES.includes(resource))) return false;
+  const state = sanitizeTurnState(raw, movementMaximum);
+  return resources.every(resource => resource === "movement" ||
+    state[`${resource}Used`] < state[`${resource}Max`]);
+}
+
 export function consumeTurnResources(
   raw,
   resources,

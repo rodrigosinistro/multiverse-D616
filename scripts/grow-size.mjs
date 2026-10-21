@@ -1,3 +1,4 @@
+import {isEffectChangeType} from './active-effect-types.mjs';
 import { syncActorTokenSize, RESIZE_SKIP_OPTION } from "./token-size.mjs";
 /**
  * Grow 1–4: user-selected size with official Resize maximum categories.
@@ -29,7 +30,7 @@ function effectChanges(effect) { return effect?.system?.changes ?? effect?.chang
 export function isGrowthEffect(effect) { return effect?.flags?.[SYSTEM_ID]?.[FLAG] === true; }
 /** Growth and shrinking are mutually exclusive: only one temporary Resize choice can be active. */
 export function isResizeChoiceEffect(effect) {
-  return isGrowthEffect(effect) || effect?.flags?.[SYSTEM_ID]?.shrinkChoice === true;
+  return isGrowthEffect(effect) || effect?.flags?.[SYSTEM_ID]?.shrinkChoice === true || effect?.flags?.[SYSTEM_ID]?.resizeOtherChoice === true;
 }
 function isNaturalSizeEffect(effect) {
   if (isResizeChoiceEffect(effect)) return false;
@@ -106,7 +107,7 @@ function sizeMechanics(size, config) {
   const eff = config?.sizeEffects?.[size];
   const out = new Map();
   for (const c of effectChanges(eff ?? {})) {
-    if (c.key?.startsWith('system.abilities.') && Number(c.mode) === 2) out.set(c.key, Number(c.value) || 0);
+    if (c.key?.startsWith('system.abilities.') && isEffectChangeType(c, 'add')) out.set(c.key, Number(c.value) || 0);
   }
   return out;
 }
@@ -133,7 +134,7 @@ export async function applyGrowChoice(actor, item, choice, config) {
   // or -1 with -2, if a permanent natural-size AE is already present.
   for (const c of entries) {
     if (c.key === 'system.size') {c.priority = 1000; continue;}
-    if (nativeModifiers.has(c.key) && Number(c.mode) === 2) {
+    if (nativeModifiers.has(c.key) && isEffectChangeType(c, 'add')) {
       c.value = Number(c.value) - nativeModifiers.get(c.key);
     }
   }

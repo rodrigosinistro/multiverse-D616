@@ -1,4 +1,10 @@
 import { calculateD616Damage } from "./damage-calculation.js";
+import {damageCardStillCurrent, rollSignature} from "./multi-target-combat.mjs";
+import { confirmRepeatedAttackDamage, confirmHeldHellfireHealthDamage } from "./repeat-power-attacks.mjs";
+import { confirmRicoShieldDamage } from "./rico-shield-chain.mjs";
+import { confirmFaltineDamage } from './ongoing-power-effects.mjs';
+import { confirmPowerDamageFromCard, getMarvelOutcome } from "./power-conditions.mjs";
+import { activeElementalGuards, selectGuard, selectElementalDefense, assessGuardHit, consumeGuard, guardTargetDefense, findCrossingElementalBarrier } from "./elemental-shields.mjs";
 import { applyElementalFantasticFromDamageMessage, postElementalFantasticConfirmation } from "./elemental-fantastic.mjs";
 
 const MODULE_ID = "multiverse-d616";
@@ -209,6 +215,7 @@ function getStructuredEntries(message) {
           ? "focus"
           : "health",
       damage: Math.max(0, Number(entry?.damage ?? 0) || 0),
+      rawDamage: Math.max(0, Number(entry?.rawDamage ?? entry?.damage ?? 0) || 0),
       damageReduction: Math.abs(
         Number(entry?.damageReduction ?? 0) || 0
       ),
@@ -262,6 +269,10 @@ function getLegacyEntries(message, rootElement) {
     rootElement?.querySelectorAll?.(".message-content p") ?? []
   );
   const entries = [];
+  const sourceFormula=parseLegacyFormula(rootElement);
+  const computedRaw=sourceFormula.marvelDie
+    ? calculateD616Damage({...sourceFormula,damageReduction:0}).damage
+    : null;
 
   for (const [index, paragraph] of paragraphs.entries()) {
     const text = paragraph.textContent ?? "";
@@ -297,6 +308,7 @@ function getLegacyEntries(message, rootElement) {
           ? "focus"
           : "health",
       damage: Math.max(0, Number(match.groups.damage) || 0),
+      rawDamage: computedRaw??Math.max(0,Number(match.groups.damage)||0),
       damageReduction: 0,
       effectiveDamageMultiplier: 0,
     });
@@ -361,7 +373,29 @@ function isDamageMessage(message, rootElement) {
   );
 }
 
-function renderTargetTable(entries) {
+function renderGuardSelector(entry, damageMessage) {
+  let actor=null;
+  try {
+    const document=fromUuidSync(entry.targetUuid)||fromUuidSync(entry.actorUuid);
+    actor=document?.actor??(document?.documentName==='Actor'?document:null);
+  }catch(_e) {return '';}
+  const guards=activeElementalGuards(actor);
+  const sourceId=damageMessage?.getFlag?.(MODULE_ID,'sourceMessageId');
+  const roll=sourceId?game.messages?.get?.(sourceId):null;
+  const from=roll?.speaker?.scene&&game.scenes?.get?.(roll.speaker.scene)?.tokens?.get?.(roll.speaker.token);
+  const to=fromUuidSync?.(entry.targetUuid);
+  const boundary=findCrossingElementalBarrier(to?.parent,from,to);
+  if(!guards.length&&!boundary)return '';
+  const auto=selectGuard(guards,'auto',entry.category);
+  const structure=guards.find(g=>g.kind==='structure');
+  const sphere=guards.find(g=>g.name==='Elemental Sphere');
+  if(!auto&&!structure&&!boundary)return '';
+  const choices=[`<option value="auto">${boundary?`Intercepção: ${escapeHtml(boundary.guard.name)} (Ego do criador, proteção ${boundary.guard.threshold})`:auto?`${escapeHtml(auto.name)} — absorção automática (${auto.threshold})`:sphere?`Elemental Sphere — proteção do conjurador (${sphere.threshold})`:'Ataque direto ao personagem'}</option>`];
+  if(structure||boundary)choices.push(`<option value="structure">Atacar estrutura: ${escapeHtml((structure??boundary.guard).name)} (defesa Ego, proteção ${(structure??boundary.guard).threshold})</option>`);
+  if(auto||structure||boundary)choices.push('<option value="bypass">Ataque direto sem absorção (decisão do Mestre)</option>');
+  return `<label class="mmdr-guard-line">Proteção ativa:<select class="mmdr-guard-mode" data-target="${escapeHtml(entry.targetUuid)}">${choices.join('')}</select></label>`;
+}
+function renderTargetTable(entries,damageMessage) {
   if (!entries.length) return "";
   const rows = entries
     .map(
@@ -370,7 +404,7 @@ function renderTargetTable(entries) {
           <span>${escapeHtml(entry.name)}</span>
           <span>DR ${entry.damageReduction}</span>
           <span class="tt">${entry.damage}</span>
-        </div>`
+        </div>${renderGuardSelector(entry,damageMessage)}`
     )
     .join("");
 
@@ -479,7 +513,7 @@ function appendUi(message, rootElement) {
         <div class="formula">${escapeHtml(formulaText)}</div>
       </div>
     </div>
-    ${renderTargetTable(exactEntries)}
+    ${renderTargetTable(exactEntries,message)}
     ${actions}
   `;
 
@@ -500,7 +534,7 @@ Hooks.on("renderChatMessageHTML", (message, html) => {
 
 /* ---------------- Application ---------------- */
 
-async function applyExactEntries(entries, action) {
+async function applyExactEntries(entries, action, modes={}, damageMessage=null) {
   const results = [];
 
   for (const entry of entries) {
@@ -514,59 +548,71 @@ async function applyExactEntries(entries, action) {
     }
 
     const heal = action === "heal";
-    const delta =
-      action === "half"
-        ? Math.ceil(Math.max(0, Number(entry.damage) || 0) / 2)
-        : Math.max(0, Number(entry.damage) || 0);
-    await applyDelta({
-      actor,
-      category: entry.category,
-      delta,
-      heal,
-    });
+    const mode=modes[entry.targetUuid]??'auto';
+    const rawAmount=action==='half'?Math.ceil(entry.rawDamage/2):entry.rawDamage;
+    // Determine whether the ray crosses an ACTIVE Sphere/Prison region; the
+    // caster owns the barrier, even if the recipient is a different actor.
+    const sourceId=damageMessage?.getFlag?.(MODULE_ID,'sourceMessageId');
+    const source=sourceId?game.messages?.get?.(sourceId):null;
+    const srcScene=source?.speaker?.scene?game.scenes?.get?.(source.speaker.scene):null;
+    const attacker=srcScene?.tokens?.get?.(source?.speaker?.token);
+    const victimToken=entry.targetUuid?fromUuidSync?.(entry.targetUuid):null;
+    const boundary=!heal&&mode!=='bypass'
+      ?findCrossingElementalBarrier(victimToken?.parent,attacker,victimToken):null;
+    // All supported attack cards use the same guard precedence.
+    const defense=heal?null:selectElementalDefense({actor,boundary,mode,category:entry.category});
+    const guard=defense?.guard??null;
+    const guardOwner=defense?.owner??actor;
+    let guarded=null;
+    if(guard){
+      if(guard.kind==='structure'){
+        const outcome=getMarvelOutcome(source?.rolls?.[0],guardTargetDefense(guardOwner,guard));
+        if(!outcome?.success){
+          results.push({name:entry.name,targetUuid:entry.targetUuid,actorUuid:entry.actorUuid,
+            category:entry.category,delta:0,heal:false,blocked:true,
+            description:`Ataque errou ${guard.name} (defesa Ego do criador).`});
+          continue;
+        }
+      }
+      guarded=assessGuardHit(rawAmount,guard);
+      await consumeGuard(guardOwner,guard,guarded);
+    }
+    const delta=guarded?.blocked ? 0 :
+      (action==='half'?Math.ceil(Math.max(0,Number(entry.damage)||0)/2):Math.max(0,Number(entry.damage)||0));
+    if(delta>0||heal)await applyDelta({actor,category:entry.category,delta,heal});
     results.push({
       name: entry.name || actor.name,
+      targetUuid: entry.targetUuid, actorUuid: entry.actorUuid,
       category: entry.category,
-      delta,
-      heal,
+      delta,heal,
+      blocked:Boolean(guarded?.blocked),
+      description:guarded?.blocked
+        ? `${guard.name} absorveu ${rawAmount} dano${guarded.destroyed?' e foi destruída':' e permanece ativa'}.`
+        : '',
     });
   }
 
   return results;
 }
 
-async function applyLegacyFormula(message, rootElement, action) {
-  const formula = parseLegacyFormula(rootElement);
-  const category = categoryFromText(rootElement.textContent);
-  const targets = getLegacyTargetRefs(message, rootElement);
-  const results = [];
-
-  for (const target of targets) {
-    const actor = await resolveActor(target.uuid, target.actorUuid);
-    if (!actor) continue;
-
-    const reduction = readDamageReduction(actor, category);
-    const { damage } = calculateD616Damage({
-      marvelDie: formula.marvelDie,
-      damageMultiplier: formula.damageMultiplier,
-      damageReduction: reduction,
-      ability: formula.ability,
-      fantastic: formula.isFantastic,
-    });
-
-    const heal = action === "heal";
-    const delta =
-      action === "half" ? Math.ceil(damage / 2) : damage;
-    await applyDelta({ actor, category, delta, heal });
-    results.push({
-      name: target.name || actor.name,
-      category,
-      delta,
-      heal,
-    });
+async function applyLegacyFormula(message, rootElement, action, modes={}) {
+  const formula=parseLegacyFormula(rootElement);
+  const category=categoryFromText(rootElement.textContent);
+  const targets=getLegacyTargetRefs(message,rootElement);
+  const normalized=[];
+  for(const target of targets){
+    const actor=await resolveActor(target.uuid,target.actorUuid);
+    if(!actor)continue;
+    const common={marvelDie:formula.marvelDie,damageMultiplier:formula.damageMultiplier,
+      ability:formula.ability,fantastic:formula.isFantastic};
+    const rawDamage=calculateD616Damage({...common,damageReduction:0}).damage;
+    const damage=calculateD616Damage({...common,damageReduction:readDamageReduction(actor,category)}).damage;
+    normalized.push({targetUuid:target.uuid,actorUuid:target.actorUuid,name:target.name||actor.name,
+      category,damage,rawDamage});
   }
-
-  return results;
+  // Legacy and modern card variants now share the authoritative hit/guard
+  // path. Only this function applies the damage; no double update occurs.
+  return applyExactEntries(normalized,action,modes,message);
 }
 
 async function postConfirmation(results, action) {
@@ -576,9 +622,7 @@ async function postConfirmation(results, action) {
   const text = results
     .map(
       (result) =>
-        `${escapeHtml(result.name)} ${
-          result.heal ? "+" : "-"
-        }${result.delta}`
+        `${escapeHtml(result.name)} ${result.description?escapeHtml(result.description):`${result.heal?'+':'-'}${result.delta}`}`
     )
     .join(", ");
   const categories = new Set(results.map((result) => result.category));
@@ -600,6 +644,7 @@ async function postConfirmation(results, action) {
   });
 }
 
+const pendingDamageCards=new Set();
 document.addEventListener(
   "click",
   async (event) => {
@@ -625,6 +670,11 @@ document.addEventListener(
     }
 
     const action = button.dataset.action ?? "full";
+    if(pendingDamageCards.has(message.id)){
+      ui.notifications?.warn?.('Este card já está processando o dano.');
+      return;
+    }
+    pendingDamageCards.add(message.id);
     button.disabled = true;
 
     try {
@@ -635,13 +685,25 @@ document.addEventListener(
       const exactEntries = structuredEntries.length
         ? structuredEntries
         : legacyEntries;
+      // An already applied card must not spend health/Focus or consume a
+      // barrier twice (including after a Chat rerender).
+      if(message.getFlag(MODULE_ID,'mmdrResolved')){
+        ui.notifications?.warn?.('Este card de dano já foi confirmado.');
+        return;
+      }
+      const sourceId=message.getFlag(MODULE_ID,'sourceMessageId');
+      const sourceMessage=sourceId?game.messages?.get?.(sourceId):null;
+      const decisions=sourceMessage?.getFlag(MODULE_ID,'multiTargetDecisionRollSignature')===rollSignature(sourceMessage?.rolls?.[0])
+        ?(sourceMessage.getFlag(MODULE_ID,'multiTargetDecisions')??{}):{};
+      if(sourceMessage && !damageCardStillCurrent(message.getFlag(MODULE_ID,'damageApplication'),sourceMessage.rolls?.[0],decisions)){
+        ui.notifications?.warn?.('Os dados do ataque foram modificados depois do cálculo. Gere outro card de dano para usar os resultados atualizados.');
+        return;
+      }
+      const modes=Object.fromEntries(Array.from(messageElement.querySelectorAll('.mmdr-guard-mode'))
+        .map(select=>[select.dataset.target,select.value]));
       const results = exactEntries.length
-        ? await applyExactEntries(exactEntries, action)
-        : await applyLegacyFormula(
-            message,
-            messageElement,
-            action
-          );
+        ? await applyExactEntries(exactEntries, action,modes,message)
+        : await applyLegacyFormula(message,messageElement,action,modes);
 
       if (!results.length) {
         ui.notifications?.warn(
@@ -650,8 +712,15 @@ document.addEventListener(
         return;
       }
 
+      await message.setFlag(MODULE_ID,'mmdrResolved',{action,at:Date.now()});
       await postConfirmation(results, action);
-      const elementalApplied = await applyElementalFantasticFromDamageMessage(message, action);
+      await confirmPowerDamageFromCard(message, action, results.filter(r=>!r.blocked));
+      await confirmFaltineDamage(message,action,results);
+      await confirmRicoShieldDamage(message,action,results);
+      await confirmRepeatedAttackDamage(message,action,results);
+      await confirmHeldHellfireHealthDamage(message,action,results);
+      const elementalApplied = await applyElementalFantasticFromDamageMessage(
+        message, action, new Set(results.filter(r=>r.blocked).map(r=>r.targetUuid)));
       await postElementalFantasticConfirmation(message, elementalApplied);
       const summary = results
         .map(
@@ -667,6 +736,7 @@ document.addEventListener(
         "MMDR: ocorreu um erro ao aplicar o dano. Veja o console."
       );
     } finally {
+      pendingDamageCards.delete(message.id);
       button.disabled = false;
     }
   },

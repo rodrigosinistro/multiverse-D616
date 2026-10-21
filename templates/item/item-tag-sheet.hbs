@@ -16,7 +16,24 @@
       <div class="mm-styled-field -fill">
         <label class="mm-styled-label -align-left rollable" for="system.description" data-label="description"><span>Description</span></label>
         <div class="mm-styled-input">
-          {{editor system.description target="system.description" button=false engine="prosemirror" collaborate=false}}
+          <div class="mm-item-richtext" data-field="description">
+              {{#if editable}}
+              <div class="mm-item-richtext-actions">
+                <button type="button" class="mm-item-richtext-edit" data-field="description"><i class="fas fa-pen"></i> Editar descrição</button>
+              </div>
+              {{/if}}
+              <div class="mm-item-richtext-readonly">{{{enriched.description}}}</div>
+              {{#if editable}}
+              <div class="mm-item-richtext-editor" hidden>
+                <div class="mm-item-richtext-editable" contenteditable="true" role="textbox" aria-label="Editar descrição" aria-multiline="true" spellcheck="true"></div>
+                <div class="mm-item-richtext-buttons">
+                  <button type="button" class="mm-item-save-richtext" data-field="description"><i class="fas fa-save"></i> Salvar</button>
+                  <button type="button" class="mm-item-cancel-richtext" data-field="description">Cancelar</button>
+                </div>
+                <p class="mm-item-richtext-help">Edite o texto acima e clique em Salvar. Formatação existente é mantida.</p>
+              </div>
+              {{/if}}
+            </div>
         </div>
       </div>
       <div class="mm-styled-field -fill">

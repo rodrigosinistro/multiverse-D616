@@ -20,17 +20,35 @@ const M616 = {
 };
 
 Hooks.once("init", () => {
+  const themes = { red:"Alt Red (padrão)", black:"Alt Black", blue:"Alt Blue", gray:"Alt Gray", orange:"Alt Orange", pink:"Alt Pink", purple:"Alt Purple" };
+  // Keep the legacy world key readable, but hide its orphan category.
   game.settings.register(M616.ID, "templateTheme", {
-    name: "Template de Ficha (cor)",
-    hint: "Escolha o PDF base a ser usado no export. Padrão: Alt Red.",
-    scope: "world", config: true, type: String,
-    choices: { red:"Alt Red (padrão)", black:"Alt Black", blue:"Alt Blue", gray:"Alt Gray", orange:"Alt Orange", pink:"Alt Pink", purple:"Alt Purple" },
-    default: "red"
+    scope:"world",config:false,type:String,choices:themes,default:"red",
+  });
+  game.settings.register("multiverse-d616", "templateTheme", {
+    name:"Template de Ficha (cor)",
+    hint:"Escolha o PDF base a ser usado na exportação PDF. Padrão: Alt Red.",
+    scope:"world",config:true,type:String,choices:themes,default:"red",
+  });
+  game.settings.register("multiverse-d616", "templateThemeMigrated054", {
+    scope:"world",config:false,type:Boolean,default:false,
   });
   console.log(`[${M616.ID}] v${M616.VERSION} init`);
 });
 
-Hooks.once("ready", () => console.log(`[${M616.ID}] ready`));
+Hooks.once("ready", async () => {
+  // The old setting is world-scoped; only a GM can write the new one.
+  try {
+    if (game.user?.isGM && !game.settings.get('multiverse-d616','templateThemeMigrated054')) {
+      const oldTheme=game.settings.get(M616.ID,'templateTheme');
+      const current=game.settings.get('multiverse-d616','templateTheme');
+      if (oldTheme && oldTheme!=='red' && current==='red' && Object.hasOwn(M616.TEMPLATES,oldTheme))
+        await game.settings.set('multiverse-d616','templateTheme',oldTheme);
+      await game.settings.set('multiverse-d616','templateThemeMigrated054',true);
+    }
+  } catch(error) {console.warn('[sheet-export-m616] Não foi possível migrar a cor do PDF.',error);}
+  console.log(`[${M616.ID}] ready`);
+});
 
 /** Header (sempre adiciona, sem flag de bloqueio) */
 Hooks.on("getActorSheetHeaderButtons", (sheet, buttons) => {
@@ -57,6 +75,9 @@ Hooks.on("getActorSheetHeaderButtons", (sheet, buttons) => {
 /** Fallback DOM — confere o DOM (sem flags) */
 Hooks.on("renderMarvelMultiverseCharacterSheet", (app, html) => {
   try{
+    // The ActorSheetV2 attaches the button in _onRender using the global exporter.
+    // This jQuery compatibility hook only serves legacy sheets.
+    if (app instanceof foundry.applications.sheets.ActorSheetV2) return;
     const header = html.closest(".app").find(".window-header");
     if (!header.length || header.find(".m616-export-inline, .m616-export").length) return;
     const btn = $(`<a class="m616-export-inline" title="Exportar PDF (M616)"><i class="fas fa-file-pdf"></i> PDF (M616)</a>`);
@@ -207,7 +228,7 @@ async function exportActor(actor){
   try{
     await ensureDeps();
     const { PDFDocument, StandardFonts } = window.PDFLib;
-    const theme = game.settings.get(M616.ID, "templateTheme") || "red";
+    const theme = game.settings.get("multiverse-d616", "templateTheme") || "red";
     const tplPath = M616.TEMPLATES[theme] || M616.TEMPLATES.red;
 
     const bytes = await fetch(tplPath).then(r=>r.arrayBuffer());
@@ -474,3 +495,6 @@ async function ensureDeps(){
   if(!window.saveAs) await loadScript("https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js");
 }
 function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=()=>res(); s.onerror=e=>rej(e); document.head.appendChild(s); }); }
+
+// Modern ActorSheetV2 header integration; V1 getActorSheetHeaderButtons is not fired.
+globalThis.multiverseD616ExportPDF = exportActor;

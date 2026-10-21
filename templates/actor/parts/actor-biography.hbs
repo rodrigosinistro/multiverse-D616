@@ -1,18 +1,23 @@
-<div class="mm-styled-container">
-  <h3 for="system.history" data-label="history">History</h3>
-  <div class="mm-input">
-      {{editor system.history target="system.history" button=false engine="prosemirror" collaborate=false}}
+{{!-- ApplicationV2 biography: editable, independently persisted fields. --}}
+{{#each enrichedBiography as |content field|}}
+<section class="mm-styled-container mm-actor-bio-panel" data-field="{{field}}">
+  <h3>{{#if (eq field "history")}}History{{else if (eq field "personality")}}Personality{{else}}Features{{/if}}</h3>
+  <div class="mm-styled-container-body">
+    {{#if @root.editable}}
+      <div class="mm-actor-bio-actions">
+        <button type="button" class="mm-actor-bio-edit" aria-expanded="false"><i class="fas fa-edit"></i> Editar</button>
+      </div>
+    {{/if}}
+    <div class="mm-actor-bio-preview">{{{content}}}</div>
+    {{#if @root.editable}}
+      <div class="mm-actor-bio-editor" hidden>
+        <div class="mm-actor-bio-content" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Editar {{field}}"></div>
+        <div class="mm-actor-bio-buttons">
+          <button type="button" class="mm-actor-bio-save"><i class="fas fa-check"></i> Salvar</button>
+          <button type="button" class="mm-actor-bio-cancel">Cancelar</button>
+        </div>
+      </div>
+    {{/if}}
   </div>
-</div>
-<div class="mm-styled-container">
-  <h3 for="system.personality" data-label="personality">Personality</h3>
-  <div class="mm-input">
-    {{editor system.personality target="system.personality" button=false engine="prosemirror" collaborate=false}}
-  </div>
-</div>
-<div class="mm-styled-container">
-  <h3 for="system.distinguishingFeatures" data-label="distinguishingFeatures">Features</h3>
-  <div class="mm-input">
-    {{editor system.distinguishingFeatures target="system.distinguishingFeatures" button=false engine="prosemirror" collaborate=false}}
-  </div>
-</div>
+</section>
+{{/each}}

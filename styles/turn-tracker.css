@@ -451,3 +451,8 @@
     white-space: normal;
   }
 }
+
+/* v0.2.40: show the live resource limit (including Combat Reflexes). */
+#m616-turn-tracker-window .m616-popup-resource strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+#m616-turn-tracker-window .m616-popup-resource strong small { font-size: 10px; color: #ffe4e0; font-weight: 700; }
+#m616-turn-tracker-window .m616-popup-resource.is-exhausted { border-color: #f0a098; background: linear-gradient(180deg, #63211e, #571b1a); }

@@ -1,4 +1,7 @@
 import { isRemovableConcentrationStatusId, requestRemoveConcentrationStatus } from "./concentration.js";
+import { ELEMENTAL_TRAY_PREFIX, getElementalFantasticTrayEntries, findElementalFantasticTrayEffect } from "./condition-visuals.mjs";
+import { retireElementalFantasticEffect } from "./elemental-fantastic.mjs";
+import { FLAME_TRAY_PREFIX, getOngoingPowerTrayEntries, findOngoingPowerTrayEffect, gmRemoveFlames } from "./ongoing-power-effects.mjs";
 
 
 const MODULE_ID = "multiverse-d616";
@@ -397,7 +400,14 @@ class ConditionTray {
     }
 
     const actor = this.selectedActor;
-    const statuses = actor ? __mmrpg_actorStatusIds(actor) : [];
+    // Earth and Force Fantastic effects have visible token icons but are not
+    // core status IDs. Include their named entries in this tray without adding
+    // fictitious conditions to CONFIG.statusEffects or changing their mechanics.
+    const elementalEntries = actor ? getElementalFantasticTrayEntries(actor) : [];
+    const elementalById = new Map(elementalEntries.map((entry) => [entry.id, entry]));
+    const ongoingEntries = actor ? getOngoingPowerTrayEntries(actor) : [];
+    const ongoingById = new Map(ongoingEntries.map(entry=>[entry.id,entry]));
+    const statuses = actor ? [...new Set([...__mmrpg_actorStatusIds(actor), ...elementalById.keys(), ...ongoingById.keys()])].sort() : [];
     const actorOwnedByUser = !!actor && (game.user?.isGM ||
       !!actor.testUserPermission?.(game.user, CONST.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3));
     const signature = `${actor?.uuid ?? "none"}|${game.user?.isGM ? "gm" : "player"}|${actorOwnedByUser}|${statuses.join("|")}`;
@@ -415,7 +425,7 @@ class ConditionTray {
 
     const byId = Object.fromEntries((CONDITION_DATA.conditions || []).map((c) => [c.id, c]));
     for (const sid of statuses) {
-      const c = byId[sid] ?? __mmrpg_transientCondition(actor, sid);
+      const c = byId[sid] ?? elementalById.get(sid) ?? ongoingById.get(sid) ?? __mmrpg_transientCondition(actor, sid);
       if (!c) continue;
       const pill = document.createElement("div");
       pill.className = "mmrpg-cond-pill";
@@ -464,6 +474,18 @@ class ConditionTray {
       return requestRemoveConcentrationStatus(actor, condId);
     }
     if (!game.user?.isGM) return;
+    if (String(condId).startsWith(ELEMENTAL_TRAY_PREFIX)) {
+      // Only the corresponding temporary Elemental Fantastic effect is removed.
+      // This preserves manually added conditions and effects from other powers.
+      const effect = findElementalFantasticTrayEffect(actor, condId);
+      if (effect) await retireElementalFantasticEffect(actor, effect);
+      return;
+    }
+    if(String(condId).startsWith(FLAME_TRAY_PREFIX)){
+      const effect=findOngoingPowerTrayEffect(actor,condId);
+      if(effect)await gmRemoveFlames(actor,effect);
+      return;
+    }
     if (__mmrpg_isTransientCondition(condId)) {
       try {
         const ids = Array.from(actor.effects ?? [])
@@ -608,6 +630,7 @@ function hasStatus(target,id){
 
 async function applyEndTurnDamageFromCombat(combat, reason="updateCombat"){
   if (!__mmrpg_isPrimaryGM()) return;
+  if (game.multiverseD616?.automationEnabled?.('ongoingConditions') === false) return;
   if(!game.settings.get(MODULE_ID,"autoTurnDamage")) return;
   const prevIndex = combat?.previous?.turn;
   if(prevIndex == null) return;
@@ -827,7 +850,7 @@ async function _mmrpgRecoveryRoll(actor, mode){
   const label = (mode === "incapacitated") ? "Recuperação (Incapacitado)" : "Recuperação (Desmoralizado)";
 
   const roll = new CONFIG.Dice.MarvelMultiverseRoll(formula, actor.getRollData());
-  await roll.evaluate({ async: true });
+  await roll.evaluate({});
   const messageMode = game.settings.get("core", "messageMode");
   await roll.toMessage(
     {

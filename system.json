@@ -27,7 +27,7 @@
       "thumbnail": "systems/multiverse-d616/ui/official/mmrpg-setup-thumbnail.png"
     }
   ],
-  "version": "0.2.7",
+  "version": "0.2.68",
   "compatibility": {
     "minimum": "14",
     "verified": "14"
@@ -47,8 +47,6 @@
     "scripts/conditions-hud.js",
     "scripts/native-action-hud.mjs",
     "apps/charactermancer/scripts/charactermancer.js",
-    "apps/charactermancer/scripts/mmc-guard-core-listeners.js",
-    "apps/charactermancer/scripts/mmc-compat-cleaner-titlebar.js",
     "apps/charactermancer/scripts/utils/mmc-load-traits-tags.js",
     "features/sheet-export-m616/m616-export.js"
   ],
@@ -59,7 +57,12 @@
     "styles/conditions-hud.css",
     "styles/native-action-hud.css",
     "styles/turn-tracker.css",
-    "apps/charactermancer/styles/styles.css"
+    "styles/smart-targets.css",
+    "styles/dialog-v14.css",
+    "styles/combat-preflight.css",
+    "apps/charactermancer/styles/styles.css",
+    "styles/actor-sheet-v2.css",
+    "styles/item-sheet-v2.css"
   ],
   "languages": [
     {
@@ -146,7 +149,7 @@
   ],
   "socket": true,
   "manifest": "https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json",
-  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.2.7/multiverse-d616-v0.2.7.zip",
+  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.2.68/multiverse-d616-v0.2.68.zip",
   "background": "systems/multiverse-d616/ui/official/mmrpg-background.webp",
   "grid": {
     "distance": 5,

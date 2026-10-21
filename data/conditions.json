@@ -28,6 +28,13 @@
       "description": "Agarrador e alvo não se movem (a menos que carregue o outro). Ataques contra alvo específico: Trouble; ataques sem alvo específico: Edge."
     },
     {
+      "id": "mmrpg.power-grabbed",
+      "name": "Agarrado — Poder",
+      "icon": "icons/m.svg",
+      "description": "Regra da mesa: alvo preso por poder não pode se deslocar. Ataques contra ele recebem 1 Edge. O controlador não fica Agarrado. Não acumula Edge por fontes repetidas da mesma contenção.",
+      "remove": "Escapar com o teste do poder ou encerrar a Concentração, quando aplicável."
+    },
+    {
       "id": "mmrpg.pinned",
       "name": "Imobilizado (Pinned)",
       "icon": "icons/m.svg",
