@@ -49,8 +49,8 @@ test('v0.2.68: paredes usam constantes de sentidos v14, sem modificar geometria 
  } finally{if(old===undefined)delete globalThis.CONST;else globalThis.CONST=old;}
 });
 test('v0.2.68: manifesto GitHub e referências a artefatos internos prontos para release',()=>{
- assert.equal(manifest.id,'multiverse-d616');assert.equal(manifest.version,'0.2.76');
- assert.equal(manifest.download,'https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.2.76/multiverse-d616-v0.2.76.zip');
+ assert.equal(manifest.id,'multiverse-d616');assert.equal(manifest.version,'0.2.77');
+ assert.equal(manifest.download,'https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.2.77/multiverse-d616-v0.2.77.zip');
  assert.ok(manifest.manifest.endsWith('/main/system.json'));
  const refs=[...manifest.esmodules,...manifest.styles,...manifest.languages.map(l=>l.path),...manifest.packs.map(p=>p.path),manifest.background,manifest.readme,manifest.license,manifest.changelog];
  for(const name of refs){assert.equal(typeof name,'string');assert.ok(name);const local=name.startsWith('systems/multiverse-d616/')?name.slice('systems/multiverse-d616/'.length):name;const absolute=resolve(root,local);assert.ok(absolute.startsWith(root+'/'));assert.ok(existsSync(absolute),`Faltando: ${name}`);}

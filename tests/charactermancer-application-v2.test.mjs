@@ -73,7 +73,7 @@ test('Charactermancer theme uses red/black/white scoped styles and retains syste
   assert.match(css,/\.mmc-app \.mmc-shell/);
   assert.match(css,/#9a332b/);
   assert.match(css,/#17181d/);
-  assert.equal(manifest.version,'0.2.76');
+  assert.equal(manifest.version,'0.2.77');
   assert.ok(manifest.esmodules.includes('apps/charactermancer/scripts/charactermancer.js'));
   assert.ok(!manifest.esmodules.some(e=>e.includes('mmc-guard-core-listeners')||e.includes('mmc-compat-cleaner-titlebar')));
 });

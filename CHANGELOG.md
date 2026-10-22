@@ -1,3 +1,11 @@
+## v0.2.77 — Padronização do README e documentação (Foundry VTT v14) — 22/10/2026
+
+- Reorganizado o `README.md` no formato institucional acordado: apresentação, manifesto de instalação, recursos nativos integrados, compatibilidade, créditos, avisos de projeto não oficial, licença MIT e instruções de instalação.
+- Removidos do README os relatos históricos de versões, testes, correções e notas de release; o histórico de alterações permanece documentado neste `CHANGELOG.md`.
+- Atualizada a compatibilidade documentada para Foundry VTT **v14** (minimum 14, verified 14); badge de instalação atualizado para v14.
+- Lista de recursos do README atualizada com armas equipadas no HUD, poderes vinculados a Armas/Itens, poderes permanentes sem acumulação e Active Effect Adamantium.
+- Manifesto `system.json` atualizado para **0.2.77**, com URL de release correspondente (publicação manual posterior pelo usuário). **Nenhuma mudança funcional no motor de regras, fichas ou compêndios** em relação à v0.2.76.
+
 ## v0.2.76 — Mesmo filtro de poderes permanentes no HUD de Armas e Itens (Foundry VTT v14)
 
 - O HUD **POWERS** agora usa exatamente o mesmo critério de visibilidade dos poderes do personagem para poderes associados a armas equipadas e itens no inventário. Poderes **Permanent** passivos (Mighty, Sturdy, Uncanny, Flight etc.) permanecem no equipamento e continuam concedendo seus bônus pela lógica v0.2.75, mas não criam botões de ativação desnecessários.

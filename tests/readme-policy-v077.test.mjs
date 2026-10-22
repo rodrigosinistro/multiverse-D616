@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const readme=fs.readFileSync(path.join(root,'README.md'),'utf8');
+const changelog=fs.readFileSync(path.join(root,'CHANGELOG.md'),'utf8');
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'system.json'),'utf8'));
+test('README documents persistent system details, not release history',()=>{
+ for(const heading of ['Instalação (Manifest)','Recursos nativos integrados','Compatibilidade','Créditos e Referências','Installation Instructions','Easy Install']) assert.ok(readme.includes(heading),heading);
+ assert.ok(!/^#{1,6}\s+(?:Atualiza[cç][aã]o\s+)?v?0\.2\.\d+/im.test(readme));
+ assert.ok(!/\bv0\.2\.\d+\b/i.test(readme));
+ assert.match(readme,/Foundry VTT v14/);
+ assert.match(readme,/minimum 14, verified 14/);
+ assert.ok(readme.includes(manifest.manifest));
+ assert.ok(readme.includes('MIT license'));
+ assert.ok(changelog.startsWith('## v0.2.77'));
+ assert.equal(manifest.version,'0.2.77');
+ assert.equal(manifest.compatibility.minimum,'14');
+ assert.equal(manifest.compatibility.verified,'14');
+});

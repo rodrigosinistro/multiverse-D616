@@ -113,7 +113,7 @@ test('legacy effect data-action is removed from Item templates to avoid V2 actio
 
 test('V2 item styles and Non-Combat Checks correction scoped only to character header',()=>{
  const manifest=JSON.parse(fs.readFileSync(new URL('../system.json',import.meta.url)));
- assert.equal(manifest.version,'0.2.76');
+ assert.equal(manifest.version,'0.2.77');
  assert.ok(manifest.styles.includes('styles/item-sheet-v2.css'));
  const styles=fs.readFileSync(new URL('../styles/item-sheet-v2.css',import.meta.url),'utf8');
  assert.match(styles,/\.sheet\.item\.mm-item-v2/);
