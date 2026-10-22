@@ -253,3 +253,37 @@
 .multiverse-d616.sheet.item.mm-item-v2 .mm-item-list.-effects .mm-item .effect-duration {
   color:#151515 !important; text-shadow:none !important;
 }
+
+/* v0.2.69 — assistente de Active Effect Adamantium para armas */
+.sheet.item.mm-item-v2 .mm-adamantium-tool { padding: .65rem .8rem; margin-bottom: .65rem; border: 1px solid var(--color-border-light-primary, #888); border-radius: 5px; }
+.sheet.item.mm-item-v2 .mm-adamantium-tool p { margin: .2rem 0 .55rem; }
+.sheet.item.mm-item-v2 .mm-adamantium-tool button { width: 100%; }
+.sheet.item.mm-item-v2 .mm-adamantium-note { font-size: .85rem; opacity: .85; margin-top: .45rem; }
+
+/* v0.2.72 — Powers attached to a weapon or basic Item. */
+.sheet.item.mm-item-v2 .mm-attached-powers { padding: 10px 6px 15px; }
+.sheet.item.mm-item-v2 .mm-attached-powers-dropzone {
+  border: 2px dashed #b85c3c; background: rgba(242,208,188,.15); padding: 14px 12px;
+  border-radius: 5px; color: #e9d5cb; text-align: center;
+}
+.sheet.item.mm-item-v2 .mm-attached-powers-dropzone strong { display:block; margin-bottom:7px; font-size:14px; }
+.sheet.item.mm-item-v2 .mm-attached-powers-dropzone p { font-size:12px; margin:0; }
+.sheet.item.mm-item-v2 .mm-attached-powers-list { padding:0; margin:12px 0; list-style:none; }
+.sheet.item.mm-item-v2 .mm-attached-power { display:flex; align-items:center; gap:9px;
+  padding:7px; margin:5px 0; border:1px solid #b8664e; background:#fff2ec; color:#242020;
+  border-radius:4px; }
+.sheet.item.mm-item-v2 .mm-attached-power img { object-fit:cover; border:none; flex-shrink:0; }
+.sheet.item.mm-item-v2 .mm-attached-power-name { flex:1; min-width:0; font-weight:700; overflow:hidden; text-overflow:ellipsis; }
+.sheet.item.mm-item-v2 .mm-attached-power button { width:auto; height:auto; padding:6px 8px; margin:0;
+  font-weight:600; font-size:12px; background:#973720; color:#fff; border:1px solid #c96a47;
+  white-space:nowrap; }
+.sheet.item.mm-item-v2 .mm-attached-powers-empty, .sheet.item.mm-item-v2 .mm-attached-power-info {
+  font-size:12px; opacity:.9; margin:10px 0; }
+
+/* v0.2.74: edit copied equipment powers without changing caster's power. */
+.mm-attached-power-dialog .mm-attached-power-editor { display:flex; flex-direction:column; gap:9px; max-height:62vh; overflow-y:auto; padding:4px 10px; }
+.mm-attached-power-dialog .mm-ap-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.mm-attached-power-dialog .mm-ap-field { display:flex; flex-direction:column; gap:3px; min-width:0; font-size:12px; font-weight:600; }
+.mm-attached-power-dialog .mm-ap-field input, .mm-attached-power-dialog .mm-ap-field select,
+.mm-attached-power-dialog .mm-ap-field textarea { width:100%; box-sizing:border-box; padding:5px 7px; font:inherit; }
+.mm-attached-power-dialog .mm-attached-power-editor p.hint { margin:0 0 7px; font-size:12px; }

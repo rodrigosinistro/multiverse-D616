@@ -1,3 +1,29 @@
+### v0.2.76 — HUD de poderes permanentes em armas e itens
+
+No HUD **POWERS**, poderes de armas e itens seguem agora **a mesma regra dos poderes do portador**: permanentes passivos (Mighty, Sturdy, Uncanny, Flight etc.) continuam fornecendo o melhor bônus aplicável, mas não aparecem como ações clicáveis. Permanentes que requerem uso manual (Grow, Shrink, Resize Object, Resize Other etc.) permanecem no HUD, assim como poderes de duração não permanente. Em armas, os botões exigem **Equipped**; itens comuns funcionam quando pertencem ao personagem. A aba Poderes das fichas de equipamento continua mostrando e permitindo editar **todos** os poderes associados.
+
+### v0.2.75 — Poderes Permanentes em equipamentos (não acumuláveis)
+
+Armas equipadas e itens no inventário agora fornecem os efeitos passivos de poderes Permanent associados à ficha do portador. Para versões diferentes do mesmo poder (por exemplo Sturdy 2 no personagem e Sturdy 4 na arma), prevalece somente a versão maior. Em caso de empate, prevalece a versão nativa do personagem. Remover/desequipar o equipamento reverte o bônus. Poderes Permanent de uso deliberado (Grow, Shrink, Resize etc.) continuam requerendo ação e não são ativados passivamente.
+
+### v0.2.74 — Poderes editáveis nos equipamentos e Elemental Protection
+
+Na aba **PODERES** de uma arma ou item, clique no ícone de lápis ao lado do poder vinculado para configurar o **elemento específico daquele poder** (por exemplo, uma espada de fogo usada por alguém de gelo). O editor modifica somente a cópia do equipamento; selecione "Herdar elemento do portador" para usar o elemento padrão da ficha. Também permite ajustar descrição, efeito, custo e dados de ataque.
+
+Ao ativar **Elemental Protection** ou **Telekinetic Protection** de arma equipada / item possuído, a Concentração criada agora é reconhecida pela automação de proteção de dano no card: interceptação total até o limite do poder, independentemente da RD, com rompimento no golpe que exceda o limite. Proteções provenientes de armas desequipadas não interceptam danos.
+
+### v0.2.73 — Correção da abertura das fichas de Armas e Itens
+
+Corrige a pré-carga do template de poderes anexados (`templates/item/parts/item-attached-powers.hbs`) ao iniciar o sistema no Foundry VTT v14. O arquivo estava presente no ZIP anterior, mas a ausência no registro de partials Handlebars impedia o Foundry de renderizar as fichas de armas e itens. Mantidos os poderes associados, HUD, equipamento e demais recursos da v0.2.72.
+
+### v0.2.72 — Poderes em Armas e Itens
+
+Abra a ficha de uma Arma ou Item, vá à aba **Poderes** e arraste um Poder existente (de um personagem, do diretório de itens ou de um compêndio) para a janela. O poder é copiado para o equipamento como um poder associado, preservando o original; pode ser removido depois. Com o equipamento no inventário de um personagem, o botão **Usar** ativa poderes acionáveis por meio do fluxo de Item.roll() existente. Para Armas, é necessário marcar **Equipped**. O HUD **POWERS** mostra poderes da arma abaixo do atalho da arma equipada e poderes dos demais itens num grupo separado. **Poderes passivos** não concedem efeitos passivos automaticamente só por estarem associados: precisam de configuração explícita apropriada nas regras do personagem/equipamento.
+
+**v0.2.70 (Foundry VTT v14):** corrige a validação de duração dos Active Effects ao adicionar armas com Adamantium a personagens e NPCs; cria o efeito com duração permanente explícita no esquema v14 e normaliza os dados na cópia para a ficha. Mantém o Adamantium 1 ignorando um nível de RD de Health somente em ataques da arma equipada. ZIP completo instalável; sem publicação direta no GitHub.
+
+**v0.2.69 (Foundry VTT v14):** armas agora podem receber o Active Effect **Adamantium 1** pela aba Efeitos. Quando a arma está equipada e é usada para causar dano de Health, ignora 1 nível de RD do alvo (ou o valor inteiro configurado no efeito), sem alterar a RD original; não afeta Focus, outros itens ou poderes. Ataques registram a penetração na rolagem para impedir alterações retroativas. O ZIP inclui a pasta `multiverse-d616/`; publicação no GitHub continua manual.
+
 **v0.2.68 (Foundry VTT v14):** Banging Heads derruba os alvos atingidos no Fantástico depois de confirmar cada dano; Deafen aplica Surdo por um turno e somente permite dano no Fantástico; Flare e Dazzle também recebem dano normal apenas no Fantástico. Barreira física usa a constante moderna de sentidos v14. `system.json` aponta para a release `v0.2.68` **a ser publicada manualmente após validação**. ZIP único com pasta `multiverse-d616/`: para atualizar o repositório copie o **conteúdo** dessa pasta para a raiz, mantendo `system.json` na raiz. A URL `download` no manifesto só funcionará depois de criar a release e enviar o ZIP de nome correspondente. Não houve publicação automática. Consulte CHANGELOG para detalhes.
 
 **v0.2.65 (Foundry v14):** ataques adicionais opcionais para Unstoppable Assault e Unrelenting Smash (novos 15 Focus por rolagem, Movimento limitado e sem repetir alvos); ações sustentadas de Hellfire Chains (teste por rodada contra alvo preso, dano Health e Focus) e Coiling Crush (Movimento para esmagar por Melee vs Resilience). Atalhos e botões dependem da situação e respeitam as configurações do Mestre. Não substituem posicionamento nem decisões de alcance especial. Ver CHANGELOG.
@@ -155,6 +181,8 @@ O uso de poderes reconhece custos em `Focus` e `Foco`, fixos e variáveis. Quand
 **Instalação:** faça backup do mundo, substitua a pasta `Data/systems/multiverse-d616` pelo conteúdo deste ZIP e reinicie o Foundry. Faça os primeiros testes como Mestre em um mundo de teste. O ZIP contém o sistema completo; o GitHub não é alterado.
 
 ## Atualização v0.2.8 — Poderes permanentes acionáveis nos atalhos
+
+A aba **POWERS** do HUD nativo também mostra uma seção **ARMAS EQUIPADAS** com os ataques das armas marcadas como Equipped. Atalhos de armas executam o mesmo `Item.roll()` da ficha, incluindo Adamantium; armas não equipadas não aparecem.
 
 A aba **POWERS** do Token Action HUD nativo inclui **Resize Object** e **Resize Other** (também aceita a grafia `Resize Others`), além de 11 outros poderes com duração Permanente que demandam uso deliberado ou teste de dados: Charmed Life, Disguise, Domination, Edit Memory, Flexible Fingers, Levitation, Memory Blip, Orders, Rubberneck, Shape-Shift e Teleport Object. Grow/Shrink 1–4 continuam disponíveis. Modificadores puramente passivos como Mighty, Flight e Sturdy permanecem ocultos.
 

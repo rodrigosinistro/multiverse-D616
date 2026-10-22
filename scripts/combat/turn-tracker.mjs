@@ -1,3 +1,4 @@
+import {hasEquipmentPermanentPower} from '../equipment-permanent-effects.mjs';
 import { automationEnabled } from '../automation-settings.mjs';
 import {
   TURN_TRACKER_RESOURCES,
@@ -314,7 +315,7 @@ function actorHasPower(actor, name) {
   const wanted = String(name ?? "").trim().toLowerCase();
   return Array.from(actor?.items ?? []).some(
     (item) => item?.type === "power" && String(item.name ?? "").trim().toLowerCase() === wanted
-  );
+  ) || hasEquipmentPermanentPower(actor,wanted);
 }
 
 function actorIsSurprised(actor) {

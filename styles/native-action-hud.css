@@ -245,3 +245,22 @@
     grid-template-columns: minmax(180px, 1fr);
   }
 }
+
+/* Equipped weapons share the POWERS tab, while remaining visually separated
+   from character powers and reusing the native Item.roll() attack flow. */
+#mmrpg-native-action-hud .mmrpg-native-action-hud__group-title {
+  margin: 6px 2px 0;
+  padding: 5px 4px 2px;
+  border-top: 1px solid rgba(232, 132, 32, 0.40);
+  color: #ffb25f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .05em;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.weapon {
+  border-left: 2px solid rgba(232, 132, 32, 0.75);
+}
+
+/* v0.2.72 — Powers on carried items/equipped weapons. */
+.mmrpg-native-action-hud__action.attached-power { padding-left: 21px; font-size: .93em; }
+.mmrpg-native-action-hud__action.attached-power .name { overflow:hidden; text-overflow:ellipsis; }

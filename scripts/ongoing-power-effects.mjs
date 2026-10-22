@@ -6,6 +6,7 @@
 import { automationEnabled } from './automation-settings.mjs';
 import { getMarvelOutcome, normalizeConditionDefense } from './power-conditions.mjs';
 import { resolvePowerRoll } from './power-rolls.mjs';
+import {hasEquipmentPermanentPower} from './equipment-permanent-effects.mjs';
 import { adjudicateTargetOutcome, rollSignature, MULTI_TARGET_DECISION_KEY } from './multi-target-combat.mjs';
 const SYSTEM='multiverse-d616';
 export const FLAME_KIND='faltineFlames';
@@ -19,7 +20,7 @@ export const flameFlag=effect=>effect?.flags?.[SYSTEM]?.ongoingPower?.kind===FLA
 const effects=actor=>list(actor?.effects).filter(e=>flameFlag(e)&&!e.disabled);
 export const hasFaltineFlames=actor=>effects(actor).length>0;
 const isPower=(item,name)=>item?.type==='power'&&String(item.name).trim()===name;
-export function hasHealingFactor(actor){return list(actor?.items).some(i=>isPower(i,'Healing Factor'));}
+export function hasHealingFactor(actor){return list(actor?.items).some(i=>isPower(i,'Healing Factor')) || hasEquipmentPermanentPower(actor,'Healing Factor');}
 export function healingAmount(actor){return Math.max(0,Number(actor?.system?.abilities?.res?.value)||0);}
 export function nextHealingHealth(actor){
   const now=Number(actor?.system?.health?.value)||0;

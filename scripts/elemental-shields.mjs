@@ -3,6 +3,7 @@
  * structure; Protection intercepts attacks against its owner automatically.
  */
 import {elementalProtection,telekineticProtection,absorbElementalStructureHit} from './elemental-advanced.mjs';
+import {findUsableAttachedPower} from './item-attached-powers.mjs';
 import {crossingRegions,tokenCenter,areaCircle,areaRectangle,AREA_STRUCTURE_NAMES} from './elemental-area-geometry.mjs';
 import {crossingWalls} from './elemental-wall-geometry.mjs';
 const SYS='multiverse-d616';
@@ -24,7 +25,7 @@ export function personalProtectionSpec(name){
 export function activeElementalGuards(actor){
   return array(actor?.effects).filter(e=>!e.disabled).map(effect=>{
     const id=effect.flags?.[SYS]?.concentrationPower?.itemId;
-    const item=actor?.items?.get?.(id)??array(actor?.items).find(i=>i.id===id);
+    const item=actor?.items?.get?.(id)??array(actor?.items).find(i=>i.id===id)??findUsableAttachedPower(actor,id);
     const spec=personalProtectionSpec(item?.name);
     if(!spec&&!GUARD_NAMES.has(item?.name))return null;
     const protection=spec?null:(GUARD_NAMES.has(item.name) && item.name.endsWith('Barrier')

@@ -1,3 +1,66 @@
+## v0.2.76 — Mesmo filtro de poderes permanentes no HUD de Armas e Itens (Foundry VTT v14)
+
+- O HUD **POWERS** agora usa exatamente o mesmo critério de visibilidade dos poderes do personagem para poderes associados a armas equipadas e itens no inventário. Poderes **Permanent** passivos (Mighty, Sturdy, Uncanny, Flight etc.) permanecem no equipamento e continuam concedendo seus bônus pela lógica v0.2.75, mas não criam botões de ativação desnecessários.
+- Permanentes acionáveis (como Grow, Shrink, Resize Object, Resize Other, Domination) continuam aparecendo para execução voluntária; poderes de uso Instant e Concentration permanecem inalterados.
+- Itens com apenas poderes passivos não geram cabeçalhos vazios no HUD. Alterações do nome/duração do poder associado atualizam o HUD; botões antigos deixam de acioná-lo se for alterado para passivo.
+- Sem alterações em fichas/compêndios, nos bônus ou na regra de não acumulação dos poderes permanentes. Um ZIP instalável para validação e publicação manual posterior, sem modificação do GitHub.
+
+## v0.2.75 — Poderes permanentes de armas/itens, sem acumulação (Foundry VTT v14)
+
+- Active Effects transferíveis de poderes com duração **Permanent/Permanente** associados a armas equipadas e itens possuídos passam a ser considerados nos cálculos do portador, sem criar um poder adicional em sua ficha.
+- Poderes da mesma família (Power Set + nome, ignorando sufixo numérico) usam somente o **nível mais alto** entre portador e equipamentos. Empates mantêm o poder próprio do personagem; duplicatas em equipamentos não acumulam.
+- Remover ou desequipar o equipamento restaura a versão intrínseca automaticamente. Equipamentos não equipados não concedem passivos; itens comuns concedem enquanto estiverem no inventário.
+- Não aplica automaticamente poderes Permanent que exigem ativação voluntária (ex.: Grow, Shrink, Domination, Resize); esses continuam acionáveis pelo botão.
+- Suporte à normalização de efeitos antigos v13/v14 na cópia, incluindo migração de Mighty/Accuracy/Brilliance/Discipline e fatores de voo/movimento, sem modificar o compêndio nem a origem. Proteções Health/Focus, poderes de movimento e bônus Mighty/Accuracy/Brilliance/Discipline usam o mesmo motor Active Effect do Foundry v14. Também são reconhecidos Healing Factor, Danger Sense, Evasion e Wisdom quando vindos de equipamentos; Flexible Bones 2 e Jump 2/3 recebem seus efeitos equivalentes mesmo em compêndios antigos sem Active Effect.
+- Testes de regressão sobre precedência, item/arma, múltiplos itens, fontes independentes, dois tipos de RD, movimentação e dados antigos.
+
+## v0.2.74 — Edição de Poderes de Equipamentos e proteção no combate (Foundry VTT v14)
+
+- As fichas de Arma e Item agora oferecem botão **Editar** ao lado de cada poder vinculado. Abre editor para a CÓPIA do poder no equipamento: elemento próprio, nome, descrição, efeito, custo, ação e dados de ataque. Não altera o poder de origem nem o elemento do personagem.
+- **Elemental Protection 1–4** e **Telekinetic Protection 1–4** usados pelo equipamento equipado/inventário passam a ser reconhecidos no sistema de interceptação de dano: a Concentração é resolvida pelo ID do poder associado, mesmo que ele não apareça como Item independente do Actor. Respeita arma equipada e efeito habilitado; protege Health e Focus conforme as regras já existentes, sem alterar RD.
+- O poder vinculado continua uma cópia em flags, sem adicionar poderes passivos permanentes ao Actor. Equipamentos sem vínculo com o personagem não concedem proteção; armas desequipadas não concedem proteção.
+- Testes novos de independência do elemento, abertura do editor, persistência dos dados e absorção do ataque, com teste de regressão de todas as fichas e danos existentes.
+
+## v0.2.73 — Correção de abertura das fichas de Armas e Itens (Foundry VTT v14)
+
+- Registrado `systems/multiverse-d616/templates/item/parts/item-attached-powers.hbs` na pré-carga de partials Handlebars usada no Foundry v14.
+- Corrige `Failed to render template part "sheet"` / `The partial ... item-attached-powers.hbs could not be found` ao criar ou abrir armas e itens.
+- Adicionado teste de regressão que audita os partials reais chamados pelos templates, sua existência no ZIP e o registro na pré-carga.
+- Mantidos poderes associados, Active Effect Adamantium, HUD de armas e as demais funcionalidades anteriores.
+
+## v0.2.72 — Poderes vinculados a Armas e Itens (Foundry VTT v14)
+
+- Nova aba **Poderes** nas fichas de Armas e Itens. Arraste um documento do tipo Poder da ficha de personagem, aba Itens ou compêndio para associá-lo como cópia ao equipamento (arma/item com dados próprios; origem preservada).
+- Poderes associados podem ser removidos do equipamento sem apagar o documento original nem alterar os poderes da ficha.
+- Quando a arma está equipada, seus poderes ficam disponíveis logo abaixo dela no HUD nativo POWERS. Os poderes de itens comuns no inventário aparecem em grupo próprio. Os poderes vinculados usam o fluxo padrão de ativação/rolagem da ficha, com custos de Focus e verificações usuais, sem criar poderes permanentes duplicados no ator.
+- Armas não equipadas não disponibilizam seus poderes. Atalhos obsoletos são revalidados no clique.
+- Durations de Active Effects de poderes copiados são normalizadas apenas na construção temporária do documento para compatibilidade com validação do Foundry v14.
+- Limitação deliberada: **poderes passivos** vinculados a equipamentos são armazenados e exibidos, mas **não são aplicados automaticamente como benefícios do ator**. A automação cobre a utilização explícita dos poderes acionáveis. Regras que consultam exclusivamente actor.items podem requerer integração adicional para powers associados.
+
+## v0.2.71 — Armas equipadas no HUD de POWERS (Foundry VTT v14)
+
+- A aba POWERS do HUD nativo também lista todas as armas marcadas como **Equipped**, organizadas alfabeticamente, após os poderes, em grupo **ARMAS EQUIPADAS**.
+- Um clique usa o mesmo `Item.roll()` da ficha, preservando seleção de alvos, ações, dano, modificadores e a penetração de Health DR do Active Effect Adamantium.
+- Armas não equipadas não aparecem, inclusive ao alternar de arma; o HUD se atualiza quando o item muda.
+- O botão revalida que a arma ainda está equipada antes de executar (proteção contra cliques em atalhos antigos).
+- Mantidas as correções de compatibilidade de Active Effects/arrastar itens da v0.2.70; sem alterações em compêndios ou no GitHub.
+
+## v0.2.70 — Corrige equipar/adicionar armas com Active Effect Adamantium (Foundry v14)
+
+- Resolve erro de validação `effects.0.duration.value: must be an integer` ao copiar uma arma com Adamantium do diretório para uma ficha de personagem ou NPC.
+- O botão Adamantium cria um Active Effect `base` com `system.changes` e duração permanente explícita no formato v14 (`duration.value = null`).
+- Intercepta a adição de documentos à ficha em `_onDropDocument` (API v14); normaliza durações malformadas na cópia, preservando o Item original e durações válidas. Strings numéricas inteiras são convertidas; valores inválidos tornam-se permanentes (`null`).
+- Criação manual de Active Effects usa campos `duration.value/units/expiry` do Foundry v14, sem `duration.rounds` legado.
+- Preserva toda a mecânica de Adamantium da v0.2.69 e os demais comportamentos da v0.2.68.
+
+## v0.2.69 — Adamantium (Active Effect de arma)
+
+- Botão **Adicionar Active Effect: Adamantium 1** na aba Efeitos de armas. Cria um efeito de arma com alteração `flags.multiverse-d616.adamantiumHealthDrIgnore` = `1`, tipo `add` (Foundry VTT v14), sem transferência para o portador.
+- O motor de dano ignora até o valor configurado da **RD de Health** do alvo somente quando o ataque vem da própria arma equipada; nunca altera RD de Focus, poderes, outras armas ou os atributos reais do alvo.
+- Valor congelado nas flags da rolagem; efeitos desativados não operam, e valor excedente não reduz RD abaixo de zero. Múltiplos Adamantium na mesma arma não acumulam, prevalecendo o maior valor.
+- Cards de dano e painel do Mestre mostram RD original, penetração e RD efetiva.
+- Versionamento 0.2.69, ZIP instalável completo para testes v14 e publicação manual posterior.
+
 ## v0.2.68 — Auditoria pontual de Sucessos Fantásticos e manutenção Foundry v14
 - **Banging Heads:** no Sucesso Fantástico, cada alvo atingido recebe Caído **somente após o Mestre confirmar seu dano**. Mantido o ataque único contra duas defesas; sem duplicar condições nem disparar antes da confirmação.
 - **Deafen:** teste Ego contra Vigilance, aplica Surdo por 1 turno no sucesso. Somente o Sucesso Fantástico habilita dano normal; um sucesso comum não deve abrir dano indevido. Metadados incorretos de importações antigas são tratados em execução, sem modificar compêndios.

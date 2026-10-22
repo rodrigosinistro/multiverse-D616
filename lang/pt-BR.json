@@ -55,11 +55,12 @@
     "ActionHud": {
       "Settings": {
         "EnabledName": "HUD de Ações nativo",
-        "EnabledHint": "Exibe as abas ABILITIES e POWERS ao selecionar um token, sem depender do Token Action HUD Core."
+        "EnabledHint": "Exibe as abas ABILITIES e POWERS (incluindo armas equipadas) ao selecionar um token, sem depender do Token Action HUD Core."
       },
       "Abilities": "ABILITIES",
       "Powers": "POWERS",
-      "NoPowers": "Nenhum Power acionável.",
+      "NoPowers": "Nenhum poder acionável ou arma equipada.",
+      "EquippedWeapons": "ARMAS EQUIPADAS",
       "NoPermission": "Você não tem permissão para usar as ações deste ator.",
       "Collapse": "Minimizar HUD",
       "Expand": "Expandir HUD",

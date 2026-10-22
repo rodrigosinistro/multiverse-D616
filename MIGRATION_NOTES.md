@@ -1,3 +1,15 @@
+## v0.2.76
+
+Nenhuma migração de dados. Os poderes permanentes passivos armazenados em `flags.multiverse-d616.attachedPowers` continuam ativos pela regra de equipamentos da v0.2.75; apenas os atalhos de **uso** são filtrados da mesma forma que no personagem. Atualize o sistema e recarregue a sessão (Ctrl+F5). Fichas e compêndios permanecem inalterados.
+
+## v0.2.75
+
+Atualização sem migração destrutiva. Os poderes passivos de duração Permanent já associados a armas e itens são lidos diretamente das flags do equipamento durante o preparo do Actor. Nenhum Item ou Active Effect original é reescrito. Os efeitos são transitórios, e a retirada da arma/item desfaz seu bônus. Ações com resultado Permanent continuam dependendo de ativação.
+
+## v0.2.74
+
+Nenhuma migração de dados necessária: mantém `flags.multiverse-d616.attachedPowers` da v0.2.73. As cópias de poderes existentes em Armas e Itens são editáveis com o ícone de lápis. Proteções ativas associadas a equipamentos passam a ser resolvidas pelo ID do poder armazenado no próprio equipamento; para garantir a aplicação da proteção na sessão, ative o poder novamente com a arma equipada depois de atualizar.
+
 ## Publicação manual da v0.2.68 no GitHub (após testar)
 1. Extraia `multiverse-d616-v0.2.68.zip` e copie **todos os arquivos do interior da pasta `multiverse-d616/`** para a raiz do repositório (onde fica `system.json`); não crie uma pasta `multiverse-d616/` dentro da raiz do projeto.
 2. Confira que `system.json` tem `version: 0.2.68`, as entradas `esmodules`, `styles`, `packs` referenciam arquivos existentes e o manifesto aponta para a tag `v0.2.68`.

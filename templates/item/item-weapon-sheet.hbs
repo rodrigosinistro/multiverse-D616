@@ -9,8 +9,9 @@
   </header>
 
   {{!-- Sheet Tab Navigation --}}
-  <nav class="sheet-tabs tabs mm-tabs -two" data-group="primary">
+  <nav class="sheet-tabs tabs mm-tabs -three" data-group="primary">
     <a class="item" data-tab="attributes">Attributes</a>
+    <a class="item" data-tab="powers">Poderes</a>
     <a class="item" data-tab="effects">Effects</a>
   </nav>
 
@@ -102,8 +103,23 @@
         </div>
       </div>
     </div>
+    <div class="tab weapon-powers" data-group="primary" data-tab="powers">
+      {{> "systems/multiverse-d616/templates/item/parts/item-attached-powers.hbs"}}
+    </div>
     <div class="tab weapon-effects" data-group="primary" data-tab="effects">
-        {{> "systems/multiverse-d616/templates/item/parts/item-effects.hbs"}}
+      <div class="mm-adamantium-tool">
+        <p><strong>Adamantium</strong> — ignora 1 nível de RD de Health com esta arma quando equipada.</p>
+        {{#if editable}}
+          <button type="button" class="mm-add-adamantium-effect" {{#if adamantiumConfigured}}disabled{{/if}}>
+            <i class="fas fa-shield-alt"></i>
+            {{#if adamantiumConfigured}}Efeito Adamantium já criado{{else}}Adicionar Active Effect: Adamantium 1{{/if}}
+          </button>
+        {{/if}}
+        {{#if adamantiumConfigured}}
+          <p class="mm-adamantium-note">Valor ativo: {{adamantiumValue}}. Para alterar o valor, edite a mudança do efeito na lista abaixo (campo Value). O efeito só funciona com a arma equipada e para dano de Health.</p>
+        {{/if}}
+      </div>
+      {{> "systems/multiverse-d616/templates/item/parts/item-effects.hbs"}}
     </div>
   </section>
 

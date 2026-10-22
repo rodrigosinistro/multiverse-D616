@@ -25,9 +25,10 @@
   </header>
 
   {{!-- Sheet Tab Navigation --}}
-  <nav class="sheet-tabs tabs mm-tabs -two" data-group="primary">
+  <nav class="sheet-tabs tabs mm-tabs -three" data-group="primary">
     <a class="item" data-tab="description">Description</a>
     <a class="item" data-tab="attributes">Attributes</a>
+    <a class="item" data-tab="powers">Poderes</a>
   </nav>
 
   {{!-- Sheet Body --}}
@@ -73,6 +74,9 @@
           </div>
         </div>
       </div>
+    </div>
+    <div class="tab item-powers" data-group="primary" data-tab="powers">
+      {{> "systems/multiverse-d616/templates/item/parts/item-attached-powers.hbs"}}
     </div>
   </section>
 </form>

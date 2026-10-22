@@ -6,6 +6,7 @@ import { automationEnabled } from './automation-settings.mjs';
  */
 import { parseFocusCost, focusAvailable, validateFocusSpend, focusMaintenanceDuration } from './focus-cost.mjs';
 import { getConcentrationPowerEffects, itemHasConcentration } from './concentration.js';
+import {findUsableAttachedPower} from './item-attached-powers.mjs';
 
 const SYSTEM = 'multiverse-d616';
 const MAINTENANCE = 'focusMaintenance';
@@ -120,7 +121,7 @@ export async function processFocusMaintenanceTurn(combat) {
       const info = flags(effect);
       if (!info || info.lastPaidKey === key || !effect.id) continue;
       // Don't charge a future turn for items no longer on the actor.
-      const item = actor.items?.get?.(info.itemId);
+      const item = actor.items?.get?.(info.itemId) ?? findUsableAttachedPower(actor,info.itemId);
       if (!item) {
         await actor.deleteEmbeddedDocuments('ActiveEffect', [effect.id]);
         continue;

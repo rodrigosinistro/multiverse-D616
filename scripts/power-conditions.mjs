@@ -1,4 +1,5 @@
 import { automationEnabled } from './automation-settings.mjs';
+import {hasEquipmentPermanentPower} from './equipment-permanent-effects.mjs';
 import {endUnneededHellfireConcentration} from './held-concentration.mjs';
 import { crossingRegions } from './elemental-area-geometry.mjs';
 import { powerGrabStatusFor, POWER_GRABBED_STATUS } from './power-grabbed.mjs';
@@ -158,7 +159,7 @@ export function normalizeConditionDefense(ability, actor) {
   const aliases = {melee:'mle',agility:'agl',resilience:'res',vigilance:'vig',logic:'log'};
   key = aliases[key] ?? key;
   const items = values(actor?.items);
-  const trait = name => items.some(i=>['trait','power'].includes(i?.type) && String(i.name??'').toLowerCase().trim()===name.toLowerCase());
+  const trait = name => items.some(i=>['trait','power'].includes(i?.type) && String(i.name??'').toLowerCase().trim()===name.toLowerCase()) || hasEquipmentPermanentPower(actor,name);
   if(key==='agl' && trait('Brawling')) return 'mle';
   if(key==='mle' && trait('Evasion')) return 'agl';
   if(key==='log' && trait('Wisdom')) return 'ego';

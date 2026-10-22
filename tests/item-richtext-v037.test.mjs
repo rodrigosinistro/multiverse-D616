@@ -21,7 +21,8 @@ function sheet({editable=true,type='power',raw='<p><b>HTML</b> safely saved</p>'
  const win={
   foundry:{appv1:{sheets:{ItemSheet:LegacyBase}},applications:{api:{HandlebarsApplicationMixin:K=>K},sheets:{ItemSheetV2:ModernBase},ux:{TextEditor:{implementation:{async enrichHTML(html){return '<div class="enriched">'+html+'</div>';}}}}},utils:{deepClone:obj=>structuredClone(obj),duplicate:obj=>structuredClone(obj),escapeHTML:s=>s.replace(/</g,'&lt;')}},
   game:{i18n:{localize:s=>s}},CONFIG:{MULTIVERSE_D616:{elements:{},abilities:{}}},
-  prepareActiveEffectCategories:()=>({}),console,TextEditor:{},Dialog:class{},ui:{notifications:{}},Item:{},fromUuid:async()=>null
+  prepareActiveEffectCategories:()=>({}),console,TextEditor:{},Dialog:class{},ui:{notifications:{}},Item:{},fromUuid:async()=>null,
+  supportsAttachedPowers:()=>false
  };
  vm.createContext(win);
  vm.runInContext(`${source}\nglobalThis._sheets=D616ItemSheetsByType`,win);

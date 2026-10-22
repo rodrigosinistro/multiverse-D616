@@ -39,6 +39,10 @@ import { resolveConditionEdges, localTargetActors, resolveConditionReroll, regis
 import { isAdvancedElementalPower, areaPowerProtection, resolvedAdvancedFocusItem, validateAdvancedElementalTargets, registerElementalAdvancedHooks, advancedNeedsDamage } from "./scripts/elemental-advanced.mjs";
 import { hasActiveBodySheet, isAttackItem } from "./scripts/activated-movement-powers.mjs";
 import { calculateD616Damage } from "./scripts/damage-calculation.js";
+import { hasAdamantiumEffect, weaponAdamantiumValue, adamantiumEffectData, applyAdamantiumToHealthDr } from "./scripts/adamantium.mjs";
+import { normalizeItemEffectDurations } from "./scripts/active-effect-v14-compat.mjs";
+import { getAttachedPowers, supportsAttachedPowers, attachPower, detachPower, editAttachedPower, attachedPowerUsable, activateAttachedPower } from "./scripts/item-attached-powers.mjs";
+import {resolveEquipmentPermanentEffects,hasEquipmentPermanentPower} from "./scripts/equipment-permanent-effects.mjs";
 import { calculatePowerDamage } from "./scripts/power-fantastic-damage.mjs";
 import { buildItemRollFormula } from "./scripts/roll-formula.mjs";
 import { resolvePowerRoll, checkPowerOutcome, hasNaturalUltimateFantastic, powerDamageReductionCategory } from "./scripts/power-rolls.mjs";
@@ -465,6 +469,14 @@ class MarvelMultiverseRoll extends Roll {
  * @extends {Actor}
  */
 class MarvelMultiverseActor extends Actor {
+  /** Foundry V14 processes these alongside ordinary transferred Item effects.
+   * Only equipment-borne Permanent powers participate in this override. */
+  *allApplicableEffects() {
+    const effects=resolveEquipmentPermanentEffects(this,super.allApplicableEffects(),
+      data=>new CONFIG.ActiveEffect.documentClass(data,{parent:this}));
+    yield* effects;
+  }
+
   /**
    *
    * @override
@@ -871,6 +883,11 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
           String(powerRoll.damageType ?? "").toLowerCase() === "focus"
             ? "focus"
             : "health",
+        // Adamantium is a property of the ATTACKING weapon, not its bearer.
+        // Snapshot it now, before any future equipment or effect changes.
+        adamantiumHealthDrIgnore: this.type === 'weapon' && this.system.equipped
+          ? weaponAdamantiumValue(this)
+          : 0,
         damageMultiplier: {
           base: baseDamageMultiplier,
           otherBonus,
@@ -2712,7 +2729,7 @@ class ChatMessageMarvel extends ChatMessage {
         const n = mmD616Norm(it.name);
         if (n === want || n.startsWith(`${want} `) || n.startsWith(`${want} (`)) return true;
       }
-      return false;
+      return hasEquipmentPermanentPower(actor,traitName);
     };
 
     const mmD616ResolveDefenseAbility = (attackAbr, configuredDefenseAbr, actor) => {
@@ -3291,6 +3308,11 @@ class ChatMessageMarvel extends ChatMessage {
       const rawDamageReduction=drCategory==='focus'
         ?target.system?.focusDamageReduction
         :target.system?.healthDamageReduction;
+      const piercing=applyAdamantiumToHealthDr(
+        rawDamageReduction,
+        chatMessage.getFlag('multiverse-d616','adamantiumHealthDrIgnore') ?? 0,
+        drCategory, item?.type,
+      );
       const targetFantastic=Boolean(outcomes.get(ref.uuid)?.fantastic);
       const {
         damage, rawDamage, damageReduction, effectiveDamageMultiplier,
@@ -3299,7 +3321,7 @@ class ChatMessageMarvel extends ChatMessage {
         powerName:chatMessage.getFlag('multiverse-d616','heldFollowUp')?.name==='Coiling Crush'
           ?null:(item?.type==='power'?item.name:null),
         marvelDie:marvelTotal,
-        damageMultiplier,damageReduction:rawDamageReduction,
+        damageMultiplier,damageReduction:piercing.effectiveDr,
         ability:abilityValue,bonus:focusBonus,
         fantastic:targetFantastic,
         suppressFantastic:Boolean(advanced?.name && advanced.name!=="Elemental Suffocation"),
@@ -3321,6 +3343,8 @@ class ChatMessageMarvel extends ChatMessage {
         category: damageType,
         damage,
         damageReduction,
+        originalDamageReduction: piercing.originalDr,
+        adamantiumIgnored: piercing.ignored,
         effectiveDamageMultiplier,
         hit: true,
         fantastic: targetFantastic,
@@ -3333,7 +3357,7 @@ class ChatMessageMarvel extends ChatMessage {
         isFantastic ? "Fantastic" : ""
       } </b> ${esc(damageType)} damage.<br/> re: MarvelDie: ${
         marvelTotal
-      } &#42; damage multiplier: &#40; ${baseDamageMultiplier} + bonus: ${effectiveBonus} &#61; ${damageMultiplier} - damageReduction: ${damageReduction} &#61; ${effectiveDamageMultiplier} &#41; + ${esc(
+      } &#42; damage multiplier: &#40; ${baseDamageMultiplier} + bonus: ${effectiveBonus} &#61; ${damageMultiplier} - damageReduction: ${damageReduction} &#61; ${effectiveDamageMultiplier} &#41;${piercing.ignored ? ` <strong>Adamantium:</strong> RD Health ${piercing.originalDr} - ${piercing.ignored} = ${piercing.effectiveDr}.` : ''} + ${esc(
         ability
       )} score ${abilityValue} of damage${esc(focusExplain)}${specialDamage
         ? `; regra especial de ${esc(item.name)}: ${powerDamageFactor}× dano normal`
@@ -3694,8 +3718,14 @@ function onManageActiveEffect(event, owner) {
           }),
           img: 'icons/svg/aura.svg',
           origin: owner.uuid,
-          'duration.rounds':
-            li.dataset.effectType === 'temporary' ? 1 : undefined,
+          type: 'base',
+          system: { changes: [] },
+          duration: {
+            value: li.dataset.effectType === 'temporary' ? 1 : null,
+            units: 'rounds',
+            expiry: li.dataset.effectType === 'temporary' ? 'turnStart' : null,
+            expired: false,
+          },
           disabled: li.dataset.effectType === 'inactive',
         },
       ]);
@@ -4909,7 +4939,7 @@ function d616ActivateTab(sheet, tab) {
 
 async function d616DropActorItem(sheet, item) {
   if (!sheet.isEditable || !item) return null;
-  const data = item.toObject(false);
+  const data = normalizeItemEffectDurations(item.toObject(false));
   if (sheet.actor.items.some(existing => existing.name === data.name)) return null;
   if (data.type === 'power' && data.system?.powerSet === 'Elemental Control') {
     data.system ??= {};
@@ -4932,7 +4962,8 @@ async function d616DropActorItem(sheet, item) {
   }
   if (data.type === 'trait' && ['Big','Small'].includes(data.name))
     await sheet._changeSizeEffect(data.name.toLowerCase());
-  return sheet.actor.createEmbeddedDocuments('Item',[data]);
+  const [created] = await sheet.actor.createEmbeddedDocuments('Item',[data]);
+  return created ?? null;
 }
 
 class D616ActorSheetV2Common extends D616ActorSheetV2Base {
@@ -5142,6 +5173,16 @@ class D616ActorSheetV2Common extends D616ActorSheetV2Base {
         await this._d616SaveBiography(panel);
     }
     return super._preClose?.(options);
+  }
+
+  // Foundry v14 dispatches drops from the directory through _onDropDocument.
+  // Intercept BEFORE it constructs a new embedded Item, since malformed
+  // v14 ActiveEffect duration data fails schema validation before hooks run.
+  async _onDropDocument(event, document) {
+    if (document?.documentName === 'Item' || document?.type && typeof document?.toObject === 'function' && document?.constructor?.documentName === 'Item') {
+      if (document?.parent?.id !== this.actor.id) return d616DropActorItem(this, document);
+    }
+    return super._onDropDocument(event, document);
   }
 
   async _onDropItem(event,item) {
@@ -5795,6 +5836,15 @@ class MarvelMultiverseItemSheet extends D616ItemSheetV2Base {
     context.owner=this.item.isOwner;
     context.cssClass=this.isEditable ? 'editable' : 'locked';
     context.effects=prepareActiveEffectCategories(this.item.effects);
+    if (supportsAttachedPowers(this.item)) {
+      context.attachedPowers=getAttachedPowers(this.item);
+      context.canActivateAttachedPowers=attachedPowerUsable(this.item) && (this.item.actor?.isOwner===true || game.user?.isGM===true);
+      context.attachedPowersUnequipped=this.item.type==='weapon' && this.item.system?.equipped!==true;
+    }
+    if (this.item.type === 'weapon') {
+      context.adamantiumConfigured = hasAdamantiumEffect(this.item);
+      context.adamantiumValue = weaponAdamantiumValue(this.item);
+    }
     if (['power','weapon'].includes(this.item.type)) {
       context.elements=Object.fromEntries(Object.entries(CONFIG.MULTIVERSE_D616.elements)
         .map(([id,el])=>[id,el.label]));
@@ -5860,6 +5910,64 @@ class MarvelMultiverseItemSheet extends D616ItemSheetV2Base {
         }));
       root.querySelectorAll('.effect-control').forEach(link=>
         link.addEventListener('click',event=>onManageActiveEffect(event,this.item)));
+      if (supportsAttachedPowers(this.item)) {
+        root.querySelectorAll('.mm-attached-power-edit').forEach(button=>
+          button.addEventListener('click',async event=>{
+            event.preventDefault();
+            const id=button.closest('[data-attached-power-id]')?.dataset.attachedPowerId;
+            if (!id) return;
+            button.disabled=true;
+            try { await editAttachedPower(this.item,id); this.render(); }
+            catch(error) {
+              console.error('[multiverse-d616] Falha ao editar poder associado:',error);
+              ui.notifications?.error?.(error?.message ?? 'Não foi possível editar o poder.');
+            } finally { button.disabled=false; }
+          }));
+        root.querySelectorAll('.mm-attached-power-remove').forEach(button=>
+          button.addEventListener('click',async event=>{
+            event.preventDefault();
+            const id=button.closest('[data-attached-power-id]')?.dataset.attachedPowerId;
+            if (!id) return;
+            try { await detachPower(this.item,id); this.render(); }
+            catch(error) {
+              console.error('[multiverse-d616] Falha ao remover poder de equipamento:',error);
+              ui.notifications?.error?.('Não foi possível remover o poder.');
+            }
+          }));
+      }
+      if (this.item.type === 'weapon') {
+        root.querySelectorAll('.mm-add-adamantium-effect').forEach(button=>
+          button.addEventListener('click',async event=>{
+            event.preventDefault();
+            if (hasAdamantiumEffect(this.item)) {
+              ui.notifications?.warn?.('A arma já possui Adamantium. Edite o efeito existente para alterar o valor.');
+              return;
+            }
+            try {
+              await this.item.createEmbeddedDocuments('ActiveEffect',[adamantiumEffectData(this.item)]);
+              ui.notifications?.info?.('Adamantium 1 adicionado à arma. Ative Equipado para usar.');
+              this.render();
+            } catch(error) {
+              console.error('[multiverse-d616] Não foi possível adicionar Adamantium:',error);
+              ui.notifications?.error?.('Não foi possível criar o efeito Adamantium. Confira o console.');
+            }
+          }));
+      }
+    }
+    if (supportsAttachedPowers(this.item)) {
+      root.querySelectorAll('.mm-attached-power-use').forEach(button=>
+        button.addEventListener('click',async event=>{
+          event.preventDefault();
+          if (button.disabled) return;
+          const id=button.closest('[data-attached-power-id]')?.dataset.attachedPowerId;
+          if (!id) return;
+          button.disabled=true;
+          try { await activateAttachedPower(this.item,id); }
+          catch(error) {
+            console.error('[multiverse-d616] Erro ao ativar poder de equipamento:',error);
+            ui.notifications?.error?.(error?.message ?? 'Falha ao usar poder.');
+          } finally { button.disabled=!attachedPowerUsable(this.item); }
+        }));
     }
     if (this.item.type!=='occupation') return;
     root.querySelectorAll('.mm-occ-view').forEach(el=>el.addEventListener('click',event=>
@@ -5952,6 +6060,28 @@ class MarvelMultiverseItemSheet extends D616ItemSheetV2Base {
     return super._preClose?.(options);
   }
 
+  async _onDropDocument(event, document) {
+    if (!supportsAttachedPowers(this.item) || document?.type !== 'power')
+      return super._onDropDocument(event,document);
+    if (!this.isEditable) {
+      ui.notifications?.warn?.('Sem permissão para adicionar poderes a este equipamento.');
+      return null;
+    }
+    try {
+      const result=await attachPower(this.item,document);
+      if (result.added) {
+        ui.notifications?.info?.(`Poder ${result.entry.name} associado a ${this.item.name}.`);
+        this.tabGroups.primary='powers';
+        this.render();
+      } else ui.notifications?.warn?.(result.reason);
+      return result.added ? document : null;
+    } catch(error) {
+      console.error('[multiverse-d616] Não foi possível associar Poder ao equipamento:',error);
+      ui.notifications?.error?.(error?.message ?? 'Erro ao adicionar Poder.');
+      return null;
+    }
+  }
+
   async _onDrop(event) {
     const zone=event?.target?.closest?.('.mm-occ-drop');
     if (this.item.type==='occupation' && zone)
@@ -6014,6 +6144,7 @@ const preloadHandlebarsTemplates = async () =>
     "systems/multiverse-d616/templates/actor/actor-limited-sheet.hbs",
     // Item partials
     "systems/multiverse-d616/templates/item/parts/item-effects.hbs",
+    "systems/multiverse-d616/templates/item/parts/item-attached-powers.hbs",
   ]);
 
 class MarvelMultiverseActorBase extends foundry.abstract

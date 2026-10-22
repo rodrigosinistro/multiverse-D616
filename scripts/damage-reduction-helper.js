@@ -219,6 +219,8 @@ function getStructuredEntries(message) {
       damageReduction: Math.abs(
         Number(entry?.damageReduction ?? 0) || 0
       ),
+      originalDamageReduction: Math.max(0, Number(entry?.originalDamageReduction ?? entry?.damageReduction ?? 0) || 0),
+      adamantiumIgnored: Math.max(0, Number(entry?.adamantiumIgnored ?? 0) || 0),
       effectiveDamageMultiplier: Math.max(
         0,
         Number(entry?.effectiveDamageMultiplier ?? 0) || 0
@@ -402,7 +404,7 @@ function renderTargetTable(entries,damageMessage) {
       (entry) => `
         <div class="mmdr-row">
           <span>${escapeHtml(entry.name)}</span>
-          <span>DR ${entry.damageReduction}</span>
+          <span>DR ${entry.damageReduction}${entry.adamantiumIgnored ? ` (${entry.originalDamageReduction} − ${entry.adamantiumIgnored} Adamantium)` : ''}</span>
           <span class="tt">${entry.damage}</span>
         </div>${renderGuardSelector(entry,damageMessage)}`
     )

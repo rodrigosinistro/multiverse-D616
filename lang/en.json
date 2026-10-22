@@ -111,11 +111,12 @@
     "ActionHud": {
       "Settings": {
         "EnabledName": "Native Action HUD",
-        "EnabledHint": "Shows ABILITIES and POWERS when a token is selected, without Token Action HUD Core."
+        "EnabledHint": "Shows ABILITIES and POWERS (including equipped weapons) when a token is selected, without Token Action HUD Core."
       },
       "Abilities": "ABILITIES",
       "Powers": "POWERS",
-      "NoPowers": "No actionable Powers.",
+      "NoPowers": "No actionable powers or equipped weapons.",
+      "EquippedWeapons": "EQUIPPED WEAPONS",
       "NoPermission": "You do not have permission to use this actor's actions.",
       "Collapse": "Collapse HUD",
       "Expand": "Expand HUD",

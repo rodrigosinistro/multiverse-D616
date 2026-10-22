@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {normalizeItemEffectDurations} from '../scripts/active-effect-v14-compat.mjs';
 
 const main = fs.readFileSync(new URL('../multiverse-d616.mjs',import.meta.url),'utf8');
 const start = main.indexOf('const D616ActorSheetV2Base =');
@@ -34,6 +35,7 @@ const makeHarness = (actor=makeFixture()) => {
     async _onRender(){}
     async render(){this.wasRendered=true;return this;}
     async _onDropItem(){this.wasSorted=true;return 'sorted';}
+    async _onDropDocument(){this.wasSorted=true;return 'sorted';}
   }
   class LegacyCharacter { _prepareItems(context){context.legacyItems=true;} _prepareData(context){context.preparedCharacter=true;} }
   class LegacyNPC { _prepareItems(context){context.legacyItems=true;} _prepareCharacterData(context){context.preparedCharacter=true;} }
@@ -47,6 +49,7 @@ const makeHarness = (actor=makeFixture()) => {
     actorHasOpenCombat:()=>false,
     prepareActiveEffectCategories:()=>({passive:[],temporary:[]}),
     ui:{notifications:{warn() {}}},
+    normalizeItemEffectDurations,
     console,
     ImagePopout:class{},
     document:{createElement(){return {}}},

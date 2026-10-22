@@ -4,7 +4,8 @@ import { resolveConditionEdges, resolveConditionReroll } from "./condition-edge.
  *
  * Replaces token-action-hud-core + token-action-hud-multiverse-d616 with a
  * small system-owned HUD containing the two actions used by this system:
- * ABILITIES and actionable POWERS, including manually usable Permanent powers such as Grow/Shrink and Resize.
+ * ABILITIES and actionable POWERS, plus equipped weapons as attack shortcuts.
+ * Includes manually usable Permanent powers such as Grow/Shrink and Resize.
  */
 
 import { growPowerLevel } from "./grow-size.mjs";
@@ -13,6 +14,7 @@ import { listPowerEscapes, choosePowerEscape } from "./power-escapes.mjs";
 import { listConditionRecoveryActions, attemptConditionRecovery } from "./condition-actions.mjs";
 import { hasFaltineFlames, extinguishFaltine, hasHealingFactor, nextHealingHealth, healOutsideCombat } from "./ongoing-power-effects.mjs";
 import { availableHeldPowers, useHeldFollowUp } from "./repeat-power-attacks.mjs";
+import { getAttachedPowers, attachedPowerUsable, activateAttachedPower } from "./item-attached-powers.mjs";
 
 const SYSTEM_ID = "multiverse-d616";
 const LEGACY_HUD_MODULE_ID = "token-action-hud-multiverse-d616";
@@ -35,10 +37,12 @@ const ABILITY_LABELS = {
 
 const FALLBACK_TEXT = {
   "MULTIVERSE_D616.ActionHud.Settings.EnabledName": "HUD de Ações nativo",
-  "MULTIVERSE_D616.ActionHud.Settings.EnabledHint": "Exibe ABILITIES e POWERS ao selecionar um token.",
+  "MULTIVERSE_D616.ActionHud.Settings.EnabledHint": "Exibe ABILITIES e POWERS (com armas equipadas) ao selecionar um token.",
   "MULTIVERSE_D616.ActionHud.Abilities": "ABILITIES",
   "MULTIVERSE_D616.ActionHud.Powers": "POWERS",
-  "MULTIVERSE_D616.ActionHud.NoPowers": "Nenhum Power acionável.",
+  "MULTIVERSE_D616.ActionHud.NoPowers": "Nenhum poder acionável ou arma equipada.",
+  "MULTIVERSE_D616.ActionHud.EquippedWeapons": "ARMAS EQUIPADAS",
+  "MULTIVERSE_D616.ActionHud.AttachedItemPowers": "PODERES DOS ITENS",
   "MULTIVERSE_D616.ActionHud.NoPermission": "Você não tem permissão para usar as ações deste ator.",
   "MULTIVERSE_D616.ActionHud.Collapse": "Minimizar HUD",
   "MULTIVERSE_D616.ActionHud.Expand": "Expandir HUD",
@@ -135,12 +139,28 @@ function canonicalPowerName(name) {
     .replace(/\s+/g, " ");
 }
 
+/** Weapon shortcuts are owned attacks, not independent powers. */
+function isEquippedWeaponForHud(item) {
+  return item?.type === "weapon" && item.system?.equipped === true;
+}
+
 /** Only explicitly actionable Permanent powers bypass the standard filter. */
 function isPowerAvailableForHud(item) {
   if (item?.type !== "power") return false;
   if (!isPermanentPower(item)) return true;
   return growPowerLevel(item) > 0 || shrinkPowerLevel(item) > 0 ||
     ACTIONABLE_PERMANENT_POWERS.has(canonicalPowerName(item.name));
+}
+
+/** Apply the same HUD visibility rule to owned Powers and to the independent
+ * Power snapshots stored on equipment. A passive Permanent power remains active
+ * through the equipment effect pipeline; it simply has no use shortcut. */
+function actionableAttachedPowers(carrier) {
+  return getAttachedPowers(carrier).filter(entry => isPowerAvailableForHud({
+    type: "power",
+    name: entry.data?.name ?? entry.name,
+    system: entry.data?.system ?? {},
+  }));
 }
 
 function compareNames(left, right) {
@@ -387,6 +407,12 @@ class NativeActionHud {
       userCanUseActor(actor),
       abilities,
       powers,
+      getActorItems(actor)
+        .filter((item) => item?.type === "weapon")
+        .map((item) => [item.id ?? item._id, item.name, item.img, item.system?.equipped === true,
+          getAttachedPowers(item).map(p=>[p.id,p.name,p.img,p.data?.name,p.data?.system?.duration])]),
+      getActorItems(actor).filter(item=>item?.type==='item' && getAttachedPowers(item).length)
+        .map(item=>[item.id??item._id,item.name,getAttachedPowers(item).map(p=>[p.id,p.name,p.img,p.data?.name,p.data?.system?.duration])]),
       listPowerEscapes(actor).map(e=>e.id),
       availableHeldPowers(actor),
     ]);
@@ -478,6 +504,12 @@ class NativeActionHud {
     const powers = getActorItems(actor)
       .filter(isPowerAvailableForHud)
       .sort((left, right) => compareNames(left.name, right.name));
+    const weapons = getActorItems(actor)
+      .filter(isEquippedWeaponForHud)
+      .sort((left, right) => compareNames(left.name, right.name));
+    const itemPowers = getActorItems(actor)
+      .filter(item=>item?.type==='item' && actionableAttachedPowers(item).length)
+      .sort((a,b)=>compareNames(a.name,b.name));
     const escapes=listPowerEscapes(actor);
     const recoveries=listConditionRecoveryActions(actor);
     const naturalHealing=hasHealingFactor(actor)&&!game.combat?.started &&
@@ -536,7 +568,7 @@ class NativeActionHud {
       button.title=`Ação Padrão — ${recovery.abilityLabel} TN ${recovery.tn}`;
       button.append(img,label);body.appendChild(button);
     }
-    if (!powers.length && !escapes.length && !recoveries.length && !burning && !naturalHealing) {
+    if (!powers.length && !weapons.length && !itemPowers.length && !escapes.length && !recoveries.length && !burning && !naturalHealing && !availableHeldPowers(actor).length) {
       const empty = document.createElement("p");
       empty.className = "mmrpg-native-action-hud__empty";
       empty.textContent = localize("MULTIVERSE_D616.ActionHud.NoPowers");
@@ -562,6 +594,59 @@ class NativeActionHud {
       applyPowerTooltip(button, item);
       body.appendChild(button);
     }
+    if (weapons.length) {
+      const heading = document.createElement("div");
+      heading.className = "mmrpg-native-action-hud__group-title";
+      heading.textContent = localize("MULTIVERSE_D616.ActionHud.EquippedWeapons");
+      body.appendChild(heading);
+      for (const item of weapons) {
+        const itemId = item.id ?? item._id;
+        if (!itemId) continue;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "mmrpg-native-action-hud__action power weapon";
+        button.dataset.action = "weapon";
+        button.dataset.itemId = itemId;
+        button.disabled = !canUse;
+        const image = document.createElement("img");
+        image.src = item.img || `systems/${SYSTEM_ID}/icons/weapons.svg`;
+        image.alt = "";
+        const name = document.createElement("span");
+        name.className = "name";
+        name.textContent = item.name ?? "(Weapon)";
+        button.append(image, name);
+        applyPowerTooltip(button, item);
+        body.appendChild(button);
+        this.renderAttachedPowerButtons(body,item,canUse);
+      }
+    }
+    if(itemPowers.length) {
+      const heading=document.createElement('div');
+      heading.className='mmrpg-native-action-hud__group-title';
+      heading.textContent=localize('MULTIVERSE_D616.ActionHud.AttachedItemPowers');
+      body.appendChild(heading);
+      for(const item of itemPowers) this.renderAttachedPowerButtons(body,item,canUse);
+    }
+  }
+
+  renderAttachedPowerButtons(body,carrier,canUse) {
+    for(const entry of actionableAttachedPowers(carrier)) {
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='mmrpg-native-action-hud__action power attached-power';
+      button.dataset.action='attached-power';
+      button.dataset.itemId=carrier.id??carrier._id;
+      button.dataset.powerId=entry.id;
+      button.disabled=!canUse || !attachedPowerUsable(carrier);
+      const img=document.createElement('img');
+      img.src=entry.img || `systems/${SYSTEM_ID}/icons/super-powers.svg`;
+      img.alt='';
+      const label=document.createElement('span');label.className='name';
+      label.textContent=`${entry.name} (${carrier.name})`;
+      button.append(img,label);
+      applyPowerTooltip(button,{type:'power',name:entry.name,system:entry.data?.system??{}});
+      body.appendChild(button);
+    }
   }
 
   async onClick(event) {
@@ -582,7 +667,7 @@ class NativeActionHud {
       return;
     }
 
-    const actionButton = event.target.closest?.("[data-action='ability'], [data-action='power'], [data-action='escape'], [data-action='condition-recovery'], [data-action='extinguish-faltine'], [data-action='healing-factor-outside'], [data-action='held-follow-up']");
+    const actionButton = event.target.closest?.("[data-action='ability'], [data-action='power'], [data-action='weapon'], [data-action='attached-power'], [data-action='escape'], [data-action='condition-recovery'], [data-action='extinguish-faltine'], [data-action='healing-factor-outside'], [data-action='held-follow-up']");
     if (!actionButton || actionButton.disabled) return;
     const actor = this.selectedActor;
     if (!actor) return;
@@ -601,16 +686,26 @@ class NativeActionHud {
         await healOutsideCombat(actor);
       } else if(actionButton.dataset.action === 'held-follow-up') {
         await useHeldFollowUp(actor,actionButton.dataset.powerName);
+      } else if(actionButton.dataset.action === 'attached-power') {
+        const carrier=actor.items?.get?.(actionButton.dataset.itemId);
+        if (carrier && attachedPowerUsable(carrier,actor) &&
+            actionableAttachedPowers(carrier).some(entry=>entry.id===actionButton.dataset.powerId)) {
+          await activateAttachedPower(carrier,actionButton.dataset.powerId,actor);
+        }
       } else {
         const item = actor.items?.get?.(actionButton.dataset.itemId);
-        if (item?.type === "power") await item.roll();
+        if (item?.type === "power" || isEquippedWeaponForHud(item)) await item.roll();
       }
     } catch (error) {
       console.error(`[${SYSTEM_ID}] Native Action HUD action failed`, error);
       ui.notifications.error(error?.message ?? "Falha ao executar a ação.");
     } finally {
       actionButton.classList.remove("is-busy");
-      actionButton.disabled = !userCanUseActor(actor);
+      if(actionButton.dataset.action==='attached-power') {
+        const carrier=actor.items?.get?.(actionButton.dataset.itemId);
+        actionButton.disabled=!userCanUseActor(actor)||!attachedPowerUsable(carrier,actor)||
+          !actionableAttachedPowers(carrier).some(entry=>entry.id===actionButton.dataset.powerId);
+      } else actionButton.disabled = !userCanUseActor(actor);
     }
   }
 
@@ -728,6 +823,7 @@ export {
   NativeActionHud,
   isPermanentPower,
   isPowerAvailableForHud,
+  isEquippedWeaponForHud,
   nativeActionHud,
   rollAbility,
 };
