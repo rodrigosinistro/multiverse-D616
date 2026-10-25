@@ -88,5 +88,5 @@ test('0.2.69 — integração: card congela valor por arma e exibe DR efetiva no
   assert.match(main,/adamantiumIgnored: piercing\.ignored/);
   assert.match(helper,/entry\.adamantiumIgnored/);
   const manifest=JSON.parse(fs.readFileSync(new URL('system.json',root),'utf8'));
-  assert.equal(manifest.version,'0.2.77');
+  assert.equal(manifest.version,'0.2.84');
 });

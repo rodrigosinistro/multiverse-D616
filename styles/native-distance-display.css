@@ -1,0 +1,10 @@
+/* D616: distância nativa e prévia de movimento efêmera; sem rastros históricos. */
+#m616-native-distance[hidden] {display:none!important}
+#m616-native-distance {position:fixed;inset:0;z-index:2147483000;pointer-events:none;font-family:var(--font-primary,Roboto,sans-serif)}
+.m616-native-distance-svg {position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.m616-distance-guide {fill:none;stroke:#89efb3;stroke-width:2.3;stroke-dasharray:7 4;filter:drop-shadow(0 1px 2px #000)}
+.m616-distance-pill {position:absolute;z-index:2147483001;max-width:min(430px,calc(100vw - 16px));min-width:150px;white-space:nowrap;text-align:center;background:rgba(19,23,25,.93);border:1px solid rgba(119,219,166,.75);border-radius:6px;padding:5px 9px;font-size:12px;font-weight:700;color:#eafff2;box-shadow:0 3px 9px #0009;text-shadow:0 1px 1px #000}
+.m616-distance-pill.is-exceeded {color:#ffe0de;border-color:#eb6159;background:rgba(83,25,24,.94)}
+
+.m616-distance-secondary {display:block;border-top:1px solid rgba(255,224,150,.38);margin-top:4px;padding-top:4px;color:#ffe7aa;font-size:12px;white-space:normal}
+.m616-distance-secondary.is-exceeded {color:#ffaaa7}

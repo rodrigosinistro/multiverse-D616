@@ -1,3 +1,57 @@
+## v0.2.84 — Teleport v14 sem alteração de modo inválido (Foundry VTT v14) — 24/10/2026
+
+- Corrigido `DataModelValidationError: movementAction: teleport is not a valid choice` ao usar Teleport 1/2, Teleport Blind e Blink. O poder não tenta mais gravar `teleport` em `TokenDocument.movementAction`, que aceita somente modos registrados no Foundry v14.
+- Preservada a reserva temporária de teleporte no Combatant e o Active Effect no portador; a distância e o alcance continuam sendo calculados pela reserva especial e não gastam Caminhada/Voo. Após executar o movimento ou iniciar novo turno, a reserva é limpa, sem mudar o modo de movimento anteriormente escolhido.
+- Mantida a recuperação de Ação Padrão, Reação e Movimento no **início do próprio próximo turno**, inclusive para quem participou da Rodada Bônus; não há restauração imediata de recursos só pela transição para Rodada 1.
+- Adicionados testes de regressão para validação do modo do token, continuidade da reserva e renovação dos recursos. Sem mudanças no README e sem publicação no GitHub.
+
+## v0.2.83 — Teleport e aviso antecipado de movimento adicional (Foundry VTT v14) — 24/10/2026
+
+- Corrigida leitura do Rank dos personagens (`system.attributes.rank.value`) ao ativar Teleport 1/2, Teleport Blind ou Blink. A reserva temporária de deslocamento usa o Rank efetivo em vez de retornar 0.
+- Fortalecida a criação do efeito visual de movimento temporário: duração compatível com Active Effects v14, e reserva de teleporte preservada caso falhe apenas a criação do ícone de efeito. Teleporte continua separado do movimento comum e é consumido no próximo deslocamento.
+- Durante o arrasto, ao ultrapassar a velocidade normal da rodada e ainda possuir Ação Padrão disponível, aparece **abaixo da medição de distância** o aviso “Esse Movimento usará também sua Ação Padrão.”. Consumo autoritativo continua apenas ao soltar o token.
+- A prévia distingue deslocamento sem Ação Padrão disponível ou além da capacidade total; o tooltip adapta seu tamanho/posição para não cortar a segunda linha.
+- Documentação estável no README preservada; histórico registrado exclusivamente neste CHANGELOG. Sem publicação no GitHub.
+
+## v0.2.82 — Recursos por rodada, teleporte e movimento extra (Foundry VTT v14) — 24/10/2026
+
+- Medidor de distância recebe prioridade visual sobre HUD, etiquetas e dados de token durante medição, sem interceptar ponteiro.
+- A chave de reinício do turno diferencia **Rodada Bônus** e **Rodada regular**: recursos são reiniciados no primeiro turno regular mesmo se o índice de combate for igual ao da Rodada Bônus. Continua restaurando ações/reação ao início de cada turno.
+- Usar Teleport 1/2, Teleport Blind ou Blink cria um Active Effect temporário no portador e uma reserva de deslocamento de teleporte em espaços, acompanhada de seleção do modo Teleporte no token. O próximo deslocamento consome a reserva e remove o efeito sem abater Caminhada/Voo. Alcance em combate: 10×Rank para Teleport, Rank para Blink. A reserva não é uma velocidade permanente e expira ao novo turno. Teleportes de objeto/outros não concedem movimento livre.
+- Movimento comum que ultrapassa a velocidade selecionada gasta automaticamente uma Ação Padrão disponível (como segunda Ação de Movimento), com aviso ao Mestre e ao proprietário; exceder o limite disponível gera alerta sem bloquear o token. O consumo e o movimento são registrados atomicamente no Combatant para evitar gasto duplo entre clientes.
+- README mantido como documentação permanente; demais recursos do sistema preservados. Corrigidos somente os pontos acima.
+
+## v0.2.81 — Refinamentos de distância e movimento nativo (Foundry VTT v14) — 24/10/2026
+
+- **Visualização transitória:** a medição de deslocamento só é desenhada enquanto o token é arrastado; ao soltar ou confirmar o movimento, linha e tooltip são removidos imediatamente. Removido o armazenamento/desenho de trajetos anteriores do turno. A contagem autoritativa `movementUsed` e as quatro setas de movimento permanecem intactas.
+- **Distância entre tokens durante combate:** passar o mouse sobre outro token mostra exatamente o mesmo texto simples `Distância: X espaços` utilizado fora de combate, sem acrescentar velocidade e restante do turno. O sistema também reconhece o combatente ativo quando não há token selecionado (respeitando propriedade e visibilidade).
+- **Aviso Hover Distance:** ao entrar no mundo com o medidor nativo habilitado e o módulo `hover-distance` ativo, aparece um aviso único sugerindo desativar o módulo em Gerenciar Módulos para evitar sobreposição. A configuração do módulo não é modificada automaticamente.
+- Corrigido possível erro `Uncaught` por movimento do ponteiro durante inicialização, antes de o canvas do Foundry v14 estar pronto.
+- Mantidas as medições por modo de deslocamento e todos os recursos anteriores de combate, iniciativa, poderes e equipamentos. README permanece como documentação permanente; changelog registra a atualização.
+
+## v0.2.80 — Distância e deslocamento nativos por modo de movimento (Foundry VTT v14) — 24/10/2026
+
+- Integrado medidor nativo e independente do Hover Distance: ao selecionar um token e passar sobre outro, mostra a distância em espaços da cena; exibe linha informativa, sem interceptar cliques. Durante o arrasto de um token selecionado, mostra prévia da distância e o movimento disponível; segmentos já percorridos no turno podem ser visualizados. O rastreio é apenas informativo e não bloqueia movimento.
+- O máximo de Movimento consumido pelo Controle de Turno e pelas quatro setas passa a ler a ação de movimento selecionada no token (`TokenDocument.movementAction`) e a velocidade de combate do modo correspondente na ficha (`system.movement.<modo>.value`). Assim Voo 30 utiliza 30 espaços, sem herdar Caminhada 5; não utiliza os multiplicadores fora de combate (`noncom`).
+- Suporte explícito aos modos Caminhada, Voo, Natação, Escalada, Salto, Planar, Balanço e Levitação. Teleporte não cria reserva automática de movimento; configurações ausentes têm fallback seguro. Ações/Reações, fechamento de combate, concentração e o motor de dano não foram modificados.
+- Configuração individual `nativeTokenDistance` permite desligar o visual caso deseje manter o módulo externo. O README recebeu apenas uma linha de recurso integrado; histórico permanece no CHANGELOG.
+- Mantida a contagem autoritativa do Controle de Turno nas flags do Combatant, com sincronização pelo Mestre. Testes automatizados acrescentados para resolução de modos, distâncias e conservação do estado ao alternar modos.
+
+## v0.2.79 — Barra de iniciativa móvel e botão Encerrar Combate (Foundry VTT v14)
+
+- A barra compacta de iniciativa pode ser reposicionada arrastando a área **Rodada/Iniciativa** (ícone de alça). A posição é salva individualmente por usuário no navegador via configuração cliente do Foundry e restaurada ao reabrir a cena; o posicionamento é limitado à área visível, inclusive após redimensionamento da janela.
+- Adicionado botão **Encerrar Combate** (bandeira quadriculada) na própria barra, disponível apenas para o Mestre durante combates iniciados. Reutiliza `turnTracker.controlCombat('end')`, com a confirmação já existente antes de finalizar, sem duplicar rotinas de encerramento.
+- A área de arrastar não interfere nos botões de iniciar, voltar/avançar turno e abrir o controle tradicional. Indicadores sobre os tokens e cálculos de combate não foram alterados.
+- Nenhuma alteração funcional ou conteúdo de atualização inserido no README; ele permanece com a documentação permanente do sistema.
+
+## v0.2.78 — HUD compacto de combate (experimental, Foundry VTT v14) — 24/10/2026
+
+- Novo modo visual de combate, ativado por padrão e **opcional por cliente** (`Combate — HUD compacto sobre tokens e iniciativa no topo`, nas configurações do sistema): ícones de Ação Padrão e Reação acima dos tokens, removidos à medida que os recursos são consumidos; quatro setas abaixo indicam 25% cada do Movimento total, com preenchimento proporcional ao movimento restante.
+- Faixa horizontal no topo com retratos dos combatentes na ordem de iniciativa do Foundry; combatente ativo destacado, rodada e valor de iniciativa. Combatentes ocultos não aparecem para jogadores. Mestre possui controles de iniciar iniciativa, turno anterior e próximo turno.
+- A nova interface consome os **mesmos estados sincronizados** do `turn-tracker` existente (uso de poderes/armas, reação, movimento e reinício de turno); não modifica a mecânica de turnos nem aplica limites adicionais a deslocamentos.
+- A janela detalhada do Controle de Turno deixa de abrir automaticamente no modo compacto, mas pode ser aberta manualmente pelo botão na faixa superior ou ferramenta da camada Tokens; o modo anterior pode ser restaurado desligando a opção de cliente.
+- Incluídos utilitários e testes de regressão para a visualização proporcional de Movimento, ações/reação, visibilidade e integração v14; nenhuma alteração de regras ou compêndios. O `README.md` recebeu apenas uma linha de recurso integrado e a descrição desta versão permanece exclusivamente neste `CHANGELOG.md`.
+
 ## v0.2.77 — Padronização do README e documentação (Foundry VTT v14) — 22/10/2026
 
 - Reorganizado o `README.md` no formato institucional acordado: apresentação, manifesto de instalação, recursos nativos integrados, compatibilidade, créditos, avisos de projeto não oficial, licença MIT e instruções de instalação.

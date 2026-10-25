@@ -3,12 +3,16 @@ import { automationEnabled } from '../automation-settings.mjs';
 import {
   TURN_TRACKER_RESOURCES,
   actorMovementMaximum,
+  actorMovementForAction,
+  combatantMovementMaximum,
   adjustTurnState,
   classifyItemAction,
   consumeTurnResources,
   movementIsTeleport,
+  teleportPowerGrant,
   movementSpacesFromHook,
   resetTurnState,
+  recordMovementDistance,
   sanitizeTurnState,
   validateTurnConsumption,
 } from "./turn-tracker-core.mjs";
@@ -23,6 +27,11 @@ const BONUS_ROUND_FLAG = "bonusRound";
 const SOCKET_NAME = `system.${SYSTEM_ID}`;
 const POPUP_ID = "m616-turn-tracker-window";
 const STORAGE_KEY = `${SYSTEM_ID}.turnTrackerWindow.v1`;
+function compactModeEnabled() {
+  try { return game.settings.get(SYSTEM_ID, "compactCombatHUD") !== false; }
+  catch (_error) { return false; }
+}
+
 const IGNORED_MOVEMENT_METHODS = new Set(["config", "paste", "undo"]);
 const processedMovements = new Set();
 const spendAcks=new Map();
@@ -105,8 +114,73 @@ function canControl(combatant, user = game.user) {
   return !!actor?.testUserPermission?.(user, ownerLevel);
 }
 
+const TEMP_MOVEMENT_FLAG = 'temporaryMovementPower';
+function movementGrant(combatant) {
+  const grant = combatant?.getFlag?.(SYSTEM_ID, TEMP_MOVEMENT_FLAG);
+  return grant?.kind === 'teleport' ? grant : null;
+}
+function movementSpeedFor(combatant) {
+  // Never overwrite the ordinary movement bank with a temporary teleport allowance.
+  const grant = movementGrant(combatant);
+  if (grant) return actorMovementForAction(combatantActor(combatant),grant.previousMode ?? 'walk').maximum;
+  return combatantMovementMaximum(combatant);
+}
+function movementAlert(combatant, text, warning = false) {
+  if (!text) return;
+  const method = warning ? 'warn' : 'info';
+  ui.notifications?.[method]?.(text);
+  // The authoritative GM makes the resource change; owning players receive
+  // the same message without duplicating the spend.
+  game.socket?.emit?.(SOCKET_NAME, {
+    type:'movementAlert',combatId:combatant?.combat?.id,
+    combatantId:combatant?.id,text,warning,
+  });
+}
+async function clearMovementGrant(combatant) {
+  const grant = movementGrant(combatant);
+  if (!grant) return false;
+  const actor = combatantActor(combatant);
+  await combatant.unsetFlag(SYSTEM_ID, TEMP_MOVEMENT_FLAG);
+  if (grant.effectId && actor?.deleteEmbeddedDocuments) {
+    try { await actor.deleteEmbeddedDocuments('ActiveEffect',[grant.effectId]); }
+    catch(error) { console.warn('[D616] Falha ao remover efeito temporário',error); }
+  }
+  // Teleport is represented by the temporary Combatant flag and Active Effect.
+  // Never write `movementAction: 'teleport'`: Foundry v14 validates this field
+  // against its registered movement actions and rejects unregistered choices.
+  // The token keeps its original movement mode throughout the teleport.
+  return true;
+}
+async function grantMovementPower(combatant,payload) {
+  const actor = combatantActor(combatant);
+  if (!actor?.createEmbeddedDocuments) return false;
+  await clearMovementGrant(combatant);
+  const maximum = Math.max(0,Number(payload.maximum)||0);
+  if (maximum <= 0) return false;
+  const name = String(payload.powerName||'Teleport').slice(0,90);
+  let effect = null;
+  try { effect = (await actor.createEmbeddedDocuments('ActiveEffect',[{
+    name:`Movimento Temporário — ${name} (${maximum} espaços)`,
+    img:'systems/multiverse-d616/icons/phasing.svg',
+    type:'base',disabled:false,showIcon:2,changes:[],system:{changes:[]},
+    duration:{},transfer:false,
+    flags:{[SYSTEM_ID]:{temporaryMovementPower:{kind:'teleport',maximum,combatantId:combatant.id}}},
+  }]))?.[0]; } catch (error) {
+    console.warn('[D616] Efeito visual temporário de Teleport não pôde ser criado; reserva de movimento mantida.',error);
+  }
+  const previousMode = combatant.token?.movementAction || 'walk';
+  await combatant.setFlag(SYSTEM_ID,TEMP_MOVEMENT_FLAG,{
+    kind:'teleport',maximum,powerName:name,effectId:effect?.id||'',
+    previousMode,resetKey:turnResetKey(combatant.combat ?? game.combat),
+  });
+  // Do not update TokenDocument.movementAction here: `teleport` is not a
+  // registered Foundry v14 movement choice. The distance overlay reads this
+  // temporary grant directly, independent of the token's normal mode.
+  return true;
+}
+
 function stateFor(combatant) {
-  const movementMax = actorMovementMaximum(combatantActor(combatant));
+  const movementMax = movementSpeedFor(combatant);
   return resolveTurnResourceState(sanitizeTurnState(
     combatant?.getFlag?.(SYSTEM_ID, FLAG_KEY) ?? {},
     movementMax
@@ -120,6 +194,7 @@ function statesEqual(left, right) {
     Number(left?.reactionUsed) === Number(right?.reactionUsed) &&
     Number(left?.reactionMax) === Number(right?.reactionMax) &&
     Number(left?.movementUsed) === Number(right?.movementUsed) &&
+    !!left?.movementExtraActionUsed === !!right?.movementExtraActionUsed &&
     Number(left?.movementMax) === Number(right?.movementMax) &&
     String(left?.resetKey ?? "") === String(right?.resetKey ?? "")
   );
@@ -145,7 +220,7 @@ async function applyRequest(payload, requestingUser) {
   const combatant = resolveCombatant(payload.combatId, payload.combatantId);
   if (!combatant || !canControl(combatant, requestingUser)) return false;
 
-  const movementMax = actorMovementMaximum(combatantActor(combatant));
+  const movementMax = movementSpeedFor(combatant);
   const current = stateFor(combatant);
   let next = current;
 
@@ -162,6 +237,17 @@ async function applyRequest(payload, requestingUser) {
     // duplicate or already-exhausted spends before modifying combatant flags.
     if (!validateTurnConsumption(current, resources, movementMax)) return false;
     next = consumeTurnResources(current, resources, movementMax);
+  } else if (payload.operation === 'movementDistance') {
+    const move = recordMovementDistance(current,Number(payload.distance),movementMax);
+    next = move.state;
+    await persistState(combatant,next);
+    if (move.actionSpent) movementAlert(combatant,
+      `${combatant.name}: movimento excedeu ${movementMax} espaços. Ação Padrão utilizada para uma segunda Ação de Movimento.`);
+    else if (move.exceeded && (move.needsExtra || current.movementUsed <= 2*movementMax)) movementAlert(combatant,
+      `${combatant.name}: deslocamento excede os recursos disponíveis. O Mestre deve revisar o movimento.`,true);
+    return true;
+  } else if (payload.operation === 'grantPowerMovement') {
+    return grantMovementPower(combatant,payload);
   } else if (payload.operation === "reset") {
     next = resetTurnState(current, current.resetKey, movementMax);
   } else {
@@ -221,6 +307,14 @@ async function handleSocket(payload) {
     return;
   }
 
+  if (payload.type === 'movementAlert') {
+    if (game.user?.isGM) return; // originating GM already saw the notification
+    const combatant = resolveCombatant(payload.combatId,payload.combatantId);
+    if (combatant && canControl(combatant,game.user)) {
+      ui.notifications?.[payload.warning?'warn':'info']?.(String(payload.text||''));
+    }
+    return;
+  }
   if (!isPrimaryGM()) return;
   const requestingUser = game.users?.get?.(payload.userId);
   if (!requestingUser) return;
@@ -768,7 +862,9 @@ async function advanceBonusTurn(combat, direction = 1) {
   const ids = bonusOrderedIds(combat, state);
   if (!ids.length) {
     await combat.unsetFlag(SYSTEM_ID, BONUS_ROUND_FLAG);
-    return combat.update({ turn: 0 }, { m616BonusTransition: true });
+    const result=await combat.update({ turn: 0 }, { m616BonusTransition: true });
+    await resetActiveCombatant(combat);
+    return result;
   }
   const currentId = combat.combatant?.id;
   const pos = Math.max(0, ids.indexOf(currentId));
@@ -787,7 +883,9 @@ async function advanceBonusTurn(combat, direction = 1) {
 
   await combat.unsetFlag(SYSTEM_ID, BONUS_ROUND_FLAG);
   ui.notifications?.info?.("Rodada Bônus encerrada. Começa a Rodada 1.");
-  return combat.update({ turn: 0 }, { m616BonusTransition: true });
+  const result=await combat.update({ turn: 0 }, { m616BonusTransition: true });
+  await resetActiveCombatant(combat);
+  return result;
 }
 
 async function consumeUltimateFantastic(combat, combatantId) {
@@ -1054,10 +1152,15 @@ async function trackItemUse(item) {
     resources = [chosen];
   }
 
-  return requestUpdate(combatant, {
-    operation: "consume",
-    resources,
-  });
+  const accepted = await requestUpdate(combatant, {operation:'consume',resources});
+  if (accepted) {
+    const power = teleportPowerGrant(item);
+    if (power) {
+      const granted = await requestUpdate(combatant,{operation:'grantPowerMovement',...power});
+      if (!granted) console.warn('[D616] Não foi possível criar reserva de Teleport:', item.name);
+    }
+  }
+  return accepted;
 }
 
 function formatValue(value) {
@@ -1568,7 +1671,7 @@ async function onPopupContextMenu(event) {
 function turnResetKey(combat) {
   const combatant = combat?.combatant;
   if (!combatant) return "";
-  return `${combat.id}:${combat.round ?? 0}:${combat.turn ?? 0}:${combatant.id}`;
+  return `${combat.id}:${bonusRound(combat) ? "bonus" : "regular"}:${combat.round ?? 0}:${combat.turn ?? 0}:${combatant.id}`;
 }
 
 async function resetActiveCombatant(combat) {
@@ -1578,13 +1681,14 @@ async function resetActiveCombatant(combat) {
   const key = turnResetKey(combat);
   const current = stateFor(combatant);
   if (!key || current.resetKey === key) return;
+  if (movementGrant(combatant)) await clearMovementGrant(combatant);
 
   await persistState(
     combatant,
     resetTurnState(
       current,
       key,
-      actorMovementMaximum(combatantActor(combatant))
+      movementSpeedFor(combatant)
     )
   );
 }
@@ -1682,11 +1786,7 @@ async function recordMovementForCombatant(combatant, spaces, source = "movement"
   const amount = Number(spaces);
   if (!combatant || !Number.isFinite(amount) || amount <= 0) return false;
 
-  const result = await requestUpdate(combatant, {
-    operation: "adjust",
-    resource: "movement",
-    delta: amount,
-  });
+  const result = await requestUpdate(combatant, {operation:"movementDistance",distance:amount});
   if (result) {
     console.debug(`[${SYSTEM_ID}] Turn Tracker recorded movement`, {
       combatant: combatant.name,
@@ -1711,7 +1811,21 @@ async function trackTokenMovement(tokenDocument, movement, _operation, _user) {
   if (destinationWasProcessed(destinationKey)) return;
 
   const method = String(movement?.method ?? "").toLowerCase();
-  if (IGNORED_MOVEMENT_METHODS.has(method) || movementIsTeleport(movement)) {
+  if (IGNORED_MOVEMENT_METHODS.has(method)) {
+    rememberProcessedDestination(destinationKey);
+    return;
+  }
+  const grant = movementGrant(combatant);
+  if (grant) {
+    const distance = movementSpacesFromHook(movement,sceneDistancePerSpace(tokenDocument)) ||
+      movementSpacesFromPositions(tokenDocument,movement?.origin,movement?.destination);
+    rememberProcessedDestination(destinationKey);
+    if (distance > Number(grant.maximum)+1e-6) movementAlert(combatant,
+      `${combatant.name}: ${grant.powerName} permite até ${grant.maximum} espaços; destino medido em ${distance.toFixed(2)} espaços. Consulte o Mestre.`,true);
+    await clearMovementGrant(combatant);
+    return;
+  }
+  if (movementIsTeleport(movement)) {
     rememberProcessedDestination(destinationKey);
     return;
   }
@@ -1780,6 +1894,13 @@ function scheduleCoordinateMovementFallback(tokenDocument, changed, options) {
     if (!combatant) return;
     const spaces = movementSpacesFromPositions(tokenDocument, origin, destination);
     rememberProcessedDestination(destinationKey);
+    const grant = movementGrant(combatant);
+    if (grant) {
+      if (spaces > Number(grant.maximum)+1e-6) movementAlert(combatant,
+        `${combatant.name}: ${grant.powerName} permite ${grant.maximum} espaços; deslocamento de ${spaces.toFixed(2)} espaços.`,true);
+      clearMovementGrant(combatant).catch(error=>console.error('[D616] Erro ao consumir Teleporte',error));
+      return;
+    }
     recordMovementForCombatant(combatant, spaces, `updateToken:${method}`).catch((error) =>
       console.error(`[${SYSTEM_ID}] Turn Tracker coordinate fallback failed`, error)
     );
@@ -1853,12 +1974,22 @@ Hooks.once("ready", () => {
     isBonusRound: () => !!bonusRound(game.combat),
     openWindow: () => showPopup(true),
     closeWindow: () => showPopup(false),
+    controlCombat: (action) => runCombatControl(action),
+    setCompactMode: (compact) => {
+      if (compact) {
+        const popup = document.getElementById(POPUP_ID);
+        if (popup) popup.hidden = true;
+      } else showPopup(windowState.open !== false);
+    },
   };
 
   game.socket.on(SOCKET_NAME, handleSocket);
 
   ensurePopup();
-  showPopup(windowState.open !== false);
+  if (compactModeEnabled()) {
+    const popup = document.getElementById(POPUP_ID);
+    if (popup) popup.hidden = true;
+  } else showPopup(windowState.open !== false);
   window.addEventListener("resize", () => clampWindowGeometry(document.getElementById(POPUP_ID)));
 
   resetActiveCombatant(game.combat).catch((error) =>
@@ -1912,6 +2043,7 @@ Hooks.on("updateCombatant", (combatant, changed) => {
   }
 });
 function autoOpenTrackerForGmAddition(combatant, authorId) {
+  if (compactModeEnabled()) return false;
   if (!game.ready || game.system?.id !== SYSTEM_ID || !combatant) return false;
   // Foundry broadcasts this hook to every connected client, including players.
   // Only additions authored by a GM to the current encounter trigger the window.
@@ -1943,6 +2075,14 @@ Hooks.on("deleteCombatant", (combatant) => {
   maybeStartCombatAfterInitiative(combatant?.combat ?? game.combat).catch((error) =>
     console.error(`[${SYSTEM_ID}] Initiative completion after delete failed`, error)
   );
+});
+Hooks.on('deleteActiveEffect',(effect)=> {
+  if (!isPrimaryGM() || !effect?.flags?.[SYSTEM_ID]?.temporaryMovementPower) return;
+  const actor=effect.parent;
+  const combatant=actor && combatantForActor(actor);
+  if (!combatant || movementGrant(combatant)?.effectId !== effect.id) return;
+  // The actual effect is already being deleted by Foundry.
+  clearMovementGrant(combatant).catch(error => console.error('[D616] Movimento temporário removido',error));
 });
 Hooks.on("createCombat", () => schedulePopupRender({ force: true }));
 Hooks.on("deleteCombat", (combat) => {

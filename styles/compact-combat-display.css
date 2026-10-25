@@ -1,0 +1,55 @@
+/* D616 compact combat mode. Screen-space indicators do not change the token or combat rules. */
+#m616-compact-initiative[hidden], #m616-compact-tokens[hidden],
+#m616-compact-tokens [hidden] { display:none!important; }
+#m616-compact-initiative {
+  position:fixed; z-index:76; top:46px; left:50%; transform:translateX(-50%);
+  max-width:min(840px,calc(100vw - 280px)); min-height:58px;
+  display:flex; align-items:center; gap:8px; padding:7px 10px;
+  border:1px solid rgba(227,175,128,.6); border-radius:10px;
+  background:rgba(21,21,27,.92); box-shadow:0 5px 18px rgba(0,0,0,.54);
+  color:#fff; font:12px var(--font-primary,"Roboto",sans-serif);
+  pointer-events:auto; user-select:none;
+}
+#m616-compact-initiative *, #m616-compact-tokens * {box-sizing:border-box}
+.m616-compact-round {display:flex; align-items:center; gap:6px; flex:0 0 auto; color:#ffcf9d; font-weight:700; white-space:nowrap}
+.m616-initiative-portraits {display:flex; align-items:center; gap:6px; overflow-x:auto; min-width:0; scrollbar-width:thin; padding:3px 2px 5px}
+.m616-initiative-person {position:relative; flex:0 0 40px; width:40px; height:40px; border-radius:6px; border:2px solid #757575; background:#111; opacity:.78}
+.m616-initiative-person.is-active {border-color:#ffc757; box-shadow:0 0 0 1px #f7f3e9,0 0 10px #e69232; opacity:1}
+.m616-initiative-person.is-defeated {filter:grayscale(1);opacity:.43}
+.m616-initiative-person img {display:block; width:100%; height:100%; object-fit:cover; border-radius:3px}
+.m616-initiative-person small {position:absolute; right:-4px; bottom:-7px; min-width:17px; padding:0 2px; border-radius:4px; background:#18181d; color:#fff; text-align:center; font-size:10px; font-weight:700; border:1px solid #a77448}
+.m616-active-arrow {position:absolute; top:-9px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:7px solid #ffc757}
+.m616-compact-controls {display:flex; gap:4px}
+#m616-compact-initiative button {width:29px;height:30px;flex:0 0 29px;display:grid;place-items:center;color:#fff;background:#77271d;border:1px solid #a45540;border-radius:5px;padding:0;cursor:pointer}
+#m616-compact-initiative button:hover {background:#aa381e}
+#m616-compact-initiative button:disabled {opacity:.4;cursor:default}
+#m616-compact-initiative .m616-compact-legacy {background:#353236;border-color:#6b6561}
+.m616-compact-empty {white-space:nowrap;color:#bebebe}
+#m616-compact-tokens {position:fixed;inset:0;pointer-events:none;z-index:72;overflow:visible}
+.m616-token-resources {position:absolute;inset:0;pointer-events:none}
+.m616-token-actions,.m616-token-movement {
+  position:absolute; display:flex; flex-direction:row; align-items:center; justify-content:center;
+  gap:3px; min-height:18px; white-space:nowrap;pointer-events:none;
+  filter:drop-shadow(0px 2px 2px #000);
+}
+.m616-token-actions {transform:translate(-50%,-100%)}
+.m616-token-movement {transform:translate(-50%,0); border-radius:5px; background:rgba(0,0,0,.62);padding:2px 4px}
+.m616-combat-resource {width:19px;height:19px;display:grid;place-items:center;border-radius:50%;border:1px solid #f5d69b;background:#712e16;color:#fff0d8;font-size:10px}
+.m616-combat-resource.is-reaction {border-color:#8bd9ff;background:#194869;color:#e5f8ff}
+.m616-no-actions {display:none}
+.m616-movement-step {display:block;position:relative;width:17px;height:15px;text-align:center;line-height:15px;font-size:13px}
+.m616-step-empty {color:#5a6369}
+.m616-step-fill {position:absolute;left:0;top:0;bottom:0; width:var(--m616-fill,0%);overflow:hidden;text-align:left;color:#6de3a5;white-space:nowrap}
+.m616-step-fill i {display:block;width:17px;line-height:15px;text-align:center}
+@media (max-width:850px) {
+  #m616-compact-initiative {left:50%;top:48px;max-width:calc(100vw - 26px);min-height:52px;padding:5px 7px}
+  .m616-compact-round span {display:none}
+  .m616-initiative-person {flex-basis:33px;width:33px;height:33px}
+}
+
+/* The round label doubles as an accessible, dedicated drag handle; buttons stay clickable. */
+#m616-compact-initiative .m616-compact-drag-handle {cursor:grab;touch-action:none;padding:6px 4px;margin:-6px -2px;}
+#m616-compact-initiative.is-dragging .m616-compact-drag-handle {cursor:grabbing;}
+#m616-compact-initiative.is-dragging {transition:none;}
+#m616-compact-initiative .m616-compact-end {background:#71342a;border-color:#d27c65;}
+#m616-compact-initiative .m616-compact-end:hover {background:#b63b27;}

@@ -27,7 +27,7 @@
       "thumbnail": "systems/multiverse-d616/ui/official/mmrpg-setup-thumbnail.png"
     }
   ],
-  "version": "0.2.77",
+  "version": "0.2.84",
   "compatibility": {
     "minimum": "14",
     "verified": "14"
@@ -38,6 +38,8 @@
     "scripts/shrink-size.mjs",
     "scripts/token-size.mjs",
     "scripts/combat/turn-tracker.mjs",
+    "scripts/combat/compact-combat-display.mjs",
+    "scripts/combat/native-distance-display.mjs",
     "scripts/migrations/v0162-world-paths.mjs",
     "scripts/migrations/v022-power-effects.mjs",
     "scripts/hover-tooltips.js",
@@ -57,6 +59,8 @@
     "styles/conditions-hud.css",
     "styles/native-action-hud.css",
     "styles/turn-tracker.css",
+    "styles/compact-combat-display.css",
+    "styles/native-distance-display.css",
     "styles/smart-targets.css",
     "styles/dialog-v14.css",
     "styles/combat-preflight.css",
@@ -149,7 +153,7 @@
   ],
   "socket": true,
   "manifest": "https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json",
-  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.2.77/multiverse-d616-v0.2.77.zip",
+  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.2.84/multiverse-d616-v0.2.84.zip",
   "background": "systems/multiverse-d616/ui/official/mmrpg-background.webp",
   "grid": {
     "distance": 5,

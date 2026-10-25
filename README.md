@@ -27,6 +27,8 @@ https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.js
 - Armas e Itens com poderes associados por arrastar e soltar, com edição independente dos poderes do personagem
 - Poderes permanentes em equipamentos: efeitos passivos aplicados ao portador, sem acumular versões do mesmo poder (prevalece a mais forte)
 - Active Effect **Adamantium** em armas, permitindo ignorar níveis configuráveis de Redução de Dano de Health
+- Visualização compacta opcional de combate: Ações e Reações sobre tokens, quatro indicadores de Movimento e ordem de iniciativa horizontal (janela de turno detalhada continua disponível)
+- Distância e acompanhamento nativos de movimento para tokens, considerando o modo de deslocamento selecionado (Caminhada, Voo, Natação, Escalada etc.)
 
 ## Compatibilidade
 

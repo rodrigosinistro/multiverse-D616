@@ -78,6 +78,99 @@ export function actorMovementMaximum(actor) {
   return finiteNonNegative(actor?.system?.movement?.run?.value, 5);
 }
 
+
+/** Resolve the actual character Rank from Foundry v14 D616 actor sheets.
+ * Actor.system.attributes.rank.value is canonical; legacy sheet shapes are
+ * tolerated so older saved characters and virtual equipment powers work.
+ */
+export function actorRankForMovement(actor) {
+  const data = actor?.system;
+  for (const raw of [data?.attributes?.rank?.value, data?.attributes?.rank,
+    data?.rank?.value, data?.rank]) {
+    const value = Number(raw);
+    if (Number.isFinite(value) && value > 0) return value;
+  }
+  return 0;
+}
+
+/** One-shot movement allowance from a self-targeting teleport power. */
+export function teleportPowerGrant(item) {
+  if (item?.type !== 'power') return null;
+  const name = String(item?.name ?? '').trim();
+  const lower = normalizeActionText(name);
+  const rank = actorRankForMovement(item?.actor);
+  if (!rank) return null;
+  if (/^teleport(?:e)?\s*[12]$/.test(lower) || /^teleport blind$/.test(lower))
+    return {powerName:name, maximum:10*rank};
+  if (lower === 'blink' || lower === 'piscar')
+    return {powerName:name, maximum:rank};
+  return null;
+}
+
+/** Text decision for a movement preview; the actual spend is authoritative on
+ * the GM and happens only after the player releases the token. */
+export function movementPreviewNotice(state, movementMax, proposal) {
+  const maximum = Number(movementMax) || 0;
+  const nextDistance = (Number(state?.movementUsed)||0)+(Number(proposal)||0);
+  if (!(maximum > 0) || nextDistance <= maximum+1e-6) return null;
+  const usingExtra = !!state?.movementExtraActionUsed;
+  const actionAvailable = (Number(state?.actionUsed)||0) < (Number(state?.actionMax)||1);
+  if (!usingExtra && actionAvailable && nextDistance <= maximum*2+1e-6)
+    return {kind:'action', text:'Esse Movimento usará também sua Ação Padrão.'};
+  if (nextDistance > maximum*(usingExtra || actionAvailable ? 2 : 1)+1e-6)
+    return {kind:'exceeded',text:'Movimento acima do limite disponível.'};
+  if (!usingExtra && !actionAvailable)
+    return {kind:'exceeded',text:'Ação Padrão indisponível para movimento adicional.'};
+  return null;
+}
+
+/** Foundry v14 TokenDocument.movementAction -> D616 combat movement speed.
+ * Distances here are grid spaces (combat .value), NEVER out-of-combat .noncom.
+ * "Teleport (Blink)" is not regular movement and must not grant free range.
+ */
+export const MOVEMENT_ACTION_TO_D616 = Object.freeze({
+  walk: 'run', run: 'run', walking: 'run', land: 'run',
+  fly: 'flight', flying: 'flight', flight: 'flight', voo: 'flight',
+  swim: 'swim', swimming: 'swim', natacao: 'swim',
+  climb: 'climb', climbing: 'climb', escalada: 'climb',
+  jump: 'jump', jumping: 'jump', salto: 'jump',
+  burrow: 'run', burrowing: 'run', excavation: 'run',
+  crawl: 'run', crawling: 'run', rastejar: 'run',
+  glide: 'glide', gliding: 'glide',
+  swing: 'swingline', swinging: 'swingline', swingline: 'swingline',
+  levitate: 'levitation', levitation: 'levitation',
+  teleport: 'teleport', teleportation: 'teleport',
+});
+
+export function movementModeForAction(action) {
+  const normalized = String(action ?? '').trim().toLowerCase();
+  return MOVEMENT_ACTION_TO_D616[normalized] || 'run';
+}
+
+export function actorMovementForAction(actor, action) {
+  const mode = movementModeForAction(action);
+  // Teleport is a separate power, not spendable movement.
+  if (mode === 'teleport') return { mode, maximum: 0 };
+  const entry = actor?.system?.movement?.[mode];
+  const fallback = actorMovementMaximum(actor);
+  // Unavailable modes should not silently grant movement from placeholder fields.
+  if (mode !== 'run' && entry?.active === false) return { mode, maximum: 0 };
+  const speed = Number(entry?.value);
+  return { mode, maximum: Number.isFinite(speed) && speed >= 0 ? speed : (mode === 'run' ? fallback : 0) };
+}
+
+export function combatantMovementInfo(combatant) {
+  const token = combatant?.token ?? combatant?.tokenDocument ?? null;
+  const actor = combatant?.actor ?? token?.actor ?? null;
+  // null (Foundry automatic) is equivalent to its default mode, i.e. walking.
+  const action = token?.movementAction ?? 'walk';
+  return actorMovementForAction(actor, action);
+}
+
+export function combatantMovementMaximum(combatant) {
+  return combatantMovementInfo(combatant).maximum;
+}
+
 export function sanitizeTurnState(raw = {}, movementMaximum = 5) {
   const movementMax = finiteNonNegative(movementMaximum, 5);
   return {
@@ -86,6 +179,7 @@ export function sanitizeTurnState(raw = {}, movementMaximum = 5) {
     reactionUsed: finiteNonNegative(raw.reactionUsed),
     reactionMax: Math.max(finiteNonNegative(raw.reactionMax, 1), 1),
     movementUsed: finiteNonNegative(raw.movementUsed),
+    movementExtraActionUsed: !!raw.movementExtraActionUsed,
     movementMax,
     resetKey: String(raw.resetKey ?? ""),
   };
@@ -106,6 +200,29 @@ export function adjustTurnState(
   const field = `${resource}Used`;
   state[field] = Math.max(0, state[field] + amount);
   return state;
+}
+
+/** Record one confirmed ordinary move atomically. The Standard Action can be
+ * exchanged for a SECOND movement allowance, not an unlimited pool. This
+ * does not silently consume extra Actions after the first allowance is spent.
+ */
+export function recordMovementDistance(raw, distance, movementMaximum = raw?.movementMax ?? 5) {
+  const state = sanitizeTurnState(raw, movementMaximum);
+  const amount = Number(distance);
+  if (!Number.isFinite(amount) || amount <= 0) return {state, actionSpent:false, exceeded:false};
+  const before = state.movementUsed;
+  state.movementUsed += amount;
+  const needsExtra = state.movementMax > 0 && !state.movementExtraActionUsed && before <= state.movementMax + 1e-6 &&
+    state.movementUsed > state.movementMax + 1e-6;
+  let actionSpent = false;
+  if (needsExtra && state.actionUsed < state.actionMax) {
+    state.actionUsed += 1;
+    state.movementExtraActionUsed = true;
+    actionSpent = true;
+  }
+  const limit = state.movementMax * (state.movementExtraActionUsed ? 2 : 1);
+  const exceeded = state.movementUsed > limit + 1e-6;
+  return {state, actionSpent, exceeded, needsExtra};
 }
 
 /**
@@ -149,6 +266,7 @@ export function resetTurnState(
   state.actionUsed = 0;
   state.reactionUsed = 0;
   state.movementUsed = 0;
+  state.movementExtraActionUsed = false;
   state.resetKey = String(resetKey ?? "");
   return state;
 }
