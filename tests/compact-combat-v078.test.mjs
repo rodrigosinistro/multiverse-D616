@@ -45,7 +45,7 @@ test('token overlay only appears on visible combat tokens in active scene',()=>{
 });
 test('Foundry v14 wires compact mode to the existing authoritative tracker',()=>{
   const manifest=JSON.parse(read('../system.json'));
-  assert.equal(manifest.version,'0.2.84');
+  assert.equal(manifest.version,'0.2.99');
   assert.equal(manifest.compatibility.minimum,'14');
   assert.ok(manifest.esmodules.includes('scripts/combat/compact-combat-display.mjs'));
   assert.ok(manifest.styles.includes('styles/compact-combat-display.css'));

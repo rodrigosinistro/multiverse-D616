@@ -3,6 +3,7 @@
  * Powers are independent copies in a namespaced Item flag, not Actor powers.
  * The original Power Item, equipment data and actor's spell list stay untouched.
  */
+import { openPowerVfxBrowser } from './power-vfx-browser.mjs';
 const NS = 'multiverse-d616';
 const FIELD = 'attachedPowers';
 
@@ -103,6 +104,18 @@ export async function updateAttachedPower(carrier, id, edits) {
     const img = String(edits.img ?? '').trim();
     if (img) entry.data.img = entry.img = img;
   }
+  const vfx = entry.data.flags?.[NS]?.vfx ?? {};
+  const vfxEdits = {};
+  if(Object.hasOwn(edits,'vfxFile')) vfxEdits.file=String(edits.vfxFile??'').trim();
+  if(Object.hasOwn(edits,'vfxMode')) vfxEdits.mode=['auto','projectile','target','self'].includes(edits.vfxMode)?edits.vfxMode:'auto';
+  if(Object.hasOwn(edits,'vfxEnabled')) vfxEdits.enabled=Boolean(edits.vfxEnabled);
+  if(Object.hasOwn(edits,'vfxPersistent')) vfxEdits.persistent=Boolean(edits.vfxPersistent);
+  if(Object.hasOwn(edits,'vfxLayer')) vfxEdits.layer=edits.vfxLayer==='below'?'below':'above';
+  if(Object.hasOwn(edits,'vfxScale')) vfxEdits.scale=Math.max(0.25,Math.min(5,Number(edits.vfxScale)||1));
+  if(Object.keys(vfxEdits).length){
+    entry.data.flags??={};entry.data.flags[NS]??={};
+    entry.data.flags[NS].vfx={...vfx,...vfxEdits};
+  }
   for (const key of fields) if (Object.hasOwn(edits, key)) {
     if (['attackRange','attackMultiplier','rollTargetNumber'].includes(key)) {
       const value = String(edits[key] ?? '').trim();
@@ -139,7 +152,11 @@ export async function editAttachedPower(carrier, id) {
   const values = Object.entries(elements).map(([key,item]) => ({key,label:item.label ?? key}));
   const elementOptions = [{key:'',label:'Herdar elemento do portador'},...values]
     .map(({key,label}) => `<option value="${escapeHtml(key)}"${String(power.element ?? '')===key?' selected':''}>${escapeHtml(label)}</option>`).join('');
-  const content = `<div class="mm-attached-power-editor">
+  const vfx=entry.data.flags?.[NS]?.vfx ?? {};
+  const vfxModeOptions=Object.entries({auto:'Automático',projectile:'Projétil',target:'Impacto no alvo',self:'No portador'})
+    .map(([value,label])=>`<option value="${value}"${String(vfx.mode??'auto')===value?' selected':''}>${label}</option>`).join('');
+  const editorId=foundry.utils.randomID(16);
+  const content = `<div class="mm-attached-power-editor" data-vfx-editor="${editorId}">
     <p class="hint">Editando somente a cópia vinculada a <strong>${escapeHtml(carrier.name)}</strong>. O poder de origem e o elemento do personagem permanecem inalterados.</p>
     ${field('name','Nome do Poder')}
     <label class="mm-ap-field"><span>Elemento do Poder</span><select name="element">${elementOptions}</select></label>
@@ -155,10 +172,31 @@ export async function editAttachedPower(carrier, id) {
     ${field('formula','Fórmula de rolagem')}
     ${field('description','Descrição (HTML)',3)}
     ${field('effect','Efeito (HTML)',3)}
+    <hr><strong>Efeitos Visuais (Sequencer)</strong>
+    <p class="hint">Configuração própria da cópia na arma/item. Campo vazio usa o preset automático do poder, quando disponível.</p>
+    <label class="mm-ap-field"><span>Ativar animação</span><input name="vfxEnabled" type="checkbox"${vfx.enabled===false?'':' checked'}></label>
+    <label class="mm-ap-field"><span>Caminho da animação</span><input name="vfxFile" type="text" value="${escapeHtml(vfx.file??'')}" placeholder="jb2a.fire_bolt.orange"><button class="mm-vfx-browse-attached" type="button"><i class="fas fa-search"></i> Procurar na biblioteca</button></label>
+    <label class="mm-ap-field"><span>Modo de reprodução</span><select name="vfxMode">${vfxModeOptions}</select></label>
+    <label class="mm-ap-field"><span>Escala</span><input name="vfxScale" type="number" min="0.25" max="5" step="0.25" value="${Number(vfx.scale)||1}"></label>
+    <label class="mm-ap-field"><span>Persistir enquanto houver Concentração</span><input name="vfxPersistent" type="checkbox"${vfx.persistent===true||(vfx.persistent!==false && /^Shield of the Seraphim$/i.test(entry.data.name))?' checked':''}></label>
+    <label class="mm-ap-field"><span>Camada</span><select name="vfxLayer"><option value="above"${vfx.layer!=='below'?' selected':''}>Acima do token</option><option value="below"${vfx.layer==='below'?' selected':''}>Abaixo do token</option></select></label>
   </div>`;
   const DialogV2=globalThis.foundry?.applications?.api?.DialogV2;
   if (typeof DialogV2?.wait !== 'function') throw new Error('Editor requer Foundry v14.');
-  const result = await DialogV2.wait({
+  // Listen only while this copy-editor dialog is open; selection fills the form
+  // but is persisted only if the player clicks Save Power in the parent editor.
+  const browseHandler=event=>{
+    const button=event.target?.closest?.(`[data-vfx-editor="${editorId}"] .mm-vfx-browse-attached`);
+    if(!button)return;
+    event.preventDefault();event.stopPropagation();
+    const input=button.closest('[data-vfx-editor]')?.querySelector('input[name="vfxFile"]');
+    void openPowerVfxBrowser({initial:input?.value??'',onSelect:path=>{
+      if(input)input.value=path;
+    }});
+  };
+  globalThis.document?.addEventListener?.('click',browseHandler,true);
+  let result;
+  try { result = await DialogV2.wait({
     window:{title:`Editar Poder — ${entry.data.name}`},
     position:{width:610},classes:['mm-attached-power-dialog'],content,rejectClose:false,
     buttons:[
@@ -170,10 +208,16 @@ export async function editAttachedPower(carrier, id) {
           'ability','attackTarget','attackKind','attackEdgeMode','attackMultiplier',
           'attackRange','prerequisites','trigger','formula','description','effect'])
           values[key]=form.elements.namedItem(key)?.value ?? '';
+        values.vfxEnabled=Boolean(form.elements.namedItem('vfxEnabled')?.checked);
+        values.vfxFile=form.elements.namedItem('vfxFile')?.value??'';
+        values.vfxMode=form.elements.namedItem('vfxMode')?.value??'auto';
+        values.vfxScale=form.elements.namedItem('vfxScale')?.value??1;
+        values.vfxPersistent=Boolean(form.elements.namedItem('vfxPersistent')?.checked);
+        values.vfxLayer=form.elements.namedItem('vfxLayer')?.value??'above';
         return values;
       }},
     ],
-  });
+  }); } finally {globalThis.document?.removeEventListener?.('click',browseHandler,true);}
   return result ? updateAttachedPower(carrier,id,result) : null;
 }
 

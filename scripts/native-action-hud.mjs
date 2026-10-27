@@ -21,8 +21,22 @@ const LEGACY_HUD_MODULE_ID = "token-action-hud-multiverse-d616";
 const LEGACY_CORE_MODULE_ID = "token-action-hud-core";
 const SETTING_ENABLED = "nativeActionHudEnabled";
 const SETTING_POSITION = "nativeActionHudPosition";
+const SETTING_WIDTH = "nativeActionHudWidth";
+// 280px power shortcuts + 5px padding on each side + the HUD borders.
+const HUD_DEFAULT_WIDTH = 294;
 const SETTING_COLLAPSED = "nativeActionHudCollapsed";
 const SETTING_TAB = "nativeActionHudTab";
+// Optional PF2e HUD-inspired presentation (original D616 implementation).
+const SETTING_PERSISTENT = "nativeActionHudPersistent";
+const SETTING_PINNED_ACTOR = "nativeActionHudPinnedActor";
+const SETTING_PERSISTENT_SIZE = "nativeActionHudPersistentSize";
+const PERSISTENT_PROFILE_WIDTH = 426;
+const PERSISTENT_SLOT = 39;
+const PERSISTENT_GAP = 4;
+const PERSISTENT_CHROME = 10;
+const PERSISTENT_MIN_HEIGHT = 225;
+const PERSISTENT_DEFAULT_HEIGHT = 252;
+const persistentMode = () => Boolean(setting(SETTING_PERSISTENT, false));
 const HUD_ID = "mmrpg-native-action-hud";
 
 const ABILITY_ORDER = ["mle", "agl", "res", "vig", "ego", "log"];
@@ -47,6 +61,7 @@ const FALLBACK_TEXT = {
   "MULTIVERSE_D616.ActionHud.Collapse": "Minimizar HUD",
   "MULTIVERSE_D616.ActionHud.Expand": "Expandir HUD",
   "MULTIVERSE_D616.ActionHud.Drag": "Arraste para mover",
+  "MULTIVERSE_D616.ActionHud.Resize": "Arraste para aumentar ou diminuir a largura",
 };
 
 function localize(key) {
@@ -63,6 +78,72 @@ function setting(key, fallback) {
   } catch (_error) {
     return fallback;
   }
+}
+
+/** Preserve the player's preferred width, but keep the HUD visible on small screens. */
+function normalizeHudWidth(value, viewportWidth = 1024, preferredMinimum = HUD_DEFAULT_WIDTH) {
+  const available = Math.max(140, Number(viewportWidth || 1024) - 16);
+  const minValue = Number(preferredMinimum);
+  const minimum = Math.min(available, Math.max(140,
+    Number.isFinite(minValue) ? minValue : HUD_DEFAULT_WIDTH));
+  const requested = Number(value);
+  return Math.round(Math.max(minimum, Math.min(available,
+    Number.isFinite(requested) ? requested : HUD_DEFAULT_WIDTH)));
+}
+
+/**
+ * The grid adds 5px of padding per side and the HUD adds two 1px borders.
+ * Avoid leaving unused space to the right of a single column: while the
+ * preferred width is below what two columns need, show the exact content width.
+ * Do not stretch the buttons or overwrite the saved width on actor changes.
+ */
+function snapHudWidthToPowerColumns(value, cellWidth, viewportWidth = 1024) {
+  const cell = Number(cellWidth);
+  if (!Number.isFinite(cell) || cell <= 0) return normalizeHudWidth(value, viewportWidth);
+  const oneColumn = Math.ceil(cell) + 12;
+  const twoColumns = Math.ceil(cell) * 2 + 16; // 2 cells + 4px grid gap + 12px chrome
+  const requested = normalizeHudWidth(value, viewportWidth, oneColumn);
+  return requested < twoColumns
+    ? normalizeHudWidth(oneColumn, viewportWidth, oneColumn)
+    : requested;
+}
+
+/**
+ * Power shortcuts retain their natural width, based on the longest displayed
+ * line. The common width is shared by ALL power/weapon shortcuts in this HUD.
+ * Attached powers are measured by their two separate lines rather than by an
+ * artificially concatenated label. Their original full names remain in tooltips.
+ */
+function calculateUniformPowerWidth(lines, measure = text => String(text).length * 7, viewportWidth = 1024) {
+  const longest = Math.max(0, ...lines.map(line => Number(measure(String(line ?? ""))) || 0));
+  const maxWidth = Math.max(100, Number(viewportWidth || 1024) - 28);
+  return Math.round(Math.min(maxWidth, Math.max(185, Math.ceil(longest + 53))));
+}
+
+function updatePowerCellWidth(body) {
+  const shortcuts = [...(body.querySelectorAll?.(".mmrpg-native-action-hud__action.power") ?? [])];
+  let context = null;
+  try { context = document.createElement("canvas")?.getContext?.("2d") ?? null; }
+  catch (_error) { /* text fallback remains available when no canvas exists */ }
+  if (context) {
+    const label = shortcuts[0]?.querySelector?.(".name");
+    const style = label && typeof getComputedStyle === "function" ? getComputedStyle(label) : null;
+    context.font = style?.font || '12px "Roboto Condensed", sans-serif';
+  }
+  const lines = shortcuts.flatMap(shortcut => {
+    const attachedLines = shortcut.querySelectorAll?.(".power-name, .equipment-name") ?? [];
+    if (attachedLines.length) return [...attachedLines].map(el => el.textContent);
+    return [shortcut.querySelector?.(".name")?.textContent ?? ""];
+  });
+  const width = calculateUniformPowerWidth(lines,
+    text => context ? context.measureText(text).width : String(text).length * 7,
+    window.innerWidth);
+  body.style?.setProperty?.("--mmrpg-power-cell-width", `${width}px`);
+  // A 1-column HUD should never crop its widest shortcut, even if the user
+  // selects an actor with longer power names than the previously selected one.
+  const minimumWindowWidth = Math.min(window.innerWidth - 16, width + 12);
+  body.parentElement?.style?.setProperty?.("--mmrpg-action-hud-min-width", `${minimumWindowWidth}px`);
+  return width;
 }
 
 function getActorItems(actor) {
@@ -163,6 +244,14 @@ function actionableAttachedPowers(carrier) {
   }));
 }
 
+/** Five rows at natural size; when columns shrink, grow downward and scroll. */
+function persistentGridShape(shortcutCount, visibleColumns) {
+  const count = Math.max(0, Math.floor(Number(shortcutCount) || 0));
+  const columns = Math.max(1, Math.floor(Number(visibleColumns) || 1));
+  const rows = Math.max(5, Math.ceil(count / columns));
+  return {columns, rows, usedColumns: Math.max(1, Math.ceil(count / rows))};
+}
+
 function compareNames(left, right) {
   return String(left ?? "").localeCompare(
     String(right ?? ""),
@@ -249,6 +338,11 @@ class NativeActionHud {
     this._lastSignature = "";
     this._activeTab = null;
     this._drag = null;
+    this._resize = null;
+    this._persistentResize = null;
+    this._currentTab = null;
+    this._powerCellWidth = null;
+    this._mode = null;
 
     Hooks.on("controlToken", () => this.scheduleRender(true));
     Hooks.on("canvasReady", () => this.scheduleRender(true));
@@ -280,7 +374,7 @@ class NativeActionHud {
         this.scheduleRender(true);
       }
     });
-    window.addEventListener("resize", () => this.positionWithinViewport());
+    window.addEventListener("resize", () => this.scheduleRender(true));
   }
 
   get selectedToken() {
@@ -288,6 +382,13 @@ class NativeActionHud {
   }
 
   get selectedActor() {
+    if (persistentMode()) {
+      // The GM's persistent HUD only exists while a token is explicitly selected.
+      // This allows native Foundry hotbar macros when no token is controlled.
+      // Players retain their assigned-character fallback as before.
+      if (game.user?.isGM) return this.selectedToken?.actor ?? null;
+      return this.selectedToken?.actor ?? (userCanUseActor(game.user?.character) ? game.user.character : null);
+    }
     return this.selectedToken?.actor ?? null;
   }
 
@@ -329,6 +430,7 @@ class NativeActionHud {
 
   remove() {
     this.root?.remove?.();
+    document.body?.style?.removeProperty?.('--mmrpg-d616-player-offset');
     this.root = null;
     this._lastSignature = "";
   }
@@ -357,6 +459,10 @@ class NativeActionHud {
     collapse.type = "button";
     collapse.className = "mmrpg-native-action-hud__collapse";
     collapse.dataset.action = "collapse";
+    // In the persistent dock this same header control becomes a diagonal resize grip.
+    collapse.addEventListener("pointerdown", event => {
+      if (persistentMode()) this.startPersistentResize(event);
+    });
 
     header.append(dragHandle, actorName, collapse);
 
@@ -375,10 +481,30 @@ class NativeActionHud {
       tabs.appendChild(button);
     }
 
+    const profile = document.createElement("section");
+    profile.className = "mmrpg-native-action-hud__profile";
+    // Text values are populated using textContent, not dynamic HTML.
+    profile.innerHTML = `<button type="button" class="mmrpg-native-action-hud__portrait" data-action="portrait" title="Abrir ficha"><img alt="Retrato"></button>
+      <div class="mmrpg-native-action-hud__identity"><strong class="mmrpg-native-action-hud__profile-name"></strong>
+      <span class="mmrpg-native-action-hud__profile-rank"></span>
+      <div class="mmrpg-native-action-hud__resource health"><span>HEALTH</span><b></b><div class="track"><div class="fill"></div></div></div>
+      <div class="mmrpg-native-action-hud__resource focus"><span>FOCUS</span><b></b><div class="track"><div class="fill"></div></div></div>
+      <div class="mmrpg-native-action-hud__profile-karma"></div>
+      <div class="mmrpg-native-action-hud__quick-abilities" aria-label="Testes de atributos do personagem"></div></div>`;
+
     const body = document.createElement("div");
     body.className = "mmrpg-native-action-hud__body";
+    body.setAttribute("aria-label", "Hotbar de ações do personagem");
 
-    root.append(header, tabs, body);
+    // Separate grip, so resizing cannot trigger a power or drag the window.
+    const resizeHandle = document.createElement("div");
+    resizeHandle.className = "mmrpg-native-action-hud__resize";
+    resizeHandle.title = localize("MULTIVERSE_D616.ActionHud.Resize");
+    resizeHandle.setAttribute("aria-label", localize("MULTIVERSE_D616.ActionHud.Resize"));
+    resizeHandle.textContent = "↔ Largura";
+
+    root.append(header, profile, tabs, body, resizeHandle);
+    resizeHandle.addEventListener("pointerdown", (event) => this.startResize(event));
     root.addEventListener("click", (event) => this.onClick(event));
     dragHandle.addEventListener("pointerdown", (event) => this.startDrag(event));
     document.body.appendChild(root);
@@ -400,6 +526,7 @@ class NativeActionHud {
         item.system?.duration,
       ]);
     return JSON.stringify([
+      persistentMode(),
       actor.uuid ?? actor.id,
       actor.name,
       tab,
@@ -423,34 +550,73 @@ class NativeActionHud {
       this.remove();
       return;
     }
+    const persistent = persistentMode();
     const actor = this.selectedActor;
-    if (!actor) {
+    // In persistent mode, keep the dock visible even before choosing an actor.
+    if (!actor && (!persistent || game.user?.isGM)) {
+      // Removing this node restores Foundry's #hotbar through the CSS :has() rule.
       this.remove();
+      return;
+    }
+    if (!actor) {
+      const root = this.root?.isConnected ? this.root : this.createRoot();
+      root.classList.add("is-persistent");
+      this._mode = "persistent";
+      root.querySelector(".mmrpg-native-action-hud__actor").textContent = "MULTIVERSE D616";
+      root.querySelector(".mmrpg-native-action-hud__body").textContent = "Selecione um token do seu personagem ou atribua um personagem ao usuário para começar.";
+      this.updatePersistentProfile(root, null);
+      this.decoratePersistentHotbar(root.querySelector(".mmrpg-native-action-hud__body"));
+      this.applyPersistentSize();
+      this.reflowPersistentHotbar(root.querySelector(".mmrpg-native-action-hud__body"));
+      this.applyPersistentPosition();
+      this._lastSignature = "";
       return;
     }
 
     const tabSetting = String(setting(SETTING_TAB, "abilities"));
-    const tab = this._activeTab ?? (tabSetting === "powers" ? "powers" : "abilities");
+    // Persistent layout offers only power slots; attributes are clickable on the left.
+    // The classic HUD still uses the saved tab, unchanged.
+    const tab = persistent ? "powers" : (this._activeTab ?? (tabSetting === "powers" ? "powers" : "abilities"));
     const collapsed = Boolean(setting(SETTING_COLLAPSED, false));
     const signature = this.signature(actor, tab, collapsed);
     if (!force && signature === this._lastSignature && this.root?.isConnected) {
-      this.positionWithinViewport();
+      if (persistent) {
+        this.updatePersistentProfile(this.root, actor);
+        this.applyPersistentSize();
+        this.reflowPersistentHotbar(this.root.querySelector(".mmrpg-native-action-hud__body"));
+      } else this.positionWithinViewport();
       return;
     }
     this._lastSignature = signature;
 
     const root = this.root?.isConnected ? this.root : this.createRoot();
-    root.classList.toggle("is-collapsed", collapsed);
+    root.classList.toggle("is-persistent", persistent);
+    this._mode = persistent ? "persistent" : "normal";
+    if (persistent) {
+      this.updatePersistentProfile(root, actor);
+      this.applyPersistentPosition();
+    } else {
+      this.applyStoredWidth();
+      root.style.removeProperty("bottom");
+      root.style.removeProperty("right");
+      root.style.removeProperty("transform");
+    }
+    // The persistent HUD can be resized but no longer minimized. Classic mode
+    // preserves the original collapsed setting and button behavior.
+    root.classList.toggle("is-collapsed", !persistent && collapsed);
     root.querySelector(".mmrpg-native-action-hud__actor").textContent = actor.name ?? "";
     const collapseButton = root.querySelector("[data-action='collapse']");
-    collapseButton.innerHTML = collapsed
-      ? '<i class="fas fa-chevron-down" aria-hidden="true"></i>'
-      : '<i class="fas fa-chevron-up" aria-hidden="true"></i>';
-    collapseButton.title = localize(
-      collapsed
+    collapseButton.innerHTML = persistent
+      ? '<span aria-hidden="true">⤢</span>'
+      : collapsed
+        ? '<i class="fas fa-chevron-down" aria-hidden="true"></i>'
+        : '<i class="fas fa-chevron-up" aria-hidden="true"></i>';
+    collapseButton.title = persistent
+      ? "Arraste para aumentar ou diminuir o HUD (largura e altura)"
+      : localize(collapsed
         ? "MULTIVERSE_D616.ActionHud.Expand"
-        : "MULTIVERSE_D616.ActionHud.Collapse"
-    );
+        : "MULTIVERSE_D616.ActionHud.Collapse");
+    collapseButton.setAttribute("aria-label", collapseButton.title);
 
     for (const button of root.querySelectorAll("[data-tab]")) {
       const active = button.dataset.tab === tab;
@@ -465,11 +631,267 @@ class NativeActionHud {
     const previousTab = body.dataset.currentTab;
     body.replaceChildren();
     body.dataset.currentTab = tab;
-    if (tab === "powers") this.renderPowers(body, actor);
-    else this.renderAbilities(body, actor);
+    this._currentTab = tab;
+    if (tab === "powers") {
+      this.renderPowers(body, actor);
+      this._powerCellWidth = updatePowerCellWidth(body);
+      // Even if a saved width is wider, a one-column list fits tightly around
+      // its longest shortcut. Preserve the saved preference for other actors.
+      if (!persistent) this.fitPowerWidthToContent();
+    } else {
+      this._powerCellWidth = null;
+      this.renderAbilities(body, actor);
+      root.style.removeProperty?.("--mmrpg-action-hud-min-width");
+    }
+    if (persistent) {
+      this.decoratePersistentHotbar(body);
+      this.applyPersistentSize();
+      this.reflowPersistentHotbar(body);
+    }
     if (previousTab === tab) body.scrollTop = previousScroll;
-    this.applyStoredPosition();
-    requestAnimationFrame(() => this.positionWithinViewport());
+    if (!persistent) {
+      this.applyStoredPosition();
+      requestAnimationFrame(() => this.positionWithinViewport());
+    }
+  }
+
+  updatePersistentProfile(root, actor) {
+    const profile = root.querySelector(".mmrpg-native-action-hud__profile");
+    if (!profile) return;
+    const portrait = profile.querySelector(".mmrpg-native-action-hud__portrait img");
+    portrait.src = actor?.img || `systems/${SYSTEM_ID}/icons/m.svg`;
+    portrait.alt = actor?.name ?? "Sem personagem";
+    profile.querySelector(".mmrpg-native-action-hud__profile-name").textContent = actor?.name ?? "Nenhum personagem";
+    profile.querySelector(".mmrpg-native-action-hud__profile-rank").textContent = actor
+      ? `RANK ${actor.system?.attributes?.rank?.value ?? "—"}` : "Selecione um token";
+    for (const resource of ["health", "focus"]) {
+      const current = Math.max(0, Number(actor?.system?.[resource]?.value ?? 0) || 0);
+      const maximum = Math.max(0, Number(actor?.system?.[resource]?.max ?? 0) || 0);
+      const element = profile.querySelector(`.mmrpg-native-action-hud__resource.${resource}`);
+      element.querySelector("b").textContent = `${current} / ${maximum}`;
+      element.querySelector(".fill").style.width = `${maximum ? Math.max(0, Math.min(100, 100 * current / maximum)) : 0}%`;
+    }
+    profile.querySelector(".mmrpg-native-action-hud__profile-karma").textContent =
+      `Karma ${actor?.system?.karma?.value ?? "—"}`;
+    const quick = profile.querySelector(".mmrpg-native-action-hud__quick-abilities");
+    if (quick) {
+      quick.replaceChildren();
+      // Read the exact same ability values used by the actor sheet, not a
+      // separate set of permanent combat bonuses.
+      for (const key of ABILITY_ORDER) {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "mmrpg-native-action-hud__quick-ability";
+        chip.dataset.action = "ability";
+        chip.dataset.ability = key;
+        chip.disabled = !userCanUseActor(actor);
+        const label = document.createElement("span");
+        label.className = "ability-label";
+        label.textContent = ABILITY_LABELS[key];
+        const value = document.createElement("strong");
+        value.className = "ability-value";
+        const score = actor?.system?.abilities?.[key]?.value;
+        value.textContent = score == null ? "—" : `${Number(score) >= 0 ? "+" : ""}${score}`;
+        chip.title = `Rolar ${ABILITY_LABELS[key]} (${value.textContent})`;
+        chip.setAttribute("aria-label", chip.title);
+        chip.append(label, value);
+        quick.appendChild(chip);
+      }
+    }
+  }
+
+  /** Present existing, fully automated shortcuts as a two-row, ten-slot hotbar.
+   * The extra shortcuts remain available by scrolling; no actions are discarded.
+   * All clicks still use the normal native HUD onClick and Item.roll pipeline.
+   */
+  decoratePersistentHotbar(body) {
+    if (!body) return;
+    const buttons = [...body.querySelectorAll(".mmrpg-native-action-hud__action")];
+    const rows = 5;
+    const getLabel = button => {
+      const name = button.querySelector(".name");
+      const powerName = name?.querySelector?.(".power-name")?.textContent?.trim?.();
+      const equipmentName = name?.querySelector?.(".equipment-name")?.textContent?.trim?.();
+      return powerName
+        ? `${powerName} ${equipmentName ?? ""}`.trim()
+        : (name?.textContent?.trim() || button.dataset.ability || "Ação");
+    };
+    buttons.sort((left, right) => compareNames(getLabel(left), getLabel(right)));
+    for (const button of buttons) {
+      button.classList.add("is-hotbar-slot");
+      const label = getLabel(button);
+      button.setAttribute("aria-label", label);
+      // Attached/borrowed powers stay visually distinct from native powers.
+      if (button.classList.contains("attached-power") || button.classList.contains("weapon")) {
+        button.classList.add("is-item-shortcut");
+      }
+      // Ensure the item name remains easy to identify on hover for equipment- and weapon-based shortcuts.
+      if (button.classList.contains("attached-power")) {
+        const sourceName = button.dataset.itemId ? (button.querySelector('.equipment-name')?.textContent?.replace(/[()]/g,'').trim() || "") : "";
+        if (sourceName) {
+          button.dataset.mmhtTitle = `${label} — ${sourceName}`;
+          button.setAttribute("title", `${label} — ${sourceName}`);
+        }
+      } else if (button.classList.contains("weapon")) {
+        const weaponName = button.querySelector(".name")?.textContent?.trim?.();
+        if (weaponName) {
+          button.dataset.mmhtTitle = weaponName;
+          button.setAttribute("title", weaponName);
+        }
+      }
+      // Keep existing D616 rich tooltip metadata and show a native fallback for synthetic shortcuts.
+      if (!button.dataset.mmhtTitle) button.title = label;
+      if (!button.querySelector("img")) {
+        const symbol = document.createElement("span");
+        symbol.className = "mmrpg-native-action-hud__slot-symbol";
+        symbol.setAttribute("aria-hidden", "true");
+        symbol.textContent = label.slice(0,2).toUpperCase();
+        button.insertBefore(symbol, button.firstChild);
+      }
+      body.appendChild(button);
+    }
+    const columns = Math.max(1, Math.ceil(buttons.length / rows));
+    const totalSlots = columns * rows;
+    for (let i = buttons.length; i < totalSlots; i++) {
+      const placeholder = document.createElement("span");
+      placeholder.className = "mmrpg-native-action-hud__slot-empty";
+      placeholder.setAttribute("aria-hidden", "true");
+      body.appendChild(placeholder);
+    }
+    body.classList.toggle("has-overflow-shortcuts", buttons.length > totalSlots);
+    body.dataset.shortcuts = String(buttons.length);
+    body.style.setProperty("--mmrpg-persistent-body-columns", String(columns));
+    body.style.setProperty("--mmrpg-persistent-body-rows", String(rows));
+    this.root?.style?.setProperty?.("--mmrpg-persistent-body-columns", String(columns));
+    this.root?.style?.setProperty?.("--mmrpg-persistent-body-rows", String(rows));
+  }
+
+  /** Client-side size is independent of the classic draggable action HUD. */
+  persistentSizeLimit() {
+    const viewportWidth = Math.max(500, Number(window.innerWidth) || 1280);
+    const viewportHeight = Math.max(400, Number(window.innerHeight) || 800);
+    const profile = viewportWidth <= 860 ? Math.max(295, viewportWidth * .49) : PERSISTENT_PROFILE_WIDTH;
+    return {
+      minWidth: Math.min(viewportWidth - 6, Math.ceil(profile) + PERSISTENT_SLOT + PERSISTENT_CHROME + 2),
+      maxWidth: viewportWidth - 6,
+      minHeight: Math.min(PERSISTENT_MIN_HEIGHT, viewportHeight - 36),
+      maxHeight: Math.max(PERSISTENT_MIN_HEIGHT, viewportHeight - 36),
+    };
+  }
+
+  applyPersistentSize() {
+    if (!this.root || !persistentMode() || this._persistentResize) return;
+    const count = Number(this.root.querySelector('.mmrpg-native-action-hud__body')?.dataset.shortcuts ?? 0);
+    const naturalCols = Math.max(1, Math.ceil(count / 5));
+    const saved = setting(SETTING_PERSISTENT_SIZE, {});
+    const constraints = this.persistentSizeLimit();
+    const defaultWidth = PERSISTENT_PROFILE_WIDTH +
+      naturalCols * PERSISTENT_SLOT + (naturalCols - 1) * PERSISTENT_GAP + PERSISTENT_CHROME;
+    const rawWidth = Number(saved?.width) > 0 ? Number(saved.width) : defaultWidth;
+    const rawHeight = Number(saved?.height) > 0 ? Number(saved.height) : PERSISTENT_DEFAULT_HEIGHT;
+    const width = Math.max(constraints.minWidth, Math.min(constraints.maxWidth, Math.round(rawWidth)));
+    const height = Math.max(constraints.minHeight, Math.min(constraints.maxHeight, Math.round(rawHeight)));
+    this.setPersistentSize(width, height);
+  }
+
+  setPersistentSize(width, height) {
+    if (!this.root) return;
+    this.root.style.setProperty('--mmrpg-persistent-user-width', `${width}px`);
+    this.root.style.setProperty('--mmrpg-persistent-user-height', `${height}px`);
+    document.body?.style?.setProperty?.('--mmrpg-d616-player-offset', `${height + 23}px`);
+  }
+
+  /** Reflow only DOM cells (never activate or copy a power). More columns fit
+   * at larger widths; a smaller width grows the vertical list and adds a
+   * scrollbar. The source order remains alphabetical, top-to-bottom first. */
+  reflowPersistentHotbar(body) {
+    if (!body || !this.root) return;
+    const buttons = [...body.querySelectorAll('.mmrpg-native-action-hud__action')];
+    const rootWidth = this.root.getBoundingClientRect?.().width ?? 0;
+    const profileWidth = this.root.querySelector('.mmrpg-native-action-hud__profile')?.getBoundingClientRect?.().width ?? PERSISTENT_PROFILE_WIDTH;
+    const bodyWidth = body.clientWidth || Math.max(0, rootWidth - profileWidth);
+    const cols = Math.max(1, Math.floor((bodyWidth - PERSISTENT_CHROME + PERSISTENT_GAP) / (PERSISTENT_SLOT + PERSISTENT_GAP)));
+    // Keep five icons per column in the natural size. If the player narrows
+    // the panel, pack the same shortcuts into fewer columns and more rows.
+    const {rows, usedColumns} = persistentGridShape(buttons.length, cols);
+    for (const node of body.querySelectorAll('.mmrpg-native-action-hud__slot-empty')) node.remove();
+    buttons.forEach((button, i) => {
+      button.style.gridColumn = String(Math.floor(i / rows) + 1);
+      button.style.gridRow = String((i % rows) + 1);
+    });
+    const actualCols = usedColumns;
+    // Cosmetic empty cells: never clickable, no action dataset.
+    for (let i = buttons.length; i < actualCols * rows; i++) {
+      const placeholder = document.createElement('span');
+      placeholder.className = 'mmrpg-native-action-hud__slot-empty';
+      placeholder.setAttribute('aria-hidden', 'true');
+      placeholder.style.gridColumn = String(Math.floor(i / rows) + 1);
+      placeholder.style.gridRow = String((i % rows) + 1);
+      body.appendChild(placeholder);
+    }
+    body.style.setProperty('--mmrpg-persistent-body-columns', String(cols));
+    body.style.setProperty('--mmrpg-persistent-body-rows', String(rows));
+    body.dataset.visibleColumns = String(cols);
+    body.dataset.visibleRows = String(rows);
+  }
+
+  /** Resize from the header's top-right corner; bottom-left stays anchored. */
+  startPersistentResize(event) {
+    if (event.button !== 0 || !this.root || !persistentMode() || this._persistentResize) return;
+    event.preventDefault();
+    event.stopPropagation?.();
+    const rect = this.root.getBoundingClientRect();
+    this._persistentResize = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      width: rect.width,
+      height: rect.height,
+    };
+    this.root.classList.add('is-resizing');
+    const move = e => this.resizePersistent(e);
+    const end = e => {
+      if (e.pointerId !== this._persistentResize?.pointerId) return;
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', end);
+      document.removeEventListener('pointercancel', end);
+      void this.endPersistentResize();
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', end);
+    document.addEventListener('pointercancel', end);
+  }
+
+  resizePersistent(event) {
+    const state = this._persistentResize;
+    if (!state || !this.root || event.pointerId !== state.pointerId) return;
+    const limit = this.persistentSizeLimit();
+    const width = Math.round(Math.max(limit.minWidth, Math.min(limit.maxWidth, state.width + event.clientX - state.startX)));
+    const height = Math.round(Math.max(limit.minHeight, Math.min(limit.maxHeight, state.height + state.startY - event.clientY)));
+    this.setPersistentSize(width, height);
+    this.reflowPersistentHotbar(this.root.querySelector('.mmrpg-native-action-hud__body'));
+  }
+
+  async endPersistentResize() {
+    const state = this._persistentResize;
+    this._persistentResize = null;
+    this.root?.classList.remove('is-resizing');
+    if (!state || !this.root) return;
+    const rect = this.root.getBoundingClientRect();
+    await game.settings.set(SYSTEM_ID, SETTING_PERSISTENT_SIZE, {
+      width: Math.round(rect.width), height: Math.round(rect.height),
+    });
+  }
+
+  applyPersistentPosition() {
+    if (!this.root) return;
+    // Absolute corner anchor: no user-selectable positions or empty gutters.
+    this.root.style.top = "auto";
+    this.root.style.bottom = "0px";
+    this.root.style.right = "auto";
+    this.root.style.left = "0px";
+    this.root.style.transform = "none";
+    this.root.style.width = "";
   }
 
   renderAbilities(body, actor) {
@@ -642,7 +1064,12 @@ class NativeActionHud {
       img.src=entry.img || `systems/${SYSTEM_ID}/icons/super-powers.svg`;
       img.alt='';
       const label=document.createElement('span');label.className='name';
-      label.textContent=`${entry.name} (${carrier.name})`;
+      const powerName=document.createElement('span');powerName.className='power-name';
+      powerName.textContent=entry.name || '(Power)';
+      const equipmentName=document.createElement('span');equipmentName.className='equipment-name';
+      equipmentName.textContent=`(${carrier.name})`;
+      label.append(powerName,equipmentName);
+      button.title=`${entry.name} (${carrier.name})`;
       button.append(img,label);
       applyPowerTooltip(button,{type:'power',name:entry.name,system:entry.data?.system??{}});
       body.appendChild(button);
@@ -650,8 +1077,14 @@ class NativeActionHud {
   }
 
   async onClick(event) {
+    if (event.target.closest?.("[data-action='portrait']")) {
+      const actor = this.selectedActor;
+      actor?.sheet?.render?.(true);
+      return;
+    }
     const collapseButton = event.target.closest?.("[data-action='collapse']");
     if (collapseButton) {
+      if (persistentMode()) return; // resized by pointer drag, not minimized
       const collapsed = !Boolean(setting(SETTING_COLLAPSED, false));
       await game.settings.set(SYSTEM_ID, SETTING_COLLAPSED, collapsed);
       this.scheduleRender(true);
@@ -671,6 +1104,14 @@ class NativeActionHud {
     if (!actionButton || actionButton.disabled) return;
     const actor = this.selectedActor;
     if (!actor) return;
+    // Keep D616's existing item.roll() and automated combat engine. Resolve the
+    // pinned actor to its real token when one is present on the current scene.
+    if (persistentMode() && actor !== this.selectedToken?.actor) {
+      const token = canvas?.tokens?.placeables?.find?.(t =>
+        (t?.actor?.uuid === actor.uuid || (!actor.uuid && t?.actor?.id === actor.id)) &&
+        (game.user?.isGM || t.isOwner));
+      token?.control?.({ releaseOthers: true });
+    }
     actionButton.disabled = true;
     actionButton.classList.add("is-busy");
     try {
@@ -709,6 +1150,69 @@ class NativeActionHud {
     }
   }
 
+  applyStoredWidth() {
+    if (persistentMode() || !this.root || this._resize) return;
+    const saved = setting(SETTING_WIDTH, HUD_DEFAULT_WIDTH);
+    this.root.style.width = `${normalizeHudWidth(saved, window.innerWidth)}px`;
+  }
+
+  fitPowerWidthToContent() {
+    if (!this.root || this._resize || this._currentTab !== "powers" || !this._powerCellWidth) return;
+    const saved = setting(SETTING_WIDTH, HUD_DEFAULT_WIDTH);
+    const fitted = snapHudWidthToPowerColumns(saved, this._powerCellWidth, window.innerWidth);
+    this.root.style.width = `${fitted}px`;
+  }
+
+  startResize(event) {
+    if (persistentMode()) return;
+    if (event.button !== 0 || !this.root || this._drag) return;
+    event.preventDefault();
+    event.stopPropagation?.();
+    this._resize = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startWidth: this.root.getBoundingClientRect().width,
+    };
+    this.root.classList.add("is-resizing");
+    const onMove = (moveEvent) => this.resize(moveEvent);
+    const onEnd = (endEvent) => {
+      if (endEvent.pointerId !== this._resize?.pointerId) return;
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onEnd);
+      document.removeEventListener("pointercancel", onEnd);
+      this.endResize();
+    };
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onEnd);
+    document.addEventListener("pointercancel", onEnd);
+  }
+
+  resize(event) {
+    if (!this._resize || event.pointerId !== this._resize.pointerId || !this.root) return;
+    const minimum = this._currentTab === "powers" && this._powerCellWidth
+      ? this._powerCellWidth + 12 : HUD_DEFAULT_WIDTH;
+    const width = normalizeHudWidth(
+      this._resize.startWidth + event.clientX - this._resize.startX, window.innerWidth, minimum
+    );
+    this.root.style.width = `${width}px`;
+    this.positionWithinViewport();
+  }
+
+  async endResize() {
+    const root = this.root;
+    this._resize = null;
+    root?.classList.remove("is-resizing");
+    if (!root) return;
+    const requested = root.getBoundingClientRect().width;
+    const width = this._currentTab === "powers" && this._powerCellWidth
+      ? snapHudWidthToPowerColumns(requested, this._powerCellWidth, window.innerWidth)
+      : normalizeHudWidth(requested, window.innerWidth);
+    root.style.width = `${width}px`;
+    this.positionWithinViewport();
+    // Width is per-user, like the existing draggable position of the HUD.
+    await game.settings.set(SYSTEM_ID, SETTING_WIDTH, width);
+  }
+
   applyStoredPosition() {
     if (!this.root) return;
     const position = setting(SETTING_POSITION, { left: 78, top: 82 });
@@ -719,6 +1223,7 @@ class NativeActionHud {
   }
 
   positionWithinViewport() {
+    if (persistentMode()) return;
     const root = this.root;
     if (!root?.isConnected) return;
     const rectangle = root.getBoundingClientRect();
@@ -735,6 +1240,7 @@ class NativeActionHud {
   }
 
   startDrag(event) {
+    if (persistentMode()) return;
     if (event.button !== 0 || !this.root) return;
     event.preventDefault();
     const rectangle = this.root.getBoundingClientRect();
@@ -778,6 +1284,18 @@ class NativeActionHud {
 }
 
 function registerSettings() {
+  game.settings.register(SYSTEM_ID, SETTING_PERSISTENT_SIZE, {
+    scope: "client", config: false, type: Object, default: {},
+  });
+  game.settings.register(SYSTEM_ID, SETTING_PERSISTENT, {
+    name: "D616 — HUD persistente experimental",
+    hint: "Mostra um painel fixo com retrato, Health, Focus, Karma e os mesmos atalhos do HUD nativo. Desative para voltar imediatamente ao HUD tradicional.",
+    scope: "client", config: true, type: Boolean, default: false,
+  });
+  // Legacy preference registration: not displayed or consulted by the compact dock.
+  game.settings.register(SYSTEM_ID, SETTING_PINNED_ACTOR, {
+    scope: "client", config: false, type: String, default: "",
+  });
   game.settings.register(SYSTEM_ID, SETTING_ENABLED, {
     name: "MULTIVERSE_D616.ActionHud.Settings.EnabledName",
     hint: "MULTIVERSE_D616.ActionHud.Settings.EnabledHint",
@@ -785,6 +1303,12 @@ function registerSettings() {
     config: true,
     type: Boolean,
     default: true,
+  });
+  game.settings.register(SYSTEM_ID, SETTING_WIDTH, {
+    scope: "client",
+    config: false,
+    type: Number,
+    default: HUD_DEFAULT_WIDTH,
   });
   game.settings.register(SYSTEM_ID, SETTING_POSITION, {
     scope: "client",
@@ -821,6 +1345,10 @@ Hooks.once("ready", () => {
 export {
   ABILITY_ORDER,
   NativeActionHud,
+  normalizeHudWidth,
+  snapHudWidthToPowerColumns,
+  calculateUniformPowerWidth,
+  persistentGridShape,
   isPermanentPower,
   isPowerAvailableForHud,
   isEquippedWeaponForHud,

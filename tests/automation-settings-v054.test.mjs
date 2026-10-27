@@ -56,7 +56,7 @@ test('v0.2.54: controles são consultados nas automações em tempo de uso',()=>
    for(const group of groups)assert.ok(s.includes(`'${group}'`),`${file}: ${group}`);
  }
  const manifest=JSON.parse(source('system.json'));
- assert.equal(manifest.version,'0.2.84');
+ assert.equal(manifest.version,'0.2.99');
  assert.ok(source('multiverse-d616.mjs').includes('registerAutomationSettings()'));
 });
 function instantiateExporter(old='red',newColor='red',isGM=true){

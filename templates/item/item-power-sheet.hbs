@@ -9,8 +9,9 @@
   </header>
 
   {{!-- Sheet Tab Navigation --}}
-  <nav class="sheet-tabs tabs mm-tabs -two" data-group="primary">
+  <nav class="sheet-tabs tabs mm-tabs -three" data-group="primary">
     <a class="item" data-tab="attributes">Attributes</a>
+    <a class="item" data-tab="visual">Visuais</a>
     <a class="item" data-tab="effects">Effects</a>
   </nav>
 
@@ -168,6 +169,9 @@
           </select>
         </div>
       </div>
+    </div>
+    <div class="tab" data-group="primary" data-tab="visual">
+      {{> "systems/multiverse-d616/templates/item/parts/item-power-vfx.hbs"}}
     </div>
     <div class="tab power-effects" data-group="primary" data-tab="effects">
        {{> "systems/multiverse-d616/templates/item/parts/item-effects.hbs"}}

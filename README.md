@@ -17,6 +17,7 @@ https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.js
 - Damage Reduction Helper
 - Conditions HUD
 - Condições automáticas de Powers em Concentração
+- Efeitos visuais opcionais para Poderes e Armas (via Sequencer, com biblioteca pesquisável e configuráveis por Item)
 - HUD de Ações para **ABILITIES** e **POWERS**, incluindo Armas equipadas e poderes associados aos equipamentos
 - Charactermancer (assistente de criação)
 - PDF Export

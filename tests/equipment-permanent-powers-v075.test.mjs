@@ -131,7 +131,7 @@ test('v075: integrates into V14 Actor allApplicableEffects, no changes to source
   assert.match(main,/resolveEquipmentPermanentEffects\(this,super\.allApplicableEffects\(\)/);
   assert.match(main,/new CONFIG\.ActiveEffect\.documentClass\(data,\{parent:this\}\)/);
   const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url),'utf8'));
-  assert.equal(manifest.version,'0.2.84');
+  assert.equal(manifest.version,'0.2.99');
 });
 
 test('v075: Flexible Bones 2 and Jump 3 from compendium without AEs receive legacy-compatible passive bonus',()=>{

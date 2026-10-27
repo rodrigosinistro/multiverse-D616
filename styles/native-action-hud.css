@@ -6,9 +6,11 @@
   position: fixed;
   z-index: 80;
   display: grid;
-  grid-template-columns: max-content;
-  width: max-content;
-  min-width: 238px;
+  grid-template-columns: minmax(0, 1fr);
+  box-sizing: border-box;
+  width: 294px;
+  /* On POWERS, JS replaces this minimum with the widest button + 12px chrome. */
+  min-width: min(var(--mmrpg-action-hud-min-width, 294px), calc(100vw - 16px));
   max-width: calc(100vw - 16px);
   color: #f3eee7;
   background: var(--mmrpg-action-hud-bg);
@@ -17,6 +19,33 @@
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.65);
   font-family: var(--font-primary, "Roboto Condensed", sans-serif);
   user-select: none;
+}
+
+#mmrpg-native-action-hud.is-resizing {
+  user-select: none;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__resize {
+  box-sizing: border-box;
+  min-height: 18px;
+  padding: 2px 9px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  color: #c6a987;
+  text-align: right;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .025em;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+#mmrpg-native-action-hud .mmrpg-native-action-hud__resize:hover {
+  color: #ffb25f;
+  background: rgba(232,132,32,.09);
+}
+
+#mmrpg-native-action-hud.is-collapsed .mmrpg-native-action-hud__resize {
+  display: none;
 }
 
 #mmrpg-native-action-hud.is-dragging {
@@ -124,21 +153,22 @@
 
 #mmrpg-native-action-hud .mmrpg-native-action-hud__body.is-abilities {
   display: grid;
-  grid-template-columns: repeat(2, minmax(112px, 1fr));
+  grid-template-columns: repeat(auto-fill, 137px);
+  grid-auto-flow: row;
+  justify-content: start;
   gap: 4px;
   width: 100%;
 }
 
 #mmrpg-native-action-hud .mmrpg-native-action-hud__body.is-powers {
   display: grid;
-  grid-template-columns: max-content;
+  grid-template-columns: repeat(auto-fill, var(--mmrpg-power-cell-width, 280px));
+  grid-auto-flow: row;
   align-items: stretch;
-  justify-items: stretch;
+  justify-content: start;
   gap: 4px;
-  width: max-content;
-  min-width: 100%;
-  max-width: none;
-  overflow: visible;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 #mmrpg-native-action-hud .mmrpg-native-action-hud__action {
@@ -199,11 +229,14 @@
 #mmrpg-native-action-hud .mmrpg-native-action-hud__action.power {
   justify-self: stretch;
   width: 100%;
-  min-width: max-content;
-  max-width: none;
+  /* All power, weapon and attached-power cells share the same card height. */
+  height: 38px;
+  min-height: 38px;
+  min-width: 0;
+  max-width: 100%;
   gap: 7px;
   padding-right: 10px;
-  overflow: visible;
+  overflow: hidden;
   white-space: nowrap;
 }
 
@@ -217,16 +250,15 @@
 }
 
 #mmrpg-native-action-hud .mmrpg-native-action-hud__action.power .name {
-  flex: 0 0 auto;
-  width: max-content;
-  min-width: max-content;
-  overflow: visible;
-  text-overflow: clip;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 #mmrpg-native-action-hud .mmrpg-native-action-hud__empty {
-  min-width: 228px;
+  min-width: 0;
   margin: 0;
   padding: 10px;
   color: #bfb7ad;
@@ -240,15 +272,19 @@
   display: none;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 310px) {
+  #mmrpg-native-action-hud .mmrpg-native-action-hud__body.is-powers {
+    grid-template-columns: minmax(0, 1fr);
+  }
   #mmrpg-native-action-hud .mmrpg-native-action-hud__body.is-abilities {
-    grid-template-columns: minmax(180px, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 /* Equipped weapons share the POWERS tab, while remaining visually separated
    from character powers and reusing the native Item.roll() attack flow. */
 #mmrpg-native-action-hud .mmrpg-native-action-hud__group-title {
+  grid-column: 1 / -1;
   margin: 6px 2px 0;
   padding: 5px 4px 2px;
   border-top: 1px solid rgba(232, 132, 32, 0.40);
@@ -261,6 +297,654 @@
   border-left: 2px solid rgba(232, 132, 32, 0.75);
 }
 
-/* v0.2.72 — Powers on carried items/equipped weapons. */
-.mmrpg-native-action-hud__action.attached-power { padding-left: 21px; font-size: .93em; }
-.mmrpg-native-action-hud__action.attached-power .name { overflow:hidden; text-overflow:ellipsis; }
+/* Associated powers use two lines, and share the width dynamically sized
+   to the widest visible power/weapon label, just like the standalone powers. */
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.attached-power {
+  padding-left: 7px;
+  white-space: normal;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.attached-power .name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1.1;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.attached-power .power-name,
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.attached-power .equipment-name {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.attached-power .power-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.attached-power .equipment-name {
+  color: #c4b9a9;
+  font-size: 10px;
+}
+
+
+
+/* v0.2.91 — Optional D616 persistent HUD, original UI inspired by PF2e HUD. */
+#mmrpg-native-action-hud .mmrpg-native-action-hud__profile { display: none; }
+#mmrpg-native-action-hud.is-persistent {
+  --mmrpg-action-hud-accent: #f09a41;
+  width: min(790px, calc(100vw - 24px)) !important;
+  min-width: 0;
+  max-width: calc(100vw - 16px);
+  max-height: min(60vh, 420px);
+  z-index: 84;
+  border-radius: 9px;
+  overflow: hidden;
+  border-color: rgba(255, 159, 53, .8);
+  background: rgba(14, 15, 22, .97);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__drag,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resize { display: none; }
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__header {
+  grid-template-columns: minmax(0,1fr) 30px;
+  min-height: 28px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__actor {
+  text-align: left;
+  padding-left: 12px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile {
+  display: grid;
+  grid-template-columns: 74px minmax(0,1fr) 80px;
+  gap: 10px;
+  align-items: center;
+  margin: 6px 10px 3px;
+  min-height: 75px;
+  color: #f7ead9;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__portrait {
+  width: 70px; height: 70px; padding: 0; margin: 0;
+  overflow: hidden; border-radius: 7px; background: #302b32;
+  border: 1px solid rgba(245,148,58,.85);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__portrait img {
+  width: 100%; height: 100%; object-fit: cover; border: 0;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__identity {
+  min-width: 0; display: grid; grid-template-columns: repeat(2,minmax(0,1fr));
+  column-gap: 12px; row-gap: 3px; font-size: 11px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile-name {
+  color: #fff5e4; font-size: 15px; grid-column: 1; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile-rank {
+  text-align: right; grid-column: 2; color: #eeb778; font-weight: 800;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resource {
+  display: grid; grid-template-columns: 48px 1fr; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 700;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resource.health { grid-column: 1; }
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resource.focus { grid-column: 2; }
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resource b { text-align: right; font-variant-numeric: tabular-nums; }
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resource .track {
+  grid-column: 1 / -1; height: 5px; overflow: hidden;
+  background: rgba(255,255,255,.18); border-radius: 5px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resource .fill { height:100%; background: #dd5a52; }
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resource.focus .fill { background: #389cdb; }
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile-karma { grid-column: 1 / -1; color: #dcb988; }
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__pin {
+  color: #f3ddc8; background: #402b21;
+  border: 1px solid #b47742; border-radius: 5px;
+  padding: 5px 6px; font-size: 11px; white-space: nowrap;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__pin.is-pinned { background: #67421a; }
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__tabs { border-top: 1px solid rgba(232,132,32,.23); }
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body {
+  overflow-y: auto; max-height: min(29vh, 235px); padding: 8px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body.is-powers {
+  grid-template-columns: repeat(auto-fill, minmax(185px, var(--mmrpg-power-cell-width, 205px)));
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.power { height: 38px; }
+#mmrpg-native-action-hud.is-persistent.is-collapsed .mmrpg-native-action-hud__body,
+#mmrpg-native-action-hud.is-persistent.is-collapsed .mmrpg-native-action-hud__tabs { display: none; }
+@media(max-width: 670px) {
+  #mmrpg-native-action-hud.is-persistent { max-height: 56vh; }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile { grid-template-columns: 56px minmax(0,1fr) 72px; gap: 5px; }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__portrait { width: 52px; height: 52px; }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__identity { grid-template-columns: 1fr; }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__identity > * { grid-column: 1 !important; }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile-rank { text-align: left; }
+}
+
+
+/* v0.2.92 — horizontal persistent hotbar, inspired by the layout principles
+ * of PF2e HUD, original D616 implementation. Classic HUD is unchanged. */
+#mmrpg-native-action-hud.is-persistent {
+  --mmrpg-hotbar-slot-size: 62px;
+  width: min(865px, calc(100vw - 20px)) !important;
+  min-width: 0 !important;
+  max-width: calc(100vw - 16px);
+  max-height: min(48vh, 244px);
+  grid-template-columns: 340px minmax(0,1fr);
+  grid-template-rows: 25px 30px minmax(0, 170px);
+  gap: 0;
+  border: 1px solid rgba(215, 132, 49, .72);
+  border-radius: 7px;
+  background: linear-gradient(140deg,rgba(26,27,34,.99),rgba(13,14,18,.99));
+  box-shadow: 0 4px 18px rgba(0,0,0,.7);
+  overflow: hidden;
+  font-family: var(--font-primary, "Roboto Condensed", sans-serif);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__header {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  min-height: 25px;
+  height: 25px;
+  border-bottom: 1px solid #534134;
+  background: rgba(4,5,8,.8);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__actor {
+  color: #ebc28f; font-size: 11px; letter-spacing: .06em;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__collapse {
+  height: 24px; width: 28px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile {
+  grid-column: 1; grid-row: 2 / 4;
+  display: grid;
+  grid-template-columns: 146px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) 25px;
+  gap: 4px 8px;
+  box-sizing: border-box;
+  margin: 0; padding: 8px;
+  min-width: 0; min-height: 0;
+  align-items: stretch;
+  background: linear-gradient(90deg,rgba(46,37,33,.9),rgba(27,28,34,.98));
+  border-right: 1px solid rgba(227,150,62,.32);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__portrait {
+  grid-column: 1; grid-row: 1;
+  width: 146px; height: 150px;
+  border: 1px solid #c58945; border-radius: 5px;
+  background: #211d23; box-shadow: inset 0 0 0 2px rgba(0,0,0,.7);
+  padding: 0; overflow: hidden;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__portrait img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__identity {
+  grid-column: 2; grid-row: 1 / 3;
+  display: flex; flex-direction: column; align-items: stretch;
+  min-width: 0; gap: 5px; font-size: 11px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile-name {
+  font-size: 13px; line-height: 1.2; color: #fff2da;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile-rank {
+  font-size: 10px; text-align: left; color: #efac5f;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resource {
+  display: grid; grid-template-columns: minmax(0,1fr) auto;
+  gap: 2px; width: 100%; font-size: 10px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resource b {
+  font-size: 10px; color: #f0ebdf;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resource .track {
+  grid-column: 1 / -1; height: 7px; background: #15151b;
+  border: 1px solid rgba(255,255,255,.08); border-radius: 2px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile-karma {
+  color: #f2c577; font-size: 11px; font-weight: 700;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-abilities {
+  display: grid; grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 3px; margin-top: 1px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-ability {
+  font-size: 10px; line-height: 18px; text-align: center;
+  color: #e2ddd4; background: #282a32; border: 1px solid #494750;
+  border-radius: 3px; white-space: nowrap;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__pin {
+  grid-column: 1; grid-row: 2;
+  margin: 0; padding: 2px 4px;
+  width: 100%; min-height: 23px;
+  background: #433020; border: 1px solid #7b5737;
+  color: #f8ddb3; font-size: 10px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__tabs {
+  grid-column: 2; grid-row: 2;
+  height: 30px; border: 0;
+  background: #1a1a20;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__tab {
+  min-height: 30px; font-size: 11px; padding: 2px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body {
+  grid-column: 2; grid-row: 3;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(5,minmax(0,1fr));
+  grid-auto-rows: var(--mmrpg-hotbar-slot-size);
+  align-content: start; align-items: stretch;
+  justify-content: stretch;
+  gap: 5px;
+  padding: 7px;
+  overflow-y: auto; overflow-x: hidden;
+  min-width: 0; min-height: 0;
+  max-height: 170px;
+  scrollbar-width: thin;
+  scrollbar-color: #9a6b43 #22232a;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body.is-powers,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body.is-abilities {
+  grid-template-columns: repeat(5,minmax(0,1fr));
+  grid-auto-rows: var(--mmrpg-hotbar-slot-size);
+  gap: 5px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.power,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.ability {
+  position: relative;
+  justify-content: center; align-items: center;
+  flex-direction: column;
+  height: var(--mmrpg-hotbar-slot-size);
+  min-height: var(--mmrpg-hotbar-slot-size);
+  min-width: 0; max-width: 100%; width: 100%;
+  padding: 4px;
+  gap: 0;
+  background: linear-gradient(130deg,#3d3b42,#202126);
+  border: 1px solid #65606b; border-radius: 4px;
+  box-shadow: inset 0 0 3px rgba(0,0,0,.7);
+  overflow: hidden;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__slot-empty {
+  display: block;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action img {
+  position: absolute; inset: 3px 3px 14px;
+  width: calc(100% - 6px); height: calc(100% - 17px);
+  max-width: none; max-height: none; border: 0;
+  flex: none; border-radius: 2px;
+  object-fit: cover;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action .name {
+  position: absolute; bottom: 1px; left: 1px; right: 1px;
+  padding: 1px 2px; margin: 0;
+  flex: none;
+  font-size: 9px; font-weight: 700; line-height: 11px;
+  text-align: center; text-overflow: ellipsis;
+  color: #f8f1e9; background: rgba(8,9,12,.89);
+  white-space: nowrap; overflow: hidden;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.ability .name {
+  text-overflow: ellipsis;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.ability .value {
+  font-size: 15px; font-weight: 900; color: #fff1cb;
+  position: absolute; top: 16px; text-shadow: 0 1px 3px black;
+}
+
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.is-item-shortcut {
+  border-color: #a73b3b;
+  box-shadow: inset 0 0 0 1px rgba(167,59,59,.38);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.is-item-shortcut:hover,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.is-item-shortcut:focus-visible {
+  border-color: #df6666;
+  box-shadow: 0 0 0 1px rgba(223,102,102,.28), inset 0 0 0 1px rgba(223,102,102,.35);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body::-webkit-scrollbar {
+  height: 8px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body::-webkit-scrollbar-thumb {
+  background: rgba(240,154,65,.45);
+  border-radius: 999px;
+}
+body:has(#mmrpg-native-action-hud.is-persistent:not(.is-collapsed)) #hotbar {
+  display: none !important;
+}
+
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__slot-symbol {
+  font-size: 22px; font-weight: 900; color: #caa87d;
+  text-shadow: 0 1px 4px black;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.attached-power .name {
+  display: block; line-height: 11px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.attached-power .equipment-name {
+  display: none;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.attached-power .power-name {
+  font-size: 9px; line-height: 11px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__group-title { display: none; }
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__slot-empty {
+  min-width: 0; min-height: var(--mmrpg-hotbar-slot-size);
+  background: #18191f; border: 1px dashed #4d4c55;
+  border-radius: 3px; opacity: .75;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__empty {
+  grid-column: 1 / -1; align-self: center;
+  padding: 6px; color: #cfbba3; font-size: 11px;
+}
+#mmrpg-native-action-hud.is-persistent.is-collapsed {
+  grid-template-rows: 25px 30px 0;
+}
+#mmrpg-native-action-hud.is-persistent.is-collapsed .mmrpg-native-action-hud__profile {
+  display: none;
+}
+@media (max-width: 760px) {
+  #mmrpg-native-action-hud.is-persistent {
+    width: min(650px,calc(100vw - 16px)) !important;
+    grid-template-columns: minmax(165px,35%) minmax(0,65%);
+    grid-template-rows: 25px 30px 136px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile {
+    grid-template-columns: 72px minmax(0,1fr); padding: 5px; gap: 4px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__portrait {
+    width: 70px; height: 86px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__identity { gap: 2px; }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile-name { font-size: 10px; }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile-rank { font-size: 9px; }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-abilities { display: none; }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body,
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body.is-powers,
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body.is-abilities {
+    grid-template-columns: repeat(5,minmax(0,1fr));
+    grid-auto-rows: 47px; max-height: 136px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action,
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.power,
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.ability,
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__slot-empty {
+    height: 47px; min-height: 47px;
+  }
+}
+
+
+/* v0.2.93 — D616 persistent corner dock: icon-only Powers and clickable stats.
+ * Strictly scoped to persistent mode; the classic action HUD is unchanged. */
+#mmrpg-native-action-hud.is-persistent {
+  --mmrpg-hotbar-slot-size: 39px;
+  --mmrpg-persistent-body-columns: 5;
+  --mmrpg-persistent-body-rows: 5;
+  --mmrpg-persistent-dock-height: 252px;
+  --mmrpg-persistent-profile-width: 426px;
+  --mmrpg-persistent-body-width: calc((var(--mmrpg-persistent-body-columns) * var(--mmrpg-hotbar-slot-size)) + ((var(--mmrpg-persistent-body-columns) - 1) * 4px) + 10px);
+  position: fixed;
+  left: 0 !important;
+  bottom: 17px !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+  width: min(var(--mmrpg-persistent-user-width, calc(var(--mmrpg-persistent-profile-width) + var(--mmrpg-persistent-body-width))), calc(100vw - 6px)) !important;
+  height: var(--mmrpg-persistent-user-height, var(--mmrpg-persistent-dock-height));
+  max-width: calc(100vw - 6px);
+  max-height: calc(100vh - 36px);
+  min-width: 0;
+  grid-template-columns: var(--mmrpg-persistent-profile-width) minmax(0,1fr);
+  grid-template-rows: 24px minmax(0,1fr);
+  gap: 0;
+  border-radius: 0 7px 0 0;
+  border-left: 0;
+  border-bottom: 0;
+  box-shadow: 1px -3px 15px rgba(0,0,0,.6);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__header {
+  grid-column: 1/-1; grid-row: 1; height: 24px; min-height: 24px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__drag { cursor: default; }
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__collapse {
+  display: grid;
+  width: 29px;
+  height: 24px;
+  touch-action: none;
+  cursor: nesw-resize;
+  color: #e8bc85;
+  background: #302720;
+  font-size: 16px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__collapse:hover {
+  color: #ffe2ae;
+  background: #57371f;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__tabs,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__pin,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resize { display: none !important; }
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile {
+  grid-column: 1; grid-row: 2;
+  display: grid;
+  grid-template-columns: 120px minmax(0,1fr);
+  grid-template-rows: minmax(0,1fr);
+  gap: 8px;
+  padding: 6px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__portrait {
+  grid-column: 1; grid-row: 1;
+  width: 120px; height: 100%; max-height: 176px;
+  padding: 0;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__identity {
+  grid-column: 2; grid-row: 1;
+  display: flex; flex-direction: column;
+  gap: 3px;
+  min-height: 0;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile-name {
+  font-size: 12px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile-rank {
+  font-size: 9px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resource {
+  gap: 1px; font-size: 9px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__resource .track {
+  height: 6px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile-karma {
+  font-size: 10px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-abilities {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 3px;
+  margin-top: auto;
+  width: 100%;
+  min-height: 69px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-ability {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1px;
+  height: 34px;
+  min-height: 34px;
+  padding: 1px;
+  margin: 0;
+  min-width: 0;
+  text-align: center;
+  background: linear-gradient(180deg,#39333a,#202128);
+  border: 1px solid #60534b;
+  border-radius: 3px;
+  color: #f2e8da;
+  box-shadow: none;
+  cursor: pointer;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-ability .ability-label {
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-ability .ability-value {
+  font-size: 12px;
+  line-height: 13px;
+  color: #f3bb7a;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-ability:hover,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-ability:focus-visible {
+  background: #714021;
+  border-color: #edaa57;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-ability:disabled {
+  opacity: .52;
+  cursor: not-allowed;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body.is-powers,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body.is-abilities {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  /* Explicit fixed-size tracks override the older five fractional columns.
+     Without this override, CSS squeezes several 39px shortcuts into narrow
+     1fr tracks and the icons appear stacked on top of each other. */
+  grid-template-columns: repeat(var(--mmrpg-persistent-body-columns), var(--mmrpg-hotbar-slot-size));
+  grid-template-rows: repeat(var(--mmrpg-persistent-body-rows), var(--mmrpg-hotbar-slot-size));
+  grid-auto-columns: var(--mmrpg-hotbar-slot-size);
+  grid-auto-flow: column;
+  gap: 4px;
+  align-content: start;
+  justify-content: start;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 5px;
+  max-height: none;
+  min-height: 0;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.power,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.ability,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__slot-empty {
+  position: relative;
+  overflow: hidden;
+  height: 39px;
+  min-height: 39px;
+  width: 39px;
+  max-width: 39px;
+  min-width: 39px;
+  padding: 1px;
+  margin: 0;
+  border-radius: 3px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__slot-empty {
+  display: block;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action img {
+  position: absolute;
+  inset: 2px;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  max-height: none;
+  object-fit: contain;
+}
+/* Names and equipment remain in the DOM for accessibility and rich tooltips.
+   A visible caption would defeat the requested compact icon-only grid. */
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action .name,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.attached-power .name,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action .value {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.is-item-shortcut {
+  border-color: #a73b3b;
+  box-shadow: inset 0 0 0 1px rgba(167,59,59,.38);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.is-item-shortcut:hover,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__action.is-item-shortcut:focus-visible {
+  border-color: #df6666;
+  box-shadow: 0 0 0 1px rgba(223,102,102,.28), inset 0 0 0 1px rgba(223,102,102,.35);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body::-webkit-scrollbar {
+  width: 8px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body::-webkit-scrollbar-thumb {
+  background: rgba(240,154,65,.45);
+  border-radius: 999px;
+}
+body:has(#mmrpg-native-action-hud.is-persistent:not(.is-collapsed)) #hotbar {
+  display: none !important;
+}
+
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__slot-symbol {
+  font-size: 15px;
+}
+#mmrpg-native-action-hud.is-persistent.is-collapsed {
+  height: 24px;
+  grid-template-rows: 24px 0;
+}
+#mmrpg-native-action-hud.is-persistent.is-collapsed .mmrpg-native-action-hud__profile,
+#mmrpg-native-action-hud.is-persistent.is-collapsed .mmrpg-native-action-hud__body {display:none;}
+/* Foundry's player-name dock belongs above the D616 hotbar, not behind it. */
+body:has(#mmrpg-native-action-hud.is-persistent:not(.is-collapsed)) #players {
+  position: fixed !important;
+  left: 2px !important;
+  bottom: var(--mmrpg-d616-player-offset, 275px) !important;
+  top: auto !important;
+  z-index: 83;
+}
+@media (max-width: 860px) {
+  #mmrpg-native-action-hud.is-persistent {
+    --mmrpg-persistent-dock-height: 252px;
+    --mmrpg-persistent-profile-width: max(295px, 49%);
+    grid-template-columns: max(295px, 49%) minmax(0,1fr);
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile {
+    grid-template-columns: 84px minmax(0,1fr);
+    gap: 5px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__portrait {
+    width: 84px; height: 100%; max-height: 170px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-abilities {display:grid;}
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body,
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body.is-powers {
+    width: 100%;
+    grid-template-columns: repeat(var(--mmrpg-persistent-body-columns), var(--mmrpg-hotbar-slot-size));
+    grid-template-rows: repeat(var(--mmrpg-persistent-body-rows), var(--mmrpg-hotbar-slot-size));
+    grid-auto-columns: var(--mmrpg-hotbar-slot-size);
+    grid-auto-flow: column;
+    gap: 3px;
+    max-height:none;
+  }
+}
+@media (max-width: 580px) {
+  #mmrpg-native-action-hud.is-persistent {
+    grid-template-columns: minmax(0,1fr);
+    grid-template-rows: 24px 0 minmax(0,1fr);
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__profile {display:none;}
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body,
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body.is-powers {
+    grid-column:1; grid-row:3;
+  }
+}

@@ -167,7 +167,8 @@ test('v0.2.72: equipped weapon gains own attached Power shortcut after weapon at
  assert.deepEqual(buttons.map(b=>b.dataset.action),['weapon','attached-power']);
  assert.equal(buttons[1].dataset.powerId,'p1');
  assert.equal(buttons[1].dataset.itemId,'Espada');
- assert.match(buttons[1].children[1].textContent,/Elemental Blast \(Espada\)/);
+ assert.equal(buttons[1].children[1].children[0].textContent, 'Elemental Blast');
+ assert.equal(buttons[1].children[1].children[1].textContent, '(Espada)');
  assert.equal(buttons[1].disabled,false);
 });
 
@@ -245,11 +246,11 @@ test('v0.2.76: attached passive Permanent powers use the same HUD filter as Acto
     'weapon','attached-power','attached-power','attached-power','attached-power',
   ]);
   assert.deepEqual(buttons.filter(b=>b.dataset.action==='attached-power')
-    .map(b=>b.children[1].textContent),[
-      'Elemental Burst (Espada da Vingança)',
-      'Elemental Protection 1 (Espada da Vingança)',
-      'Resize Object (Espada da Vingança)',
-      'Grow 2 (Espada da Vingança)',
+    .map(b=>[b.children[1].children[0].textContent,b.children[1].children[1].textContent]),[
+      ['Elemental Burst','(Espada da Vingança)'],
+      ['Elemental Protection 1','(Espada da Vingança)'],
+      ['Resize Object','(Espada da Vingança)'],
+      ['Grow 2','(Espada da Vingança)'],
     ]);
   // Passive copies remain on the weapon and continue to be handled by the
   // equipment-permanent-effects pipeline; only their HUD actions are hidden.
@@ -268,7 +269,7 @@ test('v0.2.76: item with only Permanent passives shows no empty powers group',()
   });
   const visible=render(actor);
   assert.deepEqual(visible.buttons.map(b=>b.dataset.action),['attached-power']);
-  assert.equal(visible.buttons[0].children[1].textContent,'Resize Other (Cinto)');
+  assert.deepEqual(visible.buttons[0].children[1].children.map(x=>x.textContent),['Resize Other','(Cinto)']);
   assert.equal(visible.body.children.find(c=>c.className==='mmrpg-native-action-hud__group-title')?.textContent,'PODERES DOS ITENS');
 });
 

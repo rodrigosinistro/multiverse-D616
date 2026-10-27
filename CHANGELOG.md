@@ -1,3 +1,125 @@
+## v0.2.99 — HUD persistente redimensionável e hotbar inteligente (Foundry VTT v14) — 27/10/2026
+
+- Para o Mestre, o HUD persistente desaparece quando nenhum token está selecionado, liberando automaticamente a hotbar nativa do Foundry para macros. Ao selecionar um token novamente, o HUD persistente retorna e a hotbar nativa é ocultada.
+- Mantido para jogadores o comportamento anterior: personagem atribuído continua visível mesmo quando nenhum token está selecionado.
+- O botão de minimizar do modo persistente foi substituído por um controle no canto superior direito: arraste para a direita/esquerda para mudar a largura, para cima/baixo para mudar a altura. O modo clássico preserva sua minimização original.
+- A área dos poderes reorganiza os atalhos alfabeticamente, preenchendo colunas de cima para baixo conforme a largura disponível, com rolagem vertical quando a altura não comportar todos os poderes. Ícones permanecem quadrados de 39 px, sem superposição.
+- Dimensões escolhidas são salvas individualmente para cada usuário; alteração não muda o motor de ataque, dano, Focus ou efeitos de equipamento.
+- README e manuais mantidos; pacote único completo para atualização manual do GitHub após validação.
+
+## v0.2.98 — Correção definitiva do grid do HUD persistente (Foundry VTT v14) — 26/10/2026
+
+- Corrigido o conflito entre o layout antigo de cinco colunas flexíveis (`1fr`) e o novo layout vertical: os atalhos agora usam colunas explícitas de 39 px e cinco linhas, eliminando o esmagamento e a aparência de ícones sobrepostos.
+- Preservada a ordem alfabética, com preenchimento de cima para baixo e depois da esquerda para a direita; a largura continua acompanhando a quantidade de colunas.
+- Corrigida também a regra responsiva para manter largura fixa dos ícones em janelas menores, com rolagem horizontal quando necessário.
+- Mantidos a posição vertical da v0.2.97, os indicadores vermelhos de equipamentos, os tooltips, o HUD clássico e as automações existentes.
+- Acrescentado teste de regressão específico do conflito CSS. Validado visualmente em Chromium nas resoluções 1366×768, 1920×1080, 800×800 e 620×720 com diferentes números de atalhos, sem sobreposição.
+- `README.md` e manuais não alterados; GitHub permanece sem publicação automática.
+
+## v0.2.97
+- HUD persistente: reduziu a margem inferior para aproximar a dock da borda inferior da tela, sem voltar a ficar escondida atrás da barra do sistema.
+- HUD persistente: corrigiu a sobreposição visual dos ícones, fixando posicionamento relativo e recorte interno das células do grid.
+- HUD persistente: ajustou o reposicionamento da lista de jogadores para acompanhar a nova altura/offset da dock persistente.
+
+## v0.2.96 — Correção de entrega e validação da dock persistente (Foundry VTT v14) — 26/10/2026
+
+- Correção da estrutura do ZIP completo: pasta raiz obrigatória `multiverse-d616/` com todos os arquivos do sistema.
+- Manifesto `system.json` atualizado e sincronizado com a versão e o caminho da release `v0.2.96`.
+- Preservadas as melhorias de v0.2.95: dock mais alta para não cortar a quinta linha de ícones, deslocamento vertical e lista de jogadores posicionada acima do painel.
+- Adicionadas verificações de regressão para altura da grade de cinco linhas, manifestação do sistema e política de documentação; documentação `README.md` e manuais preservados.
+- Nenhuma modificação nas regras ou no motor de automações do D616. Publicação no GitHub permanece manual, após os testes no Foundry v14.
+
+## v0.2.95
+- HUD persistente: elevou a dock acima da borda inferior da tela para evitar corte atrás da barra do sistema operacional.
+- HUD persistente: aumentou a altura total para acomodar corretamente a grade com 5 ícones por coluna sem sobreposição visual.
+- HUD persistente: reposicionou a lista de jogadores para acompanhar a nova altura da dock persistente.
+
+
+## v0.2.94
+- HUD persistente: oculta a hotbar padrão do Foundry enquanto o HUD persistente estiver visível.
+- HUD persistente: atalhos reorganizados em colunas de 5 ícones, preenchidos da esquerda para baixo e depois para a direita.
+- HUD persistente: atalhos ordenados alfabeticamente com largura do painel ajustada ao número real de colunas.
+- HUD persistente: poderes vindos de armas/equipamentos recebem destaque visual com borda vermelha.
+- HUD persistente: atalhos associados a arma/equipamento passam a mostrar melhor o nome da origem no hover.
+## v0.2.93 — Persistent HUD 2.1: dock no canto e atributos acionáveis (Foundry VTT v14) — 26/10/2026
+
+- HUD persistente ancorado ao **canto inferior esquerdo**, sem margens laterais/inferiores e sem seletor de posição. A lista nativa de jogadores é reposicionada acima do painel enquanto o HUD expandido estiver visível.
+- Hotbar de POWERS agora exibe **apenas ícones quadrados compactos** (39 × 39 px); nomes completos, inclusive equipamento associado, continuam disponíveis em tooltips e atributos de acessibilidade. Demais atalhos são acessíveis pela rolagem vertical.
+- Seis atributos (**Melee, Agility, Resilience, Vigilance, Ego, Logic**) exibidos por extenso com valor abaixo; botões executam a mesma rotina `rollAbility()` do HUD clássico, preservando permissões, Edge/Trouble e demais efeitos existentes.
+- Eliminada a aba ABILITIES do **modo persistente** (somente POWERS fica na área direita). Removido o botão Fixar; o painel segue o token selecionado ou, sem seleção, o personagem atribuído ao usuário. Configuração de posição retirada; preferências antigas ocultas continuam registradas para compatibilidade com mundos existentes.
+- HUD tradicional permanece inalterado quando o modo persistente está desligado. Sem mudanças em combate, dano, Focus, Concentração, Active Effects, animações ou compêndios.
+- README e manuais preservados; somente CHANGELOG e manifesto de versão atualizados. ZIP completo para instalação manual; GitHub não publicado automaticamente.
+
+## v0.2.92 — Persistent HUD 2.0: hotbar horizontal compacta (Foundry VTT v14) — 26/10/2026
+
+- Reformulado o HUD persistente opcional para visual de hotbar horizontal: retrato grande à esquerda, nome/Rank, barras de Health e Focus, Karma, seis atributos da ficha e grade compacta de atalhos à direita, próxima em organização ao Persistent HUD do PF2e HUD, sem copiar seus arquivos ou lógica.
+- Abas ABILITIES e POWERS mantidas, agora com slots quadrados uniformes, ícones dos poderes/armas, nome compacto, texto detalhado no tooltip e acessibilidade pelo nome completo. Ações continuam usando os mesmos handlers e Item.roll() do D616.
+- Até dez atalhos aparecem simultaneamente (duas linhas de cinco); outros atalhos permanecem acessíveis pela rolagem interna, sem exclusão de poderes. Os slots vazios são apenas visuais, sem clique ou tecla associada.
+- Retrato abre ficha, fixação por proprietário e escolha de posição (inferior esquerda/central/direita) preservadas, assim como a opção individual de voltar ao HUD clássico.
+- Visual responsivo para telas menores, sem ampliar painéis sobre o mapa; nenhuma mudança mecânica em Focus, ações, reações, condições, RD, poderes ou armas.
+- CHANGELOG atualizado; README e manuais preservados. ZIP completo para atualização manual, sem publicação direta no GitHub.
+
+## v0.2.91 — HUD persistente experimental D616 (Foundry VTT v14) — 26/10/2026
+
+- Criado modo opcional **D616 — HUD persistente experimental** nas configurações individuais do usuário. Desativado por padrão para preservar integralmente o HUD clássico da v0.2.90.
+- O modo persistente exibe um painel ancorado com retrato, Health, Focus, Karma, Rank e as abas ABILITIES/POWERS; as armas equipadas e poderes associados usam exatamente o motor de atalhos existente, sem duplicar lógica de combate.
+- Botão **Fixar** permite manter um personagem com permissão de proprietário no painel mesmo quando outro token é selecionado. Sem fixação, o painel acompanha o token selecionado ou o personagem atribuído ao usuário.
+- Clicar no retrato abre a ficha; ao usar um atalho de personagem fixado, o sistema seleciona seu token na cena, quando disponível, preservando os alvos e o fluxo existente de Item.roll().
+- Configuração de posição individual: inferior esquerdo, central ou direito. Layout responsivo, com grade de poderes e rolagem vertical para múltiplos atalhos.
+- Esta primeira etapa **não** inclui edição de slots por arrastar e soltar (prevista para evolução futura); a estrutura é original do D616 e apenas inspirada conceitualmente no Persistent HUD do PF2e HUD.
+- README e manuais preservados. Nenhum arquivo do PF2e HUD foi copiado. Sem publicação automática no GitHub.
+
+## v0.2.90 — HUD de POWERS compacto com uma coluna (Foundry VTT v14) — 26/10/2026
+
+- Corrigida a largura mínima fixa de 294 px que deixava espaço vazio à direita quando a lista de POWERS tinha apenas uma coluna.
+- A janela com uma coluna passa a ajustar-se automaticamente à **largura da maior célula + margens**, mantendo botões uniformes e seus rótulos completos, sem alargar cada atalho.
+- O controle **↔ Largura** agora permite reduzir abaixo dos antigos 294 px quando o conteúdo comporta; ao soltar em uma largura que ainda suporta apenas uma coluna, o HUD encaixa no tamanho exato. Ao ampliar para duas ou mais colunas, a grade segue distribuindo da esquerda para a direita.
+- O ajuste automático considera os poderes visíveis do personagem selecionado, sem sobrescrever a preferência salva ao trocar de ator. A aba ABILITIES mantém seu comportamento.
+- Mudança exclusiva de layout: nenhuma alteração em ações, armas, poderes, Sequencer, dano, Focus ou regras. README e manuais preservados; changelog atualizado.
+
+## v0.2.89 — HUD de atalhos com largura ajustável e células uniformes (Foundry VTT v14) — 26/10/2026
+
+- HUD de **ABILITIES/POWERS** pode ser ampliado horizontalmente pelo novo controle **↔ Largura** na borda inferior. O tamanho escolhido é salvo por usuário; a janela continua movível como antes.
+- Células de Poderes e Armas mantêm **a mesma largura dentro do HUD**, adaptando essa largura automaticamente ao maior nome exibido, como no comportamento anterior; as células não são esticadas individualmente quando a janela fica mais larga.
+- Ao aumentar a largura, os atalhos se distribuem **da esquerda para a direita, de cima para baixo**, em múltiplas colunas; títulos **ARMAS EQUIPADAS** e **PODERES DOS ITENS** ocupam a linha inteira.
+- Poderes vinculados a Armas ou Itens agora exibem **duas linhas**: nome do poder na primeira e **(Nome do equipamento)** na segunda, sem duplicar os botões nem modificar o modo de ativação.
+- Mantidas as animações Sequencer/JB2A da v0.2.88, o cálculo de poderes, Focus, RD, condições e Concentração. `README.md` e os manuais não foram alterados; o GitHub não foi atualizado automaticamente.
+
+## v0.2.88 — VFX persistentes vinculados à Concentração e camadas de token (Foundry VTT v14) — 25/10/2026
+
+- Nova opção **Persistente (até terminar a Concentração)** na aba VISUAIS, inclusive no editor das cópias de poderes associados a armas/itens. Shield of the Seraphim tem Persistente habilitado por padrão, podendo ser desativado explicitamente.
+- Nova opção **Camada da animação** (acima/abaixo do token) e escala ajustável para que escudos e auras apareçam por fora da figura; recomendamos 1,5–2 para escudos.
+- Efeitos persistentes são anexados ao token e vinculados ao Active Effect próprio do poder em Concentração (`tieToDocuments`); encerram ao perder/remover/desativar a Concentração, e não duplicam ao renovar o poder. Nenhum efeito persistente é criado sem a Concentração correspondente.
+- **Testar animação** continua reproduzindo uma prévia não persistente. Normalização de datapaths `JB2A.` maiúsculos para acesso à biblioteca Sequencer; animações não alteram regras, Focus, condições ou ações.
+- README permanece documentação permanente; manuais não foram alterados. Nenhuma publicação automática no GitHub.
+
+## v0.2.87 — Correção da visibilidade do seletor de animações (Foundry VTT v14) — 25/10/2026
+
+- Corrigida a aba **VISUAIS** nas fichas de Poderes e Armas: o botão de acesso ao navegador Sequencer estava oculto atrás da camada decorativa `::before` do campo de texto.
+- O botão **Abrir biblioteca de animações** agora aparece em linha própria logo abaixo do datapath, com contraste, foco de teclado e acesso à mesma pesquisa/prévia/seleção da v0.2.86.
+- Corrigida também a visibilidade da legenda da opção **Ativada** nesse campo, preservando a configuração existente e sem alterar as permissões de edição.
+- Mantida a biblioteca de efeitos e seu uso em poderes copiados para Armas/Itens. Nenhuma alteração nas regras, Focus, dano, movimentação, Concentração ou automações.
+- Histórico registrado apenas neste CHANGELOG; README e manuais preservados.
+
+## v0.2.86 — Navegador visual integrado ao Sequencer (Foundry VTT v14) — 25/10/2026
+
+- Na aba **Visuais** de Poder e Arma, adicionado botão **Biblioteca** ao lado do datapath: abre um seletor próprio do D616 com pesquisa em português ou inglês, filtros por Fogo/Gelo/Energia/Teleporte/Proteção/Magia, visualização do arquivo (vídeo ou imagem) e **Selecionar esta animação**.
+- Os resultados vêm exclusivamente das entradas públicas registradas pelo Sequencer em tempo de execução; preserva as bibliotecas realmente instaladas pelo jogador, sem inventar IDs ou exigir arquivos JB2A dentro do sistema. O campo continua aceitando datapaths/arquivos digitados manualmente.
+- **Testar no mapa** no próprio navegador reproduz somente uma animação visual sobre o token selecionado, sem gastar Focus, Ação Padrão, Reação ou Movimento. O botão existente de testar o poder continua disponível na ficha.
+- O editor de **Poderes associados a Armas/Itens** também permite abrir a biblioteca. A seleção preenche somente o campo da cópia; o usuário confirma a alteração ao clicar em **Salvar Poder**, sem alterar o poder original.
+- Com Sequencer ausente/inativo ou biblioteca vazia, o sistema exibe aviso e preserva totalmente a utilização normal de poderes. Interface responsiva, navegação por teclado e resultados paginados (60 por vez) para bibliotecas extensas.
+- Manuais do Mestre/Jogador preservados sem atualização; `README.md` mantido como documentação permanente, histórico exclusivo neste CHANGELOG. Nenhuma alteração intencional de dano, Focus, iniciativa, condições, efeitos ou movimento.
+
+## v0.2.85 — Fase 1: animações visuais de poderes (Foundry VTT v14) — 25/10/2026
+
+- Integração opcional com **Sequencer** (sem dependência obrigatória) para reproduzir animações ao usar Powers e Weapons, inclusive poderes associados a Armas/Itens; a reprodução acontece apenas após validações, consumo de Focus e registro da ação, sem afetar cálculos, alvos, dano ou Concentração.
+- Nova aba **Visuais** nas fichas de Poder e Arma: habilitar/desabilitar a animação, informar arquivo local ou chave da biblioteca Sequencer/JB2A, escolher modo (automático, projétil, impacto no alvo ou no personagem), escala e executar teste visual sem custo de recursos.
+- Editor de cópias de Poderes associados a equipamentos ganhou configuração visual independente, sem alterar o Poder original ou outras armas.
+- Presets iniciais e conservadores quando a biblioteca disponibiliza as entradas: Elemental Blast de fogo (`jb2a.fire_bolt.orange`); Teleport 1/2/Blind e Blink (`jb2a.misty_step.02.blue`). Outros elementos, poderes e armas permitem associação manual; nenhuma mídia JB2A é distribuída no ZIP.
+- Configuração global do Mundo **D616 — Animações dos Poderes (Sequencer)** permite desligar a camada visual. Em ausência de Sequencer, recurso desativado ou arquivo não localizado, a jogada prossegue normalmente. Somente os primeiros alvos selecionados (até 6) recebem VFX para evitar cargas excessivas.
+- Mantido o `README.md` como documentação permanente: apenas o item de recurso nativo foi acrescentado. Os manuais do Mestre e Jogador permanecem inalterados conforme solicitação.
+- Mudanças isoladas de interface e VFX; sem alterações intencionais no motor de regras, compêndios, ações, Focus, condições, RD e movimentação.
+
 ## v0.2.84 — Teleport v14 sem alteração de modo inválido (Foundry VTT v14) — 24/10/2026
 
 - Corrigido `DataModelValidationError: movementAction: teleport is not a valid choice` ao usar Teleport 1/2, Teleport Blind e Blink. O poder não tenta mais gravar `teleport` em `TokenDocument.movementAction`, que aceita somente modos registrados no Foundry v14.

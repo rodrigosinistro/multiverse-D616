@@ -12,6 +12,8 @@
  *
  */
 import { isRicochetPower, ricoOriginalContext, registerRicoShieldHooks } from "./scripts/rico-shield-chain.mjs";
+import { getPowerVfxConfig, playPowerVfx, registerPowerVfxSettings, registerPowerVfxLifecycleHooks } from "./scripts/power-vfx.mjs";
+import { openPowerVfxBrowser } from "./scripts/power-vfx-browser.mjs";
 import { originalRepeatContext, installRepeatPowerHooks } from "./scripts/repeat-power-attacks.mjs";
 import { registerHeldConcentrationHooks } from "./scripts/held-concentration.mjs";
 import { casterTokenForItem } from "./scripts/combat-preflight.mjs";
@@ -789,6 +791,10 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         this.system.effect ? this.system.effect : ""
       }</div>${growFeedback}${resizeOtherFeedback}${preflightNotes}${mmAttackEdgeModeCardHtml(this)}`,
     }, messageMode));
+
+    // Fire-and-forget optional visual effect AFTER validation, Focus and turn use.
+    // This does not mutate rules, and a missing Sequencer must never stop rolling.
+    void playPowerVfx(this).catch(error=>console.warn('[D616] VFX:',error));
 
     // The throw itself makes the shield unavailable even if the attack misses.
     await markShieldThrown(this.actor, this);
@@ -5846,6 +5852,9 @@ class MarvelMultiverseItemSheet extends D616ItemSheetV2Base {
       context.adamantiumValue = weaponAdamantiumValue(this.item);
     }
     if (['power','weapon'].includes(this.item.type)) {
+      context.powerVfx=getPowerVfxConfig(this.item);
+      context.vfxModes={auto:'Automático',projectile:'Projétil (do portador até o alvo)',target:'Impacto no alvo',self:'Sobre o portador'};
+      context.vfxLayers={above:'Acima do token (escudos e auras)',below:'Abaixo do token (efeito no solo)'};
       context.elements=Object.fromEntries(Object.entries(CONFIG.MULTIVERSE_D616.elements)
         .map(([id,el])=>[id,el.label]));
       context.selectedElement=context.system.element;
@@ -5879,6 +5888,28 @@ class MarvelMultiverseItemSheet extends D616ItemSheetV2Base {
       });
       // Explicit, always-visible rich-text controls avoid ProseMirror form
       // lifecycle issues. Every field saves independently on its own Item.
+      root.querySelectorAll('.mm-vfx-field').forEach(control=>control.addEventListener('change',async event=>{
+        const key=event.currentTarget.dataset.vfxField;
+        if(!['enabled','file','mode','scale','persistent','layer'].includes(key))return;
+        const current=getPowerVfxConfig(this.item);
+        let value=event.currentTarget.type==='checkbox'?event.currentTarget.checked:event.currentTarget.value;
+        if(key==='scale')value=Math.max(0.25,Math.min(5,Number(value)||1));
+        try{await this.item.update({'flags.multiverse-d616.vfx':{...current,[key]:value}});}
+        catch(error){console.warn('[D616] VFX configuration:',error);ui.notifications?.error?.('Falha ao salvar a animação.');}
+      }));
+      root.querySelectorAll('.mm-vfx-browse').forEach(button=>button.addEventListener('click',event=>{
+        event.preventDefault();
+        const input=root.querySelector('.mm-vfx-field[data-vfx-field="file"]');
+        void openPowerVfxBrowser({initial:input?.value??'',onSelect:async path=>{
+          const current=getPowerVfxConfig(this.item);
+          await this.item.update({'flags.multiverse-d616.vfx':{...current,file:path}});
+          if(input)input.value=path;
+        }});
+      }));
+      root.querySelectorAll('.mm-vfx-preview').forEach(button=>button.addEventListener('click',event=>{
+        event.preventDefault();
+        void playPowerVfx(this.item,{preview:true});
+      }));
       root.querySelectorAll('.mm-item-richtext-edit').forEach(button=>
         button.addEventListener('click',event=>{
           event.preventDefault();
@@ -6145,6 +6176,7 @@ const preloadHandlebarsTemplates = async () =>
     // Item partials
     "systems/multiverse-d616/templates/item/parts/item-effects.hbs",
     "systems/multiverse-d616/templates/item/parts/item-attached-powers.hbs",
+    "systems/multiverse-d616/templates/item/parts/item-power-vfx.hbs",
   ]);
 
 class MarvelMultiverseActorBase extends foundry.abstract
@@ -6721,6 +6753,8 @@ Hooks.once("init", () => {
   registerSmartTargetSettings();
   registerCombatIntelligenceSettings();
   registerAutomationSettings();
+  registerPowerVfxSettings();
+  registerPowerVfxLifecycleHooks();
   game.multiverseD616 = game.multiverseD616 ?? {};
   game.multiverseD616.automationEnabled = automationEnabled;
   // Add utility classes to the global game object so that they're more easily

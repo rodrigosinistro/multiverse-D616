@@ -1,0 +1,39 @@
+/* D616 v0.2.87: optional Sequencer browser; visible standalone picker control. */
+.mm-item-v2 .mm-vfx-config .mm-vfx-browse{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;min-height:38px;box-sizing:border-box;cursor:pointer;
+  position:relative;z-index:2;flex:0 0 auto;
+  background:#52261e;color:#fff1dd;border:1px solid #c9683c;
+  border-radius:5px;font-weight:700;text-transform:none;
+}
+.mm-item-v2 .mm-vfx-config .mm-vfx-browse:hover{background:#813822;border-color:#ed8e56}
+.mm-item-v2 .mm-vfx-config .mm-vfx-browse:focus-visible{outline:2px solid #ffd08a;outline-offset:2px}
+.mm-item-v2 .mm-vfx-config .mm-vfx-enabled-label{position:relative;z-index:1;color:#111;display:inline-block;font-weight:600;font-size:12px}
+.mm-attached-power-dialog .mm-vfx-browse-attached{margin-top:6px;min-height:32px;cursor:pointer}
+.d616-vfx-library-overlay{position:fixed;inset:0;background:rgba(0,0,0,.74);z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;}
+.d616-vfx-library{color:#f4ece7;font-size:14px;background:#191820;border:1px solid #8e3423;border-radius:12px;box-shadow:0 12px 48px #000e;width:min(1000px,96vw);max-height:94vh;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;}
+.d616-vfx-library button{font:inherit;cursor:pointer;color:#f4ece7;border:1px solid #704536;background:#33242b;border-radius:5px;padding:7px 10px;line-height:1.4}
+.d616-vfx-library button:hover{background:#683424}
+.d616-vfx-library button:focus-visible,.d616-vfx-library input:focus-visible{outline:2px solid #fac36f;outline-offset:2px}
+.d616-vfx-library button:disabled{opacity:.4;cursor:not-allowed}
+.d616-vfx-library-header{padding:12px 16px;background:#26191d;border-bottom:1px solid #863623;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:16px}
+.d616-vfx-library-close{min-width:35px}
+.d616-vfx-library-help{font-size:13px;margin:10px 16px 7px;opacity:.9}
+.d616-vfx-library-search{margin:0 16px 10px;min-height:38px;border:1px solid #a85c40;border-radius:5px;background:#0f1118!important;color:white!important;padding:8px 12px!important;width:calc(100% - 32px);box-sizing:border-box;}
+.d616-vfx-library-categories{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 12px;border-bottom:1px solid #42313a}
+.d616-vfx-library-categories button{font-size:12px;padding:5px 9px}
+.d616-vfx-library-categories button.active{background:#9a371d;border-color:#d77a53}
+.d616-vfx-library-content{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;min-height:0;flex:1;padding:14px 16px}
+.d616-vfx-library-results{min-height:0;display:flex;flex-direction:column}
+.d616-vfx-library-count{font-size:12px;opacity:.8;margin-bottom:8px}
+.d616-vfx-library-list{min-height:120px;flex:1;overflow-y:auto;overscroll-behavior:contain;border:1px solid #513542;background:#100f17;border-radius:5px;max-height:51vh;}
+.d616-vfx-library-entry{display:block!important;text-align:left!important;width:100%;border:0!important;border-bottom:1px solid #302935!important;border-radius:0!important;background:transparent!important;overflow-wrap:anywhere;padding:7px 9px!important;font-family:monospace!important;font-size:12px!important;}
+.d616-vfx-library-entry:hover,.d616-vfx-library-entry.active{background:#703520!important}
+.d616-vfx-library-more{margin-top:8px}
+.d616-vfx-library-detail{display:flex;flex-direction:column;gap:9px;min-width:0}
+.d616-vfx-library-player{background:#0a0c10;border:1px solid #513542;border-radius:5px;min-height:185px;height:min(34vh,270px);display:flex;align-items:center;justify-content:center;text-align:center;color:#beb8bf;padding:8px;font-size:12px;box-sizing:border-box;overflow:hidden}
+.d616-vfx-library-media{display:block;max-width:100%;max-height:100%;object-fit:contain}
+.d616-vfx-library-path{font-size:12px;font-family:monospace;overflow-wrap:anywhere;padding:7px;background:#100f17;border-radius:5px;min-height:30px}
+.d616-vfx-library-select{background:#8b2d15!important;border-color:#c65c34!important;font-weight:bold!important}
+.d616-vfx-library footer{padding:9px 16px;border-top:1px solid #42313a;font-size:11px;opacity:.75}
+@media (max-width:640px){.d616-vfx-library-overlay{padding:5px}.d616-vfx-library{max-height:98vh}.d616-vfx-library-content{grid-template-columns:1fr;overflow-y:auto}.d616-vfx-library-list{max-height:23vh}.d616-vfx-library-player{height:19vh;min-height:120px}}

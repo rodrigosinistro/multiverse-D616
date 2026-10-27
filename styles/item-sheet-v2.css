@@ -287,3 +287,10 @@
 .mm-attached-power-dialog .mm-ap-field input, .mm-attached-power-dialog .mm-ap-field select,
 .mm-attached-power-dialog .mm-ap-field textarea { width:100%; box-sizing:border-box; padding:5px 7px; font:inherit; }
 .mm-attached-power-dialog .mm-attached-power-editor p.hint { margin:0 0 7px; font-size:12px; }
+
+/* v0.2.85 — optional VFX configuration on Powers and Weapons */
+.mm-item-v2 .mm-vfx-config {padding: 12px 14px;display:flex;flex-direction:column;gap:10px;}
+.mm-item-v2 .mm-vfx-config .hint {font-size:0.85em;opacity:0.8;line-height:1.4;}
+.mm-item-v2 .mm-vfx-config .mm-styled-input input[type="text"],
+.mm-item-v2 .mm-vfx-config .mm-styled-input input[type="number"] {width:100%;}
+.mm-item-v2 .mm-vfx-config .mm-vfx-preview {cursor:pointer;min-height:34px;}

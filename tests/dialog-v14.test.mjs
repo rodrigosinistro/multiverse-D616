@@ -81,6 +81,6 @@ test('Modernized UI flows occur before Focus spend, no legacy dialogs for key us
   assert.match(css,/\.m616-dialog-v14/);
   assert.match(css,/\.form-footer/);
   const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url),'utf8'));
-  assert.equal(manifest.version,'0.2.84');
+  assert.equal(manifest.version,'0.2.99');
   assert.ok(manifest.styles.includes('styles/dialog-v14.css'));
 });

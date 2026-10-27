@@ -97,7 +97,7 @@ test('seletor fica antes do gasto de Focus e CSS foi registrado no manifesto',()
  assert.match(code,/document\.removeEventListener\('pointerdown',onDown,true\)/);
  assert.doesNotMatch(code,/smartTargetHistory|options\.last|type==='last'/);
  const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url),'utf8'));
- assert.equal(manifest.version,'0.2.84');
+ assert.equal(manifest.version,'0.2.99');
  assert.ok(manifest.styles.includes('styles/smart-targets.css'));
  assert.ok(manifest.styles.includes('styles/dialog-v14.css'));
  const css=readFileSync(new URL('../styles/smart-targets.css',import.meta.url),'utf8');

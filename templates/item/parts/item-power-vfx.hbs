@@ -1,0 +1,39 @@
+<div class="mm-vfx-config">
+  <p><strong>EFEITOS VISUAIS D616 — Sequencer</strong></p>
+  <p class="hint">Opcional. Não altera rolagens, dano, Focus, Concentração ou condições. Requer Sequencer e biblioteca JB2A ou arquivo de animação próprio.</p>
+  <div class="mm-styled-field -fill">
+    <label class="mm-styled-label -align-left">Animação deste poder</label>
+    <div class="mm-styled-input"><input class="mm-vfx-field" data-vfx-field="enabled" type="checkbox" {{checked powerVfx.enabled}} {{#unless editable}}disabled{{/unless}} /><span class="mm-vfx-enabled-label">Ativada</span></div>
+  </div>
+  <div class="mm-styled-field -fill">
+    <label class="mm-styled-label -align-left">Arquivo ou caminho da biblioteca Sequencer</label>
+    <div class="mm-styled-input"><input class="mm-vfx-field" data-vfx-field="file" type="text" placeholder="jb2a.fire_bolt.orange" value="{{powerVfx.file}}" {{#unless editable}}disabled{{/unless}} /></div>
+  </div>
+  {{!-- This button must NOT live inside .mm-styled-input: its ::before parchment
+       overlay covers normal-positioned children, making the button invisible. --}}
+  {{#if editable}}<button type="button" class="mm-vfx-browse" aria-label="Abrir biblioteca de animações"><i class="fas fa-folder-open"></i> Abrir biblioteca de animações</button>{{/if}}
+  <p class="hint">Em branco, usa o preset automático disponível para alguns poderes (Elemental Blast — Fire; Teleport/Blink — azul). Outros poderes exigem arquivo configurado.</p>
+  <div class="mm-styled-field -fill">
+    <label class="mm-styled-label -align-left">Como exibir</label>
+    <div class="mm-styled-input"><select class="mm-vfx-field" data-vfx-field="mode" {{#unless editable}}disabled{{/unless}}>
+      {{selectOptions vfxModes selected=powerVfx.mode}}
+    </select></div>
+  </div>
+  <div class="mm-styled-field -fill">
+    <label class="mm-styled-label -align-left">Escala de impacto / personagem (0,25–5)</label>
+    <div class="mm-styled-input"><input class="mm-vfx-field" data-vfx-field="scale" type="number" min="0.25" max="5" step="0.25" value="{{powerVfx.scale}}" {{#unless editable}}disabled{{/unless}}/></div>
+  </div>
+  <div class="mm-styled-field -fill">
+    <label class="mm-styled-label -align-left">Efeito persistente (até terminar a Concentração)</label>
+    <div class="mm-styled-input"><input class="mm-vfx-field" data-vfx-field="persistent" type="checkbox" {{checked powerVfx.persistent}} {{#unless editable}}disabled{{/unless}} /><span class="mm-vfx-enabled-label">Manter no token</span></div>
+  </div>
+  <div class="mm-styled-field -fill">
+    <label class="mm-styled-label -align-left">Camada da animação</label>
+    <div class="mm-styled-input"><select class="mm-vfx-field" data-vfx-field="layer" {{#unless editable}}disabled{{/unless}}>
+      {{selectOptions vfxLayers selected=powerVfx.layer}}
+    </select></div>
+  </div>
+  <p class="hint">Para escudos: selecione <b>Sobre o portador</b>, <b>Persistente</b> e <b>Acima do token</b>. Use escala de 1,5 a 2 para o efeito ficar ao redor do retrato. A animação termina quando a Concentração vinculada terminar. O botão Testar reproduz apenas uma prévia curta, sem persistência.</p>
+  <button class="mm-vfx-preview" type="button"><i class="fas fa-play"></i> Testar animação (sem gastar ações ou Focus)</button>
+  <p class="hint">Para projétil ou impacto, marque um alvo no mapa. Configure o controle geral em <b>Configurações do sistema → D616 — Animações dos Poderes</b>.</p>
+</div>
