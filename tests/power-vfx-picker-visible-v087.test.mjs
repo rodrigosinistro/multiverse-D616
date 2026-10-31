@@ -27,6 +27,6 @@ test('v087: picker still calls the browser and saves the selected datapath witho
   assert.match(partial,/mm-vfx-field" data-vfx-field="file"/);
   assert.match(partial,/mm-vfx-enabled-label/);
   const manifest=JSON.parse(read('../system.json'));
-  assert.equal(manifest.version,'0.2.99');
+  assert.equal(manifest.version,'0.2.106');
   assert.ok(manifest.styles.includes('styles/power-vfx-browser.css'));
 });

@@ -16,7 +16,7 @@ const pc=readFileSync(new URL('../scripts/power-conditions.mjs',import.meta.url)
 const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url)));
 
 test('v0.2.44 installer and dedicated multi-target module',()=>{
-  assert.equal(manifest.version,'0.2.99');
+  assert.equal(manifest.version,'0.2.106');
   assert.match(main,/scripts\/multi-target-combat\.mjs/);
 });
 

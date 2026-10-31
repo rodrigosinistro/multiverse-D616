@@ -73,5 +73,5 @@ test('v0.2.92: layout keeps classic HUD CSS untouched and uses native action han
  assert.match(js,/await item\.roll\(\)/);
  assert.match(js,/await activateAttachedPower\(carrier,actionButton\.dataset\.powerId,actor\)/);
  assert.match(js,/const persistent = persistentMode\(\)/);
- assert.equal(manifest.version,'0.2.99');
+ assert.equal(manifest.version,'0.2.106');
 });

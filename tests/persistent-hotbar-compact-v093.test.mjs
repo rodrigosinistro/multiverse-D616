@@ -39,5 +39,5 @@ test('v0.2.99 six full-name two-line clickable ability buttons use original test
     assert.ok(source.includes(label));
   const finalRules=css.slice(css.lastIndexOf('/* v0.2.93'));
   assert.match(finalRules,/mmrpg-native-action-hud__quick-ability \{[\s\S]*?flex-direction:\s*column/);
-  assert.equal(manifest.version,'0.2.99');
+  assert.equal(manifest.version,'0.2.106');
 });

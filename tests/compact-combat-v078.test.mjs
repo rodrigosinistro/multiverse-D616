@@ -45,7 +45,7 @@ test('token overlay only appears on visible combat tokens in active scene',()=>{
 });
 test('Foundry v14 wires compact mode to the existing authoritative tracker',()=>{
   const manifest=JSON.parse(read('../system.json'));
-  assert.equal(manifest.version,'0.2.99');
+  assert.equal(manifest.version,'0.2.106');
   assert.equal(manifest.compatibility.minimum,'14');
   assert.ok(manifest.esmodules.includes('scripts/combat/compact-combat-display.mjs'));
   assert.ok(manifest.styles.includes('styles/compact-combat-display.css'));
@@ -54,7 +54,8 @@ test('Foundry v14 wires compact mode to the existing authoritative tracker',()=>
   assert.match(old,/controlCombat: \(action\) => runCombatControl\(action\)/);
   assert.match(old,/if \(compactModeEnabled\(\)\) return false;/);
   const compact=read('../scripts/combat/compact-combat-display.mjs');
-  assert.match(compact,/getState\?\.\(combatant\)/);
+  assert.match(compact,/clearTokenUnderlays\(\)/);
+  assert.doesNotMatch(compact,/renderTokenUnderlays\s*\(/);
   assert.match(compact,/requestAnimationFrame/);
   assert.match(compact,/Hooks\.on\('canvasPan', scheduleRender\)/);
   assert.match(compact,/scope: 'client', config: true, type: Boolean, default: true/);

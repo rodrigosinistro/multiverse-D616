@@ -36,16 +36,24 @@ const IGNORED_MOVEMENT_METHODS = new Set(["config", "paste", "undo"]);
 const processedMovements = new Set();
 const spendAcks=new Map();
 const pendingSpendWrites=new Map();
-function serializeSpend(payload, user){
-  const key=`${payload.combatId}|${payload.combatantId}`;
-  const previous=pendingSpendWrites.get(key)??Promise.resolve();
-  const job=previous.catch(()=>{}).then(()=>applyRequest(payload,user));
-  pendingSpendWrites.set(key,job);
+/** Resource spends and phase/turn resets must share a per-combatant write queue.
+ * Otherwise an asynchronous bonus-round spend can overwrite the fresh state
+ * written when round 1 begins (especially when the turn index stays at 0).
+ */
+function queueCombatantWrite(combatId, combatantId, callback) {
+  const key = `${combatId}|${combatantId}`;
+  const previous = pendingSpendWrites.get(key) ?? Promise.resolve();
+  const job = previous.catch(() => {}).then(callback);
+  pendingSpendWrites.set(key, job);
   void job.then(
     () => { if (pendingSpendWrites.get(key) === job) pendingSpendWrites.delete(key); },
     () => { if (pendingSpendWrites.get(key) === job) pendingSpendWrites.delete(key); },
   );
   return job;
+}
+function serializeSpend(payload, user) {
+  return queueCombatantWrite(payload.combatId, payload.combatantId,
+    () => applyRequest(payload, user));
 }
 
 const processedDestinations = new Map();
@@ -834,7 +842,13 @@ async function maybeStartCombatAfterInitiative(combat) {
         startedAt: Date.now(),
       });
       const firstIndex = ordered.findIndex((combatant) => combatant.id === eligibleIds[0]);
-      if (firstIndex >= 0 && Number(combat.turn) !== firstIndex) await combat.update({ turn: firstIndex }, { m616BonusTransition: true });
+      if (firstIndex >= 0 && Number(combat.turn) !== firstIndex) {
+        await combat.update({ turn: firstIndex }, { m616BonusTransition: true });
+      }
+      // startCombat() already set a regular-round reset key. If the first
+      // bonus combatant is also first in initiative (turn 0), Foundry makes no
+      // turn update here. Explicitly establish the BONUS-phase resource bank.
+      await resetActiveCombatant(combat);
       const names = eligibleIds.map((id) => combat.combatants.get(id)?.name).filter(Boolean).join(", ");
       await ChatMessage.create({
         content: `<div class="m616-card"><b>Rodada Bônus</b><br>${escapeHtml(names)} podem agir antes da rodada principal.${ultimateIds.length ? "<br><b>6M6:</b> quem obteve Ultimate Fantastic pode transformar o Marvel Die em M em um teste desta rodada bônus." : ""}</div>`
@@ -862,8 +876,9 @@ async function advanceBonusTurn(combat, direction = 1) {
   const ids = bonusOrderedIds(combat, state);
   if (!ids.length) {
     await combat.unsetFlag(SYSTEM_ID, BONUS_ROUND_FLAG);
-    const result=await combat.update({ turn: 0 }, { m616BonusTransition: true });
-    await resetActiveCombatant(combat);
+    const result = await combat.update({ turn: 0 }, { m616BonusTransition: true });
+    // A phase transition is a new turn even if the numeric turn remains 0.
+    await resetActiveCombatant(combat, { force: true });
     return result;
   }
   const currentId = combat.combatant?.id;
@@ -883,8 +898,10 @@ async function advanceBonusTurn(combat, direction = 1) {
 
   await combat.unsetFlag(SYSTEM_ID, BONUS_ROUND_FLAG);
   ui.notifications?.info?.("Rodada Bônus encerrada. Começa a Rodada 1.");
-  const result=await combat.update({ turn: 0 }, { m616BonusTransition: true });
-  await resetActiveCombatant(combat);
+  const result = await combat.update({ turn: 0 }, { m616BonusTransition: true });
+  // The first regular turn always receives fresh Action, Reaction and Movement,
+  // including when its index is the SAME index as the final bonus turn.
+  await resetActiveCombatant(combat, { force: true });
   return result;
 }
 
@@ -1674,23 +1691,24 @@ function turnResetKey(combat) {
   return `${combat.id}:${bonusRound(combat) ? "bonus" : "regular"}:${combat.round ?? 0}:${combat.turn ?? 0}:${combatant.id}`;
 }
 
-async function resetActiveCombatant(combat) {
-  if (!isPrimaryGM() || !combat?.started || !combat.combatant) return;
+async function resetActiveCombatant(combat, { force = false } = {}) {
+  if (!isPrimaryGM() || !combat?.started || !combat.combatant) return false;
 
-  const combatant = combat.combatant;
-  const key = turnResetKey(combat);
-  const current = stateFor(combatant);
-  if (!key || current.resetKey === key) return;
-  if (movementGrant(combatant)) await clearMovementGrant(combatant);
-
-  await persistState(
-    combatant,
-    resetTurnState(
-      current,
-      key,
-      movementSpeedFor(combatant)
-    )
-  );
+  const activeId = combat.combatant.id;
+  // All spends/changes and turn resets are ordered for this combatant. Compute
+  // the current phase/key INSIDE the queue rather than capturing an obsolete
+  // value while the bonus flag or initiative turn is changing.
+  return queueCombatantWrite(combat.id, activeId, async () => {
+    if (!combat?.started || combat.combatant?.id !== activeId) return false;
+    const combatant = combat.combatants?.get?.(activeId) ?? combat.combatant;
+    const key = turnResetKey(combat);
+    const current = stateFor(combatant);
+    if (!key || (!force && current.resetKey === key)) return false;
+    if (movementGrant(combatant)) await clearMovementGrant(combatant);
+    return persistState(combatant, resetTurnState(
+      stateFor(combatant), key, movementSpeedFor(combatant)
+    ));
+  });
 }
 
 function tokenSceneId(tokenDocument) {

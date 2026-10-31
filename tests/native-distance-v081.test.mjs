@@ -152,12 +152,12 @@ test('hidden combatant cannot be measured; hovering is restored when visible',()
 test('no persistent trails or README release notes; manifest and changelog reflect update',()=>{
   const src=readFileSync(new URL('../scripts/combat/native-distance-display.mjs',import.meta.url),'utf8');
   assert.doesNotMatch(src,/trails\s*=\s*new Map|recordMove\s*\(/);
-  assert.match(src,/Hooks\.on\('moveToken',finishPreview\)/);
+  assert.match(src,/Hooks\.on\('moveToken'/);
   assert.match(src,/globalThis\.canvas\?\.ready/);
   const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url)));
-  assert.equal(manifest.version,'0.2.99');
+  assert.equal(manifest.version,'0.2.106');
   const changelog=readFileSync(new URL('../CHANGELOG.md',import.meta.url),'utf8');
-  assert.match(changelog,/^## v0\.2\.99/);
+  assert.match(changelog,/^## v0\.2\.106/);
   const readme=readFileSync(new URL('../README.md',import.meta.url),'utf8');
   assert.doesNotMatch(readme,/v0\.2\.82/);
 });

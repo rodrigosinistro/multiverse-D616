@@ -1,4 +1,5 @@
 import { resolveConditionEdges, resolveConditionReroll } from "./condition-edge.mjs";
+import { hudResourceState } from "./combat/hud-resource-state.mjs";
 /**
  * Multiverse-D616 — native Token Action HUD
  *
@@ -348,6 +349,12 @@ class NativeActionHud {
     Hooks.on("canvasReady", () => this.scheduleRender(true));
     // Hold conditions live on the TARGET, not on the selected caster.
     Hooks.on("updateCombat", () => this.scheduleRender(true));
+    Hooks.on("updateCombatant", () => this.scheduleRender(true));
+    Hooks.on("createCombatant", () => this.scheduleRender(true));
+    Hooks.on("deleteCombatant", () => this.scheduleRender(true));
+    Hooks.on("createCombat", () => this.scheduleRender(true));
+    Hooks.on("deleteCombat", () => this.scheduleRender(true));
+    Hooks.on("combatStart", () => this.scheduleRender(true));
     for(const hook of ['createActiveEffect','updateActiveEffect','deleteActiveEffect']){
       Hooks.on(hook, () => this.scheduleRender(true));
     }
@@ -484,13 +491,27 @@ class NativeActionHud {
     const profile = document.createElement("section");
     profile.className = "mmrpg-native-action-hud__profile";
     // Text values are populated using textContent, not dynamic HTML.
-    profile.innerHTML = `<button type="button" class="mmrpg-native-action-hud__portrait" data-action="portrait" title="Abrir ficha"><img alt="Retrato"></button>
+    profile.innerHTML = `<div class="mmrpg-native-action-hud__portrait-frame">
+        <button type="button" class="mmrpg-native-action-hud__portrait" data-action="portrait" title="Abrir ficha"><img alt="Retrato"></button>
+        <div class="mmrpg-native-action-hud__combat-icons is-hidden" aria-label="Recursos do personagem selecionado">
+          <div class="mmrpg-native-action-hud__turn-resources" title="Ações e reações disponíveis"></div>
+          <div class="mmrpg-native-action-hud__turn-movement" title="Movimento restante"></div>
+        </div>
+      </div>
       <div class="mmrpg-native-action-hud__identity"><strong class="mmrpg-native-action-hud__profile-name"></strong>
       <span class="mmrpg-native-action-hud__profile-rank"></span>
       <div class="mmrpg-native-action-hud__resource health"><span>HEALTH</span><b></b><div class="track"><div class="fill"></div></div></div>
       <div class="mmrpg-native-action-hud__resource focus"><span>FOCUS</span><b></b><div class="track"><div class="fill"></div></div></div>
       <div class="mmrpg-native-action-hud__profile-karma"></div>
       <div class="mmrpg-native-action-hud__quick-abilities" aria-label="Testes de atributos do personagem"></div></div>`;
+
+    // HUD clássico: barra privada dos recursos do próprio combatente, abaixo
+    // de ABILITIES/POWERS. Reutiliza o renderizador do retrato persistente.
+    const classicTurnStrip = document.createElement("div");
+    classicTurnStrip.className = "mmrpg-native-action-hud__classic-turn-strip is-hidden";
+    classicTurnStrip.setAttribute("aria-label", "Ação, Reação e Movimento restantes do personagem selecionado");
+    classicTurnStrip.innerHTML = `<div class="mmrpg-native-action-hud__turn-resources" aria-label="Ações e reações disponíveis"></div>
+      <div class="mmrpg-native-action-hud__turn-movement" aria-label="Movimento restante"></div>`;
 
     const body = document.createElement("div");
     body.className = "mmrpg-native-action-hud__body";
@@ -503,7 +524,7 @@ class NativeActionHud {
     resizeHandle.setAttribute("aria-label", localize("MULTIVERSE_D616.ActionHud.Resize"));
     resizeHandle.textContent = "↔ Largura";
 
-    root.append(header, profile, tabs, body, resizeHandle);
+    root.append(header, profile, tabs, classicTurnStrip, body, resizeHandle);
     resizeHandle.addEventListener("pointerdown", (event) => this.startResize(event));
     root.addEventListener("click", (event) => this.onClick(event));
     dragHandle.addEventListener("pointerdown", (event) => this.startDrag(event));
@@ -584,7 +605,10 @@ class NativeActionHud {
         this.updatePersistentProfile(this.root, actor);
         this.applyPersistentSize();
         this.reflowPersistentHotbar(this.root.querySelector(".mmrpg-native-action-hud__body"));
-      } else this.positionWithinViewport();
+      } else {
+        this.updatePortraitTurnResources(this.root, actor, true);
+        this.positionWithinViewport();
+      }
       return;
     }
     this._lastSignature = signature;
@@ -650,14 +674,71 @@ class NativeActionHud {
     }
     if (previousTab === tab) body.scrollTop = previousScroll;
     if (!persistent) {
+      // Lê sempre o mesmo Turn Tracker do HUD persistente. Nenhum estado duplicado.
+      this.updatePortraitTurnResources(root, actor, true);
       this.applyStoredPosition();
       requestAnimationFrame(() => this.positionWithinViewport());
     }
   }
 
+  /** Renderiza recursos exclusivamente do token selecionado, nunca de alvos sob hover.
+   * classic=true reutiliza os mesmos ícones/cálculos na faixa do HUD antigo. */
+  updatePortraitTurnResources(profile, actor, classic=false) {
+    const wrapper = profile.querySelector(classic
+      ? ".mmrpg-native-action-hud__classic-turn-strip"
+      : ".mmrpg-native-action-hud__combat-icons");
+    if (!wrapper) return;
+    const resources = wrapper.querySelector(".mmrpg-native-action-hud__turn-resources");
+    const movement = wrapper.querySelector(".mmrpg-native-action-hud__turn-movement");
+    const data = hudResourceState({
+      actor, token:this.selectedToken, combat:game.combat,
+      tracker:game.multiverseD616?.turnTracker, isGM:!!game.user?.isGM,
+    });
+    wrapper.classList.toggle("is-hidden",!data);
+    resources.replaceChildren();
+    movement.replaceChildren();
+    if (!data) return;
+    const iconRoot = `systems/${SYSTEM_ID}/ui/compact-combat-icons/`;
+    for (const [kind,count,icon,label] of [
+      ["action",data.actions,"hand-fist.svg","Ação Padrão disponível"],
+      ["reaction",data.reactions,"shield-halved.svg","Reação disponível"],
+    ]) {
+      for (let i=0; i<count; i++) {
+        const chip=document.createElement("span");
+        chip.className=`mmrpg-native-action-hud__turn-icon is-${kind}`;
+        chip.title=label;
+        const image=document.createElement("img");
+        image.src=iconRoot+icon; image.alt="";
+        chip.appendChild(image); resources.appendChild(chip);
+      }
+    }
+    const remaining=Number(data.remaining.toFixed(2)).toLocaleString("pt-BR");
+    const maximum=Number(data.maximum.toFixed(2)).toLocaleString("pt-BR");
+    const modes={walk:"Caminhada",run:"Caminhada",flight:"Voo",swim:"Natação",
+      climb:"Escalada",jump:"Salto",glide:"Planar",swingline:"Balanço",
+      levitation:"Levitação",teleport:"Teleporte"};
+    const mode=modes[data.mode]||data.mode;
+    movement.title=`${mode}: ${remaining} de ${maximum} espaços restantes`;
+    data.movement.forEach((value,i)=>{
+      const step=document.createElement("span");
+      step.className="mmrpg-native-action-hud__movement-step";
+      step.title=`Movimento ${i+1}/4: ${Math.round(value*100)}% disponível`;
+      const base=document.createElement("img");
+      base.className="mmrpg-native-action-hud__movement-base";
+      base.src=iconRoot+"chevron-right.svg"; base.alt="";
+      const fill=document.createElement("span");
+      fill.className="mmrpg-native-action-hud__movement-fill";
+      fill.style.width=`${Math.round(value*100)}%`;
+      const colored=document.createElement("img");
+      colored.src=iconRoot+"chevron-right.svg"; colored.alt="";
+      fill.appendChild(colored); step.append(base,fill);movement.appendChild(step);
+    });
+  }
+
   updatePersistentProfile(root, actor) {
     const profile = root.querySelector(".mmrpg-native-action-hud__profile");
     if (!profile) return;
+    this.updatePortraitTurnResources(profile,actor);
     const portrait = profile.querySelector(".mmrpg-native-action-hud__portrait img");
     portrait.src = actor?.img || `systems/${SYSTEM_ID}/icons/m.svg`;
     portrait.alt = actor?.name ?? "Sem personagem";

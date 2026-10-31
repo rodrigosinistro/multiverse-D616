@@ -65,8 +65,8 @@ test('v0.2.99 reflow usa cÃ©lulas de 39 px e rolagem vertical, preserva modo clÃ
 });
 
 test('v0.2.99 preferencias de tamanho individuais e manifesto corretos',()=>{
-  assert.equal(manifest.version,'0.2.99');
-  assert.match(manifest.download,/v0\.2\.99\/multiverse-d616-v0\.2\.99\.zip$/);
+  assert.equal(manifest.version,'0.2.106');
+  assert.match(manifest.download,/v0\.2\.106\/multiverse-d616-v0\.2\.106\.zip$/);
   assert.match(source,/game\.settings\.register\(SYSTEM_ID, SETTING_PERSISTENT_SIZE,\s*\{\s*scope: "client", config: false/);
   assert.match(source,/await game\.settings\.set\(SYSTEM_ID, SETTING_PERSISTENT_SIZE/);
 });

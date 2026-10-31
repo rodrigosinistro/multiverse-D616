@@ -85,6 +85,6 @@ test('v0.2.90: release resizing in one column snaps and saves a tight width',asy
 test('v0.2.90: ABILITIES keep prior minimum and empty-state does not force wide grid',()=>{
  assert.equal(normalizeHudWidth(120,1200),294);
  assert.match(css,/__empty\s*\{[^}]*min-width:\s*0;/s);
- assert.equal(manifest.version,'0.2.99');
- assert.match(manifest.download,/v0\.2\.99\/multiverse-d616-v0\.2\.99\.zip/);
+ assert.equal(manifest.version,'0.2.106');
+ assert.match(manifest.download,/v0\.2\.106\/multiverse-d616-v0\.2\.106\.zip/);
 });

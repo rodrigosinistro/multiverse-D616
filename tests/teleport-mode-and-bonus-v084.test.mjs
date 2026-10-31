@@ -24,7 +24,7 @@ test('v084: teleport reserve uses Rank and does not replace ordinary Fly speed',
 test('v084: resources reset at the start of the next turn, not simply on bonus-round end', () => {
   const tracker = read('../scripts/combat/turn-tracker.mjs');
   assert.match(tracker,/bonusRound\(combat\) \? "bonus" : "regular"/);
-  assert.match(tracker,/if \(!key \|\| current.resetKey === key\) return;/);
+  assert.match(tracker,/if \(!key \|\| \(!force && current.resetKey === key\)\) return false;/);
   const spent={actionUsed:1,reactionUsed:1,movementUsed:6,movementExtraActionUsed:true};
   const next=resetTurnState(spent,'encounter:regular:1:2:zima',6);
   assert.equal(next.actionUsed,0);

@@ -1,0 +1,4 @@
+Ícones baseados em Font Awesome Free 6 (Fonticons, Inc.).
+Arquivos locais usados pelo sistema: hand-fist.svg, shield-halved.svg, chevron-right.svg.
+Licença dos ícones: CC BY 4.0.
+https://fontawesome.com/  |  https://creativecommons.org/licenses/by/4.0/

@@ -1,15 +1,11 @@
-import {
-  availableTurnIcons, movementArrowFill,
-  combatantsInInitiativeOrder, canDisplayCombatToken,
-} from './compact-combat-core.mjs';
+import {combatantsInInitiativeOrder} from './compact-combat-core.mjs';
 import {clampInitiativeStripPosition, validInitiativeStripPosition} from './compact-combat-position.mjs';
-import {combatantMovementInfo} from './turn-tracker-core.mjs';
+import {clearTokenUnderlays} from './compact-token-underlay.mjs';
 
 const SYSTEM = 'multiverse-d616';
 const SETTING = 'compactCombatHUD';
 const POSITION_SETTING = 'compactInitiativePosition';
 const STRIP_ID = 'm616-compact-initiative';
-const TOKENS_ID = 'm616-compact-tokens';
 const FALLBACK = 'icons/svg/mystery-man.svg';
 let updatePending = false;
 let lastSignature = '';
@@ -20,7 +16,6 @@ function enabled() {
   catch (_error) { return true; }
 }
 function html(text) { return foundry.utils.escapeHTML(String(text ?? '')); }
-function combatantId(combatant) { return combatant?.tokenId ?? combatant?.token?.id; }
 function initiative(combatant) {
   const val = Number(combatant?.initiative);
   return combatant?.initiative == null || !Number.isFinite(val) ? '—' : String(val);
@@ -30,16 +25,6 @@ function combatantImage(combatant) {
 }
 function currentCombatants() {
   return combatantsInInitiativeOrder(game.combat, !!game.user?.isGM);
-}
-function tokenForCombatant(combatant) {
-  const tokenId = combatantId(combatant);
-  return canvas?.tokens?.placeables?.find(token => token.id === tokenId) ?? null;
-}
-function getState(combatant) {
-  const original = game.multiverseD616?.turnTracker?.getState?.(combatant) ?? null;
-  const grant = combatant?.getFlag?.(SYSTEM,'temporaryMovementPower');
-  return original && grant?.kind === 'teleport' && Number(grant.maximum) > 0
-    ? {...original, movementUsed:0, movementMax:Number(grant.maximum)} : original;
 }
 function ensureElements() {
   let strip = document.getElementById(STRIP_ID);
@@ -57,14 +42,9 @@ function ensureElements() {
     }, true);
     document.body.appendChild(strip);
   }
-  let tokens = document.getElementById(TOKENS_ID);
-  if (!tokens) {
-    tokens = document.createElement('div');
-    tokens.id = TOKENS_ID;
-    tokens.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(tokens);
-  }
-  return {strip, tokens};
+  // Remove qualquer fallback HTML deixado por versões anteriores no cliente.
+  document.getElementById('m616-compact-tokens')?.remove?.();
+  return strip;
 }
 function portraitHtml(combatant, combat) {
   const active = combat?.started && combat.combatant?.id === combatant.id;
@@ -93,86 +73,25 @@ function stripMarkup(combat, combatants) {
     ${gm && combat.started ? `<button type="button" class="m616-compact-end" data-m616-compact-control="end" title="Encerrar Combate" aria-label="Encerrar Combate"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i></button>` : ''}
     <button type="button" class="m616-compact-legacy" data-m616-compact-control="open" title="Abrir Controle de Turno detalhado"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>`;
 }
-function resourceHtml(resource, state) {
-  const count = availableTurnIcons(state, resource);
-  const icon = resource === 'action' ? 'fa-hand-fist' : 'fa-shield-halved';
-  const type = resource === 'action' ? 'Ação Padrão' : 'Reação';
-  return Array.from({length: count}, () => `<span class="m616-combat-resource is-${resource}" title="${type} disponível"><i class="fa-solid ${icon}"></i></span>`).join('');
-}
-function tokenMarkup(combatant, state) {
-  const info = combatantMovementInfo(combatant);
-  if (combatant?.getFlag?.(SYSTEM,'temporaryMovementPower')?.kind === 'teleport') info.mode = 'teleport';
-  const fills = movementArrowFill(state);
-  const remaining = Math.max(0, Number(state.movementMax || 0) - Number(state.movementUsed || 0));
-  const total = Number(state.movementMax || 0);
-  const movementTitle = `${info.mode.toUpperCase()} — Movimento: ${format(remaining)} de ${format(total)} espaços restantes`;
-  const resources = resourceHtml('action', state) + resourceHtml('reaction', state);
-  return `<div class="m616-token-actions" title="Ações e reações disponíveis">${resources || '<span class="m616-no-actions">—</span>'}</div>
-    <div class="m616-token-movement" title="${html(movementTitle)}">${fills.map(fill => `<span class="m616-movement-step" style="--m616-fill:${Math.round(fill*100)}%"><i class="fa-solid fa-chevron-right m616-step-empty"></i><span class="m616-step-fill"><i class="fa-solid fa-chevron-right"></i></span></span>`).join('')}</div>`;
-}
-function format(value) { return Number.isInteger(value) ? String(value) : String(Math.round(value * 10) / 10); }
-function canvasElement() {
-  return canvas?.app?.canvas ?? canvas?.app?.view ?? canvas?.app?.renderer?.view ?? document.querySelector('#board canvas');
-}
-function tokenScreenPosition(token) {
-  const matrix = canvas?.stage?.worldTransform;
-  const view = canvasElement();
-  if (!matrix || !view || !token) return null;
-  const bounds = view.getBoundingClientRect?.();
-  if (!bounds || !bounds.width || !bounds.height) return null;
-  const screen = canvas?.app?.renderer?.screen;
-  const ratioX = bounds.width / (Number(screen?.width) || bounds.width);
-  const ratioY = bounds.height / (Number(screen?.height) || bounds.height);
-  const top = matrix.apply({x: token.x + token.w / 2, y: token.y});
-  const bottom = matrix.apply({x: token.x + token.w / 2, y: token.y + token.h});
-  return {
-    x: bounds.left + top.x * ratioX,
-    yAbove: bounds.top + top.y * ratioY - 4,
-    yBelow: bounds.top + bottom.y * ratioY + 4,
-  };
-}
-function placeTokenIndicators() {
-  if (!enabled()) return;
-  const root = document.getElementById(TOKENS_ID);
-  if (!root || root.hidden) return;
-  for (const element of root.querySelectorAll('[data-m616-token-id]')) {
-    const token = canvas?.tokens?.get?.(element.dataset.m616TokenId) ??
-      canvas?.tokens?.placeables?.find(t => t.id === element.dataset.m616TokenId);
-    const position = tokenScreenPosition(token);
-    const visible = !!position && token?.visible && !token?.document?.hidden;
-    element.hidden = !visible;
-    if (!visible) continue;
-    element.querySelector('.m616-token-actions').style.cssText = `left:${position.x}px;top:${position.yAbove}px`;
-    element.querySelector('.m616-token-movement').style.cssText = `left:${position.x}px;top:${position.yBelow}px`;
-  }
-}
 function render() {
-  const {strip, tokens} = ensureElements();
+  const strip = ensureElements();
   const combat = game.combat;
   const display = enabled() && !!combat && (!combat.scene?.id || combat.scene.id === canvas?.scene?.id);
   strip.hidden = !display;
-  tokens.hidden = !display || !combat?.started;
-  if (!display) { tokens.replaceChildren(); lastSignature = ''; return; }
+  if (!display) { clearTokenUnderlays(); lastSignature = ''; return; }
   const members = currentCombatants();
+  // v0.2.104: indicadores privados somente no retrato do HUD do proprietário.
+  // A barra pública de iniciativa continua funcionando normalmente.
+  clearTokenUnderlays();
   const signature = JSON.stringify([
     combat.id, combat.round, combat.turn, combat.started, combat.combatant?.id, !!game.user?.isGM,
-    members.map(c => [c.id, c.name, c.initiative, c.hidden, c.defeated, combatantImage(c),
-      getState(c)?.actionUsed, getState(c)?.actionMax, getState(c)?.reactionUsed,
-      getState(c)?.reactionMax, getState(c)?.movementUsed, getState(c)?.movementMax,
-      combatantMovementInfo(c).mode, tokenForCombatant(c)?.document?.movementAction,
-      tokenForCombatant(c)?.visible, tokenForCombatant(c)?.document?.hidden, !!tokenForCombatant(c)]),
+    members.map(c => [c.id, c.name, c.initiative, c.hidden, c.defeated, combatantImage(c)]),
   ]);
   if (signature !== lastSignature) {
     lastSignature = signature;
-    strip.innerHTML = stripMarkup(combat, members);
-    tokens.innerHTML = combat.started ? members.map(c => {
-      const token = tokenForCombatant(c);
-      if (!canDisplayCombatToken(combat, token, !!game.user?.isGM) || !getState(c)) return '';
-      return `<div class="m616-token-resources" data-m616-token-id="${html(token.id)}">${tokenMarkup(c, getState(c))}</div>`;
-    }).join('') : '';
+    strip.innerHTML = stripMarkup(combat,members);
   }
   applySavedStripPosition(strip);
-  placeTokenIndicators();
 }
 
 function storedStripPosition() {
@@ -270,8 +189,8 @@ export function registerCompactCombatSettings() {
     onChange: () => repositionOnResize(),
   });
   game.settings.register(SYSTEM, SETTING, {
-    name: 'Combate — HUD compacto sobre tokens e iniciativa no topo',
-    hint: 'Exibe Ações/Reações acima de cada token e quatro setas de Movimento abaixo. Substitui a abertura automática da janela detalhada (que continua disponível pelo botão e no menu Tokens). Configuração individual por usuário.',
+    name: 'Combate — iniciativa compacta no topo',
+    hint: 'Mostra a iniciativa compacta no topo. Os indicadores particulares de Ação, Reação e Movimento ficam somente no retrato do HUD persistente do personagem selecionado, nunca sobre tokens ou alvos.',
     scope: 'client', config: true, type: Boolean, default: true,
     onChange: value => {
       lastSignature = '';
@@ -282,7 +201,10 @@ export function registerCompactCombatSettings() {
 }
 Hooks.once('init', registerCompactCombatSettings);
 Hooks.once('ready', () => { if (game.system?.id === SYSTEM) scheduleRender(); });
-Hooks.on('canvasReady', scheduleRender);
+Hooks.on('canvasReady', () => {clearTokenUnderlays(); lastSignature=''; scheduleRender();});
+Hooks.on('canvasTearDown',clearTokenUnderlays);
+Hooks.on('controlToken',scheduleRender);
+Hooks.on('hoverToken',scheduleRender);
 Hooks.on('canvasPan', scheduleRender);
 Hooks.on('updateToken', scheduleRender);
 Hooks.on('refreshToken', scheduleRender);

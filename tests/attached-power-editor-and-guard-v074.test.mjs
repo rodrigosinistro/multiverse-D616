@@ -106,7 +106,7 @@ test('v074: edit button in weapon/item, dialog connected, targeted GUI with edit
   assert.match(html,/fa-pen/);
   assert.match(main,/editAttachedPower\(this\.item,id\)/);
   assert.match(main,/mm-attached-power-edit/);
-  assert.match(readFileSync(new URL('../system.json',import.meta.url),'utf8'),/"version": "0\.2\.99"/);
+  assert.match(readFileSync(new URL('../system.json',import.meta.url),'utf8'),/"version": "0\.2\.106"/);
 });
 
 test('v074: dialog allows element-only update and cancel does not alter power',async()=>{

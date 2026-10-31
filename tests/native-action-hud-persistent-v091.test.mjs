@@ -68,5 +68,5 @@ test('v0.2.91: persistent layout retains existing shortcut and actor.roll pipeli
   assert.match(source,/activateAttachedPower\(carrier,actionButton\.dataset\.powerId,actor\)/);
   assert.match(source,/const persistent = persistentMode\(\)/);
   assert.match(source,/applyPersistentPosition\(\)/);
-  assert.equal(JSON.parse(readFileSync(new URL('../system.json',import.meta.url))).version,'0.2.99');
+  assert.equal(JSON.parse(readFileSync(new URL('../system.json',import.meta.url))).version,'0.2.106');
 });

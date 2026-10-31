@@ -948,3 +948,277 @@ body:has(#mmrpg-native-action-hud.is-persistent:not(.is-collapsed)) #players {
     grid-column:1; grid-row:3;
   }
 }
+
+/* v0.2.104 — Recursos do turno no retrato do HUD, sem indicadores no tabuleiro.
+   Os overlays não capturam o mouse: clicar no retrato continua abrindo a ficha. */
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__portrait-frame {
+  position: relative;
+  display: block;
+  grid-column: 1;
+  grid-row: 1;
+  width: 120px;
+  height: 100%;
+  max-height: 176px;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 5px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__portrait-frame > .mmrpg-native-action-hud__portrait {
+  display: block;
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  box-sizing: border-box;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__combat-icons {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__combat-icons.is-hidden {
+  display: none;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__turn-resources {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  width: 100%;
+  padding: 3px 2px 5px;
+  box-sizing: border-box;
+  background: linear-gradient(180deg,rgba(0,0,0,.85),transparent);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__turn-icon {
+  display: grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  flex: 0 0 21px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 1px solid #f2c68c;
+  background: #693319;
+  box-shadow: 0 1px 3px #000;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__turn-icon.is-reaction {
+  background: #14557f;
+  border-color: #a9dcff;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__turn-icon img {
+  position: static;
+  display: block;
+  width: 14px;
+  height: 14px;
+  max-width: 14px;
+  max-height: 14px;
+  object-fit: contain;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  filter: none;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__turn-movement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  height: 27px;
+  padding: 2px 4px;
+  box-sizing: border-box;
+  border-top: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.9);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__movement-step {
+  position: relative;
+  display: block;
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__movement-step img {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 19px;
+  height: 19px;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  object-fit: contain;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__movement-base {
+  opacity: .32;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__movement-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 19px;
+  overflow: hidden;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__movement-fill img {
+  filter: brightness(0) saturate(100%) invert(80%) sepia(40%) saturate(677%) hue-rotate(86deg) brightness(99%);
+}
+/* Foco de leitura: fundo preto e nome de habilidade maior, sem alterar rolagens. */
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-ability {
+  background: #07080b;
+  border-color: #675c52;
+  color: #fff;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-ability .ability-label {
+  font-size: 11px;
+  line-height: 13px;
+  font-weight: 800;
+  color: #fff;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-ability .ability-value {
+  font-size: 13px;
+  line-height: 14px;
+}
+@media (max-width: 860px) {
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__portrait-frame {
+    width: 84px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__turn-icon {
+    width: 17px;
+    height: 17px;
+    flex-basis: 17px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__turn-icon img {
+    width: 12px;
+    height: 12px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__movement-step {
+    width: 15px;
+    height: 15px;
+    flex-basis: 15px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__movement-step img {
+    width: 15px;
+    height: 15px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__movement-fill {
+    height: 15px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__turn-movement {
+    height: 23px;
+    gap: 1px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__quick-ability .ability-label {
+    font-size: 10px;
+  }
+}
+
+
+/* v0.2.106 — HUD clássico: linha privada de Ação / Reação + Movimento,
+   logo abaixo de ABILITIES / POWERS; o HUD persistente mantém o retrato. */
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__classic-turn-strip {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 31px;
+  padding: 3px 7px;
+  border-bottom: 1px solid rgba(232,132,32,.3);
+  background: rgba(0,0,0,.8);
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__classic-turn-strip.is-hidden,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__classic-turn-strip,
+#mmrpg-native-action-hud.is-collapsed .mmrpg-native-action-hud__classic-turn-strip {
+  display: none;
+}
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__classic-turn-strip .mmrpg-native-action-hud__turn-resources {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  min-width: 0;
+  gap: 2px;
+}
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__classic-turn-strip .mmrpg-native-action-hud__turn-icon {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+  border: 1px solid #f2c68c;
+  border-radius: 50%;
+  background: #693319;
+}
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__classic-turn-strip .mmrpg-native-action-hud__turn-icon.is-reaction {
+  background: #14557f;
+  border-color: #a9dcff;
+}
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__classic-turn-strip .mmrpg-native-action-hud__turn-icon img {
+  display: block;
+  position: static;
+  width: 13px;
+  height: 13px;
+  max-width: 13px;
+  max-height: 13px;
+  padding: 0;
+  margin: 0;
+  object-fit: contain;
+  border: 0;
+  filter: none;
+}
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__classic-turn-strip .mmrpg-native-action-hud__turn-movement {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  height: 21px;
+  margin-left: auto;
+  padding: 1px 2px;
+  background: #0b0d0f;
+  border-radius: 4px;
+}
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__classic-turn-strip .mmrpg-native-action-hud__movement-step {
+  position: relative;
+  display: block;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+}
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__classic-turn-strip .mmrpg-native-action-hud__movement-step img {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 16px;
+  height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+  margin: 0;
+  padding: 0;
+  object-fit: contain;
+  border: 0;
+}
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__classic-turn-strip .mmrpg-native-action-hud__movement-base {
+  opacity: .32;
+}
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__classic-turn-strip .mmrpg-native-action-hud__movement-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 16px;
+  overflow: hidden;
+}
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__classic-turn-strip .mmrpg-native-action-hud__movement-fill img {
+  filter: brightness(0) saturate(100%) invert(80%) sepia(40%) saturate(677%) hue-rotate(86deg) brightness(99%);
+}

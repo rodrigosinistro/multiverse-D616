@@ -1,3 +1,64 @@
+## v0.2.106 — Ação/Reação/Movimento também no HUD clássico (Foundry VTT v14) — 31/10/2026
+
+- Adicionada uma faixa compacta entre as abas **ABILITIES / POWERS** e a lista de atalhos do HUD clássico: **Ação e Reação à esquerda** (círculos marrom/azul, ícones brancos), **quatro setas de Movimento à direita** (verdes ou cinzas e frações de 25%).
+- A faixa utiliza a mesma função `hudResourceState` e o mesmo renderizador do HUD persistente, sem copiar contadores nem alterar regras; atualiza com consumo, recuperação, Rodada Bônus e renovação na Rodada 1, seleção e atualizações de combate.
+- Visibilidade privada: apenas o combatente realmente selecionado na cena e em combate, sujeito a permissões; não exibe indicadores de alvos em hover nem no mapa. Oculta a faixa fora de combate, no HUD minimizado e no modo persistente.
+- Preservados os ícones no retrato do HUD persistente, a organização de powers/armas, a iniciativa, a sincronização de distância e as correções da v0.2.105.
+- README e manuais independentes sem alterações; GitHub não publicado automaticamente.
+
+## v0.2.105 — Renovação de recursos entre Rodada Bônus e Rodada 1 (Foundry VTT v14) — 31/10/2026
+
+- Corrigida a transição após iniciativa Fantástica (Marvel Die = M): o participante da Rodada Bônus passa a ter um banco de recursos próprio, independente do seu turno na Rodada 1.
+- Na entrada da Rodada Bônus, uma renovação explícita registra a fase `bonus` mesmo quando o primeiro participante já ocupa o índice zero da iniciativa e não ocorre mudança numérica de turno.
+- Ao terminar a Rodada Bônus, a primeira pessoa da Rodada 1 recupera Ação Padrão, Reação e Movimento integralmente, incluindo o caso em que foi a última pessoa a agir na fase bônus e o índice de turno continua zero.
+- Gastos de recursos, movimentação e renovações usam uma fila serializada por combatente no Mestre para impedir que um gasto da fase anterior sobrescreva uma renovação recém-aplicada.
+- A renovação permanece individual: outros combatentes aguardam seu próprio turno; a fase bônus não concede recursos extras fora da transição definida.
+- Mantidos HUD no retrato do personagem, iniciativa compacta, sincronização de movimento, ações e habilidades da v0.2.104; README e manuais mantidos. Publicação no GitHub continua manual.
+
+## v0.2.104 — Recursos privados no retrato do HUD persistente (Foundry VTT v14) — 31/10/2026
+
+- Nova apresentação: Ações Padrão e Reações em círculos brancos sobre fundo marrom/azul na parte superior do retrato do personagem; as quatro setas de Movimento aparecem na parte inferior, mantendo o progresso em quartos (incluindo frações).
+- Indicadores são exibidos **somente no HUD persistente do token selecionado e participante do combate**; nenhuma Ação/Reação/Movimento é mostrada no mapa, sobre tokens de aliados ou inimigos, nem ao passar o mouse sobre alvos. O Mestre pode selecionar qualquer combatente para inspecionar seu próprio painel; jogadores veem somente seus tokens controlados.
+- Mantidos o estado autoritativo do Turn Tracker, velocidade/movimento temporário de Teleporte e atualização em tempo real por `updateCombatant`, início/fim de combate e seleção. Sem cópia de contadores nem escrita de flags.
+- Habilidades (Melee, Agility, Resilience, Vigilance, Ego e Logic) com fonte maior, valores mais legíveis e fundo preto; rolagens e botões mantidos.
+- O retrato continua clicável para abrir a ficha; camadas de ícones não capturam eventos do mouse.
+- Barra de iniciativa compacta e régua de distância sincronizada permanecem; renderização de ícones sobre tokens removida (canvas e fallback HTML).
+- Sistema completo e instalável. Sem atualizar o GitHub; README e manuais não alterados.
+
+## v0.2.103 — Régua nativa silenciosa, ícones brancos e distância próxima — 31/10/2026
+
+- **Eliminada a duplicação do Foundry v14:** o sistema deixa de desenhar linhas, pontos de rota, indicadores de caminhada e balões nativos de movimento do token. A alteração atua exclusivamente nos estilos e na etiqueta visual do `TokenRuler`, sem tocar no registro, cálculo, custo, pontos ou execução do movimento. A régua manual (tecla R) permanece independente. Ao desligar a medição nativa do Multiverse, a visualização original do Foundry retorna.
+- **Ícones corrigidos:** SVGs do punho e escudo têm preenchimento branco explícito para renderização consistente no PIXI; desenho interno ampliado de 12 para 15 pixels e cor de desenho branca, preservando os círculos marrom/azul e a camada inferior aos tokens.
+- **Distância mais próxima:** etiqueta ancorada no topo do token, centrada e posicionada imediatamente acima dos ícones de Ação/Reação; evita o afastamento causado pelo deslocamento vertical duplicado na v0.2.102.
+- **Mestre e jogadores:** a prévia transmitida pela rede inclui a posição de ancoragem, mantendo o mesmo posicionamento em outros clientes. Mantidos o HUD persistente, o foco simultâneo (seleção + hover), as quatro setas e as demais regras.
+- README e manuais independentes inalterados. GitHub não atualizado automaticamente.
+
+## v0.2.102 — Refinos dos indicadores e da medição nativa (Foundry VTT v14) — 31/10/2026
+
+- Removidas da visualização as decorações extras de medição do arrasto (balões/caixas pretas secundárias com valores acumulados), mantendo apenas a prévia principal do Multiverse-D616.
+- A pill principal de distância/reposicionamento agora é ancorada acima dos indicadores de Ação/Reação para não disputar espaço com os ícones do token.
+- Indicadores de Ação e Reação reposicionados alguns pixels mais acima para melhorar a leitura.
+- Indicadores do canvas agora usam assets vetoriais locais (`.svg`) para recuperar a nitidez dos desenhos originais de punho, escudo e setas de movimento.
+- Mantidas as correções da v0.2.101: hover em alvos visíveis, seleção + hover simultâneos e movimento abaixo do nome do token.
+
+## v0.2.101 — Correções visuais e foco simultâneo dos indicadores (Foundry VTT v14) — 31/10/2026
+
+- Restaurados os desenhos originais dos indicadores: punho (Ação Padrão), escudo (Reação) e setas verdes/cinzas de Movimento. As imagens Font Awesome Free agora são PNGs locais integrados ao sistema, independentes da fonte de ícones do navegador (atribuição/licença em `ui/compact-combat-icons/ATTRIBUTION.txt`).
+- Seleção do token e hover sobre outro são **simultâneos**: o personagem controlado não perde os indicadores quando o Mestre ou jogador aponta outro combatente.
+- Um jogador pode visualizar indicadores de um **alvo visível** ao passar o mouse, mesmo que não seja proprietário do alvo; tokens ocultos para o jogador não revelam dados. Só combatentes presentes no combate recebem indicadores.
+- Indicador de Movimento deslocado para uma posição **abaixo do nome do token**, fora da área da etiqueta. Mantida a renderização em camada anterior à imagem dos tokens e a escala constante durante zoom.
+- Fallback HTML também suporta dois conjuntos (seleção + hover) e o deslocamento do movimento.
+- Mantidos sincronização de régua da v0.2.100, HUD persistente, lógica de combate e demais recursos. README e manuais inalterados, GitHub permanece sob atualização manual.
+
+## v0.2.100 — Prévia de movimento compartilhada e indicadores abaixo dos tokens (Foundry VTT v14) — 31/10/2026
+
+- **Sincronização:** durante o arrasto de um token, a régua de distância, o modo de movimento, os espaços restantes e o aviso sobre uso da Ação Padrão são transmitidos em tempo real por socket para todos os clientes que podem ver o token, especialmente o Mestre. Todos recebem a mesma informação mostrada pelo jogador que está movimentando.
+- **Somente prévia:** envio temporário limitado a aproximadamente 12 quadros por segundo. A linha desaparece ao soltar/cancelar/mover a peça ou após período sem atualizações. O rastreador de movimento e a contabilização oficial continuam nativos e inalterados.
+- **Camada visual:** ícones de Ação, Reação e quatro frações do Movimento passam a ser desenhados no canvas primário, em camada entre o mapa e os tokens (sortLayer 650, abaixo dos tokens em 700). Combatentes próximos não ficam encobertos por ícones.
+- **Foco:** um único combatente exibe indicadores por vez: prioridade ao token sob o mouse, depois ao último selecionado. Jogadores veem os recursos apenas dos tokens que controlam; o Mestre pode selecionar ou inspecionar qualquer combatente visível. Sem foco, os indicadores desaparecem.
+- **Compatibilidade:** se a renderização gráfica do cliente estiver indisponível, há fallback de indicadores HTML limitado ao token em foco. A barra de iniciativa, HUD persistente, regras, automações e manuais permanecem inalterados.
+- **Testes:** regressão de preview remoto, parada de arrasto, controles de visibilidade/permissão, zoom, quantidade e ordem dos ícones, e compatibilidade com v0.2.99. ZIP completo para atualização manual no GitHub.
+
 ## v0.2.99 — HUD persistente redimensionável e hotbar inteligente (Foundry VTT v14) — 27/10/2026
 
 - Para o Mestre, o HUD persistente desaparece quando nenhum token está selecionado, liberando automaticamente a hotbar nativa do Foundry para macros. Ao selecionar um token novamente, o HUD persistente retorna e a hotbar nativa é ocultada.

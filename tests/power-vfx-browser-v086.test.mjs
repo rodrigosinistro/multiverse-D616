@@ -54,5 +54,5 @@ test('v086: both item sheets and copied powers support library button and indepe
   assert.match(attached,/document\?\.removeEventListener\?\.\('click',browseHandler,true\)/);
   assert.match(attached,/return result \? updateAttachedPower\(carrier,id,result\) : null/);
   assert.ok(manifest.styles.includes('styles/power-vfx-browser.css'));
-  assert.equal(manifest.version,'0.2.99');
+  assert.equal(manifest.version,'0.2.106');
 });

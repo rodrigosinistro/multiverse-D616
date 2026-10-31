@@ -46,7 +46,8 @@ test('GM tracker checks socket resources atomically after serializing each comba
   const code=readFileSync(new URL('../scripts/combat/turn-tracker.mjs',import.meta.url),'utf8');
   assert.match(code,/validateTurnConsumption\(current, resources, movementMax\)/);
   assert.match(code,/findCombatById\(game\.combats, game\.combat, combatId\)/);
-  assert.match(code,/pendingSpendWrites\.set\(key,job\)/);
+  assert.match(code,/pendingSpendWrites\.set\(key, job\)/);
+  assert.match(code,/return queueCombatantWrite\(payload\.combatId, payload\.combatantId,/);
 });
 
 test('Concentration effects only contain typed changes on Foundry v14',async()=>{

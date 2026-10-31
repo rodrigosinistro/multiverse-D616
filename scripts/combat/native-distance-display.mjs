@@ -5,16 +5,26 @@
 import {
   canShowTokenToUser, sceneDistanceSpaces, distanceStatus, movementPreviewNotice,
 } from './native-distance-core.mjs';
+import {quietFoundryTokenRulers} from './native-token-ruler-visuals.mjs';
 
 const SYSTEM = 'multiverse-d616';
 const SETTING = 'nativeTokenDistance';
 const ROOT_ID = 'm616-native-distance';
+const SOCKET = `system.${SYSTEM}`;
+const SEND_INTERVAL = 80; // 12.5 previews/s at most; never persist drag coordinates
+const PREVIEW_TIMEOUT = 1800;
 const NS = 'http://www.w3.org/2000/svg';
 let targetToken = null;
 let pointer = null;
 let rafPending = false;
 let stage = null;
-
+let outgoing = null;
+let outgoingAt = 0;
+let outgoingHeartbeat = null;
+let remote = null;
+let remoteTimer = null;
+let lastRemoteSequence = new Map();
+let sequence = 0;
 function enabled() {
   try { return game.system?.id === SYSTEM && game.settings.get(SYSTEM, SETTING) !== false; }
   catch { return false; }
@@ -64,6 +74,7 @@ function getRoot() {
 function format(number) {
   return (Math.round((Number(number) || 0) * 100)/100).toLocaleString('pt-BR', {maximumFractionDigits:2});
 }
+
 function sourceToken() {
   const controlled = canvas?.tokens?.controlled ?? [];
   const selected = controlled.find(t => canShowTokenToUser(t,!!game.user?.isGM));
@@ -91,31 +102,154 @@ function hoverTarget(source) {
   return options.find(t=>t && t.id !== source.id &&
     canShowTokenToUser(t,!!game.user?.isGM)) ?? null;
 }
+/** Transient preview messages contain only public map coordinates and text.
+ * Never write Combatant flags or Token documents while dragging. */
+function broadcastPreview(type, data={}) {
+  if (!game.socket || !canvas?.scene?.id) return;
+  game.socket.emit(SOCKET,{
+    type:'m616NativeMovementPreview', operation:type, userId:game.user?.id,
+    sceneId:canvas.scene.id, sequence:++sequence, ...data,
+  });
+}
+function stopOutgoing() {
+  if (!outgoing) return;
+  broadcastPreview('stop',{tokenId:outgoing.tokenId});
+  outgoing=null;
+  outgoingAt=0;
+  if (outgoingHeartbeat) clearInterval(outgoingHeartbeat);
+  outgoingHeartbeat=null;
+}
+function sendDuringDrag(token, origin, end, labelText, secondaryText, secondaryKind, exceeds, anchor) {
+  if (!token || !canvas.scene?.id) return;
+  const now=Date.now();
+  if (outgoing && (outgoing.tokenId!==token.id || outgoing.sceneId!==canvas.scene.id)) stopOutgoing();
+  const data={tokenId:token.id, origin, end, anchor, labelText, secondaryText,
+    secondaryKind, exceeds:!!exceeds};
+  if (outgoing && now-outgoingAt<SEND_INTERVAL) {
+    outgoing={...outgoing,...data};
+    return;
+  }
+  outgoing={sceneId:canvas.scene.id,...data};
+  outgoingAt=now;
+  broadcastPreview('frame',data);
+  // Mouse can remain pressed without moving for several seconds. Keep other
+  // clients' previews alive until release, without retaining state in Foundry.
+  if (!outgoingHeartbeat) {
+    outgoingHeartbeat=setInterval(()=>{
+      if (!outgoing || canvas?.scene?.id!==outgoing.sceneId) return stopOutgoing();
+      broadcastPreview('frame',outgoing);
+    },700);
+    outgoingHeartbeat.unref?.();
+  }
+}
+function visibleRemote() {
+  if (!remote || canvas?.scene?.id!==remote.sceneId) return false;
+  const token=canvas?.tokens?.get?.(remote.tokenId) ??
+    canvas?.tokens?.placeables?.find(t=>t.id===remote.tokenId);
+  return !!token && canShowTokenToUser(token,!!game.user?.isGM);
+}
+function handleSocket(payload, senderId) {
+  if (payload?.type!=='m616NativeMovementPreview' || !enabled() || !canvas?.ready) return;
+  // Socket.IO forwards the emitted payload; unlike some wrapper libraries,
+  // game.socket does not guarantee a separate sender-ID argument.
+  const sender=payload.userId;
+  if (payload.sceneId!==canvas.scene?.id || !payload.tokenId ||
+      typeof sender!=='string' || !sender || sender===game.user?.id ||
+      (senderId && senderId!==sender)) return;
+  const sourceUser=game.users?.get?.(sender);
+  const token=canvas.tokens?.get?.(payload.tokenId) ?? canvas.tokens?.placeables?.find(t=>t.id===payload.tokenId);
+  if (!sourceUser || !token || !canShowTokenToUser(token,!!game.user?.isGM) ||
+      !(sourceUser.isGM || token.document?.testUserPermission?.(sourceUser,'OWNER') ||
+        token.actor?.testUserPermission?.(sourceUser,'OWNER'))) return;
+  const receivedSequence=Number(payload.sequence);
+  if (!Number.isSafeInteger(receivedSequence) || receivedSequence<=0) return;
+  const key=`${sender}:${payload.tokenId}`;
+  if (receivedSequence<=(lastRemoteSequence.get(key)||0)) return;
+  lastRemoteSequence.set(key,receivedSequence);
+  if (lastRemoteSequence.size>100) lastRemoteSequence.clear();
+  if (payload.operation==='stop') {
+    if (remote?.tokenId===payload.tokenId && remote?.userId===sender) {
+      remote=null;
+      if (remoteTimer) clearTimeout(remoteTimer);
+      remoteTimer=null;
+      schedule();
+    }
+    return;
+  }
+  if (payload.operation!=='frame') return;
+  const validPoint=point => point && ['x','y','elevation'].every(k=>
+    Number.isFinite(point[k]) && Math.abs(point[k])<10000000);
+  if (!validPoint(payload.origin) || !validPoint(payload.end)) return;
+  remote={
+    tokenId:payload.tokenId, sceneId:payload.sceneId,userId:sender,
+    origin:payload.origin,end:payload.end,
+    anchor:validPoint(payload.anchor) ? payload.anchor : undefined,
+    labelText:String(payload.labelText||'').slice(0,180),
+    secondaryText:String(payload.secondaryText||'').slice(0,180),
+    secondaryKind:['exceeded','action','warning'].includes(payload.secondaryKind)?payload.secondaryKind:'',
+    exceeds:!!payload.exceeds,
+  };
+  if (remoteTimer) clearTimeout(remoteTimer);
+  remoteTimer=setTimeout(()=>{remote=null;remoteTimer=null;schedule();},PREVIEW_TIMEOUT);
+  remoteTimer.unref?.();
+  schedule();
+}
+function showPreview(origin, end, labelText, secondaryText='', secondaryKind='', exceeds=false, anchor=null) {
+  if (!origin || !end) return clearRoot();
+  const from=pointOnScreen(origin);
+  const to=pointOnScreen(end);
+  const anchorPoint = anchor ? pointOnScreen(anchor) : null;
+  if (!from || !to) return clearRoot();
+  const root=getRoot();
+  root.hidden=false;
+  root.querySelector('.m616-distance-guide').setAttribute('d',`M${from.x},${from.y} L${to.x},${to.y}`);
+  const pill=root.querySelector('.m616-distance-pill');
+  pill.classList.toggle('is-exceeded',!!exceeds);
+  pill.textContent=labelText;
+  if (secondaryText) {
+    const secondary=document.createElement('div');
+    secondary.className=`m616-distance-secondary is-${secondaryKind}`;
+    secondary.textContent = secondaryText;
+    pill.append(secondary);
+  }
+  const pillWidth=Math.min(window.innerWidth-16,pill.offsetWidth||260);
+  const pillHeight=pill.offsetHeight||35;
+  const anchorX = anchorPoint?.x ?? to.x;
+  const anchorY = anchorPoint?.y ?? to.y;
+  // Keep the distance directly above the 19px resource circles (whose center
+  // is 12px above the top edge of the token), with ~4px breathing room.
+  pill.style.left=`${Math.max(8,Math.min(window.innerWidth-pillWidth-8,anchorX-pillWidth/2))}px`;
+  pill.style.top=`${Math.max(8,Math.min(window.innerHeight-pillHeight-8,anchorY-pillHeight-26))}px`;
+}
+function showRemotePreview() {
+  if (!visibleRemote()) return clearRoot();
+  const token = canvas.tokens?.get?.(remote.tokenId) ?? canvas.tokens?.placeables?.find(t => t.id===remote.tokenId);
+  const anchor = remote.anchor ?? (token && {
+    x:token.x+token.w/2,y:token.y,elevation:Number(token.document?.elevation ?? 0),
+  });
+  return showPreview(remote.origin,remote.end,remote.labelText,remote.secondaryText,
+    remote.secondaryKind,remote.exceeds,anchor);
+}
 function render() {
   // Global Foundry canvas may not yet be initialized during browser loading.
-  if (!enabled() || !globalThis.canvas?.ready) return clearRoot();
+  if (!enabled() || !globalThis.canvas?.ready) { return clearRoot(); }
   const source = sourceToken();
-  if (!source) return clearRoot();
+  if (!source && visibleRemote()) return showRemotePreview();
+  if (!source) { return clearRoot(); }
   const dragged = canvas?.tokens?._draggedToken;
   const dragging = !!dragged && dragged.id === source.id && !!pointer;
   const target = dragging ? null : hoverTarget(source);
   // Only active hover measurements or active drag previews have a visual path.
   // Completed movement is stored by the turn tracker, not by this overlay.
-  if (!dragging && !target) return clearRoot();
+  if (!dragging && !target) {
+    if (visibleRemote()) return showRemotePreview();
+    return clearRoot();
+  }
   const origin = center(source);
   const end = dragging
     ? {...tokenAtPointerPosition(pointer), elevation:Number(source.document?.elevation ?? 0)}
     : center(target);
   if (!origin || !end || !Number.isFinite(end.x) || !Number.isFinite(end.y)) return clearRoot();
-  const root = getRoot();
-  root.hidden = false;
-  const guide = root.querySelector('.m616-distance-guide');
-  const pill = root.querySelector('.m616-distance-pill');
-  const from = pointOnScreen(origin);
-  const to = pointOnScreen(end);
-  if (!from || !to) return clearRoot();
-  guide.setAttribute('d',`M${from.x},${from.y} L${to.x},${to.y}`);
-
   const distance = sceneDistanceSpaces(canvas.scene,origin,end,canvas.grid,canvas.dimensions?.size);
   const label = `Distância: ${format(distance)} espaços`;
   let secondaryText = '';
@@ -124,7 +258,7 @@ function render() {
   if (!dragging) {
     // Same short hover measurement inside and outside combat.
     secondaryText = '';
-    pill.classList.remove('is-exceeded');
+
   } else {
     const combatant = combatantForToken(source);
     const state = combatant && game.multiverseD616?.turnTracker?.getState?.(combatant);
@@ -148,22 +282,14 @@ function render() {
       secondaryKind = note?.kind ?? '';
     }
     labelText = previewLabel;
-    pill.classList.toggle('is-exceeded',result.exceeds);
+    secondaryKind = secondaryKind || '';
+    var exceeds = result.exceeds;
   }
-  // Keep a fixed two-line structure; avoid HTML injection from token names.
-  pill.textContent = labelText;
-  if (secondaryText) {
-    const secondary = document.createElement('div');
-    secondary.className = `m616-distance-secondary is-${secondaryKind}`;
-    secondary.textContent = secondaryText;
-    pill.append(secondary);
-  }
-  const pillWidth = Math.min(window.innerWidth - 16,pill.offsetWidth || 260);
-  const pillHeight = pill.offsetHeight || 35;
-  const left = Math.max(8, Math.min(window.innerWidth - pillWidth - 8,to.x + 12));
-  const top = Math.max(8,Math.min(window.innerHeight-pillHeight-8,to.y-pillHeight-7));
-  pill.style.left = `${left}px`;
-  pill.style.top = `${top}px`;
+  const anchor = dragging
+    ? {x:source.x + source.w/2, y:source.y, elevation:Number(source.document?.elevation ?? 0)}
+    : target ? {x:target.x + target.w/2, y:target.y, elevation:Number(target.document?.elevation ?? 0)} : null;
+  showPreview(origin,end,labelText,secondaryText,secondaryKind,!!exceeds,anchor);
+  if (dragging) sendDuringDrag(source,origin,end,labelText,secondaryText,secondaryKind,!!exceeds,anchor);
 }
 function schedule() {
   if (rafPending) return;
@@ -189,6 +315,7 @@ function handlePointerMove(event) {
   schedule();
 }
 function finishPreview() {
+  stopOutgoing();
   pointer = null;
   targetToken = null;
   clearRoot();
@@ -207,9 +334,11 @@ function bindStage() {
 }
 function handleTokenUpdate(_tokenDoc, changes) {
   if ('x' in (changes ?? {}) || 'y' in (changes ?? {}) || 'elevation' in (changes ?? {})) {
-    // A movement has committed: clear its line immediately, but do not alter
-    // Combatant.movementUsed or the four compact combat arrows.
-    finishPreview();
+    if (remote?.tokenId===_tokenDoc?.id) {remote=null; if(remoteTimer) clearTimeout(remoteTimer);remoteTimer=null;}
+    // A committed move of the dragged token ends its preview. A different
+    // combatant moving must not interrupt a player's ongoing drag.
+    if (!outgoing || outgoing.tokenId===_tokenDoc?.id) finishPreview();
+    else schedule();
   } else schedule();
 }
 function checkHoverDistanceCompatibility() {
@@ -221,10 +350,16 @@ Hooks.once('init',()=>game.settings.register(SYSTEM, SETTING, {
   name:'Distância e deslocamento nativos nos tokens (D616)',
   hint:'Mede distâncias entre tokens e mostra a prévia do deslocamento apenas durante o arrasto, com a velocidade de combate do modo selecionado. O movimento gasto continua indicado pelas quatro setas. Se usar Hover Distance, desative um dos medidores para evitar duplicação.',
   scope:'client',config:true,type:Boolean,default:true,
-  onChange:()=>{finishPreview();},
+  onChange:()=>{remote=null;if(remoteTimer)clearTimeout(remoteTimer);remoteTimer=null;finishPreview();},
 }));
-Hooks.once('ready',()=>{checkHoverDistanceCompatibility();schedule();});
-Hooks.on('canvasReady',bindStage);
+Hooks.once('ready',()=>{
+  quietFoundryTokenRulers(enabled);
+  checkHoverDistanceCompatibility();
+  game.socket?.on?.(SOCKET,handleSocket);
+  schedule();
+});
+Hooks.on('canvasReady',()=>{quietFoundryTokenRulers(enabled);remote=null;if(remoteTimer)clearTimeout(remoteTimer);remoteTimer=null;bindStage();});
+Hooks.on('canvasTearDown',()=>{stopOutgoing();remote=null;if(remoteTimer)clearTimeout(remoteTimer);remoteTimer=null;lastRemoteSequence.clear();clearRoot();});
 Hooks.on('canvasPan',schedule);
 Hooks.on('controlToken',()=>{targetToken=null;schedule();});
 Hooks.on('hoverToken',(token,hovered)=> {
@@ -237,7 +372,7 @@ Hooks.on('deleteToken',finishPreview);
 Hooks.on('updateCombatant',schedule);
 Hooks.on('updateCombat',schedule);
 Hooks.on('deleteCombat',finishPreview);
-Hooks.on('moveToken',finishPreview);
+Hooks.on('moveToken',(tokenDoc)=> {if(!outgoing || outgoing.tokenId===tokenDoc?.id)finishPreview();else schedule();});
 if (typeof window !== 'undefined') {
   window.addEventListener('resize',schedule);
   document.addEventListener('pointermove',handlePointerMove,{passive:true});

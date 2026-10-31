@@ -71,8 +71,10 @@ test('tracker reads combatant current movement action everywhere',()=>{
  assert.doesNotMatch(tracker,/actorMovementMaximum\(combatantActor\(combatant\)\)/);
  assert.match(tracker,/Hooks\.on\("moveToken"/);
  const compact=text('../scripts/combat/compact-combat-display.mjs');
- assert.match(compact,/combatantMovementInfo\(c\)/);
- assert.match(compact,/getState\(c\)\?\.movementMax/);
+ assert.doesNotMatch(compact,/renderTokenUnderlays\s*\(/);
+ const privateHud=text('../scripts/combat/hud-resource-state.mjs');
+ assert.match(privateHud,/movementArrowFill/);
+ assert.match(privateHud,/tracker.getState\(combatant\)/);
 });
 test('native mode listens hover, drag, move, pan and can be disabled',()=>{
  const src=text('../scripts/combat/native-distance-display.mjs');
@@ -86,9 +88,9 @@ test('native mode listens hover, drag, move, pan and can be disabled',()=>{
 });
 test('manifest and README policy, versioned release',()=>{
  const manifest=JSON.parse(text('../system.json'));
- assert.equal(manifest.version,'0.2.99');
+ assert.equal(manifest.version,'0.2.106');
  assert.ok(manifest.esmodules.includes('scripts/combat/native-distance-display.mjs'));
  assert.ok(manifest.styles.includes('styles/native-distance-display.css'));
- assert.ok(text('../CHANGELOG.md').startsWith('## v0.2.99'));
+ assert.ok(text('../CHANGELOG.md').startsWith('## v0.2.106'));
  assert.ok(!text('../README.md').includes('v0.2.90'));
 });
