@@ -49,7 +49,7 @@ export function ricoOriginalContext(item,actor,targets,sourceToken,scene,grid){
    turn:game.combat?.started?Number(game.combat.turn):null};
 }
 export function ricoEligibility({source,ready,actor,item,user,combat}={}){
- if(!automationEnabled('extraAttacks'))return {ok:false,reason:'Ataques adicionais desativados nas configurações.'};
+ if(!automationEnabled('extraAttacks',undefined,item?.name))return {ok:false,reason:'Ricochetes desativados pelo Mestre.'};
  if(!isRicochetPower(item)||!source?.rolls?.[0])return {ok:false,reason:'Não é um ataque de ricochete.'};
  const chain=source.getFlag(SYSTEM,'ricoShield');
  if(!chain?.lastTargetUuid||!Array.isArray(chain.visited))return {ok:false,reason:'Ataque sem sequência de ricochetes.'};
@@ -83,7 +83,7 @@ export async function confirmRicoShieldDamage(damageMessage,action,results){
  const sourceId=damageMessage?.getFlag?.(SYSTEM,'sourceMessageId');
  const source=sourceId?game.messages?.get?.(sourceId):null;
  const {actor,item}=source?powerForMessage(source):{};
- if(!isRicochetPower(item)||!actor)return false;
+ if(!isRicochetPower(item)||!actor||!automationEnabled('extraAttacks',undefined,item.name))return false;
  const chain=source.getFlag(SYSTEM,'ricoShield');
  const target=chain?.lastTargetUuid;
  if(!target||source.getFlag(SYSTEM,'ricoShieldConsumed'))return false;

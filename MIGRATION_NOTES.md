@@ -1,3 +1,67 @@
+## v0.2.120 — Central 5.0: Biblioteca de Automações (2026-11-02)
+
+- A biblioteca é criada vazia como configuração de mundo (`customAutomationLibrary`), sem migração de regras nem ativação automática. Regras do Mestre existentes seguem funcionando sem alterações.
+- Na aba **Minhas Automações**, cada regra tem **Guardar modelo**; o botão **Exportar minhas regras** baixa um JSON com todas as regras do mundo.
+- Na nova aba **Biblioteca**, **Importar JSON** adiciona modelos após validação e confirmação, ignora duplicatas idênticas, sem substituir dados; **Exportar biblioteca** baixa o conjunto de modelos.
+- **Adicionar às minhas regras** instala uma cópia inicialmente **desativada**, para revisão do Mestre. Modelos são dados puros; scripts e efeitos não reconhecidos são rejeitados.
+- Arquivos têm formato `multiverse-d616.automations`, versão 1; limite 100 modelos por biblioteca/arquivo, máximo 1 MB por importação; cópias preservam gatilhos, condições, até 8 efeitos e suas durações, mas não IDs de origem nem ativação.
+- Para trocar de mundo: exporte JSON no mundo de origem, carregue o JSON na aba Biblioteca do outro mundo, instale os modelos desejados e ative cada um intencionalmente.
+- Controles nativos de automação e dados das fichas/compêndios não são incluídos no arquivo exportado. Sem publicação automática no GitHub; manuais independentes inalterados.
+
+## v0.2.119 — Dano contínuo por turno
+
+- Nenhuma migração manual: as automações salvas antes da 0.2.119 continuam válidas, incluindo suas sequências de efeitos e edições automáticas.
+- Novo efeito `ongoingDamage` com `ongoingAmount` (1–100), `ongoingResource` (`health`/`focus`) e `ongoingTurns` (1–20); cria ActiveEffect temporário com a flag `multiverse-d616.customAutomationOngoing`.
+- Somente no combate ativo com o personagem na iniciativa; dispara no **próximo início de turno** do alvo após a aplicação, não no próprio instante do ataque. A mesma regra e mesmo efeito não se acumulam enquanto durar no mesmo combatente.
+- A cada tick o Mestre ativo aplica dano pelo MMDR nativo, respeitando RD e proteção pessoal, sem gerar novo botão de confirmação por turno. O chat mostra valor efetivo e tempo restante. Um efeito existente continua mesmo após desativar a criação de novas automações.
+- Ao encerrar o combate, os efeitos contínuos criados pela Central são limpos. Faça backup do mundo antes de instalar e valide uma regra de Elemental Blast em um combate de teste.
+
+## v0.2.118 — Multiplicadores de dano na Central
+
+- Não exige migração. Regras existentes de `customAutomationRules`, incluindo bônus fixos/por atributo, continuam válidas; o novo campo `damageMultiplierFactor` usa opções fechadas ×2 ou ×3 apenas quando `damageBonusMode` é `multiplier`.
+- O multiplicador atua sobre o dano calculado depois da Redução de Dano e das regras/Fantástico do poder, antes de gerar o card MMDR. O maior multiplicador prevalece quando duas regras se aplicam ao mesmo alvo; não há empilhamento entre regras. Os bônus fixos e por atributo continuam sendo somados à base como na v0.2.117.
+- Cards de dano gerados antes da atualização mantêm seus valores antigos; é necessário realizar um novo ataque após ajustar a automação. Faça backup do mundo antes de atualizar e valide em uma cena de teste.
+
+## v0.2.117 — Bônus de dano personalizados
+
+- Nenhuma migração obrigatória. Automações 0.2.109–0.2.116 permanecem aceitas. A ação opcional `damageBonus` usa `damageBonusMode`, `damageBonusAmount` e `damageAbility`, sempre validada e restrita a `targetHit`.
+- O bônus altera o cálculo do card de dano apenas quando este é gerado. Cards já criados não são reescritos; altere a regra e gere novo ataque/card para refletir alterações.
+- O valor é somado como bônus de dano base antes do fator especial/Fantástico e respeita a Redução de Dano nativa (que reduz o Multiplicador de Dano), as barreiras e a confirmação do MMDR. Não é subtração adicional de Health.
+
+## v0.2.116 — Sequências de efeitos
+
+- **Não é necessária migração manual.** As regras anteriores (campos planos `effectType`, `effectStatus`, `healAmount`, `message` etc.) são interpretadas como uma lista com uma única ação. Ao salvar pelo editor da v0.2.116, a nova propriedade `effects` armazena as ações adicionais, preservando os campos compatíveis da primeira ação.
+- Cada regra suporta até oito ações. Em gatilhos de ataque por alvo, o controle `customTargetExecutions` passa a acompanhar cada ação de regras com múltiplos efeitos, mas respeita as chaves de execução antigas para não repetir efeitos em cards de combate já processados.
+- Animações novas referenciam a configuração visual já existente no poder, via Sequencer; continuam opcionais e não alteram fichas/compêndios.
+- **Dano adicional customizado** não faz parte desta versão: continue usando o cálculo e aplicação de dano nativos do card MMDR.
+- Faça backup do mundo, instale o ZIP integral e teste uma regra com condição + mensagem em um combate antes de publicar manualmente.
+
+## v0.2.115 — Salvamento seguro ao editar regras
+
+- Não exige migração. As regras do mundo em `customAutomationRules` permanecem no mesmo formato.
+- Agora, fechar a Central ou escolher outra regra **salva automaticamente as edições de uma regra existente**. Para criar uma regra nova, continue clicando em **Salvar automação**.
+- Se houver um valor inválido ou ocorrer um erro de gravação, a Central permanece aberta, evitando descarte silencioso. A dica abaixo do formulário mostra se há alterações pendentes.
+- A aplicação retroativa de duração a efeitos já ativos não acontece; apenas alterações na regra são salvas.
+
+## v0.2.114 — Duração e avisos de condições
+
+- As regras antigas em `customAutomationRules` continuam válidas: duração ausente = `manual`.
+- Opções novas `conditionDurationMode` (`manual`, `turns`, `rounds`), `conditionDurationCount` (1–20) e `conditionRemoval` (até 200 caracteres); somente condições utilizam estas opções.
+- Efeitos temporários novos usam flags `multiverse-d616.customAutomationCondition` e são removidos automaticamente pelo Mestre ativo; nenhuma modificação é feita nas rotinas nativas de duração e Concentração.
+- O chat mostra uma mensagem consolidada por início de turno quando existem condições ativas. Efeitos já ativos sem estas flags mantêm a duração original.
+
+## v0.2.113 — Central de Automações 4.1
+
+**Sem migração automática de regras.** As regras da versão 0.2.112 continuam salvas sem mudança de comportamento. Ao editar uma regra de condição com o gatilho `Ao rolar um poder`, o painel sinaliza que seu destinatário é o próprio atacante. Para converter uma regra como `Fast Attack - Teste` em um efeito no alvo, use **Converter para efeito no alvo atingido**, confira `Resultado necessário` e clique em **Salvar automação**. Uma exigência antiga de M passa a **Sucesso Fantástico contra a defesa do alvo**; ataques com dano aguardam confirmação do Mestre. Esta conversão é explícita e não se aplica a qualquer regra sem intervenção do Mestre. Faça backup do mundo antes de atualizar.
+
+## v0.2.112 — Central de Automações 4.0
+
+Nenhuma migração manual é necessária. As configurações `customAutomationRules` e `customAutomationsEnabled` são preservadas. Novos campos `hitOutcome` e `statusSubject` são preenchidos por padrão em regras existentes, sem alterar gatilhos antigos. A nova opção de gatilho por alvo utiliza confirmação de dano e seleção de alvos nativas. Regras antigas continuam aplicando efeitos ao lançador nos gatilhos anteriores.
+
+## v0.2.111 — Central de Automações 3.2
+
+Não exige migração de dados do mundo. As automações salvas nas versões 0.2.109 e 0.2.110 continuam válidas, inclusive as passivas de Edge/Trouble. A opção de Edge/Trouble na rolagem de poder só atua no próprio ataque, sem alterar o Item e sem somar novamente um Edge/Trouble nativo idêntico. Faça backup do mundo, atualize o sistema e recarregue o Foundry v14. Teste a janela no Foundry antes de publicar no GitHub.
+
 ## v0.2.76
 
 Nenhuma migração de dados. Os poderes permanentes passivos armazenados em `flags.multiverse-d616.attachedPowers` continuam ativos pela regra de equipamentos da v0.2.75; apenas os atalhos de **uso** são filtrados da mesma forma que no personagem. Atualize o sistema e recarregue a sessão (Ctrl+F5). Fichas e compêndios permanecem inalterados.

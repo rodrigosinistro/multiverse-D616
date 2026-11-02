@@ -1,3 +1,124 @@
+## v0.2.120 — Central de Automações 5.0: Biblioteca, exportação e importação (2026-11-02)
+
+- **Biblioteca de Automações:** nova aba independente da lista de automações ativas, com armazenamento de modelos no mundo, navegação, instalação de cópias e remoção confirmada.
+- **Guardar modelo:** cada regra do Mestre pode ser guardada como modelo inativo, preservando gatilho, poder, condição, resultado, todas as ações ordenadas (até 8), durações, recuperação, dano extra e dano contínuo.
+- **Compartilhamento JSON:** exportação de todas as automações pessoais ou dos modelos da biblioteca; importação de arquivos JSON validados, com confirmação do número de novos modelos e duplicatas ignoradas. Formato próprio versionado e sem código executável.
+- **Instalação segura:** importar não executa nada; instalar um modelo cria uma nova regra desativada e não altera as regras nativas nem substitui regras pré-existentes. Identidades dos mundos anteriores não são reutilizadas.
+- **Validação:** arquivo de no máximo 1 MB e 100 entradas; todos os campos passam pelo mesmo normalizador e whitelist do criador; erros de importação cancelam todo o lote; duplicatas idênticas não sobrescrevem, variantes são permitidas; apenas Mestre pode modificar.
+- **Compatibilidade:** regras legadas continuam válidas e são convertidas em sequências de um efeito somente ao exportar. Configurações existentes preservadas; sem alteração do motor de combate/MMDR, compêndios ou manuais.
+
+## v0.2.119 — Central 4.7: dano contínuo personalizado (2026-11-02)
+
+- **Criador de Automações:** novo tipo `Dano contínuo por turno (Health/Focus)` com quantidade por turno (1–100), recurso afetado (Health/Focus) e duração de 1–20 turnos do personagem atingido; disponível como efeito principal ou adicional das regras do Mestre.
+- **Efeito controlado por combate:** cria um ActiveEffect temporário com flags próprias. Começa a causar dano no próximo início de turno do destinatário, acompanha a quantidade de ativações e remove-se ao concluir ou encerrar o combate. Não modifica nem prolonga condições nativas existentes.
+- **Motor/MMDR:** cada tick reutiliza a aplicação nativa de dano, com tratamento de Health/Focus, redução de dano (5 por nível, conforme dano contínuo do HUD) e proteções pessoais; dano pode ser absorvido ou reduzido a zero. Não cria um card de confirmação adicional a cada turno, pois se trata de dano recorrente automático.
+- **Chat:** publica o dano efetivo e os turnos restantes no início do turno afetado. Só o Mestre ativo processa os efeitos. Travamento e checkpoint por turno evitam lançamentos duplicados ao receber eventos de combate repetidos.
+- **Compatibilidade:** automações anteriores continuam com seus formatos originais. A nova opção não permite scripts nem ignora outros efeitos; sem combate ativo ou personagem na iniciativa, a regra não cria um dano recorrente sem duração verificável. Documentação e testes atualizados.
+
+## v0.2.118 — Central 4.6: multiplicadores personalizados de dano (2026-11-02)
+
+- **Novo modo de dano no Criador:** em `Modificar dano (cálculo nativo/MMDR)`, além de valor fixo e atributo, o Mestre pode escolher **Multiplicar dano calculado ×2 ou ×3**. Exige gatilho `Após acertar um alvo` e permite filtros por sucesso comum/Fantástico e condição no atacante/alvo.
+- **Integração com o motor nativo:** bônus fixos e de atributos entram na base do cálculo antes das regras especiais. O multiplicador personalizado atua **sobre o dano já calculado** (depois da RD e do fator especial/Fantástico). `damage` e `rawDamage` são multiplicados conjuntamente antes de criar o card e seguem para MMDR, barreiras e confirmação pelo Mestre.
+- **Sem duplicidade/exagero:** caso mais de uma regra multiplicativa se aplique ao mesmo alvo, vale **apenas o maior multiplicador** (×2 ou ×3); eles não se multiplicam entre si. Dano originalmente zero permanece zero. Multiplicador não cria ataque nem subtrai Health diretamente.
+- **Editor atualizado:** opções de ×2 e ×3 no efeito principal e nos efeitos adicionais, prévia da regra, persistência, edição, salvamento automático e compatibilidade com as regras existentes sem migração manual. A sequência de condições, cura, mensagens e VFX mantém o fluxo anterior.
+- **Escopo:** modificadores de dano para ataques de poderes com alvos confirmados; não adiciona dano contínuo, nem modifica a categoria Health/Focus, nem altera poderes nativos ou compêndios.
+- **Entrega:** ZIP completo instalável para Foundry v14; README e MIGRATION_NOTES atualizados, sem modificar os manuais nem publicar no GitHub.
+
+## v0.2.117 — Central 4.5: dano adicional personalizado no cálculo nativo (2026-11-02)
+
+- **Novo efeito no Criador:** `Dano adicional (cálculo nativo/MMDR)` configurável dentro das sequências da Central, para o gatilho **Após acertar um alvo**. Modos: valor fixo de 1 a 100 ou valor do atributo Melee, Agility, Resilience, Vigilance, Ego ou Logic do atacante. Podem coexistir até oito efeitos por regra.
+- **Bônus condicionais:** o Mestre pode exigir acerto ou Sucesso Fantástico confirmado e uma condição no lançador ou no alvo. O bônus é calculado isoladamente para cada alvo efetivamente atingido, usando o resultado e a defesa já resolvidos pelo motor. Erros, alvos pendentes e poderes diferentes não recebem o modificador.
+- **Integração antes da confirmação:** o bônus entra no parâmetro de dano da própria rotina `calculatePowerDamage` ao GERAR o card, somado aos bônus existentes, antes do fator de dano especial/Fantástico e com RD nativa aplicada na fórmula. `rawDamage` para barreiras e `damage` para MMDR já chegam atualizados ao card. Não há segundo débito de Health/Focus após o Mestre confirmar.
+- **Casos especiais:** poderes com fator zero continuam sem dano em sucessos comuns. Dano por atributo usa o valor atual da ficha no momento de criar o card; valores negativos não geram bônus. Bônus por efeito limitados e total protegido contra números fora dos limites.
+- **Fluxo MMDR preservado:** proteção/barreiras, meio dano, RD, diferenciação Health/Focus, decisões individuais de alvo, confirmação do Mestre e proteção contra duplicidade seguem pelo pipeline existente. Efeitos adicionais (Condição, Chat, Cura, Sequencer) mantêm sua execução pós-confirmação.
+- **Compatibilidade:** regras de versões anteriores lidas sem migração; o novo tipo só pode ser criado com gatilho por alvo. HUD, compêndios, dados de mundo e manuais mantidos. ZIP completo entregue para instalação manual, sem publicação no GitHub.
+- **Limitação:** esta etapa acrescenta dano à fórmula do poder. Não cria um ataque separado, não altera multiplicadores/RD arbitrariamente, não inventa dano contínuo e não converte ataques sem dano em ataques ofensivos.
+
+## v0.2.116 — Central 4.4: múltiplos efeitos por automação (2026-11-02)
+
+- **Editor de sequência:** o Mestre pode associar **1 a 8 efeitos ordenados** à mesma regra; botões para adicionar, remover e mover efeitos. Cada condição recebe sua própria duração (manual, turnos ou rodadas) e instrução de remoção; cada cura/mensagem tem seu valor/texto próprio.
+- **Motor nativo compartilhado:** uma regra por Sucesso Fantástico validado pode aplicar condição, recuperar Health e publicar mensagem em ordem, para cada alvo realmente atingido, depois da confirmação de dano do MMDR. Gatilhos de turno e rolagem de poder continuam usando as rotinas anteriores.
+- **Animação opcional:** novo efeito para reproduzir a animação já configurada na aba Visuais do poder via Sequencer, somente para gatilhos de poder ou acerto. Não se configura arquivo JS nem mídia arbitrária na Central; sem módulo ou animação válida a etapa visual é ignorada, sem bloquear os demais efeitos.
+- **Edge/Trouble:** podem compor sequências de rolagem de poder, mas entram **antes** da rolagem; efeitos posteriores executam após o evento de rolagem. Regras passivas continuam limitadas a modificadores de rolagem e Edge/Trouble pós-acerto continua proibido.
+- **Antiduplicação granular:** para ataques confirmados, cada efeito possui sua própria chave de execução por regra e alvo, impedindo uma segunda cura/mensagem se outra etapa falhar e precisar ser repetida. Cards antigos com chave única são respeitados.
+- **Compatibilidade:** regras existentes das versões 0.2.109–0.2.115, com somente um efeito, são lidas como sequência de um efeito, sem regravar configurações do mundo na instalação. Os 107 controles nativos, HUD, compêndios e motor de dano permanecem inalterados.
+- **Limitação intencional:** esta versão **não adiciona dano numérico personalizado**. Dano adicional exige integração específica ao cálculo/redução e confirmação do MMDR para não bypassar barreiras nem aplicar DR duas vezes.
+- ZIP integral entregue para instalação manual, sem publicação automática no GitHub. Manuais do Mestre e do Jogador permanecem independentes e sem alteração.
+
+## v0.2.115 — Central 4.3: salvar edições ao fechar ou trocar de regra (2026-11-02)
+
+- **Correção de perda de edições:** ao editar uma regra existente, o fechamento da Central e a seleção de outra regra aguardam o salvamento dos campos modificados no mundo. O botão **Salvar automação** continua disponível.
+- **Aviso de salvamento:** o editor diferencia configuração salva, alterações pendentes e nova regra. Novas regras continuam exigindo **Salvar automação** para evitar criar automações incompletas ao fechar.
+- **Erros não são silenciosos:** se a validação do formulário ou a gravação de configurações falhar, a Central não fecha nem troca de regra, preservando os dados digitados para correção.
+- **Compatibilidade:** nenhuma alteração nos gatilhos, efeitos, automações nativas, durações, condições existentes ou chaves persistidas. O salvamento continua limitado ao Mestre.
+
+## v0.2.114 — Central 4.2: duração e avisos de condições (2026-11-02)
+
+- Criador de Automações: ao aplicar condição, o Mestre escolhe duração até remoção, de 1 a 20 turnos do alvo ou de 1 a 20 rodadas. Pode informar também uma orientação personalizada para remover a condição.
+- Condições criadas pela Central passam a usar ActiveEffects nativos do Foundry v14, com metadados de duração em flags e expiração por avanço real de combate. Condições já presentes não são substituídas nem prorrogadas.
+- No começo do turno, o chat informa as condições ativas do personagem, tempo restante e forma de remoção: regras nativas verificadas para Sangrando, Em Chamas e Envenenado, ou orientação do Mestre quando fornecida. Não são inventados testes ou TNs para outras condições.
+- Evita notificações duplicadas por turno, preserva autorizações do Mestre ativo, mantém condições permanentes e remove efeitos temporários personalizados ao apagar o combate.
+- Regras salvas nas versões anteriores recebem por padrão duração até remoção, sem migração destrutiva; todos os controles e recursos anteriores permanecem intactos.
+- Observação: turnos e rodadas exigem combate ativo e participação do alvo na iniciativa; efeitos já existentes anteriores à versão não passam a expirar retroativamente.
+
+## v0.2.113 — Central de Automações 4.1: destino explícito e teste Fast Attacks (2026-11-02)
+
+- **Correção de experiência do Mestre:** o gatilho **Ao rolar um poder** passa a avisar claramente que aplicar condição/recuperar Health age no **próprio personagem**, não no alvo. O dado M sozinho não é um acerto.
+- **Conversão guiada de regras existentes:** botão **Converter para efeito no alvo atingido** no editor, preservando nome, poder e efeito. Quando a regra exigia M, a conversão exige **Sucesso Fantástico confirmado contra o alvo**; caso contrário, exige acerto comum. O Mestre revisa e salva, sem migração silenciosa.
+- **Detecção do dado Marvel:** a execução do gatilho de M também lê o dado original da estrutura D616 serializada no ChatMessage, evitando depender exclusivamente de propriedades opcionais da mensagem.
+- **Regressão com Fast Attacks:** novo teste de fluxo completo com M, acerto confirmado, confirmação de dano pelo Mestre e condição Confuso no alvo; deduplicação e preservação do atacante verificadas.
+- **Compatibilidade:** mantém as 107 exceções nativas, regras personalizadas anteriores, dados de mundo, mecanismos de combate/Concentração, manuais e compêndios. Nenhuma automação existente é alterada automaticamente; não há publicação no GitHub.
+
+## v0.2.112 — Central de Automações 4.0: seleção de poderes e integração por alvo (2026-11-02)
+
+- **Seletor de poderes:** lista pesquisável pelas opções nativas do navegador, a partir dos Itens de Poder dos atores do mundo e dos índices dos compêndios de Itens acessíveis ao Mestre. Mantido campo manual para homebrew ou poderes ainda fora do catálogo; nenhuma ficha ou compêndio é modificado.
+- **Novo gatilho “Após acertar um alvo”:** a regra utiliza `getMarvelOutcome`, `normalizeConditionDefense` e `adjudicateTargetOutcome` do motor existente. Mestre escolhe qualquer acerto ou Sucesso Fantástico confirmado por alvo; M no dado isolado não basta.
+- **Alvo da automação:** aplicar uma condição, recuperar Health ou enviar mensagem para cada alvo validado, verificando condição opcional no lançador ou no alvo. Edge/Trouble permanece exclusivamente pré-rolagem.
+- **Dano e múltiplos alvos:** para ataques com dano, o efeito aguarda o card MMDR confirmado e jamais dispara em dano bloqueado; condições de ataque sem dano são resolvidas contra defesas reais. Decisões ambíguas de Edge/Trouble aguardam a revisão manual do Mestre. Barreiras atravessadas não liberam efeitos do alvo protegido.
+- **Segurança e repetição:** cada automação por alvo executa uma vez por alvo e por card original; edição de dados, rerender do chat e confirmação repetida não reaplicam curas. Efeitos já criados não são automaticamente revertidos quando um resultado é alterado posteriormente. Regras de Concentração e duração continuam exclusivas do mecanismo nativo, sem inferência a partir do texto do poder.
+- **Compatibilidade:** 107 controles nativos e regras das versões 0.2.109–0.2.111 mantidos. Configuração de mundo sem migração destrutiva, testes de regressão atualizados. Manuais preservados; GitHub não publicado.
+
+## v0.2.111 — Central de Automações 3.2: Edge/Trouble para poderes ativos (2026-11-01)
+
+- **Criador de Automações:** gatilho "Ao rolar um poder" agora oferece Edge e Trouble no próprio ataque. Escolha o nome do poder e o escopo (corpo a corpo, à distância ou todos) para executar antes da rolagem, integrado ao resolvedor de condições.
+- **Elemental Blast:** exemplo pronto de Edge à distância. Como o poder de catálogo já concede Edge nativo, o criador evita contabilizar a mesma vantagem duas vezes quando a regra personalizada é idêntica.
+- **Condições:** ampliadas as opções de pré-requisito e aplicação para as condições regulares do catálogo do sistema; reservados para seus fluxos próprios Concentração, Agarrado (físico/de poder) e Escudo Arremessado.
+- **Validação:** Edge/Trouble condicionado ao resultado Marvel M da própria rolagem é rejeitado (o bônus deve existir antes de lançar os dados). Gatilhos de turno continuam com efeitos instantâneos e não simulam bônus temporários futuros.
+- Mantidas as regras existentes, os oito grupos nativos, as 107 exceções, os poderes passivos e o estado de rolagem da v0.2.110. Configurações anteriores preservadas; não exige migração.
+
+## v0.2.110 — Criador de Automações 3.1: poderes passivos e Edge/Trouble (Foundry VTT v14) — 01/11/2026
+
+- **Blazing Fast Fists e poderes permanentes:** novo gatilho `Passiva: ao realizar um ataque`. Exige que o personagem tenha o poder indicado em seus Itens de Poder; enquanto o poder estiver na ficha, o modificador é consultado em cada ataque, sem clicar/rolar a própria habilidade passiva. Quando o poder é retirado, o modificador para de existir.
+- **Resultados personalizados:** novas ações passivas `Conceder Edge (vantagem)` e `Impor Trouble (desvantagem)` com escopo `Ataques corpo a corpo`, `Ataques à distância` ou `Todos os ataques`, além de condição prévia opcional. As regras são computadas no resolvedor compartilhado de Edge/Trouble e somadas/canceladas com condições já existentes. Rolagens que só testam atributos, sem ataque, não recebem o benefício.
+- **Editor guiado:** formulário adapta campos e opções conforme o gatilho; exemplo preenchível de Blazing Fast Fists. Validação rejeita efeitos passivos em gatilhos de turno e vice-versa. Sem código livre, escrita de Active Effects ou modificação dos poderes originais.
+- **Fluxos integrados:** poderes/armas cujo dado esteja marcado como ataque, ataques adicionais, ricochetes e rolagens Melee do HUD ou macro de atributo quando há alvo marcado. Na ausência de um tipo de ataque reconhecido, regras corpo a corpo/à distância não presumem a categoria; `Todos os ataques` continua aplicável. A regra passiva só beneficia quem possui o poder, não todos os personagens do mundo.
+- **Compatibilidade:** chaves e regras existentes da v0.2.109 preservadas, 107 controles nativos preservados e manuais independentes não alterados. Pausa geral e pausa das regras personalizadas interrompem também os modificadores passivos. Instalação por ZIP completo; GitHub não publicado automaticamente.
+
+## v0.2.109 — Central de Automações 3.0: criador de regras + rolagem preservada (Foundry VTT v14) — 01/11/2026
+
+- **Correção de rolagem:** a lista das rotinas nativas preserva `scrollTop` em interações, expansões, pesquisas e salvamentos; o estado é guardado também ao alternar entre as abas. A lista de regras próprias tem rolagem independente do editor.
+- **Nova aba "Minhas Automações":** editor sem programação com nome, gatilho, condição opcional, ação resultante, opção de habilitar/desabilitar, edição e exclusão confirmada. Regras gravadas nas novas configurações de mundo `customAutomationRules` e `customAutomationsEnabled`.
+- **Mecanismo executável:** gatilhos ao rolar um poder específico (opcional M no dado, sem confundir com acerto), início e fim de turnos avançados. Condição opcional prévia no próprio personagem. Efeitos: aplicar uma condição nativa permitida, recuperar 1–100 Health respeitando o máximo ou enviar mensagem escapada ao chat. Só o Mestre ativo executa; eventos de mensagens e turnos são deduplicados em memória.
+- **Segurança e escopo:** validação estrita de entrada, limite de 100 regras, nenhuma execução de código arbitrário. Efeitos aplicados ao conjurador/personagem do turno; não há manipulação de alvos do ataque, conclusão de dano nem testes de sucesso até implementações futuras. A pausa geral inclui personalizadas; pausa individual não modifica as nativas.
+- **Compatibilidade:** 107 controles da v0.2.108 preservados, sem alterar configurações anteriores e com regras próprias desligadas apenas ao pausar; novos mundos começam sem regras próprias. Manuais não alterados, ZIP integral para publicação manual.
+
+## v0.2.108 — Central de Automações 2.0 (Foundry VTT v14) — 01/11/2026
+
+- **Controles individuais auditados em mais quatro grupos:** ataques adicionais (Unstoppable Assault, Unrelenting Smash, Hellfire Chains, Coiling Crush, Rico-Shield e Elemental Ricochet), efeitos de Sucesso Fantástico por elemento (14 elementos com efeito automático), condições contínuas (Envenenado, Em Chamas, Sangrando, Corroído), Flames of the Faltine e Healing Factor, e remoção automática de Sangrando ao curar. Os interruptores chamam verificações reais no motor correspondente — não são apenas visuais.
+- **Dependências e estados efetivos:** a Central verifica também a opção independente de dano automático do HUD de Condições. Mostra aviso quando desligada e sinaliza Em Chamas/Sangrando/Corroído como dependentes; diferencia pausa global, grupo desativado, exceção individual e dependência ausente.
+- **Interface:** nomes e descrições específicos para poderes, condições e elementos; filtro **Só alteradas**; pesquisa preservada; contadores ajustados para rotinas configuráveis; indicação clara de Concentração e Turn Tracker como grupos indivisíveis por segurança das regras.
+- **Compatibilidade:** continuam as nove configurações originais mais o mesmo objeto `automationPowerOverrides` da v0.2.107, preservando automaticamente exceções anteriores e mantendo tudo ligado por padrão. Não muda o custo de Focus, o controle de ações, as regras de dano/defesa ou os efeitos já aplicados. A desativação individual atua nas próximas execuções; efeitos em andamento expiram/removem-se pelas regras existentes.
+- **Entrega:** ZIP integral e README atualizado com a documentação permanente da Central 2.0. Manuais independentes não alterados; publicação do GitHub continua manual.
+
+## v0.2.107 — Central de Automações (Foundry VTT v14) — 01/11/2026
+
+- **Nova Central de Automações:** acesso em **Configurações → Configurar Configurações → Multiverse-D616 → Abrir Central de Automações**, exclusivo para Mestres. Interface própria em ApplicationV2, visual escuro, contadores, categorias expansíveis e pesquisa de poderes ou comportamentos.
+- **Oito grupos originais preservados:** painel geral com chaves independentes; botão **Pausar todas** suspende temporariamente as automações opcionais sem apagar escolhas dos grupos nem de poderes. O menu substitui a apresentação das nove opções soltas na tela de configurações. Configurações de mundo antigas permanecem exatamente com as mesmas chaves e valores, sem migração.
+- **Exceções reais por poder:** nas categorias **Condições automáticas** e **Dano especial**, cada poder com rotina específica tem controle independente (padrão: ligado). Desligar um poder impede novas condições automáticas desse poder ou sua fórmula especial de dano, respectivamente, sem desligar os demais poderes. Nas outras seis categorias há apenas o controle geral, identificado claramente na interface. As exceções são mantidas num novo objeto de configurações do mundo, inicialmente vazio.
+- **Compatibilidade:** sem alterar efeitos que já estão ativos (continuam com seus ciclos normais), fórmulas padrão, dano manual, jogadas, botões de condições ou a lógica do HUD, movimento, combate e Concentração. A interface guarda as preferências imediatamente no mundo, com tratamento de falha de gravação e bloqueio de gravações concorrentes.
+- **Testes:** catálogo pesquisável, compatibilidade das chaves anteriores, prioridade dos três níveis (geral/grupo/poder) e proteção contra configuração individual inválida.
+- README atualizado somente com documentação permanente sobre a Central. Manuais independentes mantidos; ZIP completo para instalação, sem publicar no GitHub.
+
 ## v0.2.106 — Ação/Reação/Movimento também no HUD clássico (Foundry VTT v14) — 31/10/2026
 
 - Adicionada uma faixa compacta entre as abas **ABILITIES / POWERS** e a lista de atalhos do HUD clássico: **Ação e Reação à esquerda** (círculos marrom/azul, ícones brancos), **quatro setas de Movimento à direita** (verdes ou cinzas e frações de 25%).

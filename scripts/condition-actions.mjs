@@ -115,14 +115,12 @@ export function observeHealth(actor){
   if(Number.isFinite(value))observedHealth.set(actor.uuid,value);
 }
 export function captureHealthBeforeUpdate(actor,changes){
-  if (!automationEnabled('conditionRecovery')) return;
   if(!primaryGM()||!actor?.uuid)return;
   const next=changes?.['system.health.value']??changes?.system?.health?.value;
   if(next===undefined)return;
   beforeHealing.set(actor.uuid,{old:Number(actor.system?.health?.value),next:Number(next)});
 }
 export async function removeBleedingOnHeal(actor,changes){
-  if (!automationEnabled('conditionRecovery')) return false;
   if(!primaryGM()||!actor?.uuid)return false;
   const next=changes?.['system.health.value']??changes?.system?.health?.value;
   if(next===undefined)return false;
@@ -130,6 +128,9 @@ export async function removeBleedingOnHeal(actor,changes){
   beforeHealing.delete(actor.uuid);
   const old=entry?.old??observedHealth.get(actor.uuid);
   observedHealth.set(actor.uuid,Number(next));
+  // Always advance snapshots even while paused; otherwise a later decrease
+  // could look like a heal after the Narrator re-enables this rule.
+  if(!automationEnabled('conditionRecovery',undefined,'mmrpg.bleeding'))return false;
   if(!Number.isFinite(old)||!Number.isFinite(Number(next))||Number(next)<=old)return false;
   if(!hasCondition(actor,'mmrpg.bleeding'))return false;
   await removeSpecificCondition(actor,'mmrpg.bleeding');

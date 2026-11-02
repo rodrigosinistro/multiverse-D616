@@ -1,4 +1,4 @@
-import { getElementalEdgeMode } from "./elemental-fantastic.mjs";
+import { resolveConditionEdges, resolveConditionReroll, localTargetActors } from './condition-edge.mjs';
 
 /**
  * Multiverse-D616 (Foundry VTT v14)
@@ -136,20 +136,20 @@ async function rollAbilityMacro(actorUuid, abilityKey, mode = "value") {
   const speaker = ChatMessage.getSpeaker({ actor });
   const messageMode = game.settings.get("core", "messageMode");
 
-  const edgeMode = getElementalEdgeMode(actor);
+  const meleeAttack = safeMode==='value' && key==='mle' && Boolean(game.user?.targets?.size);
+  const conditionEdges=resolveConditionEdges({actor,targetActors:meleeAttack?localTargetActors():[],
+    ability:key,attack:meleeAttack,kind:meleeAttack?'close':'',targeted:meleeAttack,action:'standard'});
   const roll = new CONFIG.Dice.MarvelMultiverseRoll(
-    formula,
-    actor.getRollData(),
-    edgeMode ? { edgeMode } : {}
+    formula,actor.getRollData(),conditionEdges.edgeMode?{edgeMode:conditionEdges.edgeMode}:{}
   );
-  await roll.toMessage(
-    {
-      speaker,
-      flavor: `ability: ${label}`,
-      title: safeMode === "noncom" ? `${label} (Non-Combat)` : label,
-    },
-    { messageMode }
+  const message=await roll.toMessage(
+    {speaker,flavor:`ability: ${label}`,
+      title:safeMode==='noncom'?`${label} (Non-Combat)`:label,
+      flags:{[SYSTEM_ID]:{conditionEdges}}},
+    {messageMode}
   );
+  if(conditionEdges.sources.length&&conditionEdges.autoCount)
+    await resolveConditionReroll(message,conditionEdges);
 
   return roll;
 }

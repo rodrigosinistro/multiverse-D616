@@ -19,7 +19,7 @@ test('v0.2.54: automações começam ligadas e opção geral começa desligada',
    const record=registered.get('automation_'+key);
    assert.equal(record.default,true,key);
    assert.equal(record.scope,'world',key);
-   assert.equal(record.config,true,key);
+   assert.equal(record.config,false,key); // v107: switches now live inside Central
  }
  delete globalThis.game;
 });
@@ -56,7 +56,7 @@ test('v0.2.54: controles são consultados nas automações em tempo de uso',()=>
    for(const group of groups)assert.ok(s.includes(`'${group}'`),`${file}: ${group}`);
  }
  const manifest=JSON.parse(source('system.json'));
- assert.equal(manifest.version,'0.2.106');
+ assert.equal(manifest.version,'0.2.120');
  assert.ok(source('multiverse-d616.mjs').includes('registerAutomationSettings()'));
 });
 function instantiateExporter(old='red',newColor='red',isGM=true){

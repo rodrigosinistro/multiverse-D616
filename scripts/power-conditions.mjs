@@ -142,6 +142,7 @@ export function elementalSpecialForPower(item, sourceActor, outcome, standardRul
   if (!automationEnabled('elementalEffects')) return [];
   if(!outcome?.success || !outcome?.fantastic || !INSTANT_ELEMENTAL_SPECIAL_POWERS.has(item?.name)) return [];
   const metadata=getElementalFantasticMetadata(item,sourceActor);
+  if(metadata?.key && !automationEnabled('elementalEffects',undefined,`element:${metadata.key}`))return [];
   const rule=getElementalFantasticRule(metadata?.key);
   if(!rule || rule.noteOnly) return [];
   const status=rule.statusId===POWER_GRABBED_STATUS?'grabbed':rule.statusId?.startsWith('mmrpg.') ? rule.statusId.slice(6) : null;
@@ -290,7 +291,7 @@ export async function syncPowerConditions(message){
   if(message.getFlag?.(SYSTEM,'skipPowerConditions')===true)return;
   const {actor:sourceActor,token:casterToken}=await sourceActorFromMessage(message);
   const item=sourceActor?.items?.get?.(message.getFlag(SYSTEM,'itemId'));
-  if(item?.type!=='power'||!POWER_CONDITIONS[item.name])return;
+  if(item?.type!=='power'||!POWER_CONDITIONS[item.name] || !automationEnabled('powerConditions',undefined,item.name))return;
   const refs=message.getFlag(SYSTEM,'targets');
   if(!Array.isArray(refs)||!refs.length)return;
   const roll=message.rolls[0];
@@ -469,7 +470,7 @@ export async function confirmPowerDamageFromCard(damageMessage, action, results)
   if(!original?.rolls?.length)return false;
   const {actor}=await sourceActorFromMessage(original);
   const item=actor?.items?.get?.(original.getFlag(SYSTEM,'itemId'));
-  if(!item || !mustConfirmPowerDamage(item.name))return false;
+  if(!item || !mustConfirmPowerDamage(item.name) || !automationEnabled('powerConditions',undefined,item.name))return false;
   const safeResults=results.filter(r=>!r.heal && !r.blocked && r.targetUuid).map(r=>({
     targetUuid:r.targetUuid,delta:Math.max(0,Number(r.delta)||0),
     category:String(r.category??'').trim().toLowerCase(),

@@ -641,7 +641,8 @@ async function applyEndTurnDamageFromCombat(combat, reason="updateCombat"){
 
   await installConditions();
   const ongoing = ["mmrpg.ablaze","mmrpg.bleeding","mmrpg.corroding"];
-  const active = ongoing.filter(s=>hasStatus(token ?? actor, s));
+  const active = ongoing.filter(s=>hasStatus(token ?? actor, s) &&
+    game.multiverseD616?.automationEnabled?.('ongoingConditions',undefined,s)!==false);
   if(active.length===0) return;
 
   const perTurn = 5 * active.length;

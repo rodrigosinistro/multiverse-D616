@@ -5,6 +5,7 @@
 const SYSTEM = 'multiverse-d616';
 const PREFIX = 'mmrpg.';
 import { isPowerGrabbed, hasPhysicalGrab } from './power-grabbed.mjs';
+import { passiveAttackModifiers, powerRollModifiers } from './custom-automations.mjs';
 const labels = Object.freeze({
   'mmrpg.pinned':'Imobilizado','mmrpg.prone':'Caído',
   'mmrpg.restrained':'Restrito','mmrpg.blinded':'Cego',
@@ -50,7 +51,7 @@ function describe(source,reason,sign){return {source,reason,sign};}
  *  action: 'standard'/'reaction'/...;
  *  targeted: true for targeted attacks, false for untargeted attacks.
  */
-export function resolveConditionEdges({actor,targetActors=[],ability='',attack=false,action='standard',kind='',targeted=false,baseMode=0}={}){
+export function resolveConditionEdges({actor,targetActors=[],ability='',attack=false,action='standard',kind='',item=null,targeted=false,baseMode=0}={}){
   const own=statusIds(actor), ab=abilityCode(ability), type=attackType(kind,ability,attack);
   const matches=[];
   const add=(sign,where,id,reason)=>matches.push(describe(`${where}: ${labels[id]??id}`,reason,sign));
@@ -106,6 +107,13 @@ export function resolveConditionEdges({actor,targetActors=[],ability='',attack=f
       }
     }
   }
+  // The visual editor can add passive sources (e.g. Blazing Fast Fists).
+  // Each rule is checked against owned powers at the instant of the attack.
+  for(const modifier of passiveAttackModifiers({actor,attack,kind,ability}))
+    matches.push({source:modifier.source,reason:modifier.reason,sign:modifier.sign});
+  // Active rules for the CURRENT power, not a buff on every future attack.
+  for(const modifier of powerRollModifiers({actor,item,attack,kind,ability,baseMode}))
+    matches.push({source:modifier.source,reason:modifier.reason,sign:modifier.sign});
   // Edge and Trouble cancel one another. Distinct condition origins count once,
   // and duplicates from multiple effects bearing the same status are deduped.
   const unique=[...new Map(matches.map(e=>[`${e.source}|${e.reason}|${e.sign}`,e])).values()];
@@ -172,7 +180,7 @@ export function registerConditionEdgeHooks(){
     const sourceSummary=context.sources.length
       ?context.sources.map(s=>`${s.source} (${s.sign>0?'Edge':'Trouble'})`).join(' • ')
       :'Sem Edge/Trouble líquido de condições';
-    note.textContent=`Condições: ${sourceSummary}. ${net>0?`${net} Edge líquido(s)` : net<0?`${Math.abs(net)} Trouble líquido(s)`:'Edge/Trouble cancelados'}.${context.ambiguousTargets?' Alvos com Edge/Trouble diferentes: Mestre decide por alvo.':context.targetSourcesDiffer?' Condições diferentes, mas mesmo modificador líquido: consulte os detalhes de cada alvo.':''}${Math.abs(net)>1?' Efeitos acumulados: Mestre decide quantos rerolls podem ser usados.':''}${net>0?' Escolha o dado para usar EDGE no card.':''}`;
+    note.textContent=`Condições/automações: ${sourceSummary}. ${net>0?`${net} Edge líquido(s)` : net<0?`${Math.abs(net)} Trouble líquido(s)`:'Edge/Trouble cancelados'}.${context.ambiguousTargets?' Alvos com Edge/Trouble diferentes: Mestre decide por alvo.':context.targetSourcesDiffer?' Condições diferentes, mas mesmo modificador líquido: consulte os detalhes de cada alvo.':''}${Math.abs(net)>1?' Efeitos acumulados: Mestre decide quantos rerolls podem ser usados.':''}${net>0?' Escolha o dado para usar EDGE no card.':''}`;
     container.append(note);
   });
 }

@@ -64,5 +64,5 @@ test('v0.2.55: uses canonical saved targets, per-target success, real card flags
  assert.ok(s.includes("item?.name === 'Venom Burst'"));
  assert.ok(s.includes('rawDamage, damageReduction, effectiveDamageMultiplier'));
  assert.ok(s.includes('damageFactor: powerDamageFactor'));
- assert.ok(s.includes("automationEnabled('fantasticDamage')"));
+ assert.ok(s.includes("automationEnabled('fantasticDamage',undefined,item.name)"));
 });

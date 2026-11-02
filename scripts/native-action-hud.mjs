@@ -314,7 +314,10 @@ async function rollAbility(actor, abilityKey) {
   const speaker = ChatMessage.getSpeaker({ actor });
   const messageMode = game.settings.get("core", "messageMode");
   const RollClass = CONFIG.Dice?.MarvelMultiverseRoll ?? Roll;
-  const conditionEdges=resolveConditionEdges({actor,ability:key,action:'standard'});
+  // Generic Melee roll is considered an attack only when there is a target.
+  const meleeAttack=key==='mle'&&Boolean(game.user?.targets?.size);
+  const conditionEdges=resolveConditionEdges({actor,ability:key,attack:meleeAttack,
+    kind:meleeAttack?'close':'',targeted:meleeAttack,action:'standard'});
   const roll=new RollClass(formula,actor.getRollData(),conditionEdges.edgeMode?{edgeMode:conditionEdges.edgeMode}:{});
   const message=await roll.toMessage(
     {

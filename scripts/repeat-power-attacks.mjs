@@ -61,7 +61,7 @@ function contextForNewRoll(actor,item,token,targets){
 }
 export function originalRepeatContext(item,actor,targets,token){return contextForNewRoll(actor,item,token,targets);}
 export function repeatEligibility({item,chain,combat,combatant,actor,state,targets}={}){
- if(!automationEnabled('extraAttacks'))return {ok:false,reason:'Automações de ataques adicionais desativadas.'};
+ if(!automationEnabled('extraAttacks',undefined,item?.name))return {ok:false,reason:'Repetição desativada pelo Mestre.'};
  if(!LOOP_NAMES.includes(item?.name)||!chain)return {ok:false,reason:'Não é uma sequência de ataques repetidos.'};
  if(!combat?.started||combat.id!==chain.combatId||Number(combat.round)!==Number(chain.round)||
    combat.combatant?.id!==chain.combatantId||combatant?.id!==chain.combatantId)return {ok:false,reason:'Repetição somente no mesmo turno do ataque original.'};
@@ -176,7 +176,7 @@ function targetedHold(actor,target,powerName){
    g.sourceActorUuid===actor.uuid&&actor.items?.get?.(g.sourceItemId)?.name===powerName)??null;
 }
 export function heldFollowUpEligibility({actor,token,target,powerName,combat,tracker}={}){
- if(!automationEnabled('extraAttacks'))return {ok:false,reason:'Ataques adicionais condicionais desativados.'};
+ if(!automationEnabled('extraAttacks',undefined,powerName))return {ok:false,reason:'Ataque adicional desativado pelo Mestre.'};
  if(!HOLD_NAMES.includes(powerName)||!combat?.started)return {ok:false,reason:'Este efeito exige combate ativo.'};
  if(!onOwnerTurn(actor,token))return {ok:false,reason:'Só pode repetir no próprio turno.'};
  if(!isOwner(actor))return {ok:false,reason:'Sem permissão para usar o poder.'};
@@ -303,7 +303,7 @@ export async function confirmRepeatedAttackDamage(damageMessage,action,results){
  const message=sourceId?game.messages?.get?.(sourceId):null;
  const {item}=message?speakerInfo(message):{};
  const chain=message?.getFlag?.(SYS,'repeatAttack');
- if(!chain||!LOOP_NAMES.includes(item?.name)||message.getFlag(SYS,'repeatAttackConsumed'))return false;
+ if(!chain||!LOOP_NAMES.includes(item?.name)||!automationEnabled('extraAttacks',undefined,item.name)||message.getFlag(SYS,'repeatAttackConsumed'))return false;
  const signature=rollSignature(message.rolls?.[0]);
  if(damageMessage?.getFlag?.(SYS,'damageApplication')?.rollSignature!==signature)return false;
  if(!results?.some(r=>!r.heal&&!r.blocked&&chain.visited?.includes(r.targetUuid)))return false;
@@ -340,7 +340,7 @@ export function installRepeatPowerHooks(){
    const {actor,item,token}=speakerInfo(source);
    const chain=source.getFlag?.(SYS,'repeatAttack');
    const enabled=source.getFlag?.(SYS,'repeatAttackReady');
-   if(!chain||!LOOP_NAMES.includes(item?.name)||source.getFlag(SYS,'repeatAttackConsumed') ||
+   if(!chain||!LOOP_NAMES.includes(item?.name)||!automationEnabled('extraAttacks',undefined,item.name)||source.getFlag(SYS,'repeatAttackConsumed') ||
       enabled?.damageMessageId!==ready.confirmedDamageMessageId ||
       enabled?.rollSignature!==rollSignature(source.rolls[0]))return;
    const c=combatantForActor(actor,token),state=game.multiverseD616?.turnTracker?.getState?.(c);

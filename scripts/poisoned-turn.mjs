@@ -27,7 +27,7 @@ function whispers(actor){
   return [...recipients];
 }
 export async function offerPoisonCheck(combat){
-  if(!automationEnabled('ongoingConditions') || !primaryGM())return false;
+  if(!automationEnabled('ongoingConditions',undefined,'mmrpg.poisoned') || !primaryGM())return false;
   const key=poisonTurnKey(combat);
   if(!key||pending.has(key))return false;
   const actor=getActor(combat.combatant);
@@ -50,7 +50,7 @@ export async function offerPoisonCheck(combat){
   }finally{pending.delete(key);}
 }
 export async function attemptPoisonCheck(promptMessage){
-  if (!automationEnabled('ongoingConditions')) {ui.notifications?.warn?.('A automação de Envenenado está desativada pelo Mestre.');return false;}
+  if (!automationEnabled('ongoingConditions',undefined,'mmrpg.poisoned')) {ui.notifications?.warn?.('A automação de Envenenado está desativada pelo Mestre.');return false;}
   const prompt=promptMessage?.getFlag?.(SYSTEM,'poisonTurnPrompt');
   if(!prompt||prompt.version!==1||prompt.tn!==POISON_TN)return false;
   if(attempted.has(promptMessage.id))return false;
@@ -81,7 +81,7 @@ export async function attemptPoisonCheck(promptMessage){
 }
 /** If multiple players submit the same prompt, the first valid result wins. */
 export async function resolvePoisonCheck(message){
-  if(!automationEnabled('ongoingConditions') || !primaryGM()||!message?.id||!message.rolls?.length)return false;
+  if(!automationEnabled('ongoingConditions',undefined,'mmrpg.poisoned') || !primaryGM()||!message?.id||!message.rolls?.length)return false;
   const request=message.getFlag?.(SYSTEM,'poisonTurnCheck');
   if(!request||request.version!==1||request.tn!==POISON_TN||processing.has(request.promptId))return false;
   processing.add(request.promptId);

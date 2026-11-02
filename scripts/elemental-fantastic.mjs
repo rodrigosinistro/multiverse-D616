@@ -433,7 +433,7 @@ export async function applyElementalFantasticFromDamageMessage(message, action =
     }
   }
 
-  if (!meta?.key) return [];
+  if (!meta?.key || !automationEnabled('elementalEffects',undefined,`element:${meta.key}`)) return [];
   const rule = getElementalFantasticRule(meta.key);
   if (!rule || rule.noteOnly) return [];
 

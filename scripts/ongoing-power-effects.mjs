@@ -65,7 +65,7 @@ export async function confirmFaltineDamage(damageMessage,action,results){
   if(!source?.rolls?.[0])return false;
   const caster=speakerActor(source);
   const item=caster?.items?.get?.(source.getFlag?.(SYSTEM,'itemId'));
-  if(!isPower(item,'Flames of the Faltine'))return false;
+  if(!isPower(item,'Flames of the Faltine')||!automationEnabled('ongoingConditions',undefined,'Flames of the Faltine'))return false;
   const sig=rollSignature(source.rolls[0]);
   const cardSig=damageMessage?.getFlag?.(SYSTEM,'damageApplication')?.rollSignature;
   if(cardSig&&cardSig!==sig)return false;
@@ -178,7 +178,7 @@ export async function processRecurringPowerTurn(combat,change){
 async function processCapturedAdvance(combat,advance){
     const {previousRound,previousTurn,ended,completedRound}=advance;
     const actor=ended?.token?.actor??ended?.actor;
-    if(actor&&hasHealingFactor(actor)){
+    if(actor&&hasHealingFactor(actor)&&automationEnabled('ongoingConditions',undefined,'Healing Factor')){
       const stamp=`${combat.id}|${previousRound}|${previousTurn}|${ended.id}`;
       const seen=actor.getFlag?.(SYSTEM,'healingFactorTurns')??[];
       const next=nextHealingHealth(actor);
@@ -192,7 +192,7 @@ async function processCapturedAdvance(combat,advance){
           content:`<p><b>${foundry.utils.escapeHTML?.(actor.name)??actor.name}</b>: Healing Factor recuperou <b>${delta} Health</b> no fim do turno.</p>`});
       }
     }
-    if(completedRound!==null){
+    if(completedRound!==null && automationEnabled('ongoingConditions',undefined,'Flames of the Faltine')){
       const visited=new Set();
       const actors=[...list(game.actors)];
       for(const scene of list(game.scenes))for(const token of list(scene.tokens))if(token.actor)actors.push(token.actor);

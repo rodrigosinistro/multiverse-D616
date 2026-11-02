@@ -1,6 +1,6 @@
-/** D616 v0.2.54 — World-level switches for optional rule automation.
- * Never disable core dice, manual actions, damage buttons or ordinary Foundry status edits.
- * Reads are live; existing effects still expire/clean up when groups are switched off.
+/** D616 v0.2.108 — World-level automation groups and optional per-power exceptions.
+ * Preserves every v0.2.106 setting key/default. Never disables dice, chat cards,
+ * manual damage/condition buttons or Foundry's native effect cleanup.
  */
 export const AUTOMATION_SYSTEM = 'multiverse-d616';
 export const AUTOMATION_GROUPS = Object.freeze({
@@ -14,21 +14,44 @@ export const AUTOMATION_GROUPS = Object.freeze({
   turnActions: ['Consumo automático de Ações e Movimento', 'Registra uso de poderes e deslocamento no Controle de Turno; ajustes manuais e testes de fuga seguem disponíveis.'],
 });
 export const AUTOMATION_MASTER_KEY='disableAllAutomations';
-export function automationEnabled(group, settings = globalThis.game?.settings) {
-  if (!Object.hasOwn(AUTOMATION_GROUPS, group)) return true;
-  try {if (settings?.get?.(AUTOMATION_SYSTEM,AUTOMATION_MASTER_KEY)===true) return false;}catch(_e){}
-  try {return settings?.get?.(AUTOMATION_SYSTEM,`automation_${group}`)!==false;}catch(_e){return true;}
+export const AUTOMATION_POWERS_KEY='automationPowerOverrides';
+/** Groups with individually audited gates. Keys may represent powers, elements or conditions. */
+export const POWER_SCOPED_AUTOMATIONS=Object.freeze(['powerConditions','fantasticDamage','extraAttacks','elementalEffects','ongoingConditions','conditionRecovery']);
+export function powerOverrideKey(group,powerName){
+  return `${group}::${String(powerName??'').trim()}`;
+}
+export function getAutomationPowerOverrides(settings=globalThis.game?.settings){
+  try {
+    const value=settings?.get?.(AUTOMATION_SYSTEM,AUTOMATION_POWERS_KEY);
+    return value && typeof value==='object' && !Array.isArray(value)?value:{};
+  }catch(_e){return {};}
+}
+/** Existing calls with (group, settings) keep exactly the same behavior. */
+export function automationEnabled(group, settings=globalThis.game?.settings, powerName=null){
+  if(!Object.hasOwn(AUTOMATION_GROUPS,group))return true;
+  try {if(settings?.get?.(AUTOMATION_SYSTEM,AUTOMATION_MASTER_KEY)===true)return false;}catch(_e){}
+  try {if(settings?.get?.(AUTOMATION_SYSTEM,`automation_${group}`)===false)return false;}catch(_e){}
+  if(powerName!=null && POWER_SCOPED_AUTOMATIONS.includes(group)){
+    const key=powerOverrideKey(group,powerName);
+    if(getAutomationPowerOverrides(settings)[key]===false)return false;
+  }
+  return true;
 }
 export function registerAutomationSettings(){
   game.settings.register(AUTOMATION_SYSTEM,AUTOMATION_MASTER_KEY,{
     name:'Automações — DESATIVAR TODAS',
     hint:'Desliga todas as automações opcionais abaixo. Tem prioridade sobre os controles individuais; rolagens, botões manuais e operações fundamentais do Foundry continuam funcionando. Ao desmarcar, volta a respeitar cada grupo.',
-    scope:'world',config:true,type:Boolean,default:false,
+    scope:'world',config:false,type:Boolean,default:false,
   });
   for(const [key,[name,hint]] of Object.entries(AUTOMATION_GROUPS)){
     game.settings.register(AUTOMATION_SYSTEM,`automation_${key}`,{
-      name:`Automações — ${name}`, hint:'Ativado por padrão. '+hint,
-      scope:'world',config:true,type:Boolean,default:true,
+      name:`Automações — ${name}`,hint:'Ativado por padrão. '+hint,
+      scope:'world',config:false,type:Boolean,default:true,
     });
   }
+  game.settings.register(AUTOMATION_SYSTEM,AUTOMATION_POWERS_KEY,{
+    name:'Automações — exceções por poder',
+    hint:'Poderes desativados individualmente, conservados ao desligar grupos ou o interruptor geral.',
+    scope:'world',config:false,type:Object,default:{},
+  });
 }

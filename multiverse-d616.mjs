@@ -18,6 +18,8 @@ import { originalRepeatContext, installRepeatPowerHooks } from "./scripts/repeat
 import { registerHeldConcentrationHooks } from "./scripts/held-concentration.mjs";
 import { casterTokenForItem } from "./scripts/combat-preflight.mjs";
 import { registerAutomationSettings, automationEnabled } from "./scripts/automation-settings.mjs";
+import { registerAutomationCenterMenu } from "./scripts/automation-center.mjs";
+import { registerCustomAutomationSettings, registerCustomAutomationHooks, customDamageBonusForTarget, applyCustomDamageMultiplier } from "./scripts/custom-automations.mjs";
 import { prepareD616Movement } from "./scripts/movement-calculator.mjs";
 import { chooseD616Dialog, promptD616FocusExtra } from "./scripts/dialog-v14.mjs";
 import { growPowerLevel, promptGrowChoice, applyGrowChoice } from "./scripts/grow-size.mjs";
@@ -835,8 +837,8 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       // Only one identical target modifier is valid for a shared multi-target roll.
       const conditionEdges = resolveConditionEdges({
         actor: this.actor, targetActors: localTargetActors(),
-        ability: powerRoll.ability, attack: powerRoll.attack,
-        kind: this.system.attackKind,
+        ability: powerRoll.ability, attack: isAttackItem(this),
+        item: this, kind: this.system.attackKind,
         action: this.system.action || 'standard',
         targeted: Boolean(game.user?.targets?.size),
         baseMode: elementalEdgeMode,
@@ -936,8 +938,8 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
           if(!tokenDoc?.uuid||!targetActor)continue;
           const perTarget=resolveConditionEdges({
             actor:this.actor,targetActors:[targetActor],
-            ability:powerRoll.ability,attack:powerRoll.attack,
-            kind:this.system.attackKind,action:this.system.action||'standard',
+            ability:powerRoll.ability,attack:isAttackItem(this),
+            item:this,kind:this.system.attackKind,action:this.system.action||'standard',
             targeted:true,baseMode:elementalEdgeMode,
           });
           separate[tokenDoc.uuid]={net:perTarget.net,sources:perTarget.sources,
@@ -3295,13 +3297,13 @@ class ChatMessageMarvel extends ChatMessage {
     // Venom Burst only knocks targets down on an ordinary success. It deals
     // half normal Health damage exclusively on a successful Fantastic hit.
     // Do not create an ordinary DAMAGE card for a nondamaging hit.
-    if (item?.name === 'Coiling Crush' && automationEnabled('fantasticDamage') &&
+    if (item?.name === 'Coiling Crush' && automationEnabled('fantasticDamage',undefined,item.name) &&
         !chatMessage.getFlag('multiverse-d616','heldFollowUp') &&
         !damageTargets.some(({ref})=>outcomes.get(ref.uuid)?.fantastic)) {
       ui.notifications?.info?.('Coiling Crush: a imobilização inicial não causa dano em sucesso comum.');
       return;
     }
-    if (item?.name === 'Venom Burst' && automationEnabled('fantasticDamage') &&
+    if (item?.name === 'Venom Burst' && automationEnabled('fantasticDamage',undefined,item.name) &&
         !damageTargets.some(({ref})=>outcomes.get(ref.uuid)?.fantastic)) {
       ui.notifications?.info?.('Venom Burst: sucesso comum derruba o alvo; dano somente no Sucesso Fantástico.');
       return;
@@ -3320,18 +3322,24 @@ class ChatMessageMarvel extends ChatMessage {
         drCategory, item?.type,
       );
       const targetFantastic=Boolean(outcomes.get(ref.uuid)?.fantastic);
+      // Central 4.5: evaluate custom bonuses on the verified, individual
+      // target BEFORE the existing damage/DR/guard/MMDR confirmation pipeline.
+      // This does not execute extra damage on the victim after confirmation.
+      const customDamage=customDamageBonusForTarget({
+        actor,item,targetActor:target,outcome:outcomes.get(ref.uuid),
+      });
       const {
         damage, rawDamage, damageReduction, effectiveDamageMultiplier,
         powerDamageFactor, specialDamage,
-      } = calculatePowerDamage({
+      } = applyCustomDamageMultiplier(calculatePowerDamage({
         powerName:chatMessage.getFlag('multiverse-d616','heldFollowUp')?.name==='Coiling Crush'
           ?null:(item?.type==='power'?item.name:null),
         marvelDie:marvelTotal,
         damageMultiplier,damageReduction:piercing.effectiveDr,
-        ability:abilityValue,bonus:focusBonus,
+        ability:abilityValue,bonus:focusBonus+customDamage.bonus,
         fantastic:targetFantastic,
         suppressFantastic:Boolean(advanced?.name && advanced.name!=="Elemental Suffocation"),
-      });
+      }),customDamage.multiplier);
 
       const targetName =
         document?.name ?? ref.name ?? target.name ?? "Target";
@@ -3356,6 +3364,9 @@ class ChatMessageMarvel extends ChatMessage {
         fantastic: targetFantastic,
         damageFactor: powerDamageFactor,
         specialDamage,
+        customDamageBonus:customDamage.bonus,
+        customDamageMultiplier:customDamage.multiplier,
+        customDamageSources:customDamage.sources,
         defense: Number(outcomes.get(ref.uuid)?.targetNumber ?? 0) || undefined,
       });
 
@@ -3367,7 +3378,7 @@ class ChatMessageMarvel extends ChatMessage {
         ability
       )} score ${abilityValue} of damage${esc(focusExplain)}${specialDamage
         ? `; regra especial de ${esc(item.name)}: ${powerDamageFactor}× dano normal`
-        : ''}.</p>`;
+        : ''}${customDamage.bonus ? `; bônus da Central: +${customDamage.bonus} (${customDamage.sources.filter(s=>s.mode!=='multiplier').map(s=>esc(s.name)).join(', ')})` : ''}${customDamage.multiplier>1 ? `; multiplicador da Central: ×${customDamage.multiplier} (${customDamage.sources.filter(s=>s.mode==='multiplier').map(s=>esc(s.name)).join(', ')})` : ''}.</p>`;
     });
 
     if (damageContent.length === 0) {
@@ -6753,6 +6764,8 @@ Hooks.once("init", () => {
   registerSmartTargetSettings();
   registerCombatIntelligenceSettings();
   registerAutomationSettings();
+  registerCustomAutomationSettings();
+  registerAutomationCenterMenu();
   registerPowerVfxSettings();
   registerPowerVfxLifecycleHooks();
   game.multiverseD616 = game.multiverseD616 ?? {};
@@ -6955,6 +6968,7 @@ Hooks.once("ready", () => {
   registerResizeOtherSocket();
   registerFocusMaintenanceHooks();
   registerPowerConditionHooks();
+  registerCustomAutomationHooks();
   registerPowerGrabbedHooks();
   registerPowerEscapeHooks();
 registerConditionRecoveryHooks();

@@ -4,6 +4,7 @@ import { confirmRepeatedAttackDamage, confirmHeldHellfireHealthDamage } from "./
 import { confirmRicoShieldDamage } from "./rico-shield-chain.mjs";
 import { confirmFaltineDamage } from './ongoing-power-effects.mjs';
 import { confirmPowerDamageFromCard, getMarvelOutcome } from "./power-conditions.mjs";
+import { confirmCustomTargetDamageFromCard } from "./custom-automations.mjs";
 import { activeElementalGuards, selectGuard, selectElementalDefense, assessGuardHit, consumeGuard, guardTargetDefense, findCrossingElementalBarrier } from "./elemental-shields.mjs";
 import { applyElementalFantasticFromDamageMessage, postElementalFantasticConfirmation } from "./elemental-fantastic.mjs";
 
@@ -24,6 +25,8 @@ Hooks.once("init", () => {
 
 Hooks.once("ready", () => {
   console.log(`[MMDR] v${MMDR_VER} ready`);
+  game.multiverseD616 ??= {};
+  game.multiverseD616.applyCustomRecurringDamage = applyCustomRecurringDamage;
 });
 
 function dbg(...args) {
@@ -597,6 +600,33 @@ async function applyExactEntries(entries, action, modes={}, damageMessage=null) 
   return results;
 }
 
+/** v0.2.119: recurring GM-only damage uses the same native MMDR handler as
+ * confirmed attack cards, including DR, personal shields and Health/Focus.
+ * It does NOT create an MMDR confirmation card per turn: this is automatic
+ * ongoing damage, like the existing condition damage. No attack replay.
+ */
+export async function applyCustomRecurringDamage({actor,combatant,amount,resource}={}){
+  if(!game.user?.isGM || (game.users?.activeGM&&game.users.activeGM.id!==game.user.id))
+    return {applied:false,reason:'Sem autoridade de Mestre'};
+  const category=resource==='focus'?'focus':'health';
+  const rawAmount=Number(amount);
+  if(!Number.isInteger(rawAmount)||rawAmount<1||rawAmount>100||!actor?.uuid)
+    return {applied:false,reason:'Dados de dano inválidos'};
+  const tokenUuid=combatant?.token?.uuid??
+    (combatant?.sceneId&&combatant?.tokenId?`Scene.${combatant.sceneId}.Token.${combatant.tokenId}`:'');
+  const entry={targetUuid:tokenUuid||actor.uuid,actorUuid:actor.uuid,
+    name:actor.name,category,rawDamage:rawAmount,
+    // Match the native ongoing-conditions convention: each RD level removes 5
+    // points from a recurring flat damage tick, rather than subtracting a DM.
+    damage:Math.max(0,rawAmount-readDamageReduction(actor,category)*5)};
+  const results=await applyExactEntries([entry],'full',{},null);
+  if(!results.length)return {applied:false,reason:'Alvo não encontrado'};
+  const result=results[0];
+  return {applied:true,delta:Math.max(0,Number(result.delta)||0),
+    blocked:Boolean(result.blocked),dr:readDamageReduction(actor,category),
+    category,description:result.description??''};
+}
+
 async function applyLegacyFormula(message, rootElement, action, modes={}) {
   const formula=parseLegacyFormula(rootElement);
   const category=categoryFromText(rootElement.textContent);
@@ -717,6 +747,9 @@ document.addEventListener(
       await message.setFlag(MODULE_ID,'mmdrResolved',{action,at:Date.now()});
       await postConfirmation(results, action);
       await confirmPowerDamageFromCard(message, action, results.filter(r=>!r.blocked));
+      // Uma falha em regra personalizada nunca desfaz nem interrompe o dano já aplicado.
+      try { await confirmCustomTargetDamageFromCard(message, action, results.filter(r=>!r.blocked)); }
+      catch (error) { console.error('[D616] Falha na confirmação de automação personalizada',error); }
       await confirmFaltineDamage(message,action,results);
       await confirmRicoShieldDamage(message,action,results);
       await confirmRepeatedAttackDamage(message,action,results);

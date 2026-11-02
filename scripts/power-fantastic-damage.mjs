@@ -31,7 +31,7 @@ export const POWER_DAMAGE_FACTORS = Object.freeze({
 export const HALF_TO_FULL_POWERS = Object.freeze(HALF_TO_FULL);
 
 export function getPowerDamageFactor(name,{fantastic=false, suppressFantastic=false, enabled=undefined}={}) {
-  const canApply=enabled===undefined?automationEnabled('fantasticDamage'):Boolean(enabled);
+  const canApply=enabled===undefined?automationEnabled('fantasticDamage',undefined,name):Boolean(enabled);
   const factors=canApply?POWER_DAMAGE_FACTORS[String(name??'').trim()]:null;
   if(factors) return factors[fantastic?1:0];
   return fantastic&&!suppressFantastic?2:1;
@@ -52,7 +52,7 @@ export function calculatePowerDamage({powerName, fantastic=false,suppressFantast
     damage: Math.ceil(normal.damage*factor),
     rawDamage: Math.ceil(raw.damage*factor),
     powerDamageFactor:factor,
-    specialDamage:(enabled===undefined?automationEnabled('fantasticDamage'):Boolean(enabled)) &&
+    specialDamage:(enabled===undefined?automationEnabled('fantasticDamage',undefined,powerName):Boolean(enabled)) &&
       Object.hasOwn(POWER_DAMAGE_FACTORS,String(powerName??'').trim()),
   };
 }
