@@ -11,6 +11,34 @@ const POWER_ROLLS = Object.freeze({
   // Regular action checks against another character's defense.
   'Detect Lie': { ability: 'ego', attackTarget: 'ego', checkOnly: true },
   'Disrupt Nerves': { ability: 'ego', attackTarget: 'res', checkOnly: true },
+  // v0.2.121: catalog legacy marks these emotion/telepathy checks as
+  // damaging attacks without a defense; all four resolve Ego vs Ego
+  // and describe effects without direct damage. Keep Actor Items unchanged.
+  'Control Emotion': { ability: 'ego', attackTarget: 'ego', checkOnly: true },
+  'Control Group Emotion': { ability: 'ego', attackTarget: 'ego', checkOnly: true },
+  'Sense Emotion': { ability: 'ego', attackTarget: 'ego', checkOnly: true },
+  'Sway Emotion': { ability: 'ego', attackTarget: 'ego', checkOnly: true },
+  // v0.2.123 — stage 2 audit: explicit non-damaging opposed checks.
+  // Keep source Items intact, including powers with a legacy attackKind.
+  'Command Animal': { ability: 'ego', attackTarget: 'ego', checkOnly: true, optional: true },
+  'Time Travel Other': { ability: 'ego', attackTarget: 'vig', checkOnly: true },
+  'Dimensional Travel Other': { ability: 'ego', attackTarget: 'vig', checkOnly: true },
+  'Multiversal Travel Other': { ability: 'ego', attackTarget: 'vig', checkOnly: true },
+  'Webcasting': { ability: 'agl', attackTarget: 'agl', checkOnly: true },
+  'Speed Blast': { ability: 'agl', attackTarget: 'agl', checkOnly: true },
+  'Steal Power': { ability: 'ego', attackTarget: 'ego', checkOnly: true },
+  'Steal Powers': { ability: 'ego', attackTarget: 'ego', checkOnly: true },
+  // A Shield Bearer reaction gives an attacker Trouble and temporarily
+  // removes access to the thrown shield. Its description calls for no roll.
+  'Hurled Shield Deflection': { ability: 'agl', attackTarget: 'agl', noRoll: true },
+  // The Martial Arts and Super-Strength variants share the name and identical
+  // two-target all-or-nothing damage semantics (see targeting validation).
+  'Banging Heads': { ability: 'mle', attackTarget: 'mle', attack: true, damageType: 'health' },
+  // Damaging attacks imported as attack:false. Secondary effects remain
+  // under existing mechanics / Narrator control (Brain Drain Focus recovery).
+  'Supernova': { ability: 'ego', attackTarget: 'res', attack: true, damageType: 'health' },
+  'Brain Drain': { ability: 'ego', attackTarget: 'vig', attack: true, damageType: 'focus' },
+
   'Elemental Grab': { ability: 'ego', attackTarget: 'mle', checkOnly: true },
   'Telekinetic Grab': { ability: 'log', attackTarget: 'mle', checkOnly: true },
   'Webgrabbing': { ability: 'agl', attackTarget: 'agl', checkOnly: true },
@@ -120,7 +148,7 @@ export function resolvePowerRoll(item) {
     checkOnly, attack, optional: Boolean(mapped?.optional), fantasticDamage: Boolean(mapped?.fantasticDamage),
     damageType: legacyFocusType ? 'focus' : (data.damageType || mapped?.damageType || ''),
     edgeMode: String((legacyCrimson ? mapped?.edgeMode : data.attackEdgeMode) || mapped?.edgeMode || '').trim().toLowerCase(),
-    canRoll: Boolean(ability),
+    canRoll: Boolean(ability) && !(isPower && mapped?.noRoll),
   };
 }
 

@@ -1,0 +1,35 @@
+/* Multiverse-D616 v0.2.125 — on-demand diagnostics. */
+.d616-diagnostic-window .window-content{padding:0!important;overflow:hidden;background:#161c26;color:#e9eef5;min-height:0}
+.d616-diag{display:flex;flex-direction:column;height:100%;min-height:0;font-size:12px;color:#e9eef5;font-family:var(--font-primary,Arial,sans-serif)}
+.d616-diag *{box-sizing:border-box}
+.d616-diag__hero{flex:none;padding:19px 24px;background:linear-gradient(110deg,#301b22,#242033 52%,#192634);border-bottom:1px solid #5a4244}
+.d616-diag__eyebrow{font-size:10px;font-weight:800;letter-spacing:1.6px;color:#eabb76;margin-bottom:7px}
+.d616-diag__hero h2{margin:0 0 8px;border:0;font-size:24px;line-height:1.2;color:#fff}.d616-diag__hero h2 i{color:#e5bd76;margin-right:9px}
+.d616-diag__hero p{margin:0;color:#b9c3d2;line-height:1.45}
+.d616-diag__toolbar{flex:none;display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:13px 22px;background:#1a222e;border-bottom:1px solid #354256}
+.d616-diag__toolbar button,.d616-diag__filters button{font-size:12px;border:1px solid #505a6d;background:#2b3442;color:#f1f3f9;border-radius:7px;min-height:36px;padding:7px 13px;cursor:pointer;white-space:nowrap}
+.d616-diag__toolbar button:hover:not(:disabled),.d616-diag__filters button:hover{border-color:#d2a86a;background:#374354}
+.d616-diag__toolbar .d616-diag__primary{background:#37634f;border-color:#5e8d6b;font-weight:700}
+.d616-diag__toolbar button:disabled{opacity:.55;cursor:not-allowed}
+.d616-diag__toolbar button i{margin-right:5px}
+.d616-diag__toolbar [data-scan-status]{color:#bfc9d7;font-size:11px;flex:1;min-width:150px}
+.d616-diag__metrics{flex:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:12px 22px;background:#1b222e;border-bottom:1px solid #354256}
+.d616-diag__metrics>div{background:#262e3b;border:1px solid #3d4758;border-radius:7px;padding:11px 13px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.d616-diag__metrics span{font-size:11px;color:#c7d0de}.d616-diag__metrics strong{font-size:22px;font-variant-numeric:tabular-nums;color:#f0c386}
+.d616-diag__filters{display:flex;flex-wrap:wrap;gap:8px;flex:none;padding:10px 22px;border-bottom:1px solid #354256}
+.d616-diag__filters button{min-height:30px;padding:5px 11px}.d616-diag__filters button[aria-pressed="true"]{background:#574336;border-color:#be9362;color:#ffe3b2}
+.d616-diag__results{flex:1;overflow-y:auto;min-height:0;padding:16px 22px;scrollbar-color:#66748a #202832}
+.d616-diag__section{background:#242c38;border:1px solid #3f4a5b;border-radius:9px;margin-bottom:12px;overflow:hidden}
+.d616-diag__section h3{display:flex;align-items:center;gap:9px;padding:12px 15px;margin:0;font-size:14px;color:#f5e3c4;background:#2a3340;border-bottom:1px solid #3b4656}
+.d616-diag__section h3>i{color:#dcb375}.d616-diag__section h3 small{margin-left:auto;font-size:10px;font-weight:400;color:#b7c3d1;text-align:right}
+.d616-diag__finding{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border-bottom:1px solid #3a4556;overflow-wrap:anywhere}
+.d616-diag__finding:last-child{border-bottom:0}
+.d616-diag__severity{flex:none;min-width:76px;text-align:center;padding:4px 8px;border-radius:25px;color:#ccead8;background:#234d3f;border:1px solid #347253;font-size:10px;font-weight:700}
+.d616-diag__finding.is-error .d616-diag__severity{background:#5a282b;color:#ffd0ca;border-color:#975052}
+.d616-diag__finding.is-warning .d616-diag__severity{background:#594328;color:#ffe0ac;border-color:#927042}
+.d616-diag__finding.is-info .d616-diag__severity{background:#2b4259;color:#cbdff4;border-color:#53718c}
+.d616-diag__finding strong{font-size:12px;color:#f1f4fa}.d616-diag__finding p{margin:5px 0;line-height:1.45;color:#bdc8d6}.d616-diag__finding small{color:#9cabbf}
+.d616-diag__ok{margin:12px 15px;color:#9fc9b4}.d616-diag__empty{padding:42px 12px;text-align:center;color:#b7c5d5;display:flex;flex-direction:column;align-items:center;gap:10px}.d616-diag__empty i{font-size:30px;color:#e0b57b}.d616-diag__empty strong{font-size:15px;color:#fff}.d616-diag__empty p{margin:0}
+.d616-diag__truncated{color:#ffcea6}.d616-diag__footer{flex:none;padding:10px 22px;color:#b2bfce;background:#19222e;border-top:1px solid #424c5b;font-size:11px;line-height:1.4}
+.d616-diag__footer i{color:#e6b980;margin-right:6px}
+@media(max-width:670px){.d616-diag__hero{padding:13px}.d616-diag__hero h2{font-size:20px}.d616-diag__toolbar,.d616-diag__metrics,.d616-diag__filters{padding:9px}.d616-diag__results{padding:9px}.d616-diag__metrics>div{padding:8px}.d616-diag__metrics strong{font-size:17px}.d616-diag__section h3{flex-wrap:wrap}.d616-diag__section h3 small{width:100%;text-align:left;margin:0}}

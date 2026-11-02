@@ -20,6 +20,7 @@ export const POWER_DAMAGE_FACTORS = Object.freeze({
   'Coiling Crush': [0, 1], // Initial grasp: no damage normally; normal on Fantastic.
   'Headshot': [2, 3],
   'Banging Heads': [1, 1],
+  'Supernova': [0.5, 1], // Half on a normal hit; full on a successful Fantastic.
   'Leg Sweep': [1, 1],
   'Rico-Shield': [1, 1],
   // Blind/deafen effects deal NO damage on ordinary success; exactly normal damage on Fantastic.

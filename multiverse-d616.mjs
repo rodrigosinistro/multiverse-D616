@@ -19,6 +19,7 @@ import { registerHeldConcentrationHooks } from "./scripts/held-concentration.mjs
 import { casterTokenForItem } from "./scripts/combat-preflight.mjs";
 import { registerAutomationSettings, automationEnabled } from "./scripts/automation-settings.mjs";
 import { registerAutomationCenterMenu } from "./scripts/automation-center.mjs";
+import { registerDiagnosticCenterMenu } from "./scripts/diagnostic-center.mjs";
 import { registerCustomAutomationSettings, registerCustomAutomationHooks, customDamageBonusForTarget, applyCustomDamageMultiplier } from "./scripts/custom-automations.mjs";
 import { prepareD616Movement } from "./scripts/movement-calculator.mjs";
 import { chooseD616Dialog, promptD616FocusExtra } from "./scripts/dialog-v14.mjs";
@@ -50,6 +51,7 @@ import {resolveEquipmentPermanentEffects,hasEquipmentPermanentPower} from "./scr
 import { calculatePowerDamage } from "./scripts/power-fantastic-damage.mjs";
 import { buildItemRollFormula } from "./scripts/roll-formula.mjs";
 import { resolvePowerRoll, checkPowerOutcome, hasNaturalUltimateFantastic, powerDamageReductionCategory } from "./scripts/power-rolls.mjs";
+import { mayCreateBangingHeadsDamage } from "./scripts/power-target-rules.mjs";
 import {
   canUseShieldBearerPower,
   markShieldThrown,
@@ -584,6 +586,13 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         ui.notifications?.warn?.('Não foi possível confirmar os alvos. A ação foi cancelada.');
         return;
       }
+    }
+    // Both Banging Heads variants require exactly TWO marked targets for the
+    // shared Melee roll. Validate before spending Focus/action/Concentration.
+    if (this.type === 'power' && this.name === 'Banging Heads' &&
+        mmD616CollectLocalTargets().length !== 2) {
+      ui.notifications?.warn?.('Banging Heads: marque exatamente dois alvos antes do ataque.');
+      return;
     }
     // Rico-Shield makes one attack per ricochet, never a multi-target roll.
     // Check before paying Focus and recording a Standard Action.
@@ -3285,6 +3294,13 @@ class ChatMessageMarvel extends ChatMessage {
       return;
     }
     let damageTargets=resolvedTargets.length?filterHitTargets(resolvedTargets,outcomes):resolvedTargets;
+    // Shared attack: Banging Heads succeeds ONLY if both Melee defenses are
+    // beaten. Never generate a DAMAGE card for just one of the two targets.
+    if (item?.type === 'power' &&
+        !mayCreateBangingHeadsDamage(item.name, resolvedTargets, damageTargets)) {
+      ui.notifications?.warn?.('Banging Heads: os dois alvos precisam ser atingidos; sem dano se qualquer um falhar.');
+      return;
+    }
     if(advanced?.name && isAdvancedElementalPower(advanced.name)){
       damageTargets=damageTargets.filter(({ref,document})=>advancedNeedsDamage(advanced.name,outcomes.get(ref.uuid),{
         displaced:Boolean(chatMessage.getFlag('multiverse-d616',`elementalMoved_${document?.id??''}`)),
@@ -6766,6 +6782,7 @@ Hooks.once("init", () => {
   registerAutomationSettings();
   registerCustomAutomationSettings();
   registerAutomationCenterMenu();
+  registerDiagnosticCenterMenu();
   registerPowerVfxSettings();
   registerPowerVfxLifecycleHooks();
   game.multiverseD616 = game.multiverseD616 ?? {};

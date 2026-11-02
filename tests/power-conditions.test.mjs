@@ -34,9 +34,11 @@ test('não aplica efeitos situacionais dependentes de dano nem escolhas',()=>{
  }
  assert.deepEqual(conditionsForOutcome('Elemental Grab',fantastic).map(r=>r.status),['grabbed','pinned']);
 });
-test('efeito no próprio usuário exige sucesso e regra explícita',()=>{
- assert.deepEqual(conditionsForOutcome('Speed Blast',fantastic,{self:true}).map(r=>r.status),['prone']);
- assert.deepEqual(conditionsForOutcome('Speed Blast',good,{self:true}).map(r=>r.status),[]);
+test('Speed Blast: Atordoado e Caído são efeitos no alvo, nunca no atacante',()=>{
+ assert.deepEqual(conditionsForOutcome('Speed Blast',good).map(r=>r.status),['stunned']);
+ assert.deepEqual(conditionsForOutcome('Speed Blast',fantastic).map(r=>r.status),['stunned','prone']);
+ assert.deepEqual(conditionsForOutcome('Speed Blast',fantastic,{self:true}),[]);
+ assert.deepEqual(conditionsForOutcome('Speed Blast',miss),[]);
 });
 test('trocas de defesa por traços não são ignoradas',()=>{
  const mk=n=>({items:[{type:'trait',name:n}]});
@@ -101,6 +103,27 @@ test('sucesso fantástico adiciona efeito específico e reroll remove só ele',a
  assert.deepEqual(env.effects.map(e=>e.statuses[0]),['mmrpg.stunned','mmrpg.prone']);
  env.msg.rolls=[roll(19,2)];await syncPowerConditions(env.msg);
  assert.deepEqual(env.effects.map(e=>e.statuses[0]),['mmrpg.stunned']);
+});
+test('v0.2.124: Speed Blast Fantastic aplica Caído apenas no alvo e reconcilia rerrolagem',async()=>{
+ const env=setupMock({name:'Speed Blast',marvel:1,rollTotal:19,defense:16});
+ assert.notEqual(env.source,env.target,'atacante e alvo devem ser atores distintos');
+ await syncPowerConditions(env.msg);
+ assert.deepEqual(env.target.effects.map(e=>e.statuses[0]),['mmrpg.stunned','mmrpg.prone']);
+ assert.equal(env.source.effects.length,0,'atacante nunca deve ficar Caído ao usar Speed Blast');
+ for(const effect of env.target.effects){
+   const flags=effect.flags['multiverse-d616'].powerCondition;
+   assert.equal(flags.recipientUuid,env.token.uuid,'o destinatário deve ser o token do alvo');
+ }
+ await syncPowerConditions(env.msg);
+ assert.deepEqual(env.target.effects.map(e=>e.statuses[0]),['mmrpg.stunned','mmrpg.prone'],'atualização de card não duplica efeitos');
+ env.msg.rolls=[roll(19,2)];
+ await syncPowerConditions(env.msg);
+ assert.deepEqual(env.target.effects.map(e=>e.statuses[0]),['mmrpg.stunned'],'acerto comum mantém só Atordoado');
+ assert.equal(env.source.effects.length,0);
+ env.msg.rolls=[roll(12,1)];
+ await syncPowerConditions(env.msg);
+ assert.deepEqual(env.target.effects,[],'falha fantástica não mantém condição no alvo');
+ assert.equal(env.source.effects.length,0);
 });
 test('Concentração ausente impede condição que depende do poder',async()=>{
  const env=setupMock({name:'Elemental Grab'});

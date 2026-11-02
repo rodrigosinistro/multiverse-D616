@@ -30,7 +30,9 @@ export const POWER_CONDITIONS = Object.freeze({
   // Wait for the Narrator's individual damage confirmation as with Clobber.
   'Banging Heads': [C('prone','fantastic')],
   'Leg Sweep': [C('prone'), C('stunned','fantastic','turn')],
-  'Speed Blast': [C('stunned','success','turn'), C('prone','fantastic',null,{self:true})],
+  // Speed Blast affects the HIT TARGET: stunned on success and additionally
+  // prone on Fantastic success. Never knock down the attacker.
+  'Speed Blast': [C('stunned','success','turn'), C('prone','fantastic')],
   'Webcasting': [C('paralyzed'), C('pinned','fantastic')],
   'Elemental Grab': [C('grabbed','success',null,{concentration:true}), C('pinned','fantastic',null,{concentration:true})],
   'Telekinetic Grab': [C('grabbed','success',null,{concentration:true}), C('pinned','fantastic',null,{concentration:true})],

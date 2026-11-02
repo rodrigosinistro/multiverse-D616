@@ -1,3 +1,32 @@
+## v0.2.126 — Reposição de compêndios omitidos na v0.2.125
+
+**Backup recomendado:** copie a pasta de dados do mundo antes de instalar. Encerre totalmente o servidor Foundry VTT antes de substituir a pasta `Data/systems/multiverse-d616` pelo conteúdo do ZIP completo. Não mescle apenas arquivos `.mjs`: os seis bancos LevelDB e seus `000002.log` precisam acompanhar o pacote. Após iniciar o servidor, reabra `MMRPG Content` e execute a Central de Diagnóstico. Esperado: Powers com 398 itens e os demais cinco compêndios preenchidos. Não é necessário recriar poderes ou fichas. A ferramenta é somente leitura e não causou o desaparecimento dos registros. Caso tenha alterado manualmente compêndios do **sistema**, preserve backup deles antes de substituir a pasta do sistema.
+
+## v0.2.125 — Central de Diagnóstico (nenhuma migração de dados)
+
+- Ferramenta nova e independente, exclusiva para o Mestre; não altera o esquema de fichas nem o formato das automações.
+- A execução é manual e somente leitura. Recomenda-se conferir o relatório antes de qualquer intervenção, mantendo backup do mundo.
+- O sistema não corrige problemas automaticamente; erros de consulta são apresentados como não verificados.
+- Instale o ZIP completo da v0.2.125 e reinicie o Foundry v14 para registrar a nova entrada de menu.
+
+## v0.2.124 — Correção do destinatário de Speed Blast
+
+Sem migração de dados. Reinstale o ZIP completo e reinicie o Foundry. A alteração atua em novas rolagens: em Sucesso Fantástico de Speed Blast, **Caído** passa a ser aplicado ao **alvo atingido**, nunca ao atacante. **Atordoado** continua no alvo por um turno. Se o atacante já tiver recebido Caído incorretamente em uma rolagem anterior, remova manualmente aquele Active Effect antigo, pois a atualização não apaga efeitos históricos do mundo. Faça backup antes de atualizar.
+
+## v0.2.123 — Auditoria Geral dos Poderes, fase 2
+
+Sem migração de dados. Os 398 registros do compêndio e as fichas existentes são preservados. O sistema corrige em tempo de execução a classificação de 12 poderes, distingue testes sem dano, reação sem rolagem e ataques danosos, e reforça os dois alvos obrigatórios de Banging Heads. Brain Drain calcula dano em Focus, mas sua recuperação correspondente continua manual; Supernova preserva metade do dano em acerto comum. Recomenda-se fazer backup do mundo e testar no Foundry antes de publicar a versão.
+
+## v0.2.122 — Reposição de poderes do compêndio
+
+Nenhuma migração das fichas ou das automações do mundo. O sistema traz seis itens que faltavam no compêndio **MMRPG Content → Powers** (quatro poderes de Telepatia, Iconic Item e Power Cosmic), com os mesmos IDs do catálogo do Charactermancer. Quatro nomes divergentes no compêndio também foram ajustados sem substituir os dados de poderes já importados nas fichas. Instale o ZIP completo, reinicie o Foundry (não apenas feche a janela do compêndio) e busque os poderes novamente. Backups e personalizações existentes não são reescritos. A correção do resolvedor de rolagens da v0.2.121 permanece intacta.
+
+## v0.2.121 — Auditoria Geral de Poderes (2026-11-02)
+
+- Atualização sem migração de mundo. A correção dos quatro poderes de Telepatia (Control Emotion, Control Group Emotion, Sense Emotion, Sway Emotion) ocorre no resolvedor de rolagens, inclusive quando itens legados ainda têm `attack: true` sem `attackTarget`.
+- Os quatro poderes passam a ser tratados como testes Ego vs Ego **sem geração de dano direto**. Outros ataques e poderes personalizados são preservados. Faça um backup do mundo e valide com uma cena de teste antes de publicar.
+- `POWER_AUDIT.md` documenta achados ainda pendentes de conferência humana, sem alterar as fichas/compêndios automaticamente.
+
 ## v0.2.120 — Central 5.0: Biblioteca de Automações (2026-11-02)
 
 - A biblioteca é criada vazia como configuração de mundo (`customAutomationLibrary`), sem migração de regras nem ativação automática. Regras do Mestre existentes seguem funcionando sem alterações.

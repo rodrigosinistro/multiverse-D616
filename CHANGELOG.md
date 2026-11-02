@@ -1,3 +1,56 @@
+## v0.2.126 — Reposição dos seis compêndios no ZIP e diagnóstico de índices vazios (2026-11-02)
+
+- **Correção urgente do pacote v0.2.125:** o ZIP anterior omitiu os seis arquivos LevelDB `000002.log` dos compêndios, apesar de o código-fonte conter os dados. Isso fazia os compêndios parecerem vazios e provocava 398 erros de poderes ausentes na Central de Diagnóstico.
+- **Compêndios restaurados no ZIP:** Powers (398 registros), Traits, Tags, Origins, Occupations e Items. Os bancos são preservados da v0.2.124, incluindo as correções e os IDs da v0.2.122. Nenhum poder foi recriado artificialmente.
+- **Diagnóstico mais claro:** se o índice completo de um compêndio estiver vazio, a Central emite um erro de pacote vazio e não centenas de falsos erros individuais de poderes ausentes.
+- **Regressão de empacotamento:** teste para verificar os seis arquivos de dados e seus arquivos de controle. A integridade do **ZIP final**, e não apenas do diretório de desenvolvimento, também deve ser conferida na geração da release.
+- **Instalação:** faça backup do mundo e instale o ZIP completo com o Foundry totalmente encerrado; depois reinicie o servidor e execute novamente o diagnóstico. A ferramenta de diagnóstico não modifica fichas nem compêndios por conta própria.
+- **Escopo:** nenhuma alteração nas regras de combate, Central de Automações, HUD, efeitos visuais ou compêndios do mundo.
+
+## v0.2.125 — Central de Diagnóstico 1.0 (2026-11-02)
+
+- **Nova Central de Diagnóstico exclusiva para o Mestre** nas configurações do Multiverse-D616. Interface em ApplicationV2 com identidade visual coerente com a Central de Automações. Execução **sob demanda e somente leitura**; não realiza correções automáticas.
+- **Compêndios:** verifica a presença dos seis compêndios do sistema, lê os índices e compara os IDs e nomes de Powers com o catálogo incluído no Charactermancer. Distingue registros faltantes, nomes divergentes e poderes adicionais. Uma fonte inacessível faz a comparação aparecer como **não verificada**, nunca como sucesso.
+- **Automações e Biblioteca:** valida os dados brutos das regras salvas, detecta IDs duplicados, gatilhos/efeitos inválidos, referências a poderes personalizados e exceções de grupos não reconhecidos. Mantém intactas as opções do Mestre; poderes personalizados são informativos, não erros automáticos.
+- **Fichas e efeitos:** conta fichas, poderes e efeitos ativos/cadastrados; sinaliza poderes sem nome, condições do namespace do sistema não registradas e metadados inválidos de duração/dano contínuo. Não marca condições de módulos externos como defeituosas apenas por não estarem no sistema.
+- **Integrações opcionais:** informa a disponibilidade do Sequencer; alerta apenas quando regras habilitadas dependem de VFX e o módulo não está ativo. Não exige Sequencer para funcionar nem para executar o diagnóstico.
+- **Relatório exportável em JSON:** inclui versão, verificações realizadas, ocorrências classificadas por gravidade e referências técnicas. O Mestre decide quando exportar/compartilhar; o relatório pode conter nomes de fichas e do mundo.
+- **Segurança e escopo:** nenhuma operação que altere documentos, compêndios, módulos, configurações ou automações. Sem teste de combate simulado, sem reabrir desenvolvimento de Animações ou da Central de Automações. As rotinas de combate e os 398 poderes permanecem como na v0.2.124.
+
+## v0.2.124 — Correção pontual: Speed Blast aplica Caído no alvo (2026-11-02)
+
+- **Speed Blast:** corrigido o destinatário de **Caído** em Sucesso Fantástico. O efeito estava marcado incorretamente como `self`, derrubando o atacante. Agora a vítima atingida recebe **Atordoado** por 1 turno e, em Sucesso Fantástico, também **Caído**. Nenhuma condição do Speed Blast é aplicada ao atacante.
+- **Rerolagens e prevenção de duplicidade:** o mecanismo existente continua removendo Caído quando o resultado é alterado para acerto comum e ambas as condições em caso de falha, sem remover efeitos manuais não relacionados. O card não cria efeitos repetidos.
+- **Escopo:** correção apenas no mapeamento da condição e teste de regressão com atacante e alvo diferentes. Mantidos os 398 poderes, os compêndios, a Central de Automações, o HUD e os demais efeitos de combate.
+
+## v0.2.123 — Auditoria Geral dos Poderes: fase 2 (2026-11-02)
+
+- **Revisão dos 12 casos** do relatório v0.2.121, baseada no texto dos efeitos já incluídos no catálogo. Sem modificar os 398 registros nem o compêndio do Foundry.
+- **Oito testes não danosos:** Command Animal (teste situacional), Time Travel Other, Dimensional Travel Other, Multiversal Travel Other, Webcasting, Speed Blast, Steal Power e Steal Powers passam a emitir testes de defesa sem botão de dano, preservando suas condições nativas e decisões narrativas.
+- **Reação não danosa:** Hurled Shield Deflection não solicita uma rolagem de ataque inexistente no seu texto; mantém o fluxo de ativação/reação e os controles de escudo do sistema.
+- **Ataques danosos:** Brain Drain passa a processar dano em Focus (Ego vs Vigilance); Supernova passa a processar dano em Health (Ego vs Resilience), **metade** em sucesso comum e **total** no Fantástico; o Banging Heads da categoria Martial Arts passa a ser reconhecido como ataque danoso, tal como a variante de Super-Strength.
+- **Banging Heads:** exigir dois alvos marcados antes da ativação e só gerar o card de dano se **ambos** forem atingidos pela rolagem; condição Caído já automatizada permanece vinculada ao dano confirmado. Mesma verificação nas duas versões do poder.
+- **Limites declarados:** a recuperação de Focus do lançador descrita em Brain Drain não foi automatizada nesta fase; seleção/posicionamento de área de Supernova e transferências de poder/viagem continuam dependendo da decisão do Mestre. As rotinas existentes não passam a inventar esses resultados.
+- **Prevenção:** auditoria agora não sinaliza erroneamente uma reação sem rolagem como ataque; novos testes cobrem classificação, dano, condições e regra conjunta de dois alvos. Todos os ajustes ocorrem no resolvedor, sem sobrescrever itens dos mundos.
+
+## v0.2.122 — Compêndio Powers: restauração de seis poderes ausentes (2026-11-02)
+
+- **Correção do compêndio:** restaurados os seis itens existentes no catálogo do Charactermancer, mas ausentes do banco LevelDB do compêndio `MMRPG Content / Powers`: **Control Emotion, Control Group Emotion, Sense Emotion, Sway Emotion, Iconic Item e Power Cosmic**.
+- **Causa raiz:** o compêndio era idêntico nas versões 0.2.120 e 0.2.121; as seis ausências eram anteriores à auditoria. Não havia exclusão feita pela v0.2.121.
+- **Correções de nomes:** quatro itens com ID correto, mas nome divergente, foram harmonizados com o catálogo: Invisibility → Mirror Images, Extend Invisiblity → Extend Invisibility, Elemental Richochet → Elemental Ricochet e Steal Powers → Steal Power. Efeitos, atributos, pastas e IDs foram mantidos.
+- **Preservação:** mantidos os 392 registros anteriores, com somente as quatro correções pontuais de nome. Os seis itens restaurados foram copiados do catálogo original, preservando IDs e descrição, sem alterar fichas existentes ou automações.
+- **Auditoria preventiva:** teste automático de correspondência por ID e nome entre os 398 poderes do catálogo e o banco LevelDB distribuído; também valida as quatro entradas da Telepatia.
+- **Motor:** mantida a correção da v0.2.121 para testes de Ego contra Ego sem dano direto. Nenhuma alteração adicional nas rolagens.
+- **Instalação:** atualize o sistema completo e reinicie o Foundry para recarregar o índice do compêndio. Faça backup do mundo antes de instalar; os compêndios do mundo e personagens já importados não são modificados.
+
+## v0.2.121 — Auditoria Geral dos Poderes: fase 1 (2026-11-02)
+
+- **Auditoria baseada no catálogo:** análise automatizada dos 398 poderes do Charactermancer, conferindo metadados, resoluções de ataque/defesa, campos de ações e anomalias de importação. Relatório `POWER_AUDIT.md` incluído no ZIP; nenhum julgamento das regras oficiais é feito sem validar o texto correspondente.
+- **Correção de 4 poderes de Telepatia:** Control Emotion, Control Group Emotion, Sense Emotion e Sway Emotion agora rolam Ego vs defesa Ego como **testes sem dano**. Seus registros importados vinham com `attack: true`, mas sem defesa, e poderiam acionar indevidamente o processamento de dano. O ajuste conservador é aplicado somente pelo resolvedor de rolagem, sem reescrever compêndios ou fichas.
+- **Prevenção de regressões:** adicionada auditoria sem efeitos colaterais e testes cobrindo catálogo completo, itens legados, danos de outros poderes e lista de possíveis inconsistências para revisão futura.
+- **Pendências não alteradas:** 12 entradas com `attackKind` mas sem classificação de dano/check, a divergência de campos de Environmental Protection e descrição resumida ausente de Iconic Weapon. Sem alteração automática por falta de confirmação específica da regra.
+- **Compatibilidade:** Central de Automações 5.0, MMDR, VFX, HUD, Charactermancer, equipamentos, manuais e configurações existentes permanecem sem mudanças funcionais além dos quatro testes de Telepatia.
+
 ## v0.2.120 — Central de Automações 5.0: Biblioteca, exportação e importação (2026-11-02)
 
 - **Biblioteca de Automações:** nova aba independente da lista de automações ativas, com armazenamento de modelos no mundo, navegação, instalação de cópias e remoção confirmada.

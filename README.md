@@ -2,6 +2,23 @@
 
 Sistema **Multiverse-D616** para **Foundry VTT v14**.
 
+
+### Central de Diagnóstico
+
+Para abrir, acesse **Configurações do Foundry → Configurações do Jogo → Multiverse-D616 → Abrir Central de Diagnóstico** (somente Mestre). Clique em **Executar diagnóstico** para verificar os compêndios do sistema, o catálogo de poderes, as automações pessoais e a biblioteca, os efeitos das fichas e as integrações opcionais. O relatório apresenta **Erros**, **Revisar** e **Informações** e pode ser exportado como **JSON** para análise.
+
+A verificação é **somente leitura**: não repara fichas, não substitui compêndios e não altera as configurações do mundo. Falhas de carregamento aparecem como verificações indisponíveis, não como aprovadas. O JSON pode conter o identificador do mundo e nomes de fichas; revise antes de compartilhar. Não confunda ausência de ocorrências com garantia absoluta de funcionamento: apenas as verificações descritas são executadas.
+
+
+## Auditoria Geral dos Poderes — fase 1
+
+Revisão automatizada de **398 poderes** do catálogo, com correção conservadora de
+**Control Emotion, Control Group Emotion, Sense Emotion e Sway Emotion**: os quatro
+fazem testes de **Ego vs Ego sem dano direto**, evitando botões/rotinas de dano
+indevidos. Um relatório detalhado de achados e limites está em `POWER_AUDIT.md`.
+Não houve alteração nos compêndios, na Central de Automações, no HUD ou em fichas
+existentes; veja `CHANGELOG.md` e `MIGRATION_NOTES.md`.
+
 ## Central de Automações 5.0 — Biblioteca e compartilhamento de regras
 
 A Central possui três abas: **Minhas Automações** (regras em uso), **Biblioteca** (modelos salvos, inativos) e **Automações Nativas** (configurações do motor já existente).
@@ -55,6 +72,10 @@ Na aba **Minhas Automações**, use o formulário **Gatilho → Condição → E
 Uma regra pode conter **de um a oito efeitos em sequência**, com controles para **adicionar, remover e reordenar** cada etapa. Por exemplo, após um Sucesso Fantástico confirmado contra o alvo, é possível **aplicar Confuso por dois turnos**, **recuperar Health** e **publicar um aviso no chat**, sem criar três regras independentes. Cada condição tem sua própria duração e orientação de remoção. A ação **Executar animação configurada no poder** pode reproduzir a animação do Item via Sequencer (quando o módulo e o arquivo estiverem disponíveis); a ausência da animação não impede as demais ações. Edge/Trouble continua alterando somente rolagens antes de serem feitas. **Dano personalizado** está disponível no gatilho **Após acertar um alvo**, por valor fixo, por atributo ou como **multiplicador ×2/×3**. Bônus entram no dano base; o multiplicador atua no dano calculado após RD e regras especiais. As decisões sobre acerto, barreiras e aplicação pelo Mestre continuam no motor/MMDR nativo. Caso múltiplas automações proponham multiplicadores para o mesmo alvo, somente o maior se aplica. **Dano contínuo por turno** é um efeito adicional (1–100 pontos por tick, Health ou Focus, por 1–20 inícios de turno do alvo): após o gatilho ele cria um ActiveEffect temporário independente das condições nativas. Começa no **próximo início de turno** do personagem, aplica o dano automaticamente pelo processador do MMDR (redução de dano e proteções pessoais), informa no chat o dano efetivo e os turnos restantes, e desaparece ao terminar. Precisa de combate iniciado, personagem na iniciativa e Mestre ativo; uma regra já ativa não se acumula novamente no mesmo alvo. Efeitos existentes continuam até expirarem mesmo se a criação de novas regras for pausada. Não dispara um segundo pedido de confirmação de dano em cada turno. **Atenção:** adicionar Em Chamas e dano contínuo na mesma regra pode provocar dois danos independentes (o dano nativo da condição e o dano personalizado). Use os dois apenas quando essa for a intenção do Mestre.
 
 Nas regras de turno/poder, somente o Mestre ativo aplica alterações de ficha ou envia mensagens. Regras passivas apenas influenciam a rolagem do próprio atacante, sem modificar fichas. Não são aceitos códigos JavaScript, caminhos de dados arbitrários nem alterações genéricas de valores. A opção **Pausar todas** também pausa estas regras, e **Executar minhas automações** controla somente as personalizadas. No início/fim do turno, somente avanços normais do combate disparam os gatilhos (não retrocessos). Não há execução retroativa. Os efeitos não modificam Concentração nem gastos automáticos do sistema. Nas automações que aplicam condições, o Mestre pode escolher **duração manual**, **1–20 turnos do alvo** ou **1–20 rodadas de combate**, além de escrever uma **orientação de remoção** opcional. Para turnos/rodadas é obrigatório que o combate esteja ativo e o personagem afetado esteja na iniciativa; sem essas condições, o sistema não aplica um efeito temporário sem prazo confiável. Durações são controladas por flags nos ActiveEffects do Foundry v14, sem alterar a rotina das condições nativas nem substituir efeitos existentes. **No início de cada turno**, o chat apresenta as condições ativas, o tempo restante e a forma de remoção; Sangrando, Em Chamas e Envenenado usam as referências nativas já existentes no sistema e as demais condições são descritas sem inventar testes. A orientação do Mestre prevalece na condição criada pela Central. Avisos não representam rolagens nem consomem ações. Condições antigas das automações já salvas continuam com **duração manual**. A expiração independe da opção de pausar novas automações, respeitando efeitos já aplicados.
+
+### Classificação de poderes do catálogo
+
+A auditoria do catálogo conserva as fichas e o compêndio original, enquanto o resolvedor distingue ataques danosos, testes sem dano e reações sem rolagem. Poderes como Webcasting, Speed Blast, Command Animal e os poderes de viagem/controle não criam cards de dano por causa de `attackKind` legado. Banging Heads exige dois alvos atingidos para gerar dano; Brain Drain usa Focus e Supernova causa meio dano em acerto comum. Os efeitos narrativos que não dispõem de mecanismo confirmado permanecem sob controle do Mestre. Consulte `POWER_AUDIT.md` para detalhes.
 
 ## Compatibilidade
 
