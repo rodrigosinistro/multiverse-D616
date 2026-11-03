@@ -8,6 +8,8 @@ import {adjudicateTargetOutcome,rollSignature,MULTI_TARGET_DECISION_KEY} from '.
 import {resolvePowerRoll} from './power-rolls.mjs';
 import {crossingRegions} from './elemental-area-geometry.mjs';
 import {CONDITION_RECOVERY_RULES} from './condition-actions.mjs';
+import {cleanupExpiredElementalEffects} from './elemental-fantastic.mjs';
+import {conditionReference} from './condition-reference.mjs';
 import {powerConditionExpiryDecision} from './power-conditions.mjs';
 import {playPowerVfx} from './power-vfx.mjs';
 
@@ -649,11 +651,14 @@ export function customConditionDurationText(effect,combat){
 function conditionRemovalText(statusId,effect){
   const custom=conditionFlags(effect);
   if(custom?.removalNote)return custom.removalNote;
+  // Same removal instruction as the condition tray, including world customizations.
+  const reference=conditionReference(statusId);
+  if(reference)return reference.remove || '';
   const recovery=CONDITION_RECOVERY_RULES[statusId];
   if(recovery)return `Ação Padrão: ${recovery.abilityLabel} TN ${recovery.tn}`+
     (statusId==='mmrpg.bleeding'?'; também pode cessar ao recuperar Health, se habilitado':'');
   if(statusId==='mmrpg.poisoned')return 'Início do turno: Resilience TN 18; Sucesso Fantástico remove a condição';
-  return 'Pela regra do poder, expiração ou remoção pelo Mestre';
+  return ''; // The condition tray does not provide a removal rule for this ID.
 }
 /** Return entries for native and custom statuses, de-duplicated by status ID.
  * The native expiry metadata is read only; its engine owns removal. */
@@ -669,10 +674,17 @@ export function conditionTurnEntries(actor,combat){
         .find(entry=>entry?.id===id);
       if(!registered)continue;
       const label=CUSTOM_STATUSES[id]??registered.name??registered.label??id;
+      const elemental=effect.flags?.[AUTOMATION_SYSTEM]?.elementalFantastic;
+      // Fantastic elemental effects are native statuses, not rules created in
+      // the Central. Their duration belongs to the elemental engine and must
+      // not be presented as an indefinite status in the beginning-of-turn chat.
       const duration=custom?customConditionDurationText(effect,combat):native?.expires==='turn'
         ?'1 turno (controle nativo)':native?.expires==='round'?'1 rodada (controle nativo)':
-          'até remoção conforme a regra';
-      const record={id,label,duration,removal:conditionRemovalText(id,effect),custom:!!custom};
+          elemental?.source==='fantastic' && Number(elemental.rounds)>0
+            ?plural(Number(elemental.rounds),'rodada (efeito elemental)','rodadas (efeito elemental)'):
+            'até remoção conforme a regra';
+      const record={id,label,duration,description:conditionReference(id)?.description ?? '',
+        removal:conditionRemovalText(id,effect),custom:!!custom};
       if(!found.has(id)||custom)found.set(id,record);
     }
   }
@@ -682,7 +694,8 @@ export function conditionTurnEntries(actor,combat){
     const registered=list(Array.isArray(globalThis.CONFIG?.statusEffects)?CONFIG.statusEffects:Object.values(globalThis.CONFIG?.statusEffects??{}))
       .find(entry=>entry?.id===id);
     if(registered)found.set(id,{id,label:CUSTOM_STATUSES[id]??registered.name??registered.label??id,
-      duration:'até remoção conforme a regra',removal:conditionRemovalText(id,null),custom:false});
+      duration:'até remoção conforme a regra',description:conditionReference(id)?.description ?? '',
+      removal:conditionRemovalText(id,null),custom:false});
   }
   return [...found.values()];
 }
@@ -715,6 +728,9 @@ export async function processCustomConditionTurn(combat){
   conditionTurnPending.add(key);
   try{
     await expireCustomConditionRounds(combat);
+    // The status due at THIS target turn must be retired before the chat reads
+    // the Actor effects, not on an unrelated round boundary or after notice.
+    await cleanupExpiredElementalEffects(combat);
     const combatant=combat.combatant,actor=combatant.token?.actor??combatant.actor;
     const advance=[];
     for(const effect of list(actor.effects)){
@@ -734,9 +750,13 @@ export async function processCustomConditionTurn(combat){
     const already=list(globalThis.game?.messages).some(m=>m.getFlag?.(AUTOMATION_SYSTEM,'customConditionTurnNotice')?.turnKey===key);
     if(already){conditionTurnSeen.add(key);return false;}
     if(typeof globalThis.ChatMessage?.create!=='function')return false;
+    // Use the very same descriptions and removal instructions shown by the tray.
+    // Escape configured text: custom condition notes can be authored by the GM.
     const content=`<section class="d616-custom-condition-turn"><strong>Condições de ${escapeHTML(actor.name)} — início do turno</strong><ul>`+
-      entries.map(c=>`<li><strong>${escapeHTML(c.label)}</strong> — Restante: ${escapeHTML(c.duration)}. `+
-        `Como remover: ${escapeHTML(c.removal)}.</li>`).join('')+'</ul></section>';
+      entries.map(c=>`<li><strong>${escapeHTML(c.label)}</strong> — Restante: ${escapeHTML(c.duration)}.`+
+        (c.description?`<div>${escapeHTML(c.description)}</div>`:'')+
+        (c.removal?`<div><strong>Como remover:</strong> ${escapeHTML(c.removal)}</div>`:'')+
+        '</li>').join('')+'</ul></section>';
     await ChatMessage.create({author:game.user.id,speaker:ChatMessage.getSpeaker?.({actor})??{},content,
       flags:{[AUTOMATION_SYSTEM]:{customConditionTurnNotice:{version:1,turnKey:key,
         actorUuid:actor.uuid,combatId:combat.id}}}});
@@ -835,11 +855,17 @@ export function registerCustomAutomationHooks(){
     const previous=combat.previous??{};
     const currentRound=Number(combat.round),currentTurn=Number(combat.turn);
     const previousRound=Number(previous.round),previousTurn=Number(previous.turn);
-    // No effects while rewinding or on metadata-only changes.
+    // In Foundry v14, combat.previous is not guaranteed to be available when
+    // updateCombat fires (notably after bonus-round transitions or a different
+    // turn-tracker implementation). A missing previous snapshot must NOT silence
+    // status reminders for the new combatant. We only skip positively proven
+    // backwards navigation, and per-turn checkpointing prevents duplicates.
     const validPrevious=Number.isInteger(previousRound)&&previousRound>=0&&Number.isInteger(previousTurn);
     const forward=validPrevious && (currentRound>previousRound ||
       (currentRound===previousRound&&currentTurn>previousTurn));
-    if(!forward&&change.started!==true)return;
+    const backwards=validPrevious && (currentRound<previousRound ||
+      (currentRound===previousRound&&currentTurn<previousTurn));
+    if(backwards&&change.started!==true)return;
     void processCustomConditionTurn(combat).catch(e=>console.error('[D616] Aviso de condições',e));
     void processCustomOngoingDamageTurn(combat).catch(e=>console.error('[D616] Dano contínuo',e));
     const turns=list(combat.turns);

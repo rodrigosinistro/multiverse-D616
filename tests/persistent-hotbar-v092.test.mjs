@@ -28,22 +28,22 @@ function element(cls, title) {
  };
 }
 
-test('v0.2.99: hotbar sorts alphabetically in five-row columns and preserves all actions',()=>{
+test('v0.2.129: hotbar sorts favorites before others and preserves all actions without empty slots',()=>{
  const buttons=Array.from({length:13},(_,i)=>element('mmrpg-native-action-hud__action power',`Poder ${i}`));
  const extra=[];
  const styles={};
  const body={
   dataset:{},style:{setProperty(k,v){styles[k]=v}},classList:{toggle(n,on){this[n]=on}},
-  querySelectorAll(selector){assert.equal(selector,'.mmrpg-native-action-hud__action');return buttons},
+  querySelectorAll(selector){return selector==='.mmrpg-native-action-hud__action'?buttons:[]},
   appendChild(node){extra.push(node)},
  };
  const previous=document.createElement;
  document.createElement=(tag)=>{assert.equal(tag,'span');return element('');};
  try {new NativeActionHud().decoratePersistentHotbar(body)} finally {document.createElement=previous;}
  assert.equal(extra.filter(n=>n.className.includes('power')).length,13,'all 13 power buttons remain usable');
- assert.equal(extra.filter(n=>n.className==='mmrpg-native-action-hud__slot-empty').length,2);
+ assert.equal(extra.filter(n=>n.className==='mmrpg-native-action-hud__slot-empty').length,0);
  assert.equal(body.dataset.shortcuts,'13');
- assert.equal(body.classList['has-overflow-shortcuts'],false);
+ assert.equal(body.classList['has-overflow-shortcuts'],undefined);
  assert.equal(styles['--mmrpg-persistent-body-rows'],'5');
  assert.equal(styles['--mmrpg-persistent-body-columns'],'3');
  assert.ok(buttons.every(b=>b.classList.added.has('is-hotbar-slot')));
@@ -51,15 +51,15 @@ test('v0.2.99: hotbar sorts alphabetically in five-row columns and preserves all
  assert.equal(extra[0].attrs['aria-label'],'Poder 0');
 });
 
-test('v0.2.99: five-row column padding is visual, not clickable controls',()=>{
+test('v0.2.129: single shortcut does not gain artificial empty slots',()=>{
  const buttons=[element('mmrpg-native-action-hud__action power','Shield 2')];
  const placeholders=[];
- const body={dataset:{},style:{setProperty(){}},classList:{toggle(){}},querySelectorAll:()=>buttons,appendChild:p=>placeholders.push(p)};
+ const body={dataset:{},style:{setProperty(){}},classList:{toggle(){}},querySelectorAll:s=>s==='.mmrpg-native-action-hud__action'?buttons:[],appendChild:p=>placeholders.push(p)};
  const previous=document.createElement;
  document.createElement=()=>element('');
  try{new NativeActionHud().decoratePersistentHotbar(body)}finally{document.createElement=previous;}
- assert.equal(placeholders.length,5);
- assert.equal(placeholders.filter(p=>p.className==='mmrpg-native-action-hud__slot-empty').length,4);
+ assert.equal(placeholders.length,1);
+ assert.equal(placeholders.filter(p=>p.className==='mmrpg-native-action-hud__slot-empty').length,0);
  assert.equal(placeholders[0],buttons[0]);
  const empty=placeholders.slice(1);
  assert.ok(empty.every(p=>!p.dataset.action));
@@ -73,5 +73,5 @@ test('v0.2.92: layout keeps classic HUD CSS untouched and uses native action han
  assert.match(js,/await item\.roll\(\)/);
  assert.match(js,/await activateAttachedPower\(carrier,actionButton\.dataset\.powerId,actor\)/);
  assert.match(js,/const persistent = persistentMode\(\)/);
- assert.equal(manifest.version,'0.2.126');
+ assert.equal(manifest.version,'0.2.134');
 });

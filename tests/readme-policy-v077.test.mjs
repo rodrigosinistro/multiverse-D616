@@ -15,8 +15,8 @@ test('README documents persistent system details, not release history',()=>{
  assert.match(readme,/minimum 14, verified 14/);
  assert.ok(readme.includes(manifest.manifest));
  assert.ok(readme.includes('MIT license'));
- assert.ok(changelog.startsWith('## v0.2.126'));
- assert.equal(manifest.version,'0.2.126');
+ assert.ok(changelog.startsWith('## v0.2.134'));
+ assert.equal(manifest.version,'0.2.134');
  assert.equal(manifest.compatibility.minimum,'14');
  assert.equal(manifest.compatibility.verified,'14');
 });

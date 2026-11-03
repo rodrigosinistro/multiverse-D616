@@ -59,14 +59,14 @@ test('v0.2.99 reflow usa células de 39 px e rolagem vertical, preserva modo cl�
   assert.match(final,/overflow-y:\s*auto/);
   assert.match(final,/overflow-x:\s*hidden/);
   assert.match(final,/width:\s*100%/);
-  assert.match(source,/button\.style\.gridColumn = String\(Math\.floor\(i \/ rows\) \+ 1\)/);
-  assert.match(source,/button\.style\.gridRow = String\(\(i % rows\) \+ 1\)/);
+  assert.match(source,/button\.style\.removeProperty\('grid-column'\)/);
+  assert.match(source,/button\.style\.removeProperty\('grid-row'\)/);
   assert.match(source,/this\.renderAbilities\(body, actor\)/,'modo clássico ainda usa ABILITIES');
 });
 
 test('v0.2.99 preferencias de tamanho individuais e manifesto corretos',()=>{
-  assert.equal(manifest.version,'0.2.126');
-  assert.match(manifest.download,/v0\.2\.126\/multiverse-d616-v0\.2\.126\.zip$/);
+  assert.equal(manifest.version,'0.2.134');
+  assert.match(manifest.download,/v0\.2\.134\/multiverse-d616-v0\.2\.134\.zip$/);
   assert.match(source,/game\.settings\.register\(SYSTEM_ID, SETTING_PERSISTENT_SIZE,\s*\{\s*scope: "client", config: false/);
   assert.match(source,/await game\.settings\.set\(SYSTEM_ID, SETTING_PERSISTENT_SIZE/);
 });

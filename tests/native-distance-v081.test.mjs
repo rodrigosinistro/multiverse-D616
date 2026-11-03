@@ -155,9 +155,9 @@ test('no persistent trails or README release notes; manifest and changelog refle
   assert.match(src,/Hooks\.on\('moveToken'/);
   assert.match(src,/globalThis\.canvas\?\.ready/);
   const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url)));
-  assert.equal(manifest.version,'0.2.126');
+  assert.equal(manifest.version,'0.2.134');
   const changelog=readFileSync(new URL('../CHANGELOG.md',import.meta.url),'utf8');
-  assert.match(changelog,/^## v0\.2\.126/);
+  assert.match(changelog,/^## v0\.2\.134/);
   const readme=readFileSync(new URL('../README.md',import.meta.url),'utf8');
   assert.doesNotMatch(readme,/v0\.2\.82/);
 });

@@ -197,6 +197,36 @@ function buildDuration(rounds) {
   return { value: Number(rounds), units: "rounds", expiry: null, expired: false };
 }
 
+/** Find the exact affected combatant, even for unlinked Token Actors.
+ * Never silently bind a condition to the wrong token when a linked Actor has
+ * multiple combatants in the same encounter. */
+export function findElementalTargetCombatant(combat, actor, tokenUuid = null) {
+  const combatants = Array.from(combat?.combatants?.contents ?? combat?.combatants ?? []);
+  const tokenId = String(tokenUuid ?? actor?.token?.uuid ?? actor?.parent?.uuid ?? '').match(/(?:^|\.)Token\.([^.]+)/)?.[1]
+    ?? actor?.token?.id ?? (actor?.parent?.documentName === 'Token' ? actor.parent.id : null);
+  if (tokenId) {
+    const exact = combatants.find(c => (c.tokenId ?? c.token?.id) === tokenId);
+    if (exact) return exact;
+  }
+  const matches = combatants.filter(c =>
+    c.actor === actor || (actor?.uuid && c.actor?.uuid === actor.uuid) ||
+    (actor?.id && (c.actorId === actor.id || c.actor?.id === actor.id)));
+  return matches.length === 1 ? matches[0] : null;
+}
+
+/** One complete affected turn must elapse. If the target has not acted yet
+ * in the current round, its turn now counts as the first affected turn;
+ * otherwise the target's next round is the first. Expire at the following
+ * appearance of that target, never at a generic round-number transition. */
+export function elementalTargetExpiryRound(combat, targetCombatant, rounds = 1) {
+  const index = Array.from(combat?.turns ?? combat?.combatants?.contents ?? combat?.combatants ?? [])
+    .findIndex(c => c.id === targetCombatant?.id);
+  const round = Number(combat?.round), turn = Number(combat?.turn), count = Number(rounds);
+  if (index < 0 || !Number.isFinite(round) || !Number.isInteger(turn) || turn < 0 ||
+      !Number.isInteger(count) || count <= 0) return null;
+  return round + count + (index < turn ? 1 : 0);
+}
+
 function effectName(rule) {
   if (rule.statusId) return `Elemental — ${rule.label}: ${rule.text}`;
   return `Elemental — ${rule.label}`;
@@ -262,6 +292,10 @@ export async function replaceElementalEffect(actor, rule, metadata = {}) {
 
   const combat = game.combat?.started ? game.combat : null;
   const sourceCombatantId = findElementalSourceCombatant(combat, metadata.sourceSpeaker, metadata.sourceActorUuid);
+  const targetCombatant = combat && rule.rounds ?
+    findElementalTargetCombatant(combat, actor, metadata.targetTokenUuid) : null;
+  const expireAtRound = targetCombatant ? elementalTargetExpiryRound(combat, targetCombatant, rule.rounds) : null;
+  const managedTargetExpiry = !!(rule.rounds && targetCombatant && expireAtRound != null);
   const flagData = {
     [SYSTEM_ID]: {
       [FLAG_KEY]: {
@@ -274,6 +308,9 @@ export async function replaceElementalEffect(actor, rule, metadata = {}) {
         appliedTurn: combat?.turn ?? null,
         combatId: combat?.id ?? null,
         sourceCombatantId,
+        targetCombatantId: managedTargetExpiry ? targetCombatant.id : null,
+        expireAtRound: managedTargetExpiry ? expireAtRound : null,
+        managedTargetExpiry,
         rounds: Number(rule.rounds ?? 0) || 0,
       },
     },
@@ -340,7 +377,7 @@ export async function replaceElementalEffect(actor, rule, metadata = {}) {
       // a condition the target already had for another reason.
       if (!alreadyActive) {
         const update = { flags: flagData };
-        if (rule.rounds) update.duration = buildDuration(rule.rounds);
+        if (rule.rounds) update.duration = buildDuration(managedTargetExpiry ? null : rule.rounds);
         try {
           await effect.update(update);
         } catch (error) {
@@ -349,6 +386,9 @@ export async function replaceElementalEffect(actor, rule, metadata = {}) {
       }
       return effect;
     }
+    // A status can exist through a separate source without a discoverable
+    // ActiveEffect. Never manufacture a second elemental owner for it.
+    if (alreadyActive) return null;
   }
 
   // Old custom versions with the same element must not remain active when
@@ -368,7 +408,7 @@ export async function replaceElementalEffect(actor, rule, metadata = {}) {
     transfer: false,
     statuses: rule.statusId ? [rule.statusId] : [],
     ...(rule.custom ? { showIcon: ALWAYS_SHOW_EFFECT_ICON } : {}),
-    duration: buildDuration(rule.custom ? null : rule.rounds),
+    duration: buildDuration((rule.custom || managedTargetExpiry) ? null : rule.rounds),
     flags: flagData,
   };
 
@@ -463,6 +503,7 @@ export async function applyElementalFantasticFromDamageMessage(message, action =
         sourceActorUuid: (sourceMessage?.speaker?.actor ?? message.speaker?.actor)
           ? `Actor.${sourceMessage?.speaker?.actor ?? message.speaker.actor}` : null,
         sourceSpeaker: sourceMessage?.speaker ?? message.speaker ?? null,
+        targetTokenUuid: entry.targetUuid ?? null,
       });
       applied.push({ actor, targetKey, rule });
       already.add(targetKey);
@@ -528,6 +569,21 @@ export function shouldExpireElementalFantasticEffect(effect, combat) {
   return false;
 }
 
+/** Only our own temporary elemental statuses use this clock. Native
+ * Foundry 1-round expiry can end at the new round boundary before the victim
+ * completes its affected turn, so their ActiveEffect has no native timer. */
+export function shouldExpireElementalTargetStatus(effect, combat) {
+  const data = effectFlag(effect);
+  if (!data?.managedTargetExpiry || data?.source !== 'fantastic' ||
+      data.custom || !data.targetCombatantId || !combat?.combatant ||
+      (data.combatId && data.combatId !== combat.id)) return false;
+  const now = Number(combat.round), deadline = Number(data.expireAtRound);
+  if (!Number.isFinite(now) || !Number.isFinite(deadline) || now < deadline) return false;
+  const combatants = Array.from(combat?.combatants?.contents ?? combat?.combatants ?? []);
+  const targetPresent = combatants.some(c => c.id === data.targetCombatantId);
+  return !targetPresent || combat.combatant.id === data.targetCombatantId;
+}
+
 // An updateCombat hook may be delivered more than once by the socket/GM. Only
 // one update to a given ActiveEffect can be pending at a time.
 const expiringCustomIds = new Set();
@@ -540,12 +596,21 @@ export async function cleanupExpiredElementalEffects(combat) {
   for (const actor of actors) {
     for (const effect of actor.effects?.contents ?? Array.from(actor.effects ?? [])) {
       const data = effectFlag(effect);
-      if (!data?.custom || data.source !== 'fantastic' || effect.disabled || effect.duration?.expired === true) continue;
-      if (!shouldExpireElementalFantasticEffect(effect, combat)) continue;
+      if (data?.source !== 'fantastic' || effect.disabled || effect.duration?.expired === true) continue;
+      const customExpired = data.custom && shouldExpireElementalFantasticEffect(effect, combat);
+      const statusExpired = !data.custom && shouldExpireElementalTargetStatus(effect, combat);
+      if (!customExpired && !statusExpired) continue;
       const key = `${actor.uuid ?? actor.id ?? ''}:${effect.id}`;
       if (expiringCustomIds.has(key)) continue;
       expiringCustomIds.add(key);
-      try { await retireElementalFantasticEffect(actor, effect); }
+      try {
+        if (customExpired) await retireElementalFantasticEffect(actor, effect);
+        else if (statusExpired) {
+          // Delete only the ActiveEffect explicitly created/tagged by us; a
+          // pre-existing native status was never marked managedTargetExpiry.
+          await actor.deleteEmbeddedDocuments('ActiveEffect', [effect.id]);
+        }
+      }
       catch (error) { console.warn(`[${SYSTEM_ID}] Failed to expire elemental effect`, error); }
       finally { expiringCustomIds.delete(key); }
     }

@@ -44,7 +44,7 @@ test('v0.2.89: width is per-client and clamped to viewport',()=>{
  assert.equal(normalizeHudWidth(5000,1200),1184);
  assert.equal(normalizeHudWidth(20,1200),294);
  assert.equal(normalizeHudWidth(800,260),244);
- const config=hooks.find(([name])=>name==='init')?.[1];
+ const config=hooks.filter(([name])=>name==='init').at(-1)?.[1];
  assert.ok(config);config();
  assert.equal(registered.get('nativeActionHudWidth')?.scope,'client');
  assert.equal(registered.get('nativeActionHudWidth')?.config,false);

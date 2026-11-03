@@ -178,7 +178,7 @@ test('v116: editor includes add/remove/reorder and duration per additional actio
 test('v116: package documentation and manifest select new release',()=>{
   const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url)));
   const ui=readFileSync(new URL('../scripts/automation-center.mjs',import.meta.url),'utf8');
-  assert.equal(manifest.version,'0.2.126');
+  assert.equal(manifest.version,'0.2.134');
   assert.match(ui,/Central de Automações 5\.0/);
 });
 

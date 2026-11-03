@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {publishConditionReferences,conditionReference} from '../scripts/condition-reference.mjs';
 import {
   normalizeCustomRule,executeCustomRule,processCustomConditionTurn,
   customConditionDurationText,conditionTurnEntries,expireCustomConditionRounds,
@@ -172,4 +173,55 @@ test('v114: editor displays duration/recovery and preserves existing rule settin
   assert.match(text,/conditionDurationCount/);
   assert.match(text,/conditionRemoval/);
   assert.match(text,/data-condition-timing/);
+});
+
+
+test('v132: turn notice shares exact native condition descriptions and removal guidance with the condition tray',async()=>{
+  const catalog=JSON.parse(readFileSync(new URL('../data/conditions.json',import.meta.url),'utf8')).conditions;
+  publishConditionReferences(catalog);
+  const f=fixture();try{
+    for(const id of ['mmrpg.blinded','mmrpg.ablaze','mmrpg.grabbed'])
+      globalThis.CONFIG.statusEffects.push({id,name:id});
+    await f.target.createEmbeddedDocuments('ActiveEffect',[
+      {name:'Cego',statuses:['mmrpg.blinded'],flags:{}},
+      {name:'Em Chamas',statuses:['mmrpg.ablaze'],flags:{}},
+      {name:'Agarrado',statuses:['mmrpg.grabbed'],flags:{}}
+    ]);
+    const entries=conditionTurnEntries(f.target,f.combat);
+    assert.equal(entries.find(e=>e.id==='mmrpg.blinded').description,
+      conditionReference('mmrpg.blinded').description);
+    assert.equal(entries.find(e=>e.id==='mmrpg.ablaze').removal,
+      conditionReference('mmrpg.ablaze').remove);
+    assert.equal(entries.find(e=>e.id==='mmrpg.grabbed').removal,'',
+      'No invented recovery procedure when tray has none');
+    f.combat.combatant=f.c2;f.combat.turn=1;
+    assert.equal(await processCustomConditionTurn(f.combat),true);
+    const chat=f.messages[0].content;
+    assert.match(chat,/Velocidade -50%/);
+    assert.match(chat,/Trouble em ações visuais/);
+    assert.match(chat,/Agility TN 10, 1 ação/);
+    assert.match(chat,/Agarrador e alvo não se movem/);
+    assert.equal((chat.match(/Como remover:/g)||[]).length,1,
+      'Show removal text only when configured, without fake procedures');
+    assert.match(chat,/Restante: até remoção conforme a regra/);
+  }finally{publishConditionReferences([]);f.restore();}
+});
+
+test('v132: world override and rule-specific removal are reflected safely in chat',async()=>{
+  publishConditionReferences([{id:'mmrpg.confused',name:'Confuso',
+    description:'Descrição do Mestre <b>não executar</b>',
+    remove:'Recuperar com uma Ação Padrão'}]);
+  const f=fixture();try{
+    await executeCustomRule(rule({conditionRemoval:'Teste <script>injetado</script>'}),f.target,
+      {targetTokenUuid:'Scene.s1.Token.t2'});
+    f.combat.combatant=f.c2;f.combat.turn=1;
+    assert.equal(await processCustomConditionTurn(f.combat),true);
+    const chat=f.messages[0].content;
+    assert.match(chat,/Descrição do Mestre &lt;b&gt;não executar&lt;\/b&gt;/);
+    assert.match(chat,/Teste &lt;script&gt;injetado&lt;\/script&gt;/);
+    assert.doesNotMatch(chat,/<script>/);
+    assert.doesNotMatch(chat,/Recuperar com uma Ação Padrão/,
+      'The optional rule-specific recovery note has priority');
+    assert.match(chat,/2 turnos do alvo/);
+  }finally{publishConditionReferences([]);f.restore();}
 });

@@ -1,4 +1,5 @@
 import { isRemovableConcentrationStatusId, requestRemoveConcentrationStatus } from "./concentration.js";
+import { publishConditionReferences } from "./condition-reference.mjs";
 import { ELEMENTAL_TRAY_PREFIX, getElementalFantasticTrayEntries, findElementalFantasticTrayEffect } from "./condition-visuals.mjs";
 import { retireElementalFantasticEffect } from "./elemental-fantastic.mjs";
 import { FLAME_TRAY_PREFIX, getOngoingPowerTrayEntries, findOngoingPowerTrayEffect, gmRemoveFlames } from "./ongoing-power-effects.mjs";
@@ -261,6 +262,9 @@ async function installConditions({ force = false } = {}) {
     for (const c of custom) map.set(c.id, c);
     CONDITION_DATA = { conditions: Array.from(map.values()) };
   }
+
+  // Both the condition tray and the turn chat read the same configured text.
+  publishConditionReferences(CONDITION_DATA.conditions);
 
   if (!force && CONDITIONS_INSTALLED) return CONDITION_DATA;
 

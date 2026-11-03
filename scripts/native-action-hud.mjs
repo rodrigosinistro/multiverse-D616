@@ -1,5 +1,6 @@
 import { resolveConditionEdges, resolveConditionReroll } from "./condition-edge.mjs";
 import { hudResourceState } from "./combat/hud-resource-state.mjs";
+import { hudConditionSnapshot, hudConcentrationSnapshot, hudMovementSnapshot, favoriteItemKey, hudActorFavorites, withFavoriteFirst } from './hud3-presentation.mjs';
 /**
  * Multiverse-D616 — native Token Action HUD
  *
@@ -30,6 +31,7 @@ const SETTING_TAB = "nativeActionHudTab";
 // Optional PF2e HUD-inspired presentation (original D616 implementation).
 const SETTING_PERSISTENT = "nativeActionHudPersistent";
 const SETTING_PINNED_ACTOR = "nativeActionHudPinnedActor";
+const SETTING_FAVORITES = 'nativeActionHudFavorites';
 const SETTING_PERSISTENT_SIZE = "nativeActionHudPersistentSize";
 const PERSISTENT_PROFILE_WIDTH = 426;
 const PERSISTENT_SLOT = 39;
@@ -49,6 +51,29 @@ const ABILITY_LABELS = {
   ego: "Ego",
   log: "Logic",
 };
+
+/** Keep both HUD variants consistent with the actor sheet's existing
+ * Combat/Non-Combat ability fields. This is presentation/routing only: no
+ * changes to how the system calculates derived ability modifiers.
+ */
+function abilityHudMode(combat = game.combat) {
+  const active = combat && (combat.started ?? (Number(combat.round ?? 0) > 0));
+  return active ? 'combat' : 'noncom';
+}
+
+function abilityHudValue(actor, key, combat = game.combat) {
+  const ability = actor?.system?.abilities?.[key];
+  if (!ability) return null;
+  const field = abilityHudMode(combat) === 'combat' ? 'value' : 'noncom';
+  const result = Number(ability[field] ?? ability.value);
+  return Number.isFinite(result) ? result : null;
+}
+
+function abilityHudText(actor, key, combat = game.combat) {
+  const score = abilityHudValue(actor, key, combat);
+  return score == null ? '—' : `${score >= 0 ? '+' : ''}${score}`;
+}
+
 
 const FALLBACK_TEXT = {
   "MULTIVERSE_D616.ActionHud.Settings.EnabledName": "HUD de Ações nativo",
@@ -310,12 +335,16 @@ async function rollAbility(actor, abilityKey) {
   if (!ABILITY_LABELS[key]) return null;
   const ability = actor.system?.abilities?.[key];
   const label = ability?.label ?? ABILITY_LABELS[key];
-  const formula = `{1d6,1dm,1d6}+@abilities.${key}.value`;
+  // Use the same modifier displayed by the HUD: noncom outside combat,
+  // value during combat. Non-combat Melee checks are not attacks.
+  const mode = abilityHudMode();
+  const field = mode === 'combat' ? 'value' : 'noncom';
+  const formula = `{1d6,1dm,1d6}+@abilities.${key}.${field}`;
   const speaker = ChatMessage.getSpeaker({ actor });
   const messageMode = game.settings.get("core", "messageMode");
   const RollClass = CONFIG.Dice?.MarvelMultiverseRoll ?? Roll;
   // Generic Melee roll is considered an attack only when there is a target.
-  const meleeAttack=key==='mle'&&Boolean(game.user?.targets?.size);
+  const meleeAttack=mode==='combat'&&key==='mle'&&Boolean(game.user?.targets?.size);
   const conditionEdges=resolveConditionEdges({actor,ability:key,attack:meleeAttack,
     kind:meleeAttack?'close':'',targeted:meleeAttack,action:'standard'});
   const roll=new RollClass(formula,actor.getRollData(),conditionEdges.edgeMode?{edgeMode:conditionEdges.edgeMode}:{});
@@ -324,7 +353,7 @@ async function rollAbility(actor, abilityKey) {
       author: game.user?.id,
       speaker,
       flavor: `ability: ${label}`,
-      title: label,
+      title: mode === 'noncom' ? `${label} (Non-Combat)` : label,
       flags:{'multiverse-d616':{conditionEdges}},
     },
     { messageMode }
@@ -347,6 +376,7 @@ class NativeActionHud {
     this._currentTab = null;
     this._powerCellWidth = null;
     this._mode = null;
+    this._favoriteSavePending = false;
 
     Hooks.on("controlToken", () => this.scheduleRender(true));
     Hooks.on("canvasReady", () => this.scheduleRender(true));
@@ -506,6 +536,7 @@ class NativeActionHud {
       <div class="mmrpg-native-action-hud__resource health"><span>HEALTH</span><b></b><div class="track"><div class="fill"></div></div></div>
       <div class="mmrpg-native-action-hud__resource focus"><span>FOCUS</span><b></b><div class="track"><div class="fill"></div></div></div>
       <div class="mmrpg-native-action-hud__profile-karma"></div>
+      <div class="mmrpg-native-action-hud__hud3-status is-persistent-status" aria-label="Condições e Concentração"></div>
       <div class="mmrpg-native-action-hud__quick-abilities" aria-label="Testes de atributos do personagem"></div></div>`;
 
     // HUD clássico: barra privada dos recursos do próprio combatente, abaixo
@@ -528,8 +559,16 @@ class NativeActionHud {
     resizeHandle.textContent = "↔ Largura";
 
     root.append(header, profile, tabs, classicTurnStrip, body, resizeHandle);
+    const classicStatus = document.createElement('div');
+    classicStatus.className = 'mmrpg-native-action-hud__hud3-status is-classic-status';
+    classicStatus.setAttribute('aria-label', 'Condições e Concentração');
+    root.insertBefore(classicStatus, body);
+    root.classList.add('is-hud3');
     resizeHandle.addEventListener("pointerdown", (event) => this.startResize(event));
     root.addEventListener("click", (event) => this.onClick(event));
+    // Only right-click changes favorites. Left-click, including on the decorative
+    // star, keeps using the normal item.roll() action handler.
+    root.addEventListener("contextmenu", (event) => this.onShortcutContextMenu(event));
     dragHandle.addEventListener("pointerdown", (event) => this.startDrag(event));
     document.body.appendChild(root);
     this.root = root;
@@ -539,7 +578,7 @@ class NativeActionHud {
   signature(actor, tab, collapsed) {
     const abilities = ABILITY_ORDER.map((key) => {
       const ability = actor.system?.abilities?.[key];
-      return [key, ability?.label ?? "", ability?.value ?? null];
+      return [key, ability?.label ?? "", ability?.value ?? null, ability?.noncom ?? null];
     });
     const powers = getActorItems(actor)
       .filter((item) => item?.type === "power")
@@ -556,6 +595,7 @@ class NativeActionHud {
       tab,
       collapsed,
       userCanUseActor(actor),
+      abilityHudMode(),
       abilities,
       powers,
       getActorItems(actor)
@@ -589,6 +629,7 @@ class NativeActionHud {
       root.querySelector(".mmrpg-native-action-hud__actor").textContent = "MULTIVERSE D616";
       root.querySelector(".mmrpg-native-action-hud__body").textContent = "Selecione um token do seu personagem ou atribua um personagem ao usuário para começar.";
       this.updatePersistentProfile(root, null);
+      this.updateHud3Status(root, null);
       this.decoratePersistentHotbar(root.querySelector(".mmrpg-native-action-hud__body"));
       this.applyPersistentSize();
       this.reflowPersistentHotbar(root.querySelector(".mmrpg-native-action-hud__body"));
@@ -606,10 +647,12 @@ class NativeActionHud {
     if (!force && signature === this._lastSignature && this.root?.isConnected) {
       if (persistent) {
         this.updatePersistentProfile(this.root, actor);
+        this.updateHud3Status(this.root, actor);
         this.applyPersistentSize();
         this.reflowPersistentHotbar(this.root.querySelector(".mmrpg-native-action-hud__body"));
       } else {
         this.updatePortraitTurnResources(this.root, actor, true);
+        this.updateHud3Status(this.root, actor);
         this.positionWithinViewport();
       }
       return;
@@ -651,6 +694,7 @@ class NativeActionHud {
       button.setAttribute("aria-selected", String(active));
     }
 
+    this.updateHud3Status(root, actor);
     const body = root.querySelector(".mmrpg-native-action-hud__body");
     // Preserve scroll when another client updates the selected Actor, or a
     // combat status changes mid-turn. Do not throw the player's list to top.
@@ -661,6 +705,7 @@ class NativeActionHud {
     this._currentTab = tab;
     if (tab === "powers") {
       this.renderPowers(body, actor);
+      this.decorateFavoriteShortcuts(body, actor);
       this._powerCellWidth = updatePowerCellWidth(body);
       // Even if a saved width is wider, a one-column list fits tightly around
       // its longest shortcut. Preserve the saved preference for other actors.
@@ -682,6 +727,131 @@ class NativeActionHud {
       this.applyStoredPosition();
       requestAnimationFrame(() => this.positionWithinViewport());
     }
+  }
+
+  /** Read-only HUD 3.0 indicators. No ActiveEffect changes or turn mutations. */
+  updateHud3Status(root, actor) {
+    const conditions = hudConditionSnapshot(actor, game.combat?.started ? game.combat : null);
+    const concentration = hudConcentrationSnapshot(actor);
+    const movement = hudMovementSnapshot(actor, this.selectedToken, game.combat);
+    const registry = Array.from(root.querySelectorAll?.('.mmrpg-native-action-hud__hud3-status') ?? []);
+    for (const panel of registry) {
+      panel.replaceChildren();
+      panel.classList.toggle('is-empty', !actor);
+      if (!actor) continue;
+      // Fixed order: concentration (left) → selected movement → conditions (right).
+      if (concentration.maximum) {
+        const gauge = document.createElement('span');
+        gauge.className = 'mmrpg-native-action-hud__concentration';
+        gauge.classList.toggle('is-full', concentration.used >= concentration.maximum);
+        gauge.title = `Concentração ${concentration.used}/${concentration.maximum}` +
+          (concentration.names.length ? `\n${concentration.names.join('\n')}` : '');
+        gauge.setAttribute('aria-label', gauge.title);
+        const symbol = document.createElement('span'); symbol.textContent = '◈';
+        symbol.setAttribute('aria-hidden', 'true');
+        const label = document.createElement('span'); label.textContent = `${concentration.used}/${concentration.maximum}`;
+        gauge.append(symbol, label);
+        panel.appendChild(gauge);
+      }
+      if (movement) {
+        const mode = document.createElement('span');
+        mode.className = 'mmrpg-native-action-hud__movement-mode';
+        mode.title = `Movimento atual: ${movement.label}`;
+        mode.setAttribute('aria-label', mode.title);
+        if (movement.img) {
+          const img = document.createElement('img');
+          img.src = movement.img;
+          img.alt = '';
+          img.setAttribute('aria-hidden', 'true');
+          mode.appendChild(img);
+        } else {
+          const icon = document.createElement('i');
+          // Foundry icon values can contain the full "fa-solid fa-..." set.
+          icon.className = movement.icon.includes('fa-') && /\bfa-(solid|regular|brands|light|duotone)\b/.test(movement.icon)
+            ? movement.icon : `fa-solid ${movement.icon}`;
+          icon.setAttribute('aria-hidden', 'true');
+          mode.appendChild(icon);
+        }
+        panel.appendChild(mode);
+      }
+      if (conditions.length) {
+        const block = document.createElement('div');
+        block.className = 'mmrpg-native-action-hud__status-conditions';
+        block.setAttribute('aria-label', `${conditions.length} condições ativas`);
+        for (const status of conditions.slice(0, 5)) {
+          const chip = document.createElement('span');
+          chip.className = 'mmrpg-native-action-hud__status-chip';
+          // HUD compact: the native Foundry status indicator owns the detailed
+          // condition tooltip. Show only the name here to avoid repetition.
+          chip.title = status.label;
+          chip.setAttribute('aria-label', status.label);
+          if (status.icon) {
+            const img = document.createElement('img'); img.src = status.icon; img.alt = '';
+            chip.appendChild(img);
+          } else { chip.textContent = '◆'; }
+          block.appendChild(chip);
+        }
+        if (conditions.length > 5) {
+          const more = document.createElement('span');
+          more.className = 'mmrpg-native-action-hud__status-more';
+          more.textContent = `+${conditions.length - 5}`;
+          more.title = conditions.slice(5).map(c => c.label).join('\n');
+          block.appendChild(more);
+        }
+        panel.appendChild(block);
+      }
+    }
+  }
+
+  getFavoriteKeys(actor) {
+    return hudActorFavorites(setting(SETTING_FAVORITES, {}), actor);
+  }
+
+  decorateFavoriteShortcuts(body, actor) {
+    const favorites = new Set(this.getFavoriteKeys(actor));
+    for (const button of body.querySelectorAll('.mmrpg-native-action-hud__action')) {
+      const key = favoriteItemKey(button.dataset.action, button.dataset.itemId, button.dataset.powerId);
+      if (!key) continue;
+      button.dataset.favoriteKey = key;
+      button.classList.toggle('is-favorite', favorites.has(key));
+      const star = document.createElement('span');
+      star.className = 'mmrpg-native-action-hud__star';
+      star.setAttribute('aria-hidden', 'true');
+      star.textContent = favorites.has(key) ? '★' : '☆';
+      button.dataset.favoriteHint = favorites.has(key) ? 'Clique direito: remover favorito' : 'Clique direito: adicionar favorito';
+      button.appendChild(star);
+    }
+    // Sort the entire shortcuts collection, not just powers separately from
+    // weapons or attached powers. Favorites A-Z, then other shortcuts A-Z.
+    // The persistent grid places the resulting DOM order top-to-bottom.
+    const buttons = [...body.querySelectorAll('.mmrpg-native-action-hud__action')];
+    const getLabel = button => {
+      const name = button.querySelector('.name');
+      const power = name?.querySelector?.('.power-name')?.textContent?.trim?.();
+      return power || name?.textContent?.trim?.() || button.dataset.powerName || '';
+    };
+    buttons.sort((left, right) =>
+      Number(right.classList.contains('is-favorite')) - Number(left.classList.contains('is-favorite')) ||
+      compareNames(getLabel(left), getLabel(right)));
+    // Category headings cannot remain attached to a reordered list. The HUD
+    // already identifies Powers and the shortcut type remains in its tooltip.
+    for (const heading of body.querySelectorAll('.mmrpg-native-action-hud__group-title')) heading.remove();
+    for (const button of buttons) body.appendChild(button);
+  }
+
+  async toggleFavorite(actor, key) {
+    if (!favoriteItemKey(...String(key ?? '').split(':'))) return;
+    const raw = setting(SETTING_FAVORITES, {});
+    const actorKey = String(actor?.uuid ?? actor?.id ?? '');
+    if (!actorKey) return;
+    const current = new Set(this.getFavoriteKeys(actor));
+    if (current.has(key)) current.delete(key);
+    else current.add(key);
+    await game.settings.set(SYSTEM_ID, SETTING_FAVORITES, {
+      ...(raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}),
+      [actorKey]: [...current].slice(0, 150),
+    });
+    this.scheduleRender(true);
   }
 
   /** Renderiza recursos exclusivamente do token selecionado, nunca de alvos sob hover.
@@ -774,9 +944,9 @@ class NativeActionHud {
         label.textContent = ABILITY_LABELS[key];
         const value = document.createElement("strong");
         value.className = "ability-value";
-        const score = actor?.system?.abilities?.[key]?.value;
-        value.textContent = score == null ? "—" : `${Number(score) >= 0 ? "+" : ""}${score}`;
-        chip.title = `Rolar ${ABILITY_LABELS[key]} (${value.textContent})`;
+        value.textContent = abilityHudText(actor, key);
+        const modeLabel = abilityHudMode() === 'combat' ? 'Combate' : 'Non-Combat Check';
+        chip.title = `Rolar ${ABILITY_LABELS[key]} (${modeLabel}: ${value.textContent})`;
         chip.setAttribute("aria-label", chip.title);
         chip.append(label, value);
         quick.appendChild(chip);
@@ -800,7 +970,10 @@ class NativeActionHud {
         ? `${powerName} ${equipmentName ?? ""}`.trim()
         : (name?.textContent?.trim() || button.dataset.ability || "Ação");
     };
-    buttons.sort((left, right) => compareNames(getLabel(left), getLabel(right)));
+    const favorites = new Set(this.getFavoriteKeys(this.selectedActor));
+    buttons.sort((left, right) =>
+      Number(favorites.has(right.dataset.favoriteKey)) - Number(favorites.has(left.dataset.favoriteKey)) ||
+      compareNames(getLabel(left), getLabel(right)));
     for (const button of buttons) {
       button.classList.add("is-hotbar-slot");
       const label = getLabel(button);
@@ -835,14 +1008,8 @@ class NativeActionHud {
       body.appendChild(button);
     }
     const columns = Math.max(1, Math.ceil(buttons.length / rows));
-    const totalSlots = columns * rows;
-    for (let i = buttons.length; i < totalSlots; i++) {
-      const placeholder = document.createElement("span");
-      placeholder.className = "mmrpg-native-action-hud__slot-empty";
-      placeholder.setAttribute("aria-hidden", "true");
-      body.appendChild(placeholder);
-    }
-    body.classList.toggle("has-overflow-shortcuts", buttons.length > totalSlots);
+    // No fake empty slots: the responsive grid fills sequentially from top-left.
+    body.querySelectorAll('.mmrpg-native-action-hud__slot-empty').forEach(node => node.remove());
     body.dataset.shortcuts = String(buttons.length);
     body.style.setProperty("--mmrpg-persistent-body-columns", String(columns));
     body.style.setProperty("--mmrpg-persistent-body-rows", String(rows));
@@ -895,24 +1062,15 @@ class NativeActionHud {
     const profileWidth = this.root.querySelector('.mmrpg-native-action-hud__profile')?.getBoundingClientRect?.().width ?? PERSISTENT_PROFILE_WIDTH;
     const bodyWidth = body.clientWidth || Math.max(0, rootWidth - profileWidth);
     const cols = Math.max(1, Math.floor((bodyWidth - PERSISTENT_CHROME + PERSISTENT_GAP) / (PERSISTENT_SLOT + PERSISTENT_GAP)));
-    // Keep five icons per column in the natural size. If the player narrows
-    // the panel, pack the same shortcuts into fewer columns and more rows.
-    const {rows, usedColumns} = persistentGridShape(buttons.length, cols);
+    // Column-major alphabetic order: top-to-bottom, then next column.
+    // Available width controls the number of columns; extra rows scroll.
+    // No placeholder cells or unused gaps before the final slot.
     for (const node of body.querySelectorAll('.mmrpg-native-action-hud__slot-empty')) node.remove();
-    buttons.forEach((button, i) => {
-      button.style.gridColumn = String(Math.floor(i / rows) + 1);
-      button.style.gridRow = String((i % rows) + 1);
-    });
-    const actualCols = usedColumns;
-    // Cosmetic empty cells: never clickable, no action dataset.
-    for (let i = buttons.length; i < actualCols * rows; i++) {
-      const placeholder = document.createElement('span');
-      placeholder.className = 'mmrpg-native-action-hud__slot-empty';
-      placeholder.setAttribute('aria-hidden', 'true');
-      placeholder.style.gridColumn = String(Math.floor(i / rows) + 1);
-      placeholder.style.gridRow = String((i % rows) + 1);
-      body.appendChild(placeholder);
+    for (const button of buttons) {
+      button.style.removeProperty('grid-column');
+      button.style.removeProperty('grid-row');
     }
+    const rows = Math.max(1, Math.ceil(buttons.length / cols));
     body.style.setProperty('--mmrpg-persistent-body-columns', String(cols));
     body.style.setProperty('--mmrpg-persistent-body-rows', String(rows));
     body.dataset.visibleColumns = String(cols);
@@ -996,8 +1154,8 @@ class NativeActionHud {
       name.textContent = ability.label ?? ABILITY_LABELS[key];
       const value = document.createElement("span");
       value.className = "value";
-      const numericValue = Number(ability.value ?? 0);
-      value.textContent = `${numericValue >= 0 ? "+" : ""}${numericValue}`;
+      value.textContent = abilityHudText(actor, key);
+      button.title = `${ability.label ?? ABILITY_LABELS[key]} — ${abilityHudMode() === 'combat' ? 'Combate' : 'Non-Combat Check'} (${value.textContent})`;
       button.append(name, value);
       body.appendChild(button);
     }
@@ -1007,12 +1165,13 @@ class NativeActionHud {
     body.classList.remove("is-abilities");
     body.classList.add("is-powers");
     const canUse = userCanUseActor(actor);
-    const powers = getActorItems(actor)
-      .filter(isPowerAvailableForHud)
-      .sort((left, right) => compareNames(left.name, right.name));
-    const weapons = getActorItems(actor)
-      .filter(isEquippedWeaponForHud)
-      .sort((left, right) => compareNames(left.name, right.name));
+    const favorites = this.getFavoriteKeys(actor);
+    const powers = withFavoriteFirst(getActorItems(actor)
+      .filter(isPowerAvailableForHud), item => favoriteItemKey('power', item.id ?? item._id),
+      favorites, (left, right) => compareNames(left.name, right.name));
+    const weapons = withFavoriteFirst(getActorItems(actor)
+      .filter(isEquippedWeaponForHud), item => favoriteItemKey('weapon', item.id ?? item._id),
+      favorites, (left, right) => compareNames(left.name, right.name));
     const itemPowers = getActorItems(actor)
       .filter(item=>item?.type==='item' && actionableAttachedPowers(item).length)
       .sort((a,b)=>compareNames(a.name,b.name));
@@ -1157,6 +1316,27 @@ class NativeActionHud {
       button.append(img,label);
       applyPowerTooltip(button,{type:'power',name:entry.name,system:entry.data?.system??{}});
       body.appendChild(button);
+    }
+  }
+
+  async onShortcutContextMenu(event) {
+    const shortcut = event.target.closest?.('.mmrpg-native-action-hud__action[data-favorite-key]');
+    if (!shortcut || !this.root?.contains?.(shortcut)) return;
+    // Avoid Foundry's item menu on these shortcuts, and leave all other right-clicks alone.
+    event.preventDefault();
+    event.stopPropagation();
+    const actor = this.selectedActor;
+    if (!actor || !userCanUseActor(actor) || this._favoriteSavePending) return;
+    const key = shortcut.dataset.favoriteKey;
+    if (!key) return;
+    this._favoriteSavePending = true;
+    try {
+      await this.toggleFavorite(actor, key);
+    } catch (error) {
+      console.error(`[${SYSTEM_ID}] Não foi possível salvar o favorito`, error);
+      ui.notifications?.error?.('Não foi possível alterar o favorito.');
+    } finally {
+      this._favoriteSavePending = false;
     }
   }
 
@@ -1368,6 +1548,9 @@ class NativeActionHud {
 }
 
 function registerSettings() {
+  game.settings.register(SYSTEM_ID, SETTING_FAVORITES, {
+    scope: 'client', config: false, type: Object, default: {},
+  });
   game.settings.register(SYSTEM_ID, SETTING_PERSISTENT_SIZE, {
     scope: "client", config: false, type: Object, default: {},
   });
@@ -1428,6 +1611,9 @@ Hooks.once("ready", () => {
 
 export {
   ABILITY_ORDER,
+  abilityHudMode,
+  abilityHudValue,
+  abilityHudText,
   NativeActionHud,
   normalizeHudWidth,
   snapHudWidthToPowerColumns,

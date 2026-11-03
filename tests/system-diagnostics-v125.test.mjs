@@ -26,7 +26,7 @@ function mockGame({rules=[testRule],library=[],packs='ok',gm=true,actorEffects=[
   const values={customAutomationRules:rules,customAutomationLibrary:library,automationPowerOverrides:{}};
   const actor={id:'actor1',name:'Garras',items:{contents:[{type:'power',name:'Fast Attacks'}]},effects:{contents:actorEffects}};
   const writes=[];
-  return {user:{isGM:gm},system:{id:'multiverse-d616',version:'0.2.126'},version:'14.0',world:{id:'test-world'},
+  return {user:{isGM:gm},system:{id:'multiverse-d616',version:'0.2.129'},version:'14.0',world:{id:'test-world'},
     packs:packMap,modules:new Map(),actors:{contents:[actor]},
     settings:{get(ns,key){assert.equal(ns,'multiverse-d616');return values[key];},set(...args){writes.push(args);throw Error('Diagnostic must never write settings');}},
     writes};
@@ -130,7 +130,7 @@ test('v125: release registers menu, stylesheet and includes no write APIs in sca
   const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url),'utf8'));
   const main=readFileSync(new URL('../multiverse-d616.mjs',import.meta.url),'utf8');
   const source=readFileSync(new URL('../scripts/system-diagnostics.mjs',import.meta.url),'utf8');
-  assert.equal(manifest.version,'0.2.126');
+  assert.equal(manifest.version,'0.2.134');
   assert.ok(manifest.styles.includes('styles/diagnostic-center.css'));
   assert.match(main,/registerDiagnosticCenterMenu\(\);/);
   assert.doesNotMatch(source,/\.update\(|\.delete\(|\.createEmbeddedDocuments\(|\.setFlag\(|settings\.set\(/);

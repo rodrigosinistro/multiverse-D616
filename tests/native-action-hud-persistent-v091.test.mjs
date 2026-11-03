@@ -28,7 +28,7 @@ const css=readFileSync(new URL('../styles/native-action-hud.css',import.meta.url
 
 // Configuration remains safe by default, and each user's choice is local.
 test('v0.2.99: persistent mode remains opt-in and position choice is removed',()=>{
-  hooks.find(([n])=>n==='init')[1]();
+  hooks.filter(([n])=>n==='init').at(-1)[1]();
   assert.equal(registered.get('nativeActionHudPersistent').default,false);
   assert.equal(registered.get('nativeActionHudPersistent').scope,'client');
   assert.equal(registered.has('nativeActionHudPersistentPosition'),false);
@@ -68,5 +68,5 @@ test('v0.2.91: persistent layout retains existing shortcut and actor.roll pipeli
   assert.match(source,/activateAttachedPower\(carrier,actionButton\.dataset\.powerId,actor\)/);
   assert.match(source,/const persistent = persistentMode\(\)/);
   assert.match(source,/applyPersistentPosition\(\)/);
-  assert.equal(JSON.parse(readFileSync(new URL('../system.json',import.meta.url))).version,'0.2.126');
+  assert.equal(JSON.parse(readFileSync(new URL('../system.json',import.meta.url))).version,'0.2.134');
 });

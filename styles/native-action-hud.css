@@ -1222,3 +1222,167 @@ body:has(#mmrpg-native-action-hud.is-persistent:not(.is-collapsed)) #players {
 #mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__classic-turn-strip .mmrpg-native-action-hud__movement-fill img {
   filter: brightness(0) saturate(100%) invert(80%) sepia(40%) saturate(677%) hue-rotate(86deg) brightness(99%);
 }
+
+/* v0.2.127 — HUD 3.0: modernized chrome, shared read-only status presentation.
+ * CSS only, no new action economy or combat authority. */
+#mmrpg-native-action-hud.is-hud3 {
+  --mmrpg-action-hud-accent: #eaa35a;
+  border-color: rgba(234, 163, 90, .65);
+  background: linear-gradient(155deg, rgba(29,30,39,.98), rgba(12,13,19,.98));
+  box-shadow: 0 7px 24px rgba(0,0,0,.62), 0 0 0 1px rgba(234,163,90,.08);
+}
+#mmrpg-native-action-hud.is-hud3 .mmrpg-native-action-hud__header {
+  background: linear-gradient(90deg, rgba(74,42,28,.55), rgba(12,13,21,.8));
+}
+#mmrpg-native-action-hud.is-hud3 .mmrpg-native-action-hud__action.power:focus-visible,
+#mmrpg-native-action-hud.is-hud3 .mmrpg-native-action-hud__tab:focus-visible {
+  outline: 2px solid #f2bd79;
+  outline-offset: -2px;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__hud3-status {
+  display: flex; align-items: center; gap: 6px;
+  min-width: 0; box-sizing: border-box;
+  color: #f4d2a6;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__status-conditions {
+  display: flex; align-items: center; gap: 3px; min-width: 0;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__status-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 23px; height: 23px; flex: 0 0 23px;
+  border: 1px solid rgba(237,167,90,.45); border-radius: 6px;
+  background: rgba(52,35,37,.86); color: #f8bc83;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__status-chip img {
+  width: 19px; height: 19px; object-fit: contain; border-radius: 3px;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__status-more {
+  color: #eac49b; font-size: 10px; font-weight: 700;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__concentration {
+  display: inline-flex; align-items: center; gap: 4px;
+  flex: 0 0 auto; padding: 2px 6px;
+  color: #bce2ff; font-size: 10px; font-weight: 700;
+  border: 1px solid rgba(93,164,230,.38); border-radius: 6px;
+  background: rgba(30,59,88,.42);
+  font-variant-numeric: tabular-nums;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__concentration.is-full {
+  color: #ffcf9c; border-color: rgba(240,159,64,.8);
+}
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__hud3-status.is-classic-status {
+  display: flex; padding: 4px 8px; min-height: 30px;
+  justify-content: space-between; flex-wrap: wrap;
+  border-bottom: 1px solid rgba(236,165,81,.18);
+}
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__hud3-status.is-classic-status.is-empty {
+  display: none;
+}
+#mmrpg-native-action-hud:not(.is-persistent) .mmrpg-native-action-hud__hud3-status.is-persistent-status,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__hud3-status.is-classic-status,
+#mmrpg-native-action-hud.is-collapsed .mmrpg-native-action-hud__hud3-status.is-classic-status {
+  display: none;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__hud3-status.is-persistent-status {
+  display: flex; gap: 5px; min-height: 22px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__status-chip {
+  width: 19px; height: 19px; flex-basis: 19px; border-radius: 4px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__status-chip img {
+  width: 16px; height: 16px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__concentration {
+  font-size: 9px; padding: 1px 4px;
+}
+/* Favorites are a player preference, not a new item/action. */
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.power,
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.weapon {
+  position: relative;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__star {
+  position: absolute; right: 2px; top: 2px;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 17px; height: 17px; z-index: 2;
+  color: #d7c8b4; background: rgba(10,12,17,.86);
+  border: 1px solid rgba(218,186,148,.25);
+  border-radius: 4px; font-size: 14px; line-height: 1;
+  cursor: pointer; opacity: .55;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action:hover .mmrpg-native-action-hud__star,
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action:focus-within .mmrpg-native-action-hud__star,
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.is-favorite .mmrpg-native-action-hud__star {
+  opacity: 1;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.is-favorite .mmrpg-native-action-hud__star {
+  color: #ffcb71; border-color: rgba(255,203,113,.65);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__star {
+  right: 1px; top: 1px; width: 13px; height: 13px;
+  font-size: 11px; border-radius: 3px;
+}
+@media (max-width: 760px) {
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__hud3-status.is-persistent-status {
+    gap: 3px;
+  }
+  #mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__status-chip:nth-child(n+4) { display: none; }
+}
+
+/* v0.2.128 HUD 3.1 — compact, ordered indicators and right-click favorites. */
+#mmrpg-native-action-hud .mmrpg-native-action-hud__hud3-status {
+  justify-content: flex-start; flex-wrap: nowrap; gap: 6px;
+  overflow-x: auto; overflow-y: hidden;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__concentration {
+  order: 0; flex: 0 0 auto; min-height: 27px;
+  font-size: 12px; padding: 3px 7px;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__movement-mode {
+  display: inline-flex; flex: 0 0 29px; order: 1;
+  align-items: center; justify-content: center;
+  width: 29px; height: 29px;
+  color: #d8e8ff; background: rgba(37,60,76,.65);
+  border: 1px solid rgba(131,183,207,.65); border-radius: 6px;
+  font-size: 16px;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__status-conditions {order: 2; flex: 0 0 auto; gap: 4px;}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__status-chip {
+  width: 29px; height: 29px; flex-basis: 29px;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__status-chip img {
+  width: 25px; height: 25px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__hud3-status.is-persistent-status {
+  gap: 5px; min-height: 31px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__status-chip {
+  width: 27px; height: 27px; flex-basis: 27px; border-radius: 5px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__status-chip img {
+  width: 23px; height: 23px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__concentration {
+  min-height: 27px; font-size: 11px; padding: 3px 6px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__movement-mode {
+  width: 27px; height: 27px; flex-basis: 27px; font-size: 15px;
+}
+/* The star is only a visual badge. A right-click anywhere on the shortcut
+   changes favorite; left-click everywhere keeps normal use of the power. */
+#mmrpg-native-action-hud .mmrpg-native-action-hud__star {
+  pointer-events: none; cursor: inherit;
+}
+/* Responsive alphabetic grid: top-left → down → next column. */
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body.is-powers,
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__body.is-abilities {
+  grid-auto-flow: column;
+  grid-template-rows: repeat(var(--mmrpg-persistent-body-rows), var(--mmrpg-hotbar-slot-size));
+  grid-auto-rows: var(--mmrpg-hotbar-slot-size);
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__slot-empty {display: none;}
+
+/* HUD movement indicator: use the exact icon/image supplied by Foundry. */
+#mmrpg-native-action-hud .mmrpg-native-action-hud__movement-mode img {
+  width: 19px; height: 19px; object-fit: contain;
+}

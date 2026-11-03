@@ -1,3 +1,57 @@
+## v0.2.134 — Correção da duração de efeitos elementais de 1 rodada (03/11/2026)
+- Efeitos elementais de status temporários (ex.: Ice → Paralisado) que atingem um combatente não expiram mais na simples virada da rodada: o alvo recebe seu turno afetado e o efeito termina quando volta a vez desse alvo.
+- Para esses efeitos o temporizador nativo de `1 rodada` é substituído por uma marca de expiração vinculada ao turno do alvo; a remoção ocorre somente para o Active Effect criado pela automação elemental, sem remover condições preexistentes.
+- A limpeza agora antecede o aviso de condições no chat, evitando anunciar um efeito no turno em que ele acabou.
+- Corrigido o mesmo tipo de contagem para as demais condições elementais temporárias de uma rodada quando o alvo está na iniciativa.
+- Nenhuma alteração nas regras da Central de Automações, no MMDR ou nas animações.
+
+## v0.2.133 — Aviso de condições elementais no início do turno (2026-11-02)
+- **Correção de disparo do chat:** o hook de avanço do combate não depende mais da presença de `combat.previous`. Em Foundry v14, essa referência pode estar ausente ou incompleta, inclusive com rastreador compacto ou após mudanças de rodada; antes isso impedia o resumo das condições de ser publicado. Agora o turno atual é processado quando há um avanço solicitado; navegação comprovadamente regressiva continua ignorada.
+- **Efeitos elementais nativos:** o aviso reconhece metadados de `elementalFantastic` e informa a duração de efeitos como **Paralisado (Ice) por 1 rodada**, além da descrição e da forma de remoção presentes no mesmo catálogo do indicador superior.
+- **Sem duplicação:** o controle por ID de combate, rodada, turno e combatente permanece. Atualizações repetidas do mesmo turno não repetem o card. A rotina não aplica nem remove condições e não muda o ciclo de vida de efeitos de Elemental Blast, MMDR ou Concentração.
+- **Teste de regressão:** reproduz Zima aplicando Paralisado ao Pensativo Sentinel, avançando o turno com `combat.previous` ausente ou parcial. Garante anúncio, duração, deduplicação e ausência de alterações nos efeitos. Também cobre retrocesso de turno.
+- **Distribuição:** seis compêndios e conteúdo de poderes preservados; pacote completo para Foundry VTT v14.
+
+## v0.2.132 — Chat de Condições com descrições do indicador (2026-11-02)
+- **Avisos no início do turno:** cada condição ativa exibe o **nome, duração restante, descrição e orientação de remoção**, quando houver. As descrições e instruções são as mesmas do indicador superior de condições, inclusive personalizações do Mestre.
+- **Fonte única:** o indicador publica o catálogo já carregado (condições nativas e edições do mundo) para os avisos de turno; evita duplicar descrições e perder atualizações.
+- **Remoção:** prevalece a instrução personalizada da automação quando fornecida; do contrário, usa a orientação do indicador. Se o indicador não especificar como remover, o chat não inventa testes ou dificuldades.
+- **Segurança:** todo conteúdo inserido pelo Mestre é escapado antes de chegar ao chat. Sem botões de remoção no chat nem mudança nos controles de duração, efeitos ou permissões do indicador.
+- **Regressão:** testes cobrem Cego, Em Chamas, Agarrado, condições personalizadas, notas de remoção e escaping de HTML. Os seis compêndios mantidos sem modificações.
+
+## v0.2.131 — HUD 3.4: Non-Combat Checks fora das rodadas (2026-11-02)
+- **Atributos do HUD persistente e do HUD clássico:** fora de uma rodada de combate iniciada, os seis botões exibem `system.abilities.<atributo>.noncom` (os mesmos valores derivados apresentados na coluna **NON-COMBAT CHECKS** da ficha). Dentro do combate, continuam exibindo `system.abilities.<atributo>.value`.
+- **Rolagem coerente com os valores exibidos:** ao usar os botões de atributo fora do combate, a fórmula emprega `@abilities.<atributo>.noncom`; durante o combate, conserva a rolagem existente com `.value`. Uma rolagem de Melee fora do combate não é interpretada como ataque pelo simples fato de haver alvo marcado.
+- **Atualização imediata:** a apresentação acompanha a entrada/saída de rodadas e mudanças nos valores dos atributos, sem precisar reabrir o HUD.
+- **Escopo:** sem mudanças no cálculo nativo de atributos, demais atalhos, poderes, MMDR, HUD de condições, movimentos, favoritos, automações ou compêndios.
+
+## v0.2.130 — HUD 3.3: tooltips compactos de condições (2026-11-02)
+- **Indicadores de condições do HUD clássico e persistente:** tooltip e rótulo acessível mostram apenas o **nome da condição** (ex.: `Confuso`), sem duplicar duração nem instrução de remoção já disponíveis no indicador nativo do Foundry.
+- **Indicador `+N`:** quando existirem mais de cinco condições, lista somente os nomes das condições adicionais.
+- **Escopo:** nenhuma alteração nos Active Effects, expiração, avisos de turno, movimento, favoritos, concentração, automações ou regras de combate. Seis compêndios preservados.
+
+## v0.2.129 — HUD 3.2 (2026-11-02) — Movimentos nativos e atalhos por coluna
+- **Mesmos ícones do Foundry:** indicador de movimento lê `CONFIG.Token.movement.actions` (ícone ou imagem) para representar o modo selecionado no Token HUD. A ação nativa `blink` agora aparece corretamente como **Teleporte (Piscar)**. O teleporte temporário concedido por poderes segue priorizado via flag do Combatant; nenhuma mudança no controle de movimento.
+- **Ordenação global dos atalhos:** favoritos **A–Z** primeiro e depois demais atalhos **A–Z**, independentemente de serem poderes próprios, armas ou poderes anexados. A estrela continua apenas indicativa; clique esquerdo usa o atalho e direito alterna favorito.
+- **Grade persistente por colunas:** preenche de cima para baixo e só depois avança para a direita, sem lacunas artificiais, respeitando largura disponível e rolagem. HUD clássico utiliza a mesma ordenação de nomes, em sua lista.
+- **Segurança:** nenhuma alteração nos cálculos de combate, MMDR, Concentração, automações, Active Effects ou compêndios.
+
+## v0.2.128 — HUD 3.1 (2026-11-02) — Favoritos com clique direito e organização dinâmica
+- Clique **direito** em atalhos de poderes, armas equipadas e poderes vinculados a itens para alternar Favorito; clique **esquerdo** mantém o uso normal de `Item.roll()`/poder.
+- Favoritos sempre aparecem primeiro, no topo à esquerda, e são salvos separadamente por usuário e personagem; estrela do tamanho original é apenas sinalização.
+- HUD persistente preenche a grade da esquerda para direita e de cima para baixo, sem lacunas artificiais e ajustando o número de colunas ao tamanho disponível.
+- Indicadores maiores e ordem fixa: **Concentração → modo de Movimento atual → condições ativas**, em ambos os HUDs.
+- Nenhuma alteração nas regras de combate, MMDR, Concentração ou movimentação; dados dos compêndios preservados.
+
+## v0.2.127 — HUD 3.0 (2026-11-02)
+
+- HUD clássico e persistente: visual levemente modernizado com mais contraste, estados de foco e detalhes de borda, sem mudar dimensões configuradas, consumo de ações ou execução dos itens.
+- Condições ativas aparecem no HUD com ícone nativo, duração e instrução de remoção no tooltip, utilizando a mesma leitura de condições que a Central de Automações já usa para avisos de turno.
+- Concentração: indicador compacto `usada/limite`, derivado do rastreador nativo, mostrando os nomes dos poderes sustentados ao passar o mouse.
+- Favoritos: ícone de estrela nos atalhos de poderes e armas. Preferências por personagem e por usuário (scope client), sem alterar fichas ou compêndios. Favoritos são priorizados na ordem da lista; no HUD persistente são priorizados na grade.
+- Todos os indicadores são informativos; não há novas automações, ações ou alterações no motor de combate.
+- Testes de regressão específicos do HUD 3.0 e conferência dos compêndios dentro do ZIP.
+
 ## v0.2.126 — Reposição dos seis compêndios no ZIP e diagnóstico de índices vazios (2026-11-02)
 
 - **Correção urgente do pacote v0.2.125:** o ZIP anterior omitiu os seis arquivos LevelDB `000002.log` dos compêndios, apesar de o código-fonte conter os dados. Isso fazia os compêndios parecerem vazios e provocava 398 erros de poderes ausentes na Central de Diagnóstico.

@@ -1,3 +1,31 @@
+## v0.2.134 — efeitos elementais temporários
+Sem migração obrigatória. Novas condições elementais com duração de uma rodada passam a ser controladas pelo retorno do turno do alvo, sem expiração nativa ao mudar de rodada. Efeitos antigos já criados podem manter seu temporizador original; reaplique-os para testar a correção.
+
+## v0.2.133 — Avisos de condições elementais no chat
+- Nenhuma migração de fichas ou configurações. As condições que já estiverem ativas passam a ser anunciadas no início do turno quando o Foundry não fornecer `combat.previous` completo.
+- O texto do chat informa duração elemental de 1 rodada, descrição e remoção cadastradas no indicador superior, sem alterar as condições, seus efeitos ou quando expiram.
+- Faça backup do mundo, instale o ZIP completo com o servidor encerrado e reinicie o Foundry. Teste Elemental Blast (Ice) com Sucesso Fantástico contra um alvo na iniciativa e avance até o turno dele.
+
+## v0.2.132 — Avisos de condições no chat
+- Nenhuma migração de fichas ou automações. O aviso do início do turno passa a incluir a descrição e a forma de remover cadastradas no indicador superior de condições.
+- Para condições em que o indicador não informa a remoção, nenhuma instrução nova é presumida. A remoção manual no indicador continua com as permissões de antes.
+- Atualize o ZIP completo com o Foundry desligado; os seis compêndios são preservados. Faça backup antes da instalação.
+
+## v0.2.131 — HUD e Non-Combat Checks
+- Não há migração de dados. As seis estatísticas do HUD refletem `abilities.*.noncom` fora de rodada e `abilities.*.value` durante combate ativo.
+- As rolagens pelo HUD acompanham o valor exibido. Atalhos de poderes, armas e regras permanecem intactos.
+
+## v0.2.130 — Tooltips compactos de condições no HUD
+
+Nenhuma migração necessária. O HUD clássico e persistente agora exibem apenas o nome da condição no tooltip, mantendo ícones, efeitos ativos, expiração, avisos de turno e indicador de condições nativo do Foundry inalterados. Os favoritos, posição e tamanho do HUD são preservados. Instale o ZIP completo após fazer backup.
+
+## v0.2.129 — HUD 3.2
+Nenhuma migração de ficha ou mundo. Favoritos salvos na v0.2.128 permanecem associados aos mesmos itens; muda somente a ordenação dos atalhos e o ícone/identificação do movimento. `blink` é reconhecido como Teleporte (Piscar) no indicador HUD, sem reescrever `TokenDocument.movementAction`. A atualização preserva os seis compêndios; faça backup antes de instalar e teste com uma ficha que use o Teleporte do HUD nativo.
+
+## v0.2.128 — HUD 3.1
+
+Nenhuma migração de dados do mundo. A nova chave client `nativeActionHudFavorites` começa vazia; as configurações de posição, tamanho, aba e modo clássico/persistente são preservadas. O clique direito nos atalhos passa a alternar favoritos; o clique esquerdo continua executando a ação normal. A grade adaptativa reorganiza os favoritos no início. Indicadores apenas leem Active Effects, Concentração e modo de movimento do token selecionado.
+
 ## v0.2.126 — Reposição de compêndios omitidos na v0.2.125
 
 **Backup recomendado:** copie a pasta de dados do mundo antes de instalar. Encerre totalmente o servidor Foundry VTT antes de substituir a pasta `Data/systems/multiverse-d616` pelo conteúdo do ZIP completo. Não mescle apenas arquivos `.mjs`: os seis bancos LevelDB e seus `000002.log` precisam acompanhar o pacote. Após iniciar o servidor, reabra `MMRPG Content` e execute a Central de Diagnóstico. Esperado: Powers com 398 itens e os demais cinco compêndios preenchidos. Não é necessário recriar poderes ou fichas. A ferramenta é somente leitura e não causou o desaparecimento dos registros. Caso tenha alterado manualmente compêndios do **sistema**, preserve backup deles antes de substituir a pasta do sistema.
