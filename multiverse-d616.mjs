@@ -11,6 +11,7 @@
  * @param {(number)} [options.targetValue]       Assign a target value against which the result of this roll should be
  *
  */
+import { combatChangeAffectsActorSheets, makeCombatSheetRefreshScheduler } from './scripts/combat/sheet-refresh-core.mjs';
 import { isRicochetPower, ricoOriginalContext, registerRicoShieldHooks } from "./scripts/rico-shield-chain.mjs";
 import { getPowerVfxConfig, playPowerVfx, registerPowerVfxSettings, registerPowerVfxLifecycleHooks } from "./scripts/power-vfx.mjs";
 import { openPowerVfxBrowser } from "./scripts/power-vfx-browser.mjs";
@@ -3835,6 +3836,16 @@ function rerenderOpenD616ActorSheets() {
   }
 }
 
+// Multiple combat hooks may fire for the same operation. One refresh per frame
+// avoids replacing active editors repeatedly while preserving all meaningful
+// initiative/roster transitions.
+const scheduleCombatActorSheetRefresh = makeCombatSheetRefreshScheduler(
+  rerenderOpenD616ActorSheets,
+  callback => (typeof requestAnimationFrame === 'function'
+    ? requestAnimationFrame(callback)
+    : Promise.resolve().then(callback)),
+);
+
 class LegacyMarvelMultiverseCharacterSheet extends foundry.appv1.sheets.ActorSheet {
   /** @override */
   static get defaultOptions() {
@@ -4010,15 +4021,15 @@ render(force = false, options = {}) {
         powers[powerSetLabel].push(i);
       }
 
-      // Assign and return
-      context.gear = gear;
-      context.origins = origins;
-      context.occupations = occupations;
-      context.weapons = weapons;
-      context.traits = traits;
-      context.tags = tags;
-      context.powers = powers;
     }
+    // Assign once, after grouping (also for an Actor with no items).
+    context.gear = gear;
+    context.origins = origins;
+    context.occupations = occupations;
+    context.weapons = weapons;
+    context.traits = traits;
+    context.tags = tags;
+    context.powers = powers;
   }
 
   /**
@@ -4529,15 +4540,15 @@ render(force = false, options = {}) {
         weapons.push(i);
       }
 
-      // Assign and return
-      context.gear = gear;
-      context.traits = traits;
-      context.tags = tags;
-      context.powers = powers;
-      context.origins = origins;
-      context.occupations = occupations;
-      context.weapons = weapons;
     }
+    // Assign once even when the NPC has an empty inventory.
+    context.gear = gear;
+    context.traits = traits;
+    context.tags = tags;
+    context.powers = powers;
+    context.origins = origins;
+    context.occupations = occupations;
+    context.weapons = weapons;
   }
 
   /**
@@ -4856,8 +4867,19 @@ async function d616ActorSheetContext(sheet, context, legacy) {
   const snapshot = actor.toObject(false);
   context.actor = actor;
   context.data = snapshot;
-  context.items = actor.items.map(item => item.toObject(false));
-  context.system = foundry.utils.deepClone(actor.system.toObject?.(false) ?? snapshot.system);
+  // Actor#toObject already serializes its embedded Items. Reuse that detached
+  // snapshot instead of serializing every power, weapon and trait a second time.
+  // Some test/third-party Actor implementations omit `items` from toObject;
+  // preserve the previous per-Item fallback in that case.
+  const serializedItems = Array.isArray(snapshot.items) ? snapshot.items : null;
+  const itemCount = typeof actor.items?.size === 'number'
+    ? actor.items.size : (Array.isArray(actor.items) ? actor.items.length : null);
+  context.items = serializedItems && (itemCount === null || serializedItems.length === itemCount)
+    ? serializedItems : actor.items.map(item => item.toObject(false));
+  // Use the system DataModel's current values (including derived attributes,
+  // which can differ from the raw Actor snapshot). Preserve the existing
+  // isolated display copy to prevent writes to the live DataModel.
+  context.system = foundry.utils.deepClone(actor.system.toObject?.(false) ?? snapshot.system ?? {});
   context.flags = snapshot.flags ?? {};
   context.editable = sheet.isEditable;
   context.cssClass = sheet.isEditable ? 'editable' : 'locked';
@@ -4893,15 +4915,31 @@ async function d616ActorSheetContext(sheet, context, legacy) {
   if (actor.type === 'character') {
     const editor = foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
     context.enrichedBiography = {};
+    // Biographies are often large formatted texts, but Health, Focus and
+    // Active Effect updates need not re-enrich unchanged static markup.
+    // Dynamic Foundry references/inline rolls are intentionally recalculated.
+    sheet._d616BiographyCache ??= new Map();
     for (const field of ['history', 'personality', 'distinguishingFeatures']) {
       const raw = String(context.system[field] ?? '');
+      const secrets = !!actor.isOwner;
+      const language = game.i18n?.lang ?? '';
+      const dynamic = /@|\[\[|data-uuid\s*=/i.test(raw);
+      const cached = sheet._d616BiographyCache.get(field);
+      if (!dynamic && cached?.raw === raw && cached.secrets === secrets && cached.language === language) {
+        context.enrichedBiography[field] = cached.html;
+        continue;
+      }
       try {
-        context.enrichedBiography[field] = typeof editor?.enrichHTML === 'function'
-          ? await editor.enrichHTML(raw, {secrets:actor.isOwner,relativeTo:actor})
+        const html = typeof editor?.enrichHTML === 'function'
+          ? await editor.enrichHTML(raw, {secrets,relativeTo:actor})
           : (foundry.utils.escapeHTML?.(raw) ?? raw);
+        context.enrichedBiography[field] = html;
+        if (!dynamic) sheet._d616BiographyCache.set(field, {raw,secrets,language,html});
+        else sheet._d616BiographyCache.delete(field);
       } catch (error) {
         console.warn(`[multiverse-d616] Erro ao preparar Biografia (${field}):`,error);
         context.enrichedBiography[field] = foundry.utils.escapeHTML?.(raw) ?? '';
+        sheet._d616BiographyCache.delete(field);
       }
     }
   }
@@ -5149,6 +5187,12 @@ class D616ActorSheetV2Common extends D616ActorSheetV2Base {
       value = value === '' ? null : Number(value);
       if (value !== null && !Number.isFinite(value)) return;
     }
+    // A redundant change event must not update the Actor and trigger a full
+    // sheet refresh when a scalar field already has the requested value.
+    const current = field === 'name' ? this.actor.name : field.slice(7).split('.')
+      .reduce((object, key) => object?.[key], this.actor.system);
+    if ((value === null || ['string','number','boolean'].includes(typeof value)) && Object.is(current,value))
+      return;
     try {
       this._d616ScrollTop = this.element?.querySelector('.window-content')?.scrollTop ?? null;
       await this.actor.update({[field]:value});
@@ -7019,7 +7063,12 @@ registerOngoingPowerHooks();
     "updateCombat",
   ];
   for (const hook of refreshSheetHooks) {
-    Hooks.on(hook, () => rerenderOpenD616ActorSheets());
+    Hooks.on(hook, (_document, changed) => {
+      // Power/condition automation may update Combat flags several times per
+      // turn without changing anything the Actor sheets display.
+      if (hook === 'updateCombat' && !combatChangeAffectsActorSheets(changed)) return;
+      scheduleCombatActorSheetRefresh();
+    });
   }
 });
 /* -------------------------------------------- */

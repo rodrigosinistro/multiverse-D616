@@ -67,6 +67,13 @@ function getRoot() {
   svg.append(guide);
   const pill = document.createElement('div');
   pill.className = 'm616-distance-pill';
+  // v0.2.137: keep both text nodes for the entire scene/drag. Previously the
+  // secondary div was removed and recreated at every movement preview frame.
+  const primary = document.createElement('span');
+  primary.className = 'm616-distance-primary';
+  const secondary = document.createElement('div');
+  secondary.className = 'm616-distance-secondary is-hidden';
+  pill.append(primary, secondary);
   root.append(svg,pill);
   document.body.appendChild(root);
   return root;
@@ -205,13 +212,16 @@ function showPreview(origin, end, labelText, secondaryText='', secondaryKind='',
   root.querySelector('.m616-distance-guide').setAttribute('d',`M${from.x},${from.y} L${to.x},${to.y}`);
   const pill=root.querySelector('.m616-distance-pill');
   pill.classList.toggle('is-exceeded',!!exceeds);
-  pill.textContent=labelText;
-  if (secondaryText) {
-    const secondary=document.createElement('div');
-    secondary.className=`m616-distance-secondary is-${secondaryKind}`;
-    secondary.textContent = secondaryText;
-    pill.append(secondary);
-  }
+  const primary = pill.querySelector('.m616-distance-primary');
+  const secondary = pill.querySelector('.m616-distance-secondary');
+  // Update text only when it actually changes. Do not replace DOM descendants:
+  // measurements can run every animation frame while moving the pointer.
+  if (primary.textContent !== labelText) primary.textContent = labelText;
+  if (secondary.textContent !== secondaryText) secondary.textContent = secondaryText;
+  const nextSecondaryClass = secondaryText
+    ? `m616-distance-secondary is-${secondaryKind || 'notice'}`
+    : 'm616-distance-secondary is-hidden';
+  if (secondary.className !== nextSecondaryClass) secondary.className = nextSecondaryClass;
   const pillWidth=Math.min(window.innerWidth-16,pill.offsetWidth||260);
   const pillHeight=pill.offsetHeight||35;
   const anchorX = anchorPoint?.x ?? to.x;

@@ -77,6 +77,7 @@ function render() {
   const strip = ensureElements();
   const combat = game.combat;
   const display = enabled() && !!combat && (!combat.scene?.id || combat.scene.id === canvas?.scene?.id);
+  const wasHidden = strip.hidden;
   strip.hidden = !display;
   if (!display) { clearTokenUnderlays(); lastSignature = ''; return; }
   const members = currentCombatants();
@@ -90,8 +91,13 @@ function render() {
   if (signature !== lastSignature) {
     lastSignature = signature;
     strip.innerHTML = stripMarkup(combat,members);
+    // A new roster/turn can change the strip's width, so reclamp the saved
+    // position when the markup changes. Resize and setting changes have their
+    // own reposition handler; unrelated canvas events need no layout read.
+    applySavedStripPosition(strip);
+  } else if (wasHidden) {
+    applySavedStripPosition(strip);
   }
-  applySavedStripPosition(strip);
 }
 
 function storedStripPosition() {

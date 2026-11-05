@@ -8,3 +8,4 @@
 
 .m616-distance-secondary {display:block;border-top:1px solid rgba(255,224,150,.38);margin-top:4px;padding-top:4px;color:#ffe7aa;font-size:12px;white-space:normal}
 .m616-distance-secondary.is-exceeded {color:#ffaaa7}
+.m616-distance-secondary.is-hidden {display:none}

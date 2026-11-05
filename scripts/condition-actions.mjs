@@ -136,14 +136,16 @@ export async function removeBleedingOnHeal(actor,changes){
   await removeSpecificCondition(actor,'mmrpg.bleeding');
   return true;
 }
+// The caller registers these hooks inside Foundry's `ready` event. Registering
+// another `ready` listener here would miss the event, leaving the initial
+// Health snapshots unpopulated until some other event happens.
+export function initializeConditionRecoverySnapshots(){
+  for(const a of (game.actors?.contents??game.actors??[]))observeHealth(a);
+  for(const t of (canvas?.tokens?.placeables??[]))observeHealth(t.actor);
+}
 export function registerConditionRecoveryHooks(){
-  Hooks.on('ready',()=>{
-    for(const a of (game.actors?.contents??game.actors??[]))observeHealth(a);
-    for(const t of (canvas?.tokens?.placeables??[]))observeHealth(t.actor);
-  });
-  Hooks.on('canvasReady',()=>{
-    for(const t of (canvas?.tokens?.placeables??[]))observeHealth(t.actor);
-  });
+  initializeConditionRecoverySnapshots();
+  Hooks.on('canvasReady',initializeConditionRecoverySnapshots);
   Hooks.on('createActor',actor=>observeHealth(actor));
   Hooks.on('createChatMessage',m=>{
     if(primaryGM()&&m?.getFlag?.(SYSTEM,'conditionRecoveryAttempt'))

@@ -4,9 +4,11 @@ import assert from 'node:assert/strict';
 class FakeElement {
   constructor(tag='div'){
     this.tag=tag;this.children=[];this.classes=new Set();this.hidden=false;
-    this.style={};this.attributes={};this.textContent='';
+    this.style={};this.attributes={};this._text='';
     this.classList={add:c=>this.classes.add(c),remove:c=>this.classes.delete(c),toggle:(c,on)=>on?this.classes.add(c):this.classes.delete(c)};
   }
+  set textContent(value){this._text=String(value ?? '');this.children=[];}
+  get textContent(){return this._text+this.children.map(child=>child.textContent).join('');}
   set className(s){this.classes=new Set(s.split(' '));}
   append(...nodes){this.children.push(...nodes);}
   appendChild(node){this.append(node);}

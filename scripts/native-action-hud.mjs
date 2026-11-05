@@ -42,6 +42,12 @@ const PERSISTENT_DEFAULT_HEIGHT = 252;
 const persistentMode = () => Boolean(setting(SETTING_PERSISTENT, false));
 const HUD_ID = "mmrpg-native-action-hud";
 
+// Rendimentos do HUD são derivados de documentos do Foundry. Use caches fracos
+// ligados aos próprios nós para evitar destruir DOM quando o estado não mudou.
+// Nenhum estado de jogo é armazenado aqui; nós removidos são coletados pelo GC.
+const hudStatusRenderCache = new WeakMap();
+const hudTurnResourceRenderCache = new WeakMap();
+
 const ABILITY_ORDER = ["mle", "agl", "res", "vig", "ego", "log"];
 const ABILITY_LABELS = {
   mle: "Melee",
@@ -380,18 +386,31 @@ class NativeActionHud {
 
     Hooks.on("controlToken", () => this.scheduleRender(true));
     Hooks.on("canvasReady", () => this.scheduleRender(true));
-    // Hold conditions live on the TARGET, not on the selected caster.
-    Hooks.on("updateCombat", () => this.scheduleRender(true));
-    Hooks.on("updateCombatant", () => this.scheduleRender(true));
-    Hooks.on("createCombatant", () => this.scheduleRender(true));
-    Hooks.on("deleteCombatant", () => this.scheduleRender(true));
-    Hooks.on("createCombat", () => this.scheduleRender(true));
-    Hooks.on("deleteCombat", () => this.scheduleRender(true));
-    Hooks.on("combatStart", () => this.scheduleRender(true));
-    for(const hook of ['createActiveEffect','updateActiveEffect','deleteActiveEffect']){
-      Hooks.on(hook, () => this.scheduleRender(true));
+    // v0.2.136: changes to combat and chat frequently affect only the HUD's
+    // counters/statuses. An unforced render still refreshes those snapshots,
+    // and rebuilds shortcuts automatically if their signature changed.
+    // Forced renders are reserved for document changes that can alter the
+    // set of available commands (e.g. a condition on the selected actor).
+    Hooks.on("updateCombat", () => this.scheduleRender(false));
+    Hooks.on("updateCombatant", () => this.scheduleRender(false));
+    Hooks.on("createCombatant", () => this.scheduleRender(false));
+    Hooks.on("deleteCombatant", () => this.scheduleRender(false));
+    Hooks.on("createCombat", () => this.scheduleRender(false));
+    Hooks.on("deleteCombat", () => this.scheduleRender(false));
+    Hooks.on("combatStart", () => this.scheduleRender(false));
+    // Only one listener per Active Effect event. The previous code had a
+    // global listener AND a second selected-actor listener, which each
+    // scheduled a forced rebuild of the entire shortcut grid.
+    for (const hook of ["createActiveEffect", "updateActiveEffect", "deleteActiveEffect"]) {
+      Hooks.on(hook, (effect) => {
+        const parent = effect?.parent;
+        // Actor and Item-embedded effects may change usable commands.
+        // An effect on another target can change concentration/held targets;
+        // the HUD signature detects that without rebuilding unrelated icons.
+        this.scheduleRender(this.isSelectedActor(parent?.actor ?? parent));
+      });
     }
-    Hooks.on('updateChatMessage', () => this.scheduleRender(true));
+    Hooks.on('updateChatMessage', () => this.scheduleRender(false));
     Hooks.on("canvasTearDown", () => this.remove());
     Hooks.on("updateActor", (actor) => {
       if (this.isSelectedActor(actor)) this.scheduleRender(true);
@@ -399,13 +418,6 @@ class NativeActionHud {
     Hooks.on("createItem", (item) => this.onItemChange(item));
     Hooks.on("updateItem", (item) => this.onItemChange(item));
     Hooks.on("deleteItem", (item) => this.onItemChange(item));
-    for (const kind of ["createActiveEffect", "deleteActiveEffect", "updateActiveEffect"]) {
-      Hooks.on(kind, (effect) => {
-        const parent = effect?.parent;
-        // Effects may be on the Actor or embedded in one of its Items.
-        if (this.isSelectedActor(parent?.actor ?? parent)) this.scheduleRender(true);
-      });
-    }
     Hooks.on("updateToken", (token) => {
       if (this.isSelectedToken(token)) this.scheduleRender(true);
     });
@@ -735,7 +747,16 @@ class NativeActionHud {
     const concentration = hudConcentrationSnapshot(actor);
     const movement = hudMovementSnapshot(actor, this.selectedToken, game.combat);
     const registry = Array.from(root.querySelectorAll?.('.mmrpg-native-action-hud__hud3-status') ?? []);
+    const renderSignature = JSON.stringify([
+      actor?.uuid ?? actor?.id ?? null,
+      [concentration.used, concentration.maximum, concentration.names],
+      movement ? [movement.label, movement.icon, movement.img ?? null] : null,
+      conditions.map(status => [status.id, status.label, status.icon]),
+    ]);
     for (const panel of registry) {
+      // Turn/chat hooks are frequent. Keep tooltip, focus and icons in place
+      // unless the displayed information has actually changed.
+      if (hudStatusRenderCache.get(panel) === renderSignature) continue;
       panel.replaceChildren();
       panel.classList.toggle('is-empty', !actor);
       if (!actor) continue;
@@ -800,6 +821,7 @@ class NativeActionHud {
         }
         panel.appendChild(block);
       }
+      hudStatusRenderCache.set(panel, renderSignature);
     }
   }
 
@@ -868,9 +890,13 @@ class NativeActionHud {
       tracker:game.multiverseD616?.turnTracker, isGM:!!game.user?.isGM,
     });
     wrapper.classList.toggle("is-hidden",!data);
+    const resourceSignature = JSON.stringify(data ? [
+      data.actions, data.reactions, data.movement, data.remaining, data.maximum, data.mode,
+    ] : null);
+    if (hudTurnResourceRenderCache.get(wrapper) === resourceSignature) return;
     resources.replaceChildren();
     movement.replaceChildren();
-    if (!data) return;
+    if (!data) { hudTurnResourceRenderCache.set(wrapper, resourceSignature); return; }
     const iconRoot = `systems/${SYSTEM_ID}/ui/compact-combat-icons/`;
     for (const [kind,count,icon,label] of [
       ["action",data.actions,"hand-fist.svg","Ação Padrão disponível"],
@@ -906,6 +932,7 @@ class NativeActionHud {
       colored.src=iconRoot+"chevron-right.svg"; colored.alt="";
       fill.appendChild(colored); step.append(base,fill);movement.appendChild(step);
     });
+    hudTurnResourceRenderCache.set(wrapper, resourceSignature);
   }
 
   updatePersistentProfile(root, actor) {
@@ -929,27 +956,43 @@ class NativeActionHud {
       `Karma ${actor?.system?.karma?.value ?? "—"}`;
     const quick = profile.querySelector(".mmrpg-native-action-hud__quick-abilities");
     if (quick) {
-      quick.replaceChildren();
-      // Read the exact same ability values used by the actor sheet, not a
-      // separate set of permanent combat bonuses.
-      for (const key of ABILITY_ORDER) {
-        const chip = document.createElement("button");
-        chip.type = "button";
-        chip.className = "mmrpg-native-action-hud__quick-ability";
-        chip.dataset.action = "ability";
-        chip.dataset.ability = key;
-        chip.disabled = !userCanUseActor(actor);
-        const label = document.createElement("span");
-        label.className = "ability-label";
-        label.textContent = ABILITY_LABELS[key];
-        const value = document.createElement("strong");
-        value.className = "ability-value";
-        value.textContent = abilityHudText(actor, key);
-        const modeLabel = abilityHudMode() === 'combat' ? 'Combate' : 'Non-Combat Check';
-        chip.title = `Rolar ${ABILITY_LABELS[key]} (${modeLabel}: ${value.textContent})`;
-        chip.setAttribute("aria-label", chip.title);
-        chip.append(label, value);
-        quick.appendChild(chip);
+      const existing = Array.from(quick.children ?? []);
+      const reusable = existing.length === ABILITY_ORDER.length &&
+        existing.every((chip, index) => chip?.dataset?.action === 'ability' &&
+          chip.dataset.ability === ABILITY_ORDER[index] && chip.children?.length === 2 &&
+          chip.children[0]?.className === 'ability-label' &&
+          chip.children[1]?.className === 'ability-value');
+      if (!reusable) quick.replaceChildren();
+      // No repeated teardown of all six buttons on chat/turn updates.
+      // Only change text/permission when the character or combat state changes.
+      const canUse = userCanUseActor(actor);
+      const modeLabel = abilityHudMode() === 'combat' ? 'Combate' : 'Non-Combat Check';
+      for (const [index, key] of ABILITY_ORDER.entries()) {
+        let chip = reusable ? existing[index] : null;
+        if (!reusable) {
+          chip = document.createElement("button");
+          chip.type = 'button';
+          chip.className = 'mmrpg-native-action-hud__quick-ability';
+          chip.dataset.action = 'ability';
+          chip.dataset.ability = key;
+          const label = document.createElement('span');
+          label.className = 'ability-label';
+          const value = document.createElement('strong');
+          value.className = 'ability-value';
+          chip.append(label, value);
+          quick.appendChild(chip);
+        }
+        const label = chip.children[0];
+        const value = chip.children[1];
+        const text = abilityHudText(actor, key);
+        if (label.textContent !== ABILITY_LABELS[key]) label.textContent = ABILITY_LABELS[key];
+        if (value.textContent !== text) value.textContent = text;
+        chip.disabled = !canUse;
+        const title = `Rolar ${ABILITY_LABELS[key]} (${modeLabel}: ${text})`;
+        if (chip.title !== title) {
+          chip.title = title;
+          chip.setAttribute('aria-label', title);
+        }
       }
     }
   }

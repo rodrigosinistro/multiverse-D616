@@ -29,12 +29,20 @@ test('um turno de efeito aplicado fora do turno do alvo: marca começo e termina
   f.witnessedTargetTurn='1:1:victim';
   assert.equal(powerConditionExpiryDecision(f,c),false);
   setTurn(c,1,2);
-  assert.equal(powerConditionExpiryDecision(f,c),true);
+  assert.equal(powerConditionExpiryDecision(f,c),false,'não expira no turno do outro combatente');
+  setTurn(c,2,0);
+  assert.equal(powerConditionExpiryDecision(f,c),false,'não expira simplesmente ao mudar de rodada');
+  setTurn(c,2,1);
+  assert.equal(powerConditionExpiryDecision(f,c),true,'expira quando volta a vez do alvo');
 });
 test('Reação: duração 1 turno já conta o turno em andamento do alvo (inclusive v0.2.48 legado)',()=>{
   const c=combat(2,1),f=flag('turn','victim','2:1:victim');
   assert.equal(powerConditionExpiryDecision(f,c),false);
   setTurn(c,2,2);
+  assert.equal(powerConditionExpiryDecision(f,c),false);
+  setTurn(c,3,0);
+  assert.equal(powerConditionExpiryDecision(f,c),false);
+  setTurn(c,3,1);
   assert.equal(powerConditionExpiryDecision(f,c),true);
 });
 test('retroceder rodada/turno não encerra prematuramente uma condição',()=>{
@@ -44,8 +52,22 @@ test('retroceder rodada/turno não encerra prematuramente uma condição',()=>{
   setTurn(c,2,2);
   assert.equal(powerConditionExpiryDecision(f,c),false);
   setTurn(c,3,2);
+  assert.equal(powerConditionExpiryDecision(f,c),false,'outro participante não encerra a condição');
+  setTurn(c,4,1);
   assert.equal(powerConditionExpiryDecision(f,c),true);
   assert.equal(isLaterCombatPosition('3:2:bystander','3:1:victim'),true);
+});
+test('v141: Atordoado de 1 turno não some entre Rodada Bônus e Rodada 1',()=>{
+  const c=combat(0,0),f=flag('turn','victim','0:0:caster');
+  setTurn(c,0,1); // Primeiro turno do alvo na rodada bônus
+  assert.equal(powerConditionExpiryDecision(f,c),null);
+  f.witnessedTargetTurn='0:1:victim';
+  setTurn(c,0,2); // Outro participante age na rodada bônus
+  assert.equal(powerConditionExpiryDecision(f,c),false);
+  setTurn(c,1,0); // Rodada 1 começa, ainda não é a vez do alvo
+  assert.equal(powerConditionExpiryDecision(f,c),false);
+  setTurn(c,1,1); // Próxima vez do alvo
+  assert.equal(powerConditionExpiryDecision(f,c),true);
 });
 test('efeito de rodada vence no próximo turno do agressor, não por reordenar iniciativa na mesma rodada',()=>{
   const c=combat(),f=flag('round','caster','1:0:caster');

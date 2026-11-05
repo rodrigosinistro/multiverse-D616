@@ -6,13 +6,15 @@ import {readFileSync} from 'node:fs';
 class FakeElement {
   constructor(tag='div') {
     this.tag=tag; this.children=[]; this.style={}; this.hidden=false; this.attributes={};
-    this.classes=new Set();this.textContent='';
+    this.classes=new Set();this._text='';
     this.classList={
       add:name=>this.classes.add(name),
       remove:name=>this.classes.delete(name),
       toggle:(name,on)=>on?this.classes.add(name):this.classes.delete(name),
     };
   }
+  set textContent(value){this._text=String(value ?? '');this.children=[];}
+  get textContent(){return this._text+this.children.map(child=>child.textContent).join('');}
   set className(value){this.classes=new Set(String(value).split(/\s+/).filter(Boolean));}
   get className(){return [...this.classes].join(' ');}
   append(...nodes){this.children.push(...nodes);}
@@ -136,6 +138,42 @@ test('drag is preview-only; after pointerup and committed move no trajectory rem
   assert.deepEqual(game.multiverseD616.turnTracker.getState(),{movementUsed:12});
 });
 
+test('v137 distance label and movement notice reuse the same DOM nodes throughout a drag',()=>{
+  const {source,target}=setupScene();
+  trigger('hoverToken',target,true);
+  const pill=overlay().querySelector('.m616-distance-pill');
+  const primary=pill.querySelector('.m616-distance-primary');
+  const secondary=pill.querySelector('.m616-distance-secondary');
+  assert.ok(primary && secondary);
+  assert.equal(pill.children.length,2);
+  assert.equal(secondary.classes.has('is-hidden'),true);
+  for(let i=0;i<5;i++) trigger('hoverToken',target,true);
+  assert.equal(pill.querySelector('.m616-distance-primary'),primary);
+  assert.equal(pill.querySelector('.m616-distance-secondary'),secondary);
+  assert.equal(pill.children.length,2);
+
+  const previousGetState=game.multiverseD616.turnTracker.getState;
+  try {
+    game.multiverseD616.turnTracker.getState=()=>({movementUsed:29,actionUsed:1,actionMax:1});
+    canvas.tokens._draggedToken=source;
+    for (const x of [450,460,470,480,490]) documentEvents.get('pointermove')({clientX:x,clientY:50});
+    assert.equal(overlay().hidden,false);
+    assert.equal(pill.querySelector('.m616-distance-primary'),primary);
+    assert.equal(pill.querySelector('.m616-distance-secondary'),secondary);
+    assert.match(secondary.textContent,/movimento|Movimento|Ação|ação|exced/i);
+    assert.equal(secondary.classes.has('is-hidden'),false);
+    assert.equal(pill.children.length,2);
+    canvas.tokens._draggedToken=null;
+    documentEvents.get('pointerup')();
+    trigger('hoverToken',target,true);
+    assert.equal(secondary.classes.has('is-hidden'),true);
+    assert.equal(pill.querySelector('.m616-distance-secondary'),secondary);
+  } finally {
+    canvas.tokens._draggedToken=null;
+    game.multiverseD616.turnTracker.getState=previousGetState;
+  }
+});
+
 test('hidden combatant cannot be measured; hovering is restored when visible',()=>{
   const {target}=setupScene();
   game.user.isGM=false;
@@ -155,9 +193,9 @@ test('no persistent trails or README release notes; manifest and changelog refle
   assert.match(src,/Hooks\.on\('moveToken'/);
   assert.match(src,/globalThis\.canvas\?\.ready/);
   const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url)));
-  assert.equal(manifest.version,'0.2.134');
+  assert.equal(manifest.version,'0.2.141');
   const changelog=readFileSync(new URL('../CHANGELOG.md',import.meta.url),'utf8');
-  assert.match(changelog,/^## v0\.2\.134/);
+  assert.match(changelog,/^## v0\.2\.141/);
   const readme=readFileSync(new URL('../README.md',import.meta.url),'utf8');
   assert.doesNotMatch(readme,/v0\.2\.82/);
 });

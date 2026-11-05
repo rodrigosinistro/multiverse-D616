@@ -367,13 +367,15 @@ export async function syncCustomTargetRules(message,settings=globalThis.game?.se
   const itemId=message.getFlag?.(AUTOMATION_SYSTEM,'itemId');
   const item=actor?.items?.get?.(itemId);
   if(item?.type!=='power')return 0;
-  const applicable=rules.filter(r=>normalizedName(r.powerName)===normalizedName(item.name));
+  const itemName=normalizedName(item.name);
+  const applicable=rules.filter(r=>normalizedName(r.powerName)===itemName);
   if(!applicable.length)return 0;
   const refs=message.getFlag?.(AUTOMATION_SYSTEM,'targets');
   if(!Array.isArray(refs)||!refs.length)return 0;
   const roll=message.rolls[0];
+  const signature=rollSignature(roll);
   const confirmations=['powerConditionDamage','customDamageConfirmation'].map(k=>message.getFlag?.(AUTOMATION_SYSTEM,k));
-  const confirmedTargets=new Set(confirmations.flatMap(c=>c?.confirmed && c.rollSignature===rollSignature(roll)
+  const confirmedTargets=new Set(confirmations.flatMap(c=>c?.confirmed && c.rollSignature===signature
     ?(c.results??[]).map(r=>r.targetUuid):[]));
   const already=new Set(message.getFlag?.(AUTOMATION_SYSTEM,'customTargetExecutions')??[]);
   let completed=0;
@@ -387,12 +389,17 @@ export async function syncCustomTargetRules(message,settings=globalThis.game?.se
     if(targetDoc?.documentName!=='Token'||!targetDoc.actor)continue;
     if(casterToken && crossingRegions(targetDoc.parent,casterToken,targetDoc).length)continue;
     const confirmedHit=confirmedTargets.has(uuid);
+    const targetActor=targetDoc.actor;
+    // All matching rules share the same defense, roll and GM decision for
+    // this one target. Adjudicate ONCE, then apply each rule's Fantastic
+    // requirement independently. No cross-message caching (rerolls stay live).
+    const outcome=targetRuleOutcome({rule:{...applicable[0],hitOutcome:'success'},
+      item,roll,targetActor,targetUuid:uuid,message,confirmed:confirmedHit});
+    if(!outcome)continue;
     for(const rule of applicable){
       const legacyKey=`${rule.id}|${uuid}`;
       if(already.has(legacyKey))continue; // v112-v115 cards already executed this rule.
-      const targetActor=targetDoc.actor;
-      const outcome=targetRuleOutcome({rule,item,roll,targetActor,targetUuid:uuid,message,confirmed:confirmedHit});
-      if(!outcome)continue;
+      if(rule.hitOutcome==='fantastic'&&!outcome.fantastic)continue;
       const statusActor=rule.statusSubject==='target'?targetActor:actor;
       if(!hasRequiredStatus(rule,statusActor))continue;
       const effects=ruleEffects(rule);

@@ -96,6 +96,6 @@ test('v107: power-condition and damage routes consult power-specific scopes, wit
   assert.match(damage,/automationEnabled\('fantasticDamage',undefined,powerName\)/);
   assert.match(core,/registerAutomationCenterMenu\(\)/);
   assert.match(core,/automationEnabled\('fantasticDamage',undefined,item\.name\)/);
-  assert.equal(manifest.version,'0.2.134');
+  assert.equal(manifest.version,'0.2.141');
   assert.ok(manifest.styles.includes('styles/automation-center.css'));
 });

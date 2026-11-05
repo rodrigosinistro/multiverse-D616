@@ -29,15 +29,15 @@ test('v0.2.99 shortcuts are icon-only with tooltip and remain clickable',()=>{
   assert.match(source,/await activateAttachedPower\(carrier,actionButton\.dataset\.powerId,actor\)/);
 });
 test('v0.2.99 six full-name two-line clickable ability buttons use original test engine',()=>{
-  assert.match(source,/const chip = document\.createElement\("button"\)/);
-  assert.match(source,/chip\.dataset\.action = "ability"/);
+  assert.match(source,/chip = document\.createElement\("button"\)/);
+  assert.match(source,/chip\.dataset\.action = [\'"]ability[\'"]/);
   assert.match(source,/chip\.dataset\.ability = key/);
   assert.match(source,/label\.textContent = ABILITY_LABELS\[key\]/);
-  assert.match(source,/value\.className = "ability-value"/);
+  assert.match(source,/value\.className = [\'"]ability-value[\'"]/);
   assert.match(source,/await rollAbility\(actor, actionButton\.dataset\.ability\)/);
   for(const label of ['Melee','Agility','Resilience','Vigilance','Ego','Logic'])
     assert.ok(source.includes(label));
   const finalRules=css.slice(css.lastIndexOf('/* v0.2.93'));
   assert.match(finalRules,/mmrpg-native-action-hud__quick-ability \{[\s\S]*?flex-direction:\s*column/);
-  assert.equal(manifest.version,'0.2.134');
+  assert.equal(manifest.version,'0.2.141');
 });

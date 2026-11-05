@@ -37,6 +37,22 @@ Cole este link no instalador de sistemas do Foundry:
 https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json
 ```
 
+## Otimização dos HUDs
+
+Os HUDs clássico e persistente reaproveitam os indicadores de Concentração, movimento, condições e recursos quando seus valores permanecem iguais; os seis botões de atributos do HUD persistente também são atualizados sem reconstrução desnecessária. O objetivo é reduzir manipulações do DOM durante mudanças de turno e atualizações de fichas. **Nenhuma regra de combate, ordem de favoritos, tooltip, ação ou configuração foi alterada.**
+
+## Otimização do processamento de automações
+
+As automações de poderes e regras personalizadas que envolvem múltiplos alvos compartilham, **somente durante o processamento do card**, cálculos que independem do alvo (assinatura da rolagem, confirmação de dano, metadados do poder). Cada alvo continua tendo defesa, decisão de acerto, condições e efeitos próprios. A checagem de Sucesso Fantástico é reutilizada entre regras personalizadas do mesmo poder para um mesmo alvo, sem alterar o registro contra efeitos duplicados. Não há cache entre rolagens ou combates. Os ganhos efetivos de tempo devem ser conferidos no Foundry.
+
+## Estabilidade de atualizações de combate e fichas
+
+A atualização das fichas abertas durante eventos do combate é agrupada por quadro visual para evitar renderizações consecutivas. Mudanças que apenas alteram flags do combate não forçam uma nova preparação das fichas; rodada, turno, participantes, cena e outros eventos relevantes continuam atualizando a apresentação. A rotina de recuperação de condições também observa os valores iniciais de Health assim que o Foundry conclui a inicialização do sistema, atualizando-os ao trocar de cena. Não há alteração de regras ou configurações do Mestre.
+
+## Otimização das fichas de personagens
+
+As fichas de personagens e NPCs no Foundry v14 evitam serializar cada Item duas vezes ao renderizar listas extensas de poderes, traços e equipamentos. Textos estáticos da biografia não são reprocessados enquanto permanecerem iguais; referências e rolagens dinâmicas continuam atualizando normalmente. Alterações de campo que repetem um valor já salvo deixam de gerar atualizações desnecessárias. O layout, os controles, os atributos derivados e as regras de combate permanecem iguais.
+
 ## HUD 3.4 — atalhos e indicadores
 
 Os seis botões de atributos do HUD mostram **NON-COMBAT CHECKS** fora das rodadas de combate e **Ability Scores** enquanto o combate está iniciado. O clique utiliza a mesma coluna exibida, sem alterar o cálculo original das regras.
@@ -139,3 +155,7 @@ O bônus entra no cálculo do card do dano do poder, respeitando a fórmula e a 
 ### HUD 3.0
 
 O HUD clássico e o HUD persistente exibem as condições ativas, **com apenas o nome no tooltip** (duração e remoção ficam no indicador nativo de condições do Foundry), e o uso atual de Concentração sem alterar os respectivos rastreadores. Em Poderes/Armas, a estrela marca favoritos por personagem **apenas nas preferências locais do jogador**; poderes favoritos vão ao início da lista ou da grade persistente. Estrela não executa o poder. O botão normal continua usando o motor nativo. Nenhuma ficha é alterada pela personalização.
+
+### Otimização de eventos do HUD
+
+O HUD conserva seu layout e seus atalhos; cartões do chat e mudanças de turno atualizam principalmente os indicadores, sem remontar automaticamente a lista de poderes. Alterações de itens, fichas e efeitos do personagem selecionado continuam atualizando os comandos. Nenhuma opção de configuração nova é necessária.

@@ -144,7 +144,26 @@ test('blind de 1 turno expira ao final do próximo turno do alvo',async()=>{
  env.combat.turn=1;env.combat.combatant=env.combat.combatants[1];
  await expirePowerConditions(env.combat);assert.equal(env.effects.length,1);
  env.combat.round=2;env.combat.turn=0;env.combat.combatant=env.combat.combatants[0];
- await expirePowerConditions(env.combat);assert.equal(env.effects.length,0);
+ await expirePowerConditions(env.combat);assert.equal(env.effects.length,1,'não deve expirar na vez do atacante');
+ env.combat.turn=1;env.combat.combatant=env.combat.combatants[1];
+ await expirePowerConditions(env.combat);assert.equal(env.effects.length,0,'expira quando retorna o turno do alvo');
+});
+test('v141: Atordoado nativo sobrevive a outros turnos após o primeiro turno do alvo',async()=>{
+ const env=setupMock({name:'Speed Blast'});
+ await syncPowerConditions(env.msg);
+ assert.equal(env.effects.length,1);
+ // Turno 1 do alvo: registra a primeira ocorrência.
+ env.combat.turn=1;env.combat.combatant=env.combat.combatants[1];
+ await expirePowerConditions(env.combat);
+ assert.equal(env.effects.length,1);
+ // O agressor volta a agir na rodada seguinte antes do alvo.
+ env.combat.round=2;env.combat.turn=0;env.combat.combatant=env.combat.combatants[0];
+ await expirePowerConditions(env.combat);
+ assert.equal(env.effects.length,1,'não expira na transição de rodada');
+ // Somente agora o status expira.
+ env.combat.turn=1;env.combat.combatant=env.combat.combatants[1];
+ await expirePowerConditions(env.combat);
+ assert.equal(env.effects.length,0);
 });
 test('efeito manual com o mesmo status não é removido por rerrolagem',async()=>{
  const env=setupMock();
@@ -486,7 +505,10 @@ test('v0.2.49: efeito de um turno aplicado durante o turno do próprio alvo expi
   assert.equal(flags.witnessedTargetTurn,'1:1:c2');
   env.combat.round=2;env.combat.turn=0;env.combat.combatant=env.combat.combatants[0];
   await expirePowerConditions(env.combat);
-  assert.equal(env.effects.length,0);
+  assert.equal(env.effects.length,1,'turno do agressor não encerra condição do alvo');
+  env.combat.turn=1;env.combat.combatant=env.combat.combatants[1];
+  await expirePowerConditions(env.combat);
+  assert.equal(env.effects.length,0,'encerra no próximo turno do próprio alvo');
 });
 
 test('v0.2.67: Hellfire Chains só mantém Concentração quando Fantástico prende o alvo',async()=>{

@@ -1,3 +1,34 @@
+## v0.2.141 — Expiração no turno correto do alvo (sem migração)
+
+Condições nativas de 1 turno criadas por poderes agora permanecem no personagem durante os turnos dos demais participantes e só expiram quando a iniciativa retorna ao alvo após o primeiro turno afetado. Efeitos já removidos na versão anterior não são restaurados automaticamente; reaplique-os para o teste. Nenhuma alteração em compêndios, fichas ou configurações.
+
+## v0.2.140 — Revisão de estabilidade (sem migração)
+
+Não há migração de dados de fichas, efeitos, automações ou compêndios. Instale o ZIP completo com o servidor Foundry encerrado e mantenha um backup do mundo. Teste: abrir fichas de personagens/NPCs, iniciar combate, alternar turnos, criar/remover combatentes e atualizar condições de Sangrando. O fluxo de cura deve continuar removendo Sangrando conforme a regra; apenas a inicialização de observações e a frequência de atualização das fichas foram ajustadas.
+
+## v0.2.139 — Processamento de automações e combate
+
+Sem migração de dados. As automações salvas, condições ativas, configurações do Mestre e os seis compêndios são preservados. Instale o ZIP completo com o Foundry encerrado e backup do mundo. Para verificar, faça ataques contra múltiplos alvos, incluindo Sucesso Fantástico, rerrolagens Edge/Trouble e dano confirmado pelo MMDR; cada alvo deve receber apenas seus próprios efeitos uma vez. A mudança reduz leituras duplicadas dentro do mesmo card, sem armazenar resultados entre ataques.
+
+## v0.2.138 — Otimização das fichas (sem migração)
+
+Nenhuma migração de personagens, configurações ou compêndios é necessária. Feche o servidor Foundry v14, faça backup do mundo e substitua a instalação completa do sistema. Teste abrir fichas com muitos poderes, alternar abas, editar atributos, adicionar/remover poderes e verificar a biografia. Os textos com referências Foundry continuam sendo enriquecidos a cada atualização; campos inalterados não disparam gravações extras.
+
+## v0.2.137
+
+Nenhuma migração de dados do mundo é necessária. Otimização interna da prévia de movimento e da barra de iniciativa compacta.
+
+## v0.2.136 — Otimização interna do HUD
+
+- Não exige migração de dados do mundo nem reconfiguração de HUD, favoritos ou automações.
+- Instale o ZIP completo com o Foundry desligado, preservando backup do mundo.
+- Valide no Foundry: alternância de turnos, recursos Ação/Reação/Movimento, indicadores de condições e Concentração; adicionar/remover condições; inserir/remover poderes e atalhos de itens; atualizações de chat.
+
+## v0.2.135 — atualização visual incremental (sem migração)
+- Nenhuma migração de dados do mundo, fichas, compêndios ou preferências.
+- Atualização restrita aos elementos DOM do HUD: botões e indicadores são reaproveitados quando seus valores não mudaram; os dados continuam vindo das rotinas já existentes.
+- Faça backup, substitua a instalação completa com o Foundry encerrado e teste com um personagem dentro e fora do combate, incluindo mudanças de condição, concentração e movimento.
+
 ## v0.2.134 — efeitos elementais temporários
 Sem migração obrigatória. Novas condições elementais com duração de uma rodada passam a ser controladas pelo retorno do turno do alvo, sem expiração nativa ao mudar de rodada. Efeitos antigos já criados podem manter seu temporizador original; reaplique-os para testar a correção.
 

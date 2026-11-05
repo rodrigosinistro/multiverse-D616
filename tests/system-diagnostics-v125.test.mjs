@@ -130,7 +130,7 @@ test('v125: release registers menu, stylesheet and includes no write APIs in sca
   const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url),'utf8'));
   const main=readFileSync(new URL('../multiverse-d616.mjs',import.meta.url),'utf8');
   const source=readFileSync(new URL('../scripts/system-diagnostics.mjs',import.meta.url),'utf8');
-  assert.equal(manifest.version,'0.2.134');
+  assert.equal(manifest.version,'0.2.141');
   assert.ok(manifest.styles.includes('styles/diagnostic-center.css'));
   assert.match(main,/registerDiagnosticCenterMenu\(\);/);
   assert.doesNotMatch(source,/\.update\(|\.delete\(|\.createEmbeddedDocuments\(|\.setFlag\(|settings\.set\(/);

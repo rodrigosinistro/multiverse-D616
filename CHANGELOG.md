@@ -1,3 +1,58 @@
+## v0.2.141 — Correção da expiração de condições por turno (2026-11-04)
+
+- Corrigido `powerConditionExpiryDecision`: condições nativas configuradas para durar **1 turno do alvo** (incluindo Atordoado) não são mais removidas na vez do próximo participante ou na passagem de rodada.
+- Após o primeiro turno afetado, a condição expira **apenas quando a iniciativa retornar ao mesmo combatente**, inclusive ao passar da Rodada Bônus para a Rodada 1.
+- Preservadas as durações ancoradas no atacante (`round`), condições manuais, MMDR e Central de Automações.
+- Corrigidos testes legados que aceitavam a remoção prematura; novos cenários de regressão cobrem múltiplos participantes e Rodada Bônus.
+- Nenhuma migração de dados. Efeitos já removidos prematuramente antes da instalação não podem ser restaurados automaticamente.
+
+## v0.2.140 — Revisão de estabilidade: inicialização e atualização das fichas (2026-11-04)
+
+- **Recuperação de condições:** corrigida a inicialização das observações de Health. A rotina era registrada no evento `ready` depois de esse evento já ter ocorrido; agora inicializa imediatamente quando seus hooks são ativados e renova as observações em `canvasReady`. O comportamento de cura de Sangrando, os testes de remoção e as regras de combate não foram modificados.
+- **Eventos de combate e fichas abertas:** eventos simultâneos de criação/atualização de combate e combatentes passam a solicitar no máximo uma atualização das fichas por quadro visual. Mudanças apenas nas flags do combate deixam de provocar renderização de fichas; alterações de rodada, turno, estado ativo, participantes e cena continuam sendo consideradas.
+- **Testes de estabilidade:** testes para inicialização pós-`ready`, agrupamento dos eventos de combate e preservação dos gatilhos relevantes; verificação adicional dos caminhos de módulos, estilos, idiomas e arquivos LevelDB do manifesto.
+- **Escopo:** não modifica poderes, fórmulas, dano, MMDR, HUD, estrutura visual, automações salvas ou dados dos compêndios. Não requer migração do mundo. Recomenda-se validação no Foundry v14, pois a suíte é automatizada e não mede desempenho em sessões reais.
+
+## v0.2.139 — Otimização conservadora das automações por alvo (2026-11-04)
+
+- **Condições nativas de poderes:** assinatura da rolagem, decisões individuais do Mestre, confirmação de dano e metadados de cada poder são consultados uma única vez por processamento de card, em vez de novamente para cada alvo. A defesa, o acerto, a redução e a aplicação de condições continuam individuais por alvo.
+- **Automações personalizadas por alvo:** para cada personagem atingido, a decisão de acerto e Sucesso Fantástico é avaliada uma vez e reutilizada somente pelas regras que correspondem ao mesmo poder. A condição exigida, o destinatário e os efeitos de cada regra continuam sendo avaliados separadamente.
+- **Segurança de rerrolagens:** nenhuma decisão, resultado ou rolagem é guardada entre mensagens ou chamadas. Novas rolagens e alterações de Edge/Trouble continuam forçando avaliação atualizada. O registro de efeitos já executados no card permanece preservado, inclusive com múltiplos alvos.
+- **Escopo:** otimização do processamento no card. Nenhuma mudança de fórmulas, dano, MMDR, duração, HUD, interface, compêndios ou configurações. Não requer migração de mundo.
+- **Validação:** testes novos reproduzem três regras em dois alvos, resultados distintos para cada alvo, proteção contra duplicidades e reconciliação das condições após uma nova rolagem. Ganhos de desempenho no Foundry real ainda precisam ser medidos.
+
+## v0.2.138 — Otimização conservadora das fichas de personagem e NPC (2026-11-04)
+
+- **Itens preparados em uma única passagem de serialização:** as fichas `ActorSheetV2` reutilizam os itens já destacados no `Actor#toObject(false)`, evitando repetir `Item#toObject(false)` para cada poder, arma e traço a cada renderização. Quando um Actor não disponibiliza a lista de itens no snapshot, a rotina anterior continua como fallback.
+- **Atributos derivados preservados:** o contexto de exibição mantém a cópia independente de `actor.system.toObject(false)`, para continuar mostrando valores calculados como NON-COMBAT CHECKS e impedir alterações acidentais no DataModel original.
+- **Agrupamento de inventário:** fichas de personagem e NPC passam a atribuir os grupos de itens ao contexto somente após classificar tudo, inclusive em fichas vazias, em vez de repetir várias atribuições para cada item.
+- **Biografia:** textos estáticos sem referências dinâmicas não são enriquecidos novamente quando seus conteúdos, permissões e idioma não mudaram. Edições, alteração de permissões, mudança de idioma e links ou rolagens dinâmicos continuam atualizando normalmente.
+- **Salvamento de campos:** eventos de alteração de um valor escalar idêntico ao já armazenado não solicitam `Actor.update()` desnecessariamente. Novas alterações continuam usando o fluxo individual de persistência do Foundry v14.
+- **Escopo:** otimizações de preparação e persistência visual das fichas. Sem alterações de layout, fórmulas, poderes, efeitos, HUD, MMDR, combate ou compêndios. Não há migração de dados.
+- **Validação:** testes de regressão de fichas, serialização de inventário com 514 poderes, textos dinâmicos, edição, permissões e salvamento; repetir a suíte completa sobre o ZIP extraído. Ganhos em tempo de abertura e FPS ainda dependem de medição no Foundry real.
+
+## v0.2.137 — Otimização da prévia de movimento e iniciativa (2026-11-04)
+
+- **Etiqueta de distância/movimento sem reconstrução por quadro:** durante o arrasto de tokens, os elementos da linha principal e do aviso secundário são criados uma vez e reutilizados. Texto, estado de movimento excedido e avisos continuam atualizados; o conteúdo não é mais recriado no DOM a cada atualização de mouse.
+- **Barra compacta de iniciativa:** quando uma atualização não muda os combatentes, rodada, turno ou imagem, a barra não recalcula repetidamente o posicionamento por `getBoundingClientRect()`. Mudanças reais do conteúdo, redimensionamento da janela e alterações da posição salva continuam reposicionando a barra.
+- **Escopo:** exclusivamente apresentação e desempenho. Nenhuma alteração em regras de combate, cálculos de movimento, transmissão temporária de prévias, permissões, fichas, automações, MMDR ou compêndios.
+- **Testes:** regressão das prévias de distância e avisos, atualização de estado, reutilização de nós DOM, reposicionamento da iniciativa e testes de sistema completos. O ganho de desempenho ainda deverá ser confirmado no Foundry real.
+
+## v0.2.136 — Otimização dos eventos do HUD (2026-11-04)
+
+- **Atualizações incrementais em combate:** os eventos de mudança de turno/rodada e de cartões do chat continuam acionando a leitura de recursos, Concentração, movimento e condições, mas deixam de **forçar** a reconstrução da grade de poderes quando os atalhos não mudaram. A assinatura de itens/poderes existente continua acionando a reconstrução quando necessário.
+- **Active Effects sem listeners duplicados:** havia dois ouvintes para cada evento de criação, alteração e remoção de efeitos. Agora há somente um por evento. Alterações de efeitos do personagem selecionado continuam atualizando integralmente comandos contextuais (por exemplo, remover condição); mudanças em outros alvos atualizam a apresentação de forma incremental para preservar Concentração e poderes sustentados.
+- **Coalescência preservada:** mudanças simultâneas de combate/chat são processadas no mesmo quadro visual (requestAnimationFrame), com prioridade ao redesenho completo se um evento relevante ocorrer durante o intervalo.
+- **Segurança:** nenhuma mudança na lógica de ações, reações, dano, Focus, condições, iniciativa, poderes, MMDR, HUD clássico/persistente ou preferências de favoritos. Os seis compêndios são idênticos à v0.2.135. Os ganhos de FPS não foram medidos em jogo real.
+- **Testes adicionais:** roteamento de eventos, não duplicação de hooks, atualização de efeito local, preservação de atualização por Item e agrupamento de eventos em um quadro.
+
+## v0.2.135 — Otimização conservadora de atualização dos HUDs (04/11/2026)
+- **Atualização incremental dos indicadores:** Concentração, movimento atual e ícones de condições dos HUDs clássico e persistente preservam seus elementos DOM quando o estado exibido não muda; continuam sendo reconstruídos quando há alteração real de personagem, condição, concentração ou modo de movimento.
+- **Ações, reações e quatro setas de movimento:** substituição dos elementos apenas quando a quantidade ou o consumo muda, mantendo leitura do rastreador oficial do combate e sem armazenar um segundo estado de recursos.
+- **Seis botões de atributos no HUD persistente:** reutilização dos botões, com atualização pontual de valor, tooltip e permissão, inclusive na alternância entre NON-COMBAT CHECKS e valores de combate.
+- **Segurança:** caches `WeakMap` associados aos nós visuais, descartados automaticamente quando a interface é removida. Sem alterações de regras, fichas, automações, compêndios, cálculos de rolagem, favoritos ou movimento.
+- **Testes:** regressões novas comprovam ausência de reconstruções desnecessárias e atualização correta quando dados mudam. Validar também no Foundry real antes de aprovar como estável.
+
 ## v0.2.134 — Correção da duração de efeitos elementais de 1 rodada (03/11/2026)
 - Efeitos elementais de status temporários (ex.: Ice → Paralisado) que atingem um combatente não expiram mais na simples virada da rodada: o alvo recebe seu turno afetado e o efeito termina quando volta a vez desse alvo.
 - Para esses efeitos o temporizador nativo de `1 rodada` é substituído por uma marca de expiração vinculada ao turno do alvo; a remoção ocorre somente para o Active Effect criado pela automação elemental, sem remover condições preexistentes.

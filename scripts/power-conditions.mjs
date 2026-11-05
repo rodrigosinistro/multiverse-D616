@@ -303,13 +303,20 @@ export async function syncPowerConditions(message){
   // Do not create conditions for damage-producing powers during the roll.
   // The damage card is calculated and confirmed separately by the Narrator.
   const damageConfirmation=message.getFlag(SYSTEM,'powerConditionDamage');
+  // Values derived only from this roll/card are shared across target evaluations.
+  // Never cache them between messages: rerolls and GM decisions must re-evaluate.
+  const requiresConfirmedDamage=mustConfirmPowerDamage(item.name);
+  const powerRules=POWER_CONDITIONS[item.name]??[];
   // Elemental Prison traps on a regular success immediately. Its Fantastic
   // damage and additional elemental effect wait for GM damage confirmation.
   const prisonImmediate=item.name==='Elemental Prison';
-  if(mustConfirmPowerDamage(item.name) && !damageConfirmation?.confirmed && !prisonImmediate)return;
+  if(requiresConfirmedDamage && !damageConfirmation?.confirmed && !prisonImmediate)return;
   // Damage confirmations are tied to the rolled dice: a retroactive
   // Edge/Trouble reroll cannot reuse the previous damage/status result.
   const damageSignature=rollSignature(roll);
+  const mixed=message.getFlag(SYSTEM,'conditionEdges')?.ambiguousTargets===true;
+  const decisions=message.getFlag(SYSTEM,'multiTargetDecisionRollSignature')===damageSignature
+    ?(message.getFlag(SYSTEM,MULTI_TARGET_DECISION_KEY)??{}):{};
   const confirmationIsCurrent=!damageConfirmation?.rollSignature ||
     damageConfirmation.rollSignature===damageSignature;
   const confirmedDamage=new Map(((confirmationIsCurrent?damageConfirmation?.results:[])??[])
@@ -335,9 +342,6 @@ export async function syncPowerConditions(message){
     const key=normalizeConditionDefense(defenseKey,token.actor);
     const defense=tn||Number(token.actor.system?.abilities?.[key]?.defense??0);
     if(!Number.isFinite(defense)||defense<=0)continue;
-    const mixed=message.getFlag(SYSTEM,'conditionEdges')?.ambiguousTargets===true;
-    const decisions=message.getFlag(SYSTEM,'multiTargetDecisionRollSignature')===rollSignature(roll)
-      ?(message.getFlag(SYSTEM,MULTI_TARGET_DECISION_KEY)??{}):{};
     const outcome=adjudicateTargetOutcome(getMarvelOutcome(roll,defense),{
       requiresReview:mixed,
       decision:decisions[token.uuid],
@@ -349,7 +353,7 @@ export async function syncPowerConditions(message){
     // A damage card may contain multiple targets.  Only a target whose
     // damage was actually confirmed is eligible.  The amount can be zero:
     // on-hit effects still work unless their text requires real damage.
-    if(mustConfirmPowerDamage(item.name) && !confirmedDamage.has(token.uuid) && !prisonImmediate){
+    if(requiresConfirmedDamage && !confirmedDamage.has(token.uuid) && !prisonImmediate){
       // A retroactive reroll invalidates the old damage confirmation. Remove
       // ONLY conditions from this roll (not manually applied matching ones).
       await syncActorFixed(token.actor,token.uuid,message,sourceActor,casterToken,[],item.name,concentration);
@@ -358,16 +362,16 @@ export async function syncPowerConditions(message){
     const rawRules=conditionsForOutcome(item.name,outcome,{self:false});
     const rules=filterDamageDependentRules(rawRules,confirmedDamage.get(token.uuid));
     // Original indices must be stable across normal/fantastic reconciliation.
-    const indexedRules=(POWER_CONDITIONS[item.name]??[]).flatMap((r,i)=>rules.includes(r)?[{...r,_id:i}]:[]);
+    const indexedRules=powerRules.flatMap((r,i)=>rules.includes(r)?[{...r,_id:i}]:[]);
     // Never apply fantastic elemental consequences before the damage card.
-    if((!mustConfirmPowerDamage(item.name) || confirmedDamage.has(token.uuid)))
+    if((!requiresConfirmedDamage || confirmedDamage.has(token.uuid)))
       indexedRules.push(...elementalSpecialForPower(item,sourceActor,outcome,indexedRules));
     await syncActorFixed(token.actor,token.uuid,message,sourceActor,casterToken,indexedRules,item.name,concentration);
     if(outcome?.success) selfRules.push(...conditionsForOutcome(item.name,outcome,{self:true}));
   }
-  if((POWER_CONDITIONS[item.name]??[]).some(r=>r.self)){
+  if(powerRules.some(r=>r.self)){
     const recipientUuid=casterToken?.uuid??sourceActor.uuid;
-    const indexed=(POWER_CONDITIONS[item.name]??[]).flatMap((r,i)=>selfRules.includes(r)?[{...r,_id:i}]:[])
+    const indexed=powerRules.flatMap((r,i)=>selfRules.includes(r)?[{...r,_id:i}]:[])
       .filter((r,i,a)=>a.findIndex(x=>x._id===r._id)===i);
     await syncActorFixed(sourceActor,recipientUuid,message,sourceActor,casterToken,indexed,item.name,concentration);
   }
@@ -424,7 +428,10 @@ export function powerConditionExpiryDecision(f,combat){
   // its own turn has already witnessed that turn, even with an empty flag.
   const initialAnchor=String(f.initialPosition??'').split(':').slice(2).join(':');
   const witnessed=f.witnessedTargetTurn || (initialAnchor===f.anchorId?f.initialPosition:'');
-  if(witnessed)return isLaterCombatPosition(pos,witnessed);
+  // A one-target-turn status must survive every other combatant's turn,
+  // including transitions between rounds and the Bonus Round. Expire only
+  // when the *same* combatant gets a later turn after its first affected turn.
+  if(witnessed)return currentId===f.anchorId && isLaterCombatPosition(pos,witnessed);
   if(currentId===f.anchorId&&isLaterCombatPosition(pos,f.initialPosition))return null;
   return false;
 }

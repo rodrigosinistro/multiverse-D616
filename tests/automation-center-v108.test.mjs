@@ -125,8 +125,8 @@ test('v108: condition recovery and end-turn damage connect individual toggles wi
   assert.match(source('../scripts/ongoing-power-effects.mjs'),/automationEnabled\('ongoingConditions',undefined,'Flames of the Faltine'\)/);
   assert.match(source('../scripts/ongoing-power-effects.mjs'),/automationEnabled\('ongoingConditions',undefined,'Healing Factor'\)/);
   const manifest=JSON.parse(source('../system.json'));
-  assert.equal(manifest.version,'0.2.134');
-  assert.match(source('../CHANGELOG.md'),/^## v0\.2\.134/);
+  assert.equal(manifest.version,'0.2.141');
+  assert.match(source('../CHANGELOG.md'),/^## v0\.2\.141/);
   assert.match(source('../README.md'),/Só alteradas/);
 });
 

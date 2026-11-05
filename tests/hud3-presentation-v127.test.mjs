@@ -83,5 +83,5 @@ test('v127 updates HUD panels using read-only statuses and keeps both HUD modes'
  assert.match(css,/mmrpg-native-action-hud__concentration/);
  assert.match(css,/is-persistent.*__hud3-status\.is-persistent-status/s);
  assert.match(source,/await item\.roll\(\)/);
- assert.equal(manifest.version,'0.2.134');
+ assert.equal(manifest.version,'0.2.141');
 });
