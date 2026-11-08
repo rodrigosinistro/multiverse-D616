@@ -18,11 +18,11 @@
       <div class="mm-v2-npc-resources">
         <div class="mm-v2-npc-resource">
           <div class="mm-v2-resource-heading">HEALTH <span>DR {{system.healthDamageReduction}}</span></div>
-          <div class="mm-v2-numbers"><input type="number" name="system.health.value" value="{{system.health.value}}" data-dtype="Number" aria-label="Health atual"/><span>/</span><input type="number" name="system.health.max" value="{{system.health.max}}" data-dtype="Number" aria-label="Health máximo"/></div>
+          <div class="mm-v2-numbers"><input type="number" name="system.health.value" value="{{system.health.value}}" data-dtype="Number" aria-label="Health atual"/><span>/</span><output class="m616-actor-auto-max" aria-label="Health máximo calculado">{{system.health.max}}</output></div>
         </div>
         <div class="mm-v2-npc-resource -focus">
           <div class="mm-v2-resource-heading">FOCUS <span>DR {{system.focusDamageReduction}}</span></div>
-          <div class="mm-v2-numbers"><input type="number" name="system.focus.value" value="{{system.focus.value}}" data-dtype="Number" aria-label="Focus atual"/><span>/</span><input type="number" name="system.focus.max" value="{{system.focus.max}}" data-dtype="Number" aria-label="Focus máximo"/></div>
+          <div class="mm-v2-numbers"><input type="number" name="system.focus.value" value="{{system.focus.value}}" data-dtype="Number" aria-label="Focus atual"/><span>/</span><output class="m616-actor-auto-max" aria-label="Focus máximo calculado">{{system.focus.max}}</output></div>
         </div>
       </div>
     </section>

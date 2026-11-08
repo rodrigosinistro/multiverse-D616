@@ -1,3 +1,52 @@
+## v0.2.149 — Correção das permissões da tripulação (sem migração de dados)
+
+Não é necessário recriar veículos, excluir a tripulação nem alterar manualmente as permissões. Com o Foundry encerrado, faça backup do mundo e substitua a instalação completa do sistema. Ao iniciar, a reconciliação normal da tripulação poderá restaurar ou conceder os acessos sem a sintaxe legada que causava erros de `ownership` no Foundry v14. Se a v0.2.148 já descartou o backup de um jogador DURANTE uma falha de desembarque, a permissão antiga não pode ser reconstruída automaticamente. Confira as permissões de propriedade do veículo e ajuste manualmente qualquer OWNER temporário que tenha permanecido após o desembarque. Para embarques novos na v0.2.149, a rotina preserva o backup até a atualização ser confirmada. Confirme com duas contas conectadas: embarcar personagem concede OWNER no veículo; desembarcar o último personagem controlado pelo jogador restaura a permissão anterior. A grade de três colunas da ficha permanece igual à v0.2.148.
+
+## v0.2.148 — Correção visual da ficha de Veículo (sem migração)
+- Corrige a grade superior de Veículo afetada na v0.2.147, restaurando retrato e recursos / Abilities / Damage e Movimento em três colunas.
+- Não altera documentos do mundo, efeitos, recursos automáticos ou permissões. Os veículos existentes permanecem íntegros.
+- Faça backup antes de substituir a pasta completa do sistema, com o Foundry encerrado. Teste a ficha do Pássaro Negro no Mestre e no jogador.
+
+## v0.2.147 — Recursos globais e tripulação com permissões
+- **FAÇA BACKUP DO MUNDO ANTES DA INSTALAÇÃO.** Ao iniciar como Mestre, uma migração única recalcula os máximos de Health e Focus de personagens, NPCs e veículos existentes de acordo com Resilience/Vigilance. Preserve a quantidade de dano e Focus gasto na conversão. Fichas com máximos personalizados sem Active Effects serão normalizadas; confira especialmente chefes, NPCs e veículos antes da próxima sessão.
+- Para manter bônus adicionais, configure-os nos **Active Effects** dos poderes, traços e tags (inclusive em Atores antigos). Bônus descritos somente em texto não são interpretados. O seletor manual de recursos de veículos não existe mais.
+- Cada usuário proprietário de um tripulante embarcado passa a ter propriedade do Actor Veículo. Ao desembarcar o último personagem controlado pelo usuário, a permissão anterior é restaurada. O Mestre continua responsável pela edição da tripulação. Tripulantes que já estavam embarcados têm suas permissões sincronizadas ao abrir a cena.
+- Na ficha de Veículo, teste no Mestre e num segundo navegador de jogador a rolagem dos poderes e o movimento do token, sem alterar os dados básicos do veículo. Ao embarcar/desembarcar ou mudar uma opção, a janela não deve voltar ao topo.
+- Os seis compêndios não foram alterados; substitua sempre a pasta completa com o servidor Foundry encerrado.
+
+## v0.2.146 — Veículos 1.4 (sem migração automática)
+- Para criar veículo do zero, use **Criar Ator → Veículo**. A opção de conversão na ficha NPC foi removida; o Blackbird NPC e as cópias Veículo existentes permanecem no mundo.
+- Novos veículos calculam Health máximo = max(10, Resilience × 30) e Focus máximo = max(10, Vigilance × 30). Começam com ambos os recursos completos. Modificadores de poderes/traços/tags devem possuir um Active Effect com as alterações corretas; descrições em texto não são interpretadas como bônus automáticos.
+- Veículos criados até a v0.2.145 continuam com seus máximos atuais (modo manual). Para usar o novo cálculo em um veículo antigo, habilite **Recursos automáticos** na ficha; confira Health/Focus após ativar.
+- Os recursos atuais não são recuperados automaticamente ao adicionar um efeito que aumente a capacidade. Alterar diretamente Resilience ou Vigilance mantém a quantidade de dano ou Focus já gasto.
+- Faça backup do mundo, instale o ZIP completo com Foundry parado, reinicie e teste um novo veículo, uma mudança de atributo e o traço Extra Focus. As funções de tripulação e movimento permanecem como antes.
+
+## v0.2.145 — Veículos 1.3
+- Sem migração de dados. Pode continuar usando o Blackbird (Veículo) que já existe no mundo.
+- Faça backup do mundo e substitua o sistema completo com o servidor encerrado.
+- Teste movimento de passageiros ocultos e visíveis, tanto na janela do Mestre quanto na do jogador; o ícone semitransparente do passageiro permanece visível para o Mestre por padrão do Foundry.
+- A ficha mostra Tripulação depois de Powers e Traits & Tags. O piloto visualiza os mesmos cartões mas não pode administrar tripulação ou alterar atributos da nave.
+
+## v0.2.144 — Veículos 1.2: sincronização visual e movimento na ficha
+
+- Tripulação visível acompanha a animação do veículo no mesmo quadro, usando o movimento nativo do Foundry v14.
+- A posição final dos tripulantes é salva pelo Mestre ao fim do movimento da nave, evitando animações atrasadas e alterações duplicadas.
+- Nova seção Movimento abaixo de Damage na ficha: velocidades de combate e fora de combate para os modos ativos.
+- Mantém embarque, desembarque, visibilidade por veículo e conversão sem modificar NPCs originais.
+
+## v0.2.143 — Conversão do Blackbird / Veículos 1.0
+- Nenhuma migração de fichas ou dados do mundo. A conversão por cópia agora trata durações legadas dos Active Effects embutidos em itens do NPC.
+- O NPC original continua intacto. Feche o servidor, faça backup do mundo, instale o ZIP completo e reinicie o Foundry.
+- Abra o NPC Blackbird, clique em **Criar cópia como veículo**, coloque o novo veículo na cena e teste embarque/desembarque. Verifique especialmente o poder Flight 2 e seus efeitos de voo.
+
+## v0.2.142 — Veículos 1.0
+- Os NPCs existentes permanecem como NPCs. A opção de conversão cria uma **nova cópia** de Actor tipo `vehicle`; nenhum documento existente é migrado automaticamente.
+- Para usar o veículo, coloque um token dele na cena e abra a ficha. Se houver múltiplos tokens do mesmo veículo, selecione primeiro aquele que receberá a tripulação.
+- A tripulação é guardada por token de veículo; os personagens e seus recursos permanecem no Actor original.
+- Para evitar perda de posição, use **Desembarcar** antes de apagar o token do veículo ou remover a cena. Não há transferência automática de cena.
+- Todas as funções de embarque são executadas por Mestre. O movimento do veículo pelos jogadores segue o sistema de permissões de Actor do Foundry.
+- Preservar cópia de segurança do mundo antes de testar.
+
 ## v0.2.141 — Expiração no turno correto do alvo (sem migração)
 
 Condições nativas de 1 turno criadas por poderes agora permanecem no personagem durante os turnos dos demais participantes e só expiram quando a iniciativa retorna ao alvo após o primeiro turno afetado. Efeitos já removidos na versão anterior não são restaurados automaticamente; reaplique-os para o teste. Nenhuma alteração em compêndios, fichas ou configurações.

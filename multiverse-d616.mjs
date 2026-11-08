@@ -12,6 +12,8 @@
  *
  */
 import { combatChangeAffectsActorSheets, makeCombatSheetRefreshScheduler } from './scripts/combat/sheet-refresh-core.mjs';
+import { registerVehicleHooks, rollVehicleCrewInitiative, crewContext, boardByUuid, boardPassenger, disembarkPassenger, setVehicleVisibility, setCrewRole } from './scripts/vehicles/vehicle-system.mjs';
+import { prepareActorResourceBase, finalizeActorResourceMaximums } from './scripts/vehicles/vehicle-resources.mjs';
 import { isRicochetPower, ricoOriginalContext, registerRicoShieldHooks } from "./scripts/rico-shield-chain.mjs";
 import { getPowerVfxConfig, playPowerVfx, registerPowerVfxSettings, registerPowerVfxLifecycleHooks } from "./scripts/power-vfx.mjs";
 import { openPowerVfxBrowser } from "./scripts/power-vfx-browser.mjs";
@@ -512,6 +514,7 @@ class MarvelMultiverseActor extends Actor {
 
   /** @inheritdoc */
   async rollInitiative(options = {}, rollOptions = {}) {
+    if(this.type==='vehicle') return rollVehicleCrewInitiative(this);
     const combat = await super.rollInitiative(options);
     return combat;
   }
@@ -5289,6 +5292,124 @@ class MarvelMultiverseNPCSheet extends D616ActorSheetV2Common {
   get _d616LegacyPrototype() {return LegacyMarvelMultiverseNPCSheet.prototype;}
 }
 
+/** Vehicle is a native Actor type with the same resources and power engine as NPC. */
+class MarvelMultiverseVehicleSheet extends MarvelMultiverseNPCSheet {
+  // Vehicle owners may use its powers and movement; only the GM manages
+  // the crew, statistics and equipment in the sheet.
+  get isEditable() {return super.isEditable;}
+  static DEFAULT_OPTIONS = {position:{width:930,height:850},
+    actions:{},classes:['multiverse-d616','sheet','actor','mm-actor-v2','mm-vehicle-sheet']};
+  static PARTS = {sheet:{template:'systems/multiverse-d616/templates/actor/actor-vehicle-sheet.hbs'}};
+  async _prepareContext(options) {
+    const context=await super._prepareContext(options);
+    Object.assign(context,crewContext(this.actor));
+    // Same vehicle dashboard for pilots/passengers and GMs. Only the GM has
+    // editable controls; vehicleReadOnly keeps decorative item-control slots
+    // aligned without granting any new edit permissions.
+    context.vehicleCanManage = Boolean(game.user?.isGM && this.isEditable);
+    context.vehicleCanRoll = Boolean(this.actor?.isOwner || game.user?.isGM);
+    context.vehicleReadOnly = !context.vehicleCanManage;
+    context.editable = context.vehicleCanManage;
+    return context;
+  }
+  _d616RememberVehicleScroll() {
+    // Crew actions can cause more than one render (Actor flags, token flags,
+    // and the explicit sheet refresh). Capture before the first async write.
+    const element=this.element;
+    if (!element) return;
+    const scroll=element.querySelector('.window-content');
+    if (scroll) this._d616ScrollTop=scroll.scrollTop;
+    this._d616VehicleScrolls = Array.from(element.querySelectorAll('.window-content, form, .sheet-body'))
+      .map((node,index)=>({index,top:node.scrollTop,left:node.scrollLeft}));
+  }
+  async _onRender(context,options) {
+    await super._onRender(context,options);
+    const root=this.element;
+    if (!root) return;
+    const readonly = !game.user?.isGM;
+    root.classList.toggle('m616-vehicle-readonly', readonly);
+    if(this._d616VehicleScrolls) {
+      const scrolls=root.querySelectorAll('.window-content, form, .sheet-body');
+      for(const state of this._d616VehicleScrolls) {
+        const node=scrolls[state.index];
+        if (node) {node.scrollTop=state.top;node.scrollLeft=state.left;}
+      }
+    }
+    if (readonly) {
+      // Preserve the same fields/cards as the GM view but not the ability to
+      // change vehicle stats, powers, or crew from the player sheet.
+      root.querySelectorAll('form input[name],form select[name],form textarea[name]')
+        .forEach(control=>{control.disabled=true;});
+    }
+    const onError=error=>{
+      console.error('[Multiverse-D616 Vehicles]',error);
+      ui.notifications?.error?.(error?.message || 'Falha ao gerenciar a tripulação.');
+    };
+    root.querySelectorAll('.m616-vehicle-crew-drop').forEach(zone=>{
+      zone.addEventListener('dragover',event=>{if (game.user.isGM) event.preventDefault();});
+      zone.addEventListener('drop',async event=>{
+        event.preventDefault();event.stopPropagation();
+        if (!game.user.isGM) return;
+        try {
+          const data=foundry.applications?.ux?.TextEditor?.implementation?.getDragEventData?.(event)
+            ?? globalThis.TextEditor?.getDragEventData?.(event)
+            ?? JSON.parse(event.dataTransfer?.getData('text/plain')||'{}');
+          const uuid=data?.uuid ?? (data?.type==='Actor' && data?.id ? `Actor.${data.id}` : '');
+          if (!uuid) throw Error('Arraste um personagem da lista de Atores para Tripulação.');
+          this._d616RememberVehicleScroll();
+          await boardByUuid(this.actor,uuid);
+          await this.render({force:true});
+        } catch(error){onError(error);}
+      });
+    });
+    root.querySelectorAll('.m616-vehicle-add-selected').forEach(button=>button.addEventListener('click',async event=>{
+      event.preventDefault();
+      try {
+        const tokens=canvas.tokens?.controlled?.filter(t=>t.actor?.id!==this.actor.id)??[];
+        if(tokens.length!==1) throw Error('Selecione exatamente um token de personagem no mapa.');
+        this._d616RememberVehicleScroll();
+        await boardPassenger(this.actor,tokens[0].actor,tokens[0].document);
+        await this.render({force:true});
+      } catch(error){onError(error);}
+    }));
+    root.querySelectorAll('.m616-vehicle-visibility').forEach(select=>select.addEventListener('change',async event=>{
+      try{ this._d616RememberVehicleScroll();await setVehicleVisibility(this.actor,event.currentTarget.value); await this.render({force:true}); }
+      catch(error){onError(error);}
+    }));
+    root.querySelectorAll('.m616-vehicle-disembark').forEach(button=>button.addEventListener('click',async event=>{
+      event.preventDefault();
+      try {this._d616RememberVehicleScroll();await disembarkPassenger(this.actor,button.dataset.tokenId);await this.render({force:true});}
+      catch(error){onError(error);}
+    }));
+    root.querySelectorAll('.m616-vehicle-role').forEach(select=>select.addEventListener('change',async event=>{
+      try {this._d616RememberVehicleScroll();await setCrewRole(this.actor,select.dataset.tokenId,select.value);await this.render({force:true});}
+      catch(error){onError(error);}
+    }));
+  }
+  async _onDropActor(event,actor) {
+    // Foundry v14 explicitly dispatches Actor documents to _onDropActor.
+    try {
+      this._d616RememberVehicleScroll();
+      await boardPassenger(this.actor,actor);
+      await this.render({force:true});
+      return actor;
+    } catch(error) {
+      console.error('[D616 Vehicles]',error);
+      ui.notifications?.error?.(error.message);
+      return null;
+    }
+  }
+  async _onDropDocument(event,document) {
+    if(document?.documentName==='Actor' || document?.documentName==='Token') {
+      try{this._d616RememberVehicleScroll();await boardPassenger(this.actor,document.actor??document,document.documentName==='Token'?document:null);
+        await this.render({force:true});}
+      catch(error){ui.notifications?.error?.(error.message);}
+      return;
+    }
+    return super._onDropDocument(event,document);
+  }
+}
+
 /**
  * Extend the basic ItemSheet with some very simple modifications
  * @extends {ItemSheet}
@@ -6454,6 +6575,10 @@ class MarvelMultiverseActorBase extends foundry.abstract
     return schema;
   }
 
+  prepareBaseData() {
+    super.prepareBaseData();
+    prepareActorResourceBase(this);
+  }
   prepareDerivedData() {
     // Shared PC/NPC calculation (v0.2.0); retain established ability math.
     for (const key in this.abilities) {
@@ -6475,6 +6600,7 @@ class MarvelMultiverseActorBase extends foundry.abstract
         movement.noncom = Math.ceil((Number(movement.noncom) || 0) / 2);
       }
     }
+    finalizeActorResourceMaximums(this);
   }
 }
 
@@ -6495,6 +6621,12 @@ class MarvelMultiverseCharacter extends MarvelMultiverseActorBase {
 class MarvelMultiverseNPC extends MarvelMultiverseActorBase {
   // Inherit exactly the same size, movement, and derived data rules as PCs.
 }
+
+class MarvelMultiverseVehicle extends MarvelMultiverseActorBase {
+  // Vehicles use precisely the same automatic pools as Characters and NPCs.
+}
+
+
 
 class MarvelMultiverseItemBase extends foundry.abstract.TypeDataModel {
 
@@ -6812,6 +6944,7 @@ globalThis.MarvelMultiverse = {
   models,
   MarvelMultiverseCharacterSheet,
   MarvelMultiverseNPCSheet,
+  MarvelMultiverseVehicleSheet,
   MarvelMultiverseItemSheet,
   ChatMessageMarvel,
 };
@@ -6827,6 +6960,8 @@ Hooks.once("init", () => {
   registerCustomAutomationSettings();
   registerAutomationCenterMenu();
   registerDiagnosticCenterMenu();
+  // Token-based crew travel is registered once with the system.
+  registerVehicleHooks();
   registerPowerVfxSettings();
   registerPowerVfxLifecycleHooks();
   game.multiverseD616 = game.multiverseD616 ?? {};
@@ -6864,6 +6999,7 @@ Hooks.once("init", () => {
   CONFIG.Actor.dataModels = {
     character: MarvelMultiverseCharacter,
     npc: MarvelMultiverseNPC,
+    vehicle: MarvelMultiverseVehicle,
   };
   CONFIG.ChatMessage.documentClass = ChatMessageMarvel;
   CONFIG.Item.documentClass = MarvelMultiverseItem$1;
@@ -6909,6 +7045,9 @@ Hooks.once("init", () => {
   });
   sheetConfig.registerSheet(foundry.documents.Actor,"multiverse-d616",MarvelMultiverseNPCSheet,{
     types:["npc"],makeDefault:true,label:"MULTIVERSE_D616.SheetLabels.NPC"
+  });
+  sheetConfig.registerSheet(foundry.documents.Actor,"multiverse-d616",MarvelMultiverseVehicleSheet,{
+    types:["vehicle"],makeDefault:true,label:"Veículo (Multiverse-D616)"
   });
   // Emergency compatibility option: selectable per sheet, never the default.
   // This allows a GM to keep a game running if a third-party module does not

@@ -1,5 +1,6 @@
 import { resolveConditionEdges, resolveConditionReroll } from "./condition-edge.mjs";
 import { hudResourceState } from "./combat/hud-resource-state.mjs";
+import { hudVehicleContext,requestVehicleDisembark } from "./vehicles/vehicle-system.mjs";
 import { hudConditionSnapshot, hudConcentrationSnapshot, hudMovementSnapshot, favoriteItemKey, hudActorFavorites, withFavoriteFirst } from './hud3-presentation.mjs';
 /**
  * Multiverse-D616 — native Token Action HUD
@@ -383,8 +384,13 @@ class NativeActionHud {
     this._powerCellWidth = null;
     this._mode = null;
     this._favoriteSavePending = false;
+    this._vehicleView = "character";
+    this._lastVehicleMemberTokenId = null;
 
-    Hooks.on("controlToken", () => this.scheduleRender(true));
+    Hooks.on("controlToken", (_token, controlled) => {
+      if(controlled)this._vehicleView="character";
+      this.scheduleRender(true);
+    });
     Hooks.on("canvasReady", () => this.scheduleRender(true));
     // v0.2.136: changes to combat and chat frequently affect only the HUD's
     // counters/statuses. An unforced render still refreshes those snapshots,
@@ -418,8 +424,22 @@ class NativeActionHud {
     Hooks.on("createItem", (item) => this.onItemChange(item));
     Hooks.on("updateItem", (item) => this.onItemChange(item));
     Hooks.on("deleteItem", (item) => this.onItemChange(item));
-    Hooks.on("updateToken", (token) => {
-      if (this.isSelectedToken(token)) this.scheduleRender(true);
+    Hooks.on("updateToken", (token, changes) => {
+      const flags=changes?.flags?.[SYSTEM_ID] ?? {};
+      const crewChanged='embarked' in flags || 'vehicleCrew' in flags ||
+        Object.keys(changes??{}).some(k=>k.includes('embarked') || k.includes('vehicleCrew'));
+      if(crewChanged && token?.id===this._lastVehicleMemberTokenId &&
+        !token.getFlag?.(SYSTEM_ID,'embarked')) {
+        // Disembark returns HUD control to the character, including when
+        // the GM completed a player-requested exit over the system socket.
+        this._vehicleView='character';
+        const ownCharacter=game.user?.isGM || token.actor?.isOwner;
+        if(ownCharacter && !token.hidden && token.object?.control) {
+          token.object.control({releaseOthers:true});
+        }
+        this._lastVehicleMemberTokenId=null;
+      }
+      if (this.isSelectedToken(token) || crewChanged) this.scheduleRender(true);
     });
     Hooks.on("updateSetting", (changed) => {
       if (String(changed?.key ?? "").startsWith(`${SYSTEM_ID}.nativeActionHud`)) {
@@ -433,7 +453,26 @@ class NativeActionHud {
     return canvas?.tokens?.controlled?.[0] ?? null;
   }
 
+  get vehicleHudContext() {
+    if(typeof globalThis.canvas==='undefined' || typeof globalThis.game==='undefined')return null;
+    return hudVehicleContext(this.selectedToken,game.user);
+  }
+
+  get hudActionToken() {
+    const context=this.vehicleHudContext;
+    if(context && this._vehicleView!=='vehicle') {
+      return context.memberToken.object ?? {
+        id:context.memberToken.id,document:context.memberToken,
+        actor:context.characterActor,
+        isOwner:Boolean(context.characterActor?.isOwner || game.user?.isGM),
+      };
+    }
+    return this.selectedToken;
+  }
+
   get selectedActor() {
+    const vehicle=this.vehicleHudContext;
+    if (vehicle) return this._vehicleView === 'vehicle' ? vehicle.shipActor : vehicle.characterActor;
     if (persistentMode()) {
       // The GM's persistent HUD only exists while a token is explicitly selected.
       // This allows native Foundry hotbar macros when no token is controlled.
@@ -608,6 +647,7 @@ class NativeActionHud {
       collapsed,
       userCanUseActor(actor),
       abilityHudMode(),
+      this.vehicleHudContext ? [this.vehicleHudContext.ship.id,this.vehicleHudContext.member.tokenId,this._vehicleView] : null,
       abilities,
       powers,
       getActorItems(actor)
@@ -627,6 +667,8 @@ class NativeActionHud {
       return;
     }
     const persistent = persistentMode();
+    const currentVehicle = this.vehicleHudContext;
+    if(currentVehicle) this._lastVehicleMemberTokenId=currentVehicle.member.tokenId;
     const actor = this.selectedActor;
     // In persistent mode, keep the dock visible even before choosing an actor.
     if (!actor && (!persistent || game.user?.isGM)) {
@@ -745,7 +787,7 @@ class NativeActionHud {
   updateHud3Status(root, actor) {
     const conditions = hudConditionSnapshot(actor, game.combat?.started ? game.combat : null);
     const concentration = hudConcentrationSnapshot(actor);
-    const movement = hudMovementSnapshot(actor, this.selectedToken, game.combat);
+    const movement = hudMovementSnapshot(actor, this.hudActionToken, game.combat);
     const registry = Array.from(root.querySelectorAll?.('.mmrpg-native-action-hud__hud3-status') ?? []);
     const renderSignature = JSON.stringify([
       actor?.uuid ?? actor?.id ?? null,
@@ -858,6 +900,7 @@ class NativeActionHud {
     // Category headings cannot remain attached to a reordered list. The HUD
     // already identifies Powers and the shortcut type remains in its tooltip.
     for (const heading of body.querySelectorAll('.mmrpg-native-action-hud__group-title')) heading.remove();
+    buttons.sort((left,right)=>Number(right.dataset.vehicleCommand==='true')-Number(left.dataset.vehicleCommand==='true'));
     for (const button of buttons) body.appendChild(button);
   }
 
@@ -886,7 +929,7 @@ class NativeActionHud {
     const resources = wrapper.querySelector(".mmrpg-native-action-hud__turn-resources");
     const movement = wrapper.querySelector(".mmrpg-native-action-hud__turn-movement");
     const data = hudResourceState({
-      actor, token:this.selectedToken, combat:game.combat,
+      actor, token:this.hudActionToken, combat:game.combat,
       tracker:game.multiverseD616?.turnTracker, isGM:!!game.user?.isGM,
     });
     wrapper.classList.toggle("is-hidden",!data);
@@ -1017,6 +1060,7 @@ class NativeActionHud {
     buttons.sort((left, right) =>
       Number(favorites.has(right.dataset.favoriteKey)) - Number(favorites.has(left.dataset.favoriteKey)) ||
       compareNames(getLabel(left), getLabel(right)));
+    buttons.sort((left,right)=>Number(right.dataset.vehicleCommand==='true')-Number(left.dataset.vehicleCommand==='true'));
     for (const button of buttons) {
       button.classList.add("is-hotbar-slot");
       const label = getLabel(button);
@@ -1204,9 +1248,33 @@ class NativeActionHud {
     }
   }
 
+  renderVehicleCommands(body) {
+    const context=this.vehicleHudContext;
+    if(!context)return;
+    const target=this._vehicleView==='vehicle' ? context.characterActor : context.shipActor;
+    for(const [action,label,title,icon] of [
+      ['vehicle-switch',this._vehicleView==='vehicle'
+        ? `Personagem: ${target.name}` : `Veículo: ${target.name}`,
+        'Alternar entre os poderes do personagem e os poderes do veículo','fa-solid fa-repeat'],
+      ['vehicle-disembark','Desembarcar (grátis)',
+        'Desembarque gratuito: não consome deslocamento nem Ação de Movimento','fa-solid fa-person-walking-arrow-right'],
+    ]) {
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='mmrpg-native-action-hud__action power is-vehicle-command';
+      button.dataset.action=action;
+      button.dataset.vehicleCommand='true';
+      button.title=title;
+      const img=document.createElement('i');img.className=icon;img.setAttribute('aria-hidden','true');
+      const name=document.createElement('span');name.className='name';name.textContent=label;
+      button.append(img,name);body.appendChild(button);
+    }
+  }
+
   renderPowers(body, actor) {
     body.classList.remove("is-abilities");
     body.classList.add("is-powers");
+    this.renderVehicleCommands(body);
     const canUse = userCanUseActor(actor);
     const favorites = this.getFavoriteKeys(actor);
     const powers = withFavoriteFirst(getActorItems(actor)
@@ -1407,6 +1475,25 @@ class NativeActionHud {
       return;
     }
 
+    const vehicleButton=event.target.closest?.('[data-action="vehicle-switch"], [data-action="vehicle-disembark"]');
+    if(vehicleButton && !vehicleButton.disabled) {
+      const context=this.vehicleHudContext;
+      if(!context)return;
+      if(vehicleButton.dataset.action==='vehicle-switch') {
+        this._vehicleView=this._vehicleView==='vehicle'?'character':'vehicle';
+        this._lastSignature='';
+        this.scheduleRender(true);
+      } else {
+        vehicleButton.disabled=true;
+        try {
+          const requested=await requestVehicleDisembark(context);
+          if(requested && !game.user?.isGM)ui.notifications?.info?.('Desembarque solicitado ao Mestre.');
+          if(requested && game.user?.isGM){this._vehicleView='character';this.scheduleRender(true);}
+        } catch(error){ui.notifications?.error?.(error?.message??'Não foi possível desembarcar.');}
+        finally{vehicleButton.disabled=false;}
+      }
+      return;
+    }
     const actionButton = event.target.closest?.("[data-action='ability'], [data-action='power'], [data-action='weapon'], [data-action='attached-power'], [data-action='escape'], [data-action='condition-recovery'], [data-action='extinguish-faltine'], [data-action='healing-factor-outside'], [data-action='held-follow-up']");
     if (!actionButton || actionButton.disabled) return;
     const actor = this.selectedActor;

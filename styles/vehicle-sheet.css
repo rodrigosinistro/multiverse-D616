@@ -1,0 +1,79 @@
+/* Vehicle Sheet 1.4 — lean extension of the established D616 NPC visual. */
+.mm-v2-vehicle .m616-vehicle-crew{margin:12px 10px;padding:14px;border:1px solid #8e4b36;background:#171a24;color:#f6f2ec;border-radius:9px}
+.mm-v2-vehicle .m616-vehicle-crew-head{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.mm-v2-vehicle .m616-vehicle-crew h3{margin:0 0 10px;color:#ffb86e}
+.mm-v2-vehicle .m616-vehicle-settings{display:flex;flex-direction:column;gap:7px}
+.mm-v2-vehicle .m616-vehicle-settings label{font-weight:700}
+.mm-v2-vehicle .m616-vehicle-settings select,.mm-v2-vehicle .m616-vehicle-member select{border:1px solid #645c58;background:#262b38;color:#fff;border-radius:5px;padding:8px;max-width:100%;width:auto}
+.mm-v2-vehicle .m616-vehicle-settings small,.mm-v2-vehicle .m616-vehicle-note{font-size:12px;color:#c2c3cc;margin:5px 0}
+.mm-v2-vehicle .m616-vehicle-warning{color:#ffbc6c}
+.mm-v2-vehicle .m616-vehicle-crew-drop{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;border:2px dashed #7b655e;border-radius:8px;padding:14px;color:#f9dfc4;font-weight:600}
+.mm-v2-vehicle .m616-vehicle-member{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid #444a55}
+.mm-v2-vehicle .m616-vehicle-member strong{flex:1;min-width:125px}
+.mm-v2-vehicle .m616-vehicle-member button,.mm-v2-vehicle .m616-vehicle-crew-drop button{padding:6px 10px;border-radius:5px;border:1px solid #af7352;background:#313744;color:#fff;cursor:pointer}
+.mm-v2-vehicle .m616-vehicle-empty{color:#d1ccd0;font-style:italic}
+.mm-v2-vehicle .m616-vehicle-current-token{font-size:12px;color:#bfe0d2}
+
+/* The Damage and Movement cards share the right column of the NPC layout. */
+.multiverse-d616.sheet.actor.mm-actor-v2 .m616-vehicle-right-column {
+  display:flex;flex-direction:column;gap:10px;min-width:0;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 .m616-vehicle-movement {
+  flex:1;min-width:0;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 .m616-vehicle-movement-head,
+.multiverse-d616.sheet.actor.mm-actor-v2 .m616-vehicle-movement-row {
+  display:grid;grid-template-columns:minmax(0,1.2fr) minmax(45px,.8fr) minmax(65px,1fr);
+  gap:5px;align-items:center;margin:4px 0;text-align:center;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 .m616-vehicle-movement-head {
+  font-size:10px;color:#ffccc2;font-weight:700;text-transform:uppercase;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 .m616-vehicle-movement-row > span {
+  text-align:left;font-weight:600;font-size:13px;overflow-wrap:anywhere;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 .m616-vehicle-movement-row output {
+  display:flex;justify-content:center;align-items:center;
+  min-height:27px;padding:2px 5px;border:1px solid #d44822;
+  background:#fff7f1;color:#161316;font-size:14px;font-weight:700;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 .m616-vehicle-movement small {
+  display:block;margin-top:8px;color:#dcc6bc;font-size:10px;
+}
+
+/* Vehicle 1.3: identical card layout for player and GM, read-only for pilots. */
+.multiverse-d616.sheet.actor.mm-actor-v2 .m616-vehicle-crew{margin-top:16px;}
+.multiverse-d616.sheet.actor.mm-actor-v2.m616-vehicle-readonly input:disabled,
+.multiverse-d616.sheet.actor.mm-actor-v2.m616-vehicle-readonly select:disabled {
+  opacity:1;cursor:default;-webkit-text-fill-color:inherit;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2.m616-vehicle-readonly .mm-v2-npc-title input:disabled,
+.multiverse-d616.sheet.actor.mm-actor-v2.m616-vehicle-readonly .mm-v2-npc-numbers input:disabled,
+.multiverse-d616.sheet.actor.mm-actor-v2.m616-vehicle-readonly .mm-v2-stat-row input:disabled,
+.multiverse-d616.sheet.actor.mm-actor-v2.m616-vehicle-readonly .mm-v2-numbers input:disabled {
+  color:#161316;background:#fff7f1;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2.m616-vehicle-readonly .m616-vehicle-member button:disabled,
+.multiverse-d616.sheet.actor.mm-actor-v2.m616-vehicle-readonly .m616-vehicle-crew-drop button:disabled {
+  opacity:.62;cursor:default;
+}
+.multiverse-d616.sheet.actor.mm-actor-v2 .m616-view-only-controls {
+  display:flex;align-items:center;justify-content:flex-end;gap:9px;
+  opacity:.43;pointer-events:none;min-width:43px;
+}
+
+/* Vehicle 1.4: calculated resource maxima, with explicit per-vehicle opt-in. */
+.mm-v2-vehicle .m616-vehicle-auto-max {
+  display:flex;align-items:center;justify-content:center;
+  min-height:27px;min-width:0;flex:1;padding:3px 4px;
+  background:#fff7f1;color:#161316;border:1px solid #dc4927;
+  font-size:14px;font-weight:800;
+}
+.mm-v2-vehicle .m616-vehicle-resource-setting {
+  margin:7px 0 0;padding:6px 7px;border-radius:5px;
+  border:1px solid #765149;background:#231e20;color:#f7dac8;
+  font-size:11px;
+}
+.mm-v2-vehicle .m616-vehicle-resource-setting label {display:flex;align-items:center;gap:5px;font-weight:700;}
+.mm-v2-vehicle .m616-vehicle-resource-setting input[type="checkbox"] {width:14px;height:14px;margin:0;}
+.mm-v2-vehicle .m616-vehicle-resource-setting small {display:block;font-size:10px;color:#d7c3b9;line-height:1.35;margin-top:3px;}

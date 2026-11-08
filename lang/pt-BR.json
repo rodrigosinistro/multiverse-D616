@@ -1,4 +1,5 @@
 {
+  "TYPES": {"Actor": {"vehicle": "Veículo"}},
   "MMHT": {
     "Settings": {
       "Enable": "Ativar tooltips ao passar o mouse",

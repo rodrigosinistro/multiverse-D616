@@ -108,5 +108,5 @@ test('v111: builder has power example, all power effects and per-roll resolver u
   assert.match(engine,/attack: isAttackItem\(this\),\s*item: this/);
   assert.match(engine,/item:this,kind:this\.system\.attackKind/);
   const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url),'utf8'));
-  assert.equal(manifest.version,'0.2.141');
+  assert.equal(manifest.version,'0.2.153');
 });

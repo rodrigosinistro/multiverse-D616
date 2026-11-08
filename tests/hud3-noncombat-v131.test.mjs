@@ -91,5 +91,5 @@ test('v131 preserves current native ability scores for missing legacy noncom val
  game.combat=null;
  assert.equal(abilityHudText({system:{abilities:{mle:{value:2}}}},'mle'),'+2');
  assert.equal(abilityHudText({system:{abilities:{}}},'mle'),'—');
- assert.equal(version.version,'0.2.141');
+ assert.equal(version.version,'0.2.153');
 });

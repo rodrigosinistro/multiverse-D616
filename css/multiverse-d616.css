@@ -1677,3 +1677,9 @@
 .multiverse-d616.evaluation .m616-target-decided {font-size:10px;color:#d17867;}
 
 .multiverse-d616.evaluation .m616-target-condition-note {display:block;color:#deae82;font-size:10px;line-height:1.35;margin:2px 0;}
+
+/* Calculated maximum display matches the previous character resource field. */
+.multiverse-d616.sheet.actor .mm-stat-block .mm-input .m616-actor-auto-max {
+ display:flex;align-items:center;justify-content:center;min-height:27px;
+ font-weight:700;min-width:40px;text-align:center;
+}

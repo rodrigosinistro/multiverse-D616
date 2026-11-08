@@ -51,7 +51,7 @@ test('v106: classic and portrait use a single authoritative renderer and resourc
   globalThis.document={createElement:()=>new MockElement(),body:{style:{}}};
   globalThis.game={user:{isGM:false},combat,multiverseD616:{turnTracker:tracker}};
   const {NativeActionHud}=await import('../scripts/native-action-hud.mjs');
-  const context={selectedToken:friendly};
+  const context={hudActionToken:friendly};
   const paint=()=>NativeActionHud.prototype.updatePortraitTurnResources.call(context,root,actor,true);
   paint();
   assert.equal(bar.classes['is-hidden'],false);
@@ -72,7 +72,7 @@ test('v106: classic and portrait use a single authoritative renderer and resourc
   paint();
   assert.equal(resources.children.length,3,'resources refresh on next turn');
   assert.equal(movement.children[3].children[1].style.width,'100%');
-  context.selectedToken=enemy;
+  context.hudActionToken=enemy;
   paint();
   assert.equal(bar.classes['is-hidden'],true,'never reveal enemy when not selected/owned');
   assert.equal(resources.children.length,0);

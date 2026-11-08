@@ -1,3 +1,4 @@
+import {vehicleCrewCombatant} from '../vehicles/vehicle-combat-core.mjs';
 import {hasEquipmentPermanentPower} from '../equipment-permanent-effects.mjs';
 import { automationEnabled } from '../automation-settings.mjs';
 import {
@@ -1072,6 +1073,17 @@ function combatantForActor(actor) {
   const combat = game.combat;
   if (!combat?.started || !actor) return null;
 
+  // Vehicle Powers are executed during a crew member's turn, never on a
+  // fictitious extra turn for the vehicle. Their action/reaction expense uses
+  // that passenger's Combatant; the vehicle keeps its own Focus/Health.
+  if(actor.type==='vehicle') {
+    const selected=canvas?.tokens?.controlled?.map(t=>t.document)
+      .find(t=>t?.actorId===actor.id);
+    const candidates=(canvas?.scene?.tokens?.contents??[]).filter(t=>t.actorId===actor.id);
+    const ship=selected ?? (candidates.length===1 ? candidates[0] : null);
+    return vehicleCrewCombatant(combat,ship,game.user);
+  }
+
   const combatants = Array.from(combat.combatants?.values?.() ?? combat.combatants ?? []);
   if (!combatants.length) return null;
 
@@ -1816,6 +1828,9 @@ async function recordMovementForCombatant(combatant, spaces, source = "movement"
 }
 
 async function trackTokenMovement(tokenDocument, movement, _operation, _user) {
+  // Embarked passengers follow their vehicle. The synchronized token movement
+  // is not their own Movement Action and must never consume their tracker.
+  if (tokenDocument?.getFlag?.(SYSTEM_ID,'embarked')) return;
   if (!automationEnabled('turnActions')) return;
   // The v14 moveToken hook fires on every connected client after the update.
   // Only the primary GM records it, preventing duplicate socket requests and
@@ -1875,7 +1890,8 @@ function coordinateOriginKey(tokenDocument) {
   return String(tokenDocument?.uuid ?? tokenDocument?.id ?? "token");
 }
 
-function captureCoordinateOrigin(tokenDocument, changed) {
+function captureCoordinateOrigin(tokenDocument, changed, options) {
+  if (options?.d616VehicleSync || tokenDocument?.getFlag?.(SYSTEM_ID,'embarked')) return;
   if (!isPrimaryGM()) return;
   if (!("x" in (changed ?? {})) && !("y" in (changed ?? {})) && !("elevation" in (changed ?? {}))) return;
 
@@ -1888,6 +1904,10 @@ function captureCoordinateOrigin(tokenDocument, changed) {
 }
 
 function scheduleCoordinateMovementFallback(tokenDocument, changed, options) {
+  if (options?.d616VehicleSync || tokenDocument?.getFlag?.(SYSTEM_ID,'embarked')) {
+    pendingCoordinateOrigins.delete(coordinateOriginKey(tokenDocument));
+    return;
+  }
   if (!isPrimaryGM()) return;
   if (!("x" in (changed ?? {})) && !("y" in (changed ?? {})) && !("elevation" in (changed ?? {}))) return;
 

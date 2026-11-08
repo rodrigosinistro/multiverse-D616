@@ -62,8 +62,8 @@ const makeHarness = (actor=makeFixture()) => {
 test('Both Actor sheets use the Foundry v14 Handlebars/ActorSheetV2 API',()=>{
   assert.match(script,/HandlebarsApplicationMixin\(\s*foundry\.applications\.sheets\.ActorSheetV2/);
   for(const Sheet of Object.values(makeHarness().classes).filter(v=>typeof v==='function'&&v.name.includes('Sheet'))) {
-    assert.equal(Sheet.DEFAULT_OPTIONS.position.width,Sheet.name==='MarvelMultiverseNPCSheet'?900:690);
-    assert.match(Sheet.PARTS.sheet.template,/templates\/actor\/actor-(?:character|npc)-sheet\.hbs/);
+    assert.equal(Sheet.DEFAULT_OPTIONS.position.width,Sheet.name==='MarvelMultiverseVehicleSheet'?930:(Sheet.name==='MarvelMultiverseNPCSheet'?900:690));
+    assert.match(Sheet.PARTS.sheet.template,/templates\/actor\/actor-(?:character|npc|vehicle)-sheet\.hbs/);
   }
   assert.match(main,/sheetConfig\.registerSheet\(foundry\.documents\.Actor,"multiverse-d616",MarvelMultiverseCharacterSheet/);
   assert.match(main,/sheetConfig\.registerSheet\(foundry\.documents\.Actor,"multiverse-d616",MarvelMultiverseNPCSheet/);
@@ -167,6 +167,8 @@ test('V2 CSS restores vertical scrolling and NPC dashboard preserves power contr
   assert.match(npc,/actor-powers\.hbs/);
   assert.match(npc,/actor-traits\.hbs/);
   assert.match(npc,/actor-tags\.hbs/);
-  for(const field of ['name','system.attributes.rank.value','system.health.value','system.health.max','system.focus.value','system.focus.max'])
+  for(const field of ['name','system.attributes.rank.value','system.health.value','system.focus.value'])
     assert.ok(npc.includes('name="'+field+'"'),field);
+  for(const field of ['system.health.max','system.focus.max'])
+    assert.ok(npc.includes('{{'+field+'}}') && !npc.includes('name="'+field+'"'),field+' is calculated');
 });

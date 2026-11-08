@@ -24,11 +24,11 @@ test('v0.2.99: five rows fit completely inside the persistent dock, above OS tas
 
 test('v0.2.99: manifest is internally consistent, references installed assets and documented release',()=>{
   assert.equal(manifest.id,'multiverse-d616');
-  assert.equal(manifest.version,'0.2.141');
+  assert.equal(manifest.version,'0.2.153');
   assert.equal(manifest.compatibility.minimum,'14');
   assert.equal(manifest.compatibility.verified,'14');
-  assert.equal(manifest.download,'https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.2.141/multiverse-d616-v0.2.141.zip');
-  assert.match(read('CHANGELOG.md'),/^## v0\.2\.141/);
+  assert.equal(manifest.download,'https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.2.153/multiverse-d616-v0.2.153.zip');
+  assert.match(read('CHANGELOG.md'),/^## v0\.2\.153/);
   assert.doesNotMatch(read('README.md'),/^## v0\.2\.\d+/m);
   for(const path of [...manifest.esmodules, ...manifest.styles, ...manifest.languages.map(l=>l.path), manifest.readme, manifest.license, manifest.changelog]){
     assert.ok(existsSync(join(root,path)),`missing referenced manifest asset: ${path}`);

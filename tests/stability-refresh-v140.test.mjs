@@ -54,7 +54,7 @@ test('v140: condition recovery snapshots initialize immediately when registered 
 });
 
 test('v140: system manifest references resolvable runtime files and all six LevelDB packs',()=>{
-  assert.equal(manifest.version,'0.2.141');
+  assert.equal(manifest.version,'0.2.153');
   assert.equal(manifest.packs.length,6);
   const referenced=[...manifest.esmodules,...manifest.styles,...manifest.languages.map(x=>x.path)];
   for(const file of referenced)assert.ok(existsSync(new URL(`../${file}`,import.meta.url)),`manifest path missing: ${file}`);

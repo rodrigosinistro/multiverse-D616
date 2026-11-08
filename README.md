@@ -2,33 +2,6 @@
 
 Sistema **Multiverse-D616** para **Foundry VTT v14**.
 
-
-### Central de Diagnóstico
-
-Para abrir, acesse **Configurações do Foundry → Configurações do Jogo → Multiverse-D616 → Abrir Central de Diagnóstico** (somente Mestre). Clique em **Executar diagnóstico** para verificar os compêndios do sistema, o catálogo de poderes, as automações pessoais e a biblioteca, os efeitos das fichas e as integrações opcionais. O relatório apresenta **Erros**, **Revisar** e **Informações** e pode ser exportado como **JSON** para análise.
-
-A verificação é **somente leitura**: não repara fichas, não substitui compêndios e não altera as configurações do mundo. Falhas de carregamento aparecem como verificações indisponíveis, não como aprovadas. O JSON pode conter o identificador do mundo e nomes de fichas; revise antes de compartilhar. Não confunda ausência de ocorrências com garantia absoluta de funcionamento: apenas as verificações descritas são executadas.
-
-
-## Auditoria Geral dos Poderes — fase 1
-
-Revisão automatizada de **398 poderes** do catálogo, com correção conservadora de
-**Control Emotion, Control Group Emotion, Sense Emotion e Sway Emotion**: os quatro
-fazem testes de **Ego vs Ego sem dano direto**, evitando botões/rotinas de dano
-indevidos. Um relatório detalhado de achados e limites está em `POWER_AUDIT.md`.
-Não houve alteração nos compêndios, na Central de Automações, no HUD ou em fichas
-existentes; veja `CHANGELOG.md` e `MIGRATION_NOTES.md`.
-
-## Central de Automações 5.0 — Biblioteca e compartilhamento de regras
-
-A Central possui três abas: **Minhas Automações** (regras em uso), **Biblioteca** (modelos salvos, inativos) e **Automações Nativas** (configurações do motor já existente).
-
-- **Guardar modelo:** em Minhas Automações, clique em **Guardar modelo** para manter uma cópia da regra, sem vinculá-la à execução. Edições posteriores na regra ativa não modificam o modelo salvo.
-- **Exportar minhas regras:** baixa um arquivo JSON com todas as regras personalizadas do mundo; **Exportar biblioteca** baixa os modelos disponíveis. O formato é exclusivo do D616 e não contém scripts.
-- **Transferir para outro mundo:** abra a aba Biblioteca do outro mundo, selecione **Importar JSON**, revise a confirmação e, após importar, clique em **Adicionar às minhas regras** nos modelos desejados. Cada cópia é criada desativada para permitir revisão e ativação consciente.
-- **Segurança e limites:** apenas Mestres podem alterar; até 100 modelos por biblioteca/arquivo e 1 MB por arquivo; arquivos inválidos são rejeitados por completo, modelos duplicados são ignorados e nenhum item importado substitui uma regra existente. Exportações **não incluem** configurações de grupos nativos, dados das fichas nem arquivos de mídia.
-- **Disponibilidade:** modelos são salvos em configurações de *mundo*; para reutilizar em outro mundo, exporte e importe o JSON. Faça backup do mundo antes de importar bibliotecas grandes.
-
 ## Instalação (Manifest)
 
 Cole este link no instalador de sistemas do Foundry:
@@ -37,31 +10,6 @@ Cole este link no instalador de sistemas do Foundry:
 https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json
 ```
 
-## Otimização dos HUDs
-
-Os HUDs clássico e persistente reaproveitam os indicadores de Concentração, movimento, condições e recursos quando seus valores permanecem iguais; os seis botões de atributos do HUD persistente também são atualizados sem reconstrução desnecessária. O objetivo é reduzir manipulações do DOM durante mudanças de turno e atualizações de fichas. **Nenhuma regra de combate, ordem de favoritos, tooltip, ação ou configuração foi alterada.**
-
-## Otimização do processamento de automações
-
-As automações de poderes e regras personalizadas que envolvem múltiplos alvos compartilham, **somente durante o processamento do card**, cálculos que independem do alvo (assinatura da rolagem, confirmação de dano, metadados do poder). Cada alvo continua tendo defesa, decisão de acerto, condições e efeitos próprios. A checagem de Sucesso Fantástico é reutilizada entre regras personalizadas do mesmo poder para um mesmo alvo, sem alterar o registro contra efeitos duplicados. Não há cache entre rolagens ou combates. Os ganhos efetivos de tempo devem ser conferidos no Foundry.
-
-## Estabilidade de atualizações de combate e fichas
-
-A atualização das fichas abertas durante eventos do combate é agrupada por quadro visual para evitar renderizações consecutivas. Mudanças que apenas alteram flags do combate não forçam uma nova preparação das fichas; rodada, turno, participantes, cena e outros eventos relevantes continuam atualizando a apresentação. A rotina de recuperação de condições também observa os valores iniciais de Health assim que o Foundry conclui a inicialização do sistema, atualizando-os ao trocar de cena. Não há alteração de regras ou configurações do Mestre.
-
-## Otimização das fichas de personagens
-
-As fichas de personagens e NPCs no Foundry v14 evitam serializar cada Item duas vezes ao renderizar listas extensas de poderes, traços e equipamentos. Textos estáticos da biografia não são reprocessados enquanto permanecerem iguais; referências e rolagens dinâmicas continuam atualizando normalmente. Alterações de campo que repetem um valor já salvo deixam de gerar atualizações desnecessárias. O layout, os controles, os atributos derivados e as regras de combate permanecem iguais.
-
-## HUD 3.4 — atalhos e indicadores
-
-Os seis botões de atributos do HUD mostram **NON-COMBAT CHECKS** fora das rodadas de combate e **Ability Scores** enquanto o combate está iniciado. O clique utiliza a mesma coluna exibida, sem alterar o cálculo original das regras.
-
-
-No HUD clássico e no persistente, **clique esquerdo usa o poder ou arma** e **clique direito em qualquer lugar do atalho marca ou desmarca Favorito**. A estrela permanece pequena e é apenas indicativa; os favoritos passam a ser exibidos primeiro, no canto superior esquerdo. O HUD persistente distribui os atalhos de cima para baixo por colunas responsivas, em ordem alfabética dentro dos grupos de favoritos e demais atalhos, sem lacunas artificiais. As preferências de favoritos são locais de cada jogador e personagem, sem alterar os itens da ficha.
-
-A linha de indicadores mostra, nessa ordem, **Concentração → modo de Movimento atual → condições**, usando os dados já registrados no Foundry e nas automações do sistema. Os ícones são somente informativos e não consomem ações. No HUD, as condições mostram **apenas o nome** ao passar o mouse; duração e remoção continuam disponíveis no indicador nativo de condições do Foundry.
-
 ## Recursos nativos integrados
 
 - Hover Tooltips
@@ -69,7 +17,6 @@ A linha de indicadores mostra, nessa ordem, **Concentração → modo de Movimen
 - Damage Reduction Helper
 - Conditions HUD
 - Condições automáticas de Powers em Concentração
-- **Central de Automações 5.0:** Biblioteca de modelos inativos com exportação/importação JSON e cópia desativada entre mundos; oito grupos de rotinas nativas e criador visual de regras ativas (poder, início/fim do turno) e passivas (Edge/Trouble enquanto possui o poder) e modificadores de Edge/Trouble ao rolar ataques de poderes específicos, com condição opcional
 - Efeitos visuais opcionais para Poderes e Armas (via Sequencer, com biblioteca pesquisável e configuráveis por Item)
 - HUD de Ações para **ABILITIES** e **POWERS**, incluindo Armas equipadas e poderes associados aos equipamentos
 - Charactermancer (assistente de criação)
@@ -83,24 +30,25 @@ A linha de indicadores mostra, nessa ordem, **Concentração → modo de Movimen
 - Active Effect **Adamantium** em armas, permitindo ignorar níveis configuráveis de Redução de Dano de Health
 - Visualização compacta opcional de combate: Ações e Reações sobre tokens, quatro indicadores de Movimento e ordem de iniciativa horizontal (janela de turno detalhada continua disponível)
 - Distância e acompanhamento nativos de movimento para tokens, considerando o modo de deslocamento selecionado (Caminhada, Voo, Natação, Escalada etc.)
+- Central de Automações: regras personalizadas com gatilhos, condições e efeitos, configuração de rotinas nativas e biblioteca de modelos com importação/exportação JSON
+- Central de Diagnóstico: verificação sob demanda e somente leitura de compêndios, automações, fichas e dependências, com exportação de relatório JSON
+- Fichas próprias de Veículos, com tripulação embarcada, funções, visibilidade configurável por veículo e movimento conjunto dos tokens
+- Health e Focus máximos calculados automaticamente para personagens, NPCs e veículos, com suporte a modificadores de Active Effects
+- Compêndios de Powers, Traits, Tags, Origins, Occupations e Items
 
-## Central de Automações
+## Veículos e tripulação
 
-O Mestre encontra a Central em **Configurações do Foundry → Configurar Configurações → Multiverse-D616 → Abrir Central de Automações**. Nela, há duas abas: **Minhas Automações** (criação de regras próprias) e **Automações Nativas** (grupos e controles já existentes). Na aba nativa, pode pausar todas as automações opcionais, habilitar/desabilitar cada um dos oito grupos e pesquisar poderes específicos. O painel preserva a posição de rolagem quando o Mestre altera uma opção.
+Crie veículos em **Atores → Criar Ator → Veículo**. A ficha mantém o visual do sistema e apresenta **Abilities**, **Damage**, **Movimento**, **Powers**, **Traits & Tags** e **Tripulação**. O Mestre pode embarcar personagens com tokens na mesma cena, atribuir funções (piloto, copiloto, operador ou passageiro) e escolher se os passageiros ficam visíveis ou ocultos no mapa. Os tokens embarcados acompanham a nave e não se movimentam independentemente enquanto estiverem a bordo.
 
-Nas categorias **Condições automáticas de poderes**, **Dano especial**, **Ataques adicionais**, **Efeitos elementais**, **Efeitos contínuos** e **Recuperação de condições**, é possível desabilitar individualmente somente as rotinas com pontos de controle próprios. Os grupos **Concentração** e **Consumo de Ações/Movimento** permanecem configuráveis em conjunto, para preservar as regras integradas. A pesquisa e o filtro **Só alteradas** ajudam a localizar exceções. Quando o dano automático de condições do HUD estiver desligado, a Central informa a dependência e identifica as rotinas afetadas. A preferência é salva por mundo e os controles preservam os efeitos já existentes; rolagens e aplicações manuais continuam disponíveis.
+Ao embarcar, o jogador que possui o personagem recebe acesso **OWNER** ao veículo, podendo movimentá-lo e usar seus poderes. **O desembarque não revoga essa permissão**: se necessário, o Mestre pode alterá-la manualmente nas permissões do veículo. Por enquanto, o transporte de tripulantes é limitado à mesma cena; a função de piloto não concede, por si só, permissões adicionais.
 
-### Criar novas automações
+## Health e Focus automáticos
 
-Na aba **Minhas Automações**, use o formulário **Gatilho → Condição → Efeito** para criar regras que realmente executam no jogo. Escolha quando disparar (**rolar um poder específico**, **início do turno**, **fim do turno** ou **passiva: ao realizar um ataque**), restrinja opcionalmente por uma condição já presente no personagem e defina um resultado (**aplicar uma condição nativa**, **recuperar Health dentro do máximo da ficha** ou **publicar mensagem no chat**). Em rolagens de poder é possível exigir **M no dado Marvel**, o que por si só não comprova um acerto. No gatilho **Ao rolar um poder**, o efeito é aplicado **ao próprio personagem**, não ao alvo, mesmo que apareça M no dado Marvel. Para efeitos em inimigos, escolha **Após acertar um alvo**. O editor sinaliza essa diferença e oferece **Converter para efeito no alvo atingido**: ao converter uma regra que exigia M, a condição passa a depender de **Sucesso Fantástico confirmado**. Uma regra nova só é criada quando o Mestre clica em **Salvar automação**. Ao **editar uma regra já existente**, as alterações pendentes são salvas automaticamente antes de fechar a Central ou escolher outra regra; se o formulário estiver inválido ou o salvamento falhar, a janela permanece aberta. Um aviso no editor informa o estado das alterações. Para regras **Ao rolar um poder**, também é possível atribuir **Edge ou Trouble ao próprio ataque** com escopo corpo a corpo, à distância ou todos; o modificador é considerado antes dos dados serem lançados. Por exemplo, **Elemental Blast** pode ser configurado como `Ao rolar um poder` → `Elemental Blast` → `Conceder Edge` → `Ataques à distância`. **A ficha padrão de Elemental Blast já possui Edge nativo**, e o sistema ignora uma segunda vantagem idêntica definida no criador. Modificadores baseados no dado Marvel M da mesma rolagem não são permitidos: o resultado só é conhecido depois do lançamento. O menu ampliado oferece as 22 condições normais do catálogo, mas não altera os estados internos de Concentração, Agarrado ou Escudo Arremessado. Para o exemplo **Blazing Fast Fists**, selecione `Passiva: ao realizar um ataque`, informe `Blazing Fast Fists` como poder de origem, selecione `Conceder Edge (vantagem)` e `Ataques corpo a corpo`. O personagem precisa possuir esse poder na ficha. Rolagens de Item configuradas como ataque (inclusive armas) são tratadas diretamente; nos testes genéricos de Melee feitos pelo HUD ou macro, marque um alvo para indicar que se trata de ataque. Sem alvo marcado, o teste genérico não ganha Edge passivo, pois pode ser uma ação não ofensiva. As regras podem ser editadas, pausadas, ativadas e excluídas; ficam salvas por mundo.
+Para personagens, NPCs e veículos, os valores máximos são calculados a partir dos atributos: **Health = máximo entre 10 e Resilience × 30**; **Focus = máximo entre 10 e Vigilance × 30**. Poderes, traços e tags que tenham **Active Effects configurados** podem modificar os totais. Ao recalcular os máximos, o sistema preserva o dano sofrido e o Focus já consumido, em vez de restaurar automaticamente os recursos.
 
-Uma regra pode conter **de um a oito efeitos em sequência**, com controles para **adicionar, remover e reordenar** cada etapa. Por exemplo, após um Sucesso Fantástico confirmado contra o alvo, é possível **aplicar Confuso por dois turnos**, **recuperar Health** e **publicar um aviso no chat**, sem criar três regras independentes. Cada condição tem sua própria duração e orientação de remoção. A ação **Executar animação configurada no poder** pode reproduzir a animação do Item via Sequencer (quando o módulo e o arquivo estiverem disponíveis); a ausência da animação não impede as demais ações. Edge/Trouble continua alterando somente rolagens antes de serem feitas. **Dano personalizado** está disponível no gatilho **Após acertar um alvo**, por valor fixo, por atributo ou como **multiplicador ×2/×3**. Bônus entram no dano base; o multiplicador atua no dano calculado após RD e regras especiais. As decisões sobre acerto, barreiras e aplicação pelo Mestre continuam no motor/MMDR nativo. Caso múltiplas automações proponham multiplicadores para o mesmo alvo, somente o maior se aplica. **Dano contínuo por turno** é um efeito adicional (1–100 pontos por tick, Health ou Focus, por 1–20 inícios de turno do alvo): após o gatilho ele cria um ActiveEffect temporário independente das condições nativas. Começa no **próximo início de turno** do personagem, aplica o dano automaticamente pelo processador do MMDR (redução de dano e proteções pessoais), informa no chat o dano efetivo e os turnos restantes, e desaparece ao terminar. Precisa de combate iniciado, personagem na iniciativa e Mestre ativo; uma regra já ativa não se acumula novamente no mesmo alvo. Efeitos existentes continuam até expirarem mesmo se a criação de novas regras for pausada. Não dispara um segundo pedido de confirmação de dano em cada turno. **Atenção:** adicionar Em Chamas e dano contínuo na mesma regra pode provocar dois danos independentes (o dano nativo da condição e o dano personalizado). Use os dois apenas quando essa for a intenção do Mestre.
+## Documentação
 
-Nas regras de turno/poder, somente o Mestre ativo aplica alterações de ficha ou envia mensagens. Regras passivas apenas influenciam a rolagem do próprio atacante, sem modificar fichas. Não são aceitos códigos JavaScript, caminhos de dados arbitrários nem alterações genéricas de valores. A opção **Pausar todas** também pausa estas regras, e **Executar minhas automações** controla somente as personalizadas. No início/fim do turno, somente avanços normais do combate disparam os gatilhos (não retrocessos). Não há execução retroativa. Os efeitos não modificam Concentração nem gastos automáticos do sistema. Nas automações que aplicam condições, o Mestre pode escolher **duração manual**, **1–20 turnos do alvo** ou **1–20 rodadas de combate**, além de escrever uma **orientação de remoção** opcional. Para turnos/rodadas é obrigatório que o combate esteja ativo e o personagem afetado esteja na iniciativa; sem essas condições, o sistema não aplica um efeito temporário sem prazo confiável. Durações são controladas por flags nos ActiveEffects do Foundry v14, sem alterar a rotina das condições nativas nem substituir efeitos existentes. **No início de cada turno**, o chat apresenta as condições ativas, o tempo restante, a mesma descrição do indicador superior de condições e, quando cadastrada, a forma de remoção; Sangrando, Em Chamas e Envenenado usam as referências nativas já existentes no sistema e as demais condições são descritas sem inventar testes. A orientação do Mestre prevalece na condição criada pela Central. Avisos não representam rolagens nem consomem ações. Condições antigas das automações já salvas continuam com **duração manual**. A expiração independe da opção de pausar novas automações, respeitando efeitos já aplicados.
-
-### Classificação de poderes do catálogo
-
-A auditoria do catálogo conserva as fichas e o compêndio original, enquanto o resolvedor distingue ataques danosos, testes sem dano e reações sem rolagem. Poderes como Webcasting, Speed Blast, Command Animal e os poderes de viagem/controle não criam cards de dano por causa de `attackKind` legado. Banging Heads exige dois alvos atingidos para gerar dano; Brain Drain usa Focus e Supernova causa meio dano em acerto comum. Os efeitos narrativos que não dispõem de mecanismo confirmado permanecem sob controle do Mestre. Consulte `POWER_AUDIT.md` para detalhes.
+Este README descreve as funcionalidades permanentes do projeto. Consulte **[CHANGELOG.md](CHANGELOG.md)** para o histórico de versões e **[MIGRATION_NOTES.md](MIGRATION_NOTES.md)** para observações de migração quando aplicáveis. As alterações entre versões são documentadas no CHANGELOG, não neste README.
 
 ## Compatibilidade
 
@@ -124,9 +72,7 @@ This is an unofficial implementation of the [Multiverse-D616 Role Playing Game](
 
 This system is a fan made work, and is not associated with Marvel Entertainment, LLC, The Walt Disney Company, or their partners in any way.
 
-The system for Foundry VTT contains no rules or proprietary content from the various official RPG sourcebooks by Marvel Entertainment. It is intended to make the process of enjoying the Marvel Multiverse Role Playing system via an online tabletop experience as easy as possible, but you will still need to purchase any and all official sourcebooks you desire in order to enjoy this system as intended.
-
-This system provides character sheet support for Actors and Items, mechanical support for dice and rules support necessary to play games of MMRPG. It is not a substitute for or contain rules or proprietary content from any Multiverse-D616 RPG publications. It is intended to enable game play on Foundry Virtual TableTop software. You will still need to purchase any and all official sourcebooks you desire in order to enjoy this system as intended.
+This system provides character sheet support for Actors and Items, mechanical support for dice, and tools to facilitate gameplay in Foundry VTT. It is not a substitute for the official Marvel Multiverse Role-Playing Game books. To play the game as intended, consult the official sourcebooks. Marvel names, characters, and trademarks remain the property of their respective owners.
 
 The software component of this system is distributed under the MIT license.
 
@@ -141,21 +87,3 @@ To install and use the Multiverse-D616 Role Playing Game system for Foundry Virt
 In your Foundry setup page, copy and paste the manifest link above into the **Install System** dialog on the Setup menu of the application.
 
 Updates are released often. If you upgrade and discover an issue, please [submit an issue](https://github.com/rodrigosinistro/multiverse-D616/issues).
-
-### Central de Automações 4.1 — regras personalizadas por alvo
-
-Em **Configurações → Multiverse-D616 → Central de Automações → Minhas Automações**, o Mestre pode escolher um poder de uma ficha ou de um compêndio de Itens, ou informar seu nome manualmente. O gatilho **Após acertar um alvo (resultado confirmado)** aplica efeitos por alvo após a avaliação nativa da defesa e das decisões individuais de acerto. Para ataques com dano, os efeitos só são aplicados após a confirmação do card MMDR pelo Mestre; condições de ataque sem dano são resolvidas imediatamente contra a defesa. Escolha entre qualquer acerto e Sucesso Fantástico confirmado. Os efeitos disponíveis são condição, recuperação de Health e mensagem no chat. Uma condição prévia pode ser verificada no lançador ou no alvo. Edge/Trouble continuam sendo definidos **antes** da rolagem. As regras permanecem opcionais e são gravadas nas configurações do mundo; nenhuma regra modifica os compêndios ou scripts dos poderes. Efeitos já aplicados não são retroativamente desfeitos se a rolagem for alterada após a aplicação.
-
-### Central de Automações — bônus de dano personalizado
-
-Em **Minhas Automações**, crie uma regra com gatilho **Após acertar um alvo**, selecione o poder e o resultado desejado (qualquer acerto ou Sucesso Fantástico), opcionalmente exija uma condição no atacante ou alvo. No passo Efeito escolha **Modificar dano (cálculo nativo/MMDR)** e configure **valor fixo (1–100)**, **valor de um atributo do atacante** ou **multiplicador do dano calculado (×2 ou ×3)**. Multiplicadores são aplicados após RD e fator nativo, e somente o maior multiplicador de regras coincidentes entra no card. Pode adicionar condição, mensagem, cura ou animação à mesma sequência.
-
-O bônus entra no cálculo do card do dano do poder, respeitando a fórmula e a RD nativa, o fator de dano do poder, proteções e confirmação MMDR. Efeitos pós-acerto continuam após a confirmação; o modificador de dano não é executado novamente nessa fase. Mudanças em regras não alteram cards anteriores já preparados.
-
-### HUD 3.0
-
-O HUD clássico e o HUD persistente exibem as condições ativas, **com apenas o nome no tooltip** (duração e remoção ficam no indicador nativo de condições do Foundry), e o uso atual de Concentração sem alterar os respectivos rastreadores. Em Poderes/Armas, a estrela marca favoritos por personagem **apenas nas preferências locais do jogador**; poderes favoritos vão ao início da lista ou da grade persistente. Estrela não executa o poder. O botão normal continua usando o motor nativo. Nenhuma ficha é alterada pela personalização.
-
-### Otimização de eventos do HUD
-
-O HUD conserva seu layout e seus atalhos; cartões do chat e mudanças de turno atualizam principalmente os indicadores, sem remontar automaticamente a lista de poderes. Alterações de itens, fichas e efeitos do personagem selecionado continuam atualizando os comandos. Nenhuma opção de configuração nova é necessária.

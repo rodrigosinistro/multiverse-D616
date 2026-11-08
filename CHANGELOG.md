@@ -1,3 +1,99 @@
+## v0.2.153 — 2026-11-07 — Veículos: iniciativa sem duplicar tripulantes
+- Corrigida a duplicação de um personagem embarcado na iniciativa quando o Foundry já havia incluído outro token da mesma ficha (Actor). A inclusão da tripulação agora verifica `actorId` além de `tokenId`.
+- Incluída proteção na criação nativa de Combatants para impedir uma segunda entrada de um personagem já representado no mesmo combate. Duplicatas existentes da tripulação são reconciliadas quando processadas, preservando preferencialmente o combatente ativo ou com iniciativa já rolada.
+- A prevenção é restrita aos tripulantes de veículos: inimigos distintos que utilizam tokens da mesma ficha NPC permanecem independentes.
+- O HUD veicular reconhece o combatente do personagem mesmo quando o registro usa outro token da mesma ficha, preservando os custos de Ação/Reação.
+- Mantidos os botões de alternância de HUD, desembarque gratuito, permissões OWNER permanentes, cálculos de Health/Focus e todos os compêndios.
+- README.md preservado sem alterações; documentação desta correção somente no CHANGELOG.md. Sem migração de mundo.
+
+## v0.2.152 — 2026-11-07 — Veículos 2.0: iniciativa da tripulação e HUDs intercambiáveis
+- O veículo não recebe Combatant próprio quando inserido no combate: apenas os tripulantes presentes na cena recebem entradas individuais de iniciativa, mesmo se estiverem ocultos no mapa. A inclusão pode ser feita pelo Mestre ou solicitada por um jogador proprietário; o botão de iniciativa na ficha do veículo também encaminha a rolagem para a tripulação.
+- O HUD nativo prioriza o personagem embarcado e oferece atalhos na aba Poderes para alternar entre o personagem e a nave, além de Desembarcar sem custo de movimento.
+- Jogadores podem solicitar desembarque ao Mestre pelo socket do sistema com validação de propriedade do personagem; ações internas de embarque/desembarque não registram deslocamento no Turn Tracker.
+- Poderes da nave passam a consumir a Ação/Reação do tripulante que a utiliza, se estiver no combate, sem criar um turno extra do veículo; recursos Health/Focus da nave permanecem próprios.
+- Permissões OWNER seguem a regra permanente: são concedidas no embarque e não removidas no desembarque.
+- README.md preservado integralmente; histórico documentado apenas neste CHANGELOG.md.
+
+## v0.2.151 — 2026-11-07 — README canônico e documentação permanente
+- Substituído `README.md` pela estrutura de documentação enviada pelo mantenedor, preservando apresentação, instruções de instalação, funcionalidades nativas, compatibilidade, créditos e referências.
+- Conferido o README com o conteúdo da distribuição: acrescentadas somente informações permanentes sobre Veículos e tripulação, acesso `OWNER` que permanece após o desembarque, Health/Focus automáticos, Central de Automações, Central de Diagnóstico e compêndios.
+- Atualizada a descrição em inglês para não afirmar, sem auditoria de conteúdo, que a distribuição está isenta de todo material dos livros oficiais; preservados os avisos de não afiliação e de necessidade das publicações oficiais.
+- **Política de manutenção:** o README não contém notas ou números de versões; novidades e correções futuras permanecem em `CHANGELOG.md`, salvo solicitação expressa de atualização do README.
+- Esta versão altera somente documentação, manifesto de versão e verificações de documentação/distribuição. Nenhuma alteração em scripts, estilos, templates, dados de personagens ou compêndios. Nenhuma migração do mundo.
+
+## v0.2.150 — 2026-11-07 — Veículos: OWNER permanente e documentação somente no CHANGELOG
+- **Embarque:** os usuários proprietários do personagem embarcado recebem nível `OWNER` no Actor do veículo, podendo controlar seu token e usar seus poderes. Não são concedidas permissões a jogadores sem controle do personagem.
+- **Desembarque:** não altera nenhuma permissão do veículo. OWNER permanece concedido depois que o tripulante sai; o Mestre pode modificar manualmente quando quiser.
+- Removidas as rotinas de reconciliação/restauração de permissões no desembarque, ao excluir tokens e ao abrir/recarregar cenas. Não são mais enviados operadores de exclusão (`ForcedDeletion`/`ownership.-=...`) nem manipulados backups de permissão antigos.
+- Novas permissões são concedidas mediante atualização `ownership` com níveis inteiros e preservação das demais entradas existentes, compatível com Foundry VTT v14.
+- **Política de documentação restaurada:** `README.md` permanece exatamente igual ao da v0.2.149. Apenas `CHANGELOG.md` recebe a descrição desta versão.
+- Preservados ficha de três colunas, tripulação, Movimento, HUD, Health/Focus automáticos, poderes, automações e os bancos de todos os compêndios. Sem migração de dados do mundo.
+
+## v0.2.149 — 2026-11-07 — Veículos: restauração de permissões compatível com Foundry v14
+- **Falha corrigida em ownership:** a reconciliação de tripulação deixava de funcionar ao desembarcar/restaurar permissões, pois enviava `ownership.-=ID: null`, formato legado rejeitado pelo `DocumentOwnershipField` do Foundry v14.
+- A operação agora envia uma única atualização `ownership` com os IDs de usuário como chaves e o operador nativo `foundry.data.operators.ForcedDeletion` para retirar concessões temporárias sem atribuir `null` a níveis de permissão.
+- Preservado o acesso `OWNER` dos jogadores que controlam personagens embarcados. Ao último desembarque, a permissão explícita anterior volta ao seu valor original; concessões antes inexistentes são removidas. Outras permissões e o nível padrão não são alterados.
+- **Segurança contra falhas:** backups de permissões de novos tripulantes são salvos antes da concessão, mas backups de desembarques são excluídos apenas depois de o Foundry confirmar a atualização. Se a atualização falhar, pode ser repetida sem perder os valores originais.
+- Mantidos o layout restaurado na v0.2.148, a tripulação, Health/Focus automáticos, as automações, o HUD, o MMDR e os compêndios. Nenhuma migração de mundo ou criação de veículo necessária.
+- Adicionados testes de restauração explícita, remoção de permissão temporária, preservação de outras permissões, edição manual pelo Mestre e recuperação após falha de atualização.
+
+## v0.2.148 — 2026-11-07 — Veículos: correção pontual da grade da ficha
+- **Layout de Veículo restaurado:** removido um `</div>` adicional da v0.2.147 que encerrava prematuramente o painel superior e empilhava Retrato/Health/Focus, Abilities e Damage/Movimento em largura total. A ficha volta às **três colunas** aprovadas: retrato e recursos à esquerda, Abilities ao centro e Damage sobre Movimento à direita.
+- Mantidas as seções **Powers e Traits & Tags** lado a lado, com **Tripulação** ao final da ficha. Layout compartilhado por Mestre e jogadores, respeitando permissões anteriores.
+- Nenhuma alteração em cálculos automáticos de Health/Focus, permissões de tripulantes, movimento, poderes, automações, Active Effects ou compêndios.
+- Adicionado teste estrutural de HTML/Handlebars para detectar fechamento indevido de contêineres que afeta a grade, além de conferir os três painéis e a ordem das seções.
+- Atualização somente de template/documentação/versão e testes: **sem migração** de mundo.
+
+## v0.2.147 — 2026-11-07 — Veículos 1.5 e recursos automáticos globais
+- **Rolagem preservada:** embarque, desembarque, mudança de função e visibilidade da tripulação preservam a posição vertical e horizontal da ficha, inclusive após atualizações de Actor/Token e renderizações do Foundry.
+- **Health e Focus em todos os Atores:** personagens, NPCs e veículos compartilham cálculo do máximo (Health = máx(10, Resilience × 30); Focus = máx(10, Vigilance × 30)). A preparação ocorre antes dos Active Effects, que continuam podendo modificar máximos ou atributos. Os máximos passam a ser somente leitura nas três fichas; o controle manual e a caixa **Recursos automáticos** foram removidos.
+- **Recursos atuais:** mudanças diretas de Resilience/Vigilance preservam dano acumulado e Focus consumido; poderes que apenas elevam a capacidade não restauram os pontos gastos. Ao criar ficha nova, os recursos começam completos. No carregamento do mundo, o Mestre executa uma migração única dos valores legados já salvos, preservando o gasto/dano anterior ao alinhar os máximos. A migração exige **backup do mundo** antes de instalar.
+- **Tripulação com propriedade:** todos os usuários que possuem cada personagem embarcado ganham `OWNER` no Actor do veículo e podem movimentar o token e rolar poderes. Embarques múltiplos preservam o acesso enquanto houver pelo menos um dos personagens controlados pelo usuário a bordo. No último desembarque, sua permissão anterior é restaurada; uma mudança manual do Mestre não é sobrescrita. Tripulantes que já possuíam acesso o preservam. Propriedade é sincronizada também ao abrir a cena e ao remover tokens.
+- **Visual do jogador:** mesma estrutura da ficha do Mestre, incluindo poderes clicáveis para quem possui o veículo; controles administrativos e edição de dados continuam exclusivos do Mestre na interface.
+- Nenhuma mudança no MMDR, automações, condições, animações ou bancos dos seis compêndios. Sem publicação no GitHub.
+
+## v0.2.146 — 2026-11-06 — Veículos 1.4: criação do zero e recursos automáticos
+- Retirado o botão **Criar cópia como veículo** da ficha NPC. Veículos agora são criados como atores do tipo Veículo diretamente pela lista de Atores; os NPCs e veículos existentes não são excluídos nem convertidos.
+- Novo cálculo automático de máximos de Health (Resilience × 30, mínimo 10) e Focus (Vigilance × 30, mínimo 10), igual ao usado no Charactermancer e nas regras oficiais. Novos veículos começam com os recursos preenchidos.
+- O cálculo ocorre antes dos Active Effects: bônus transferidos de poderes, traços e tags sobre `system.health.max` e `system.focus.max` continuam funcionando (ex.: Extra Focus +30). Efeitos que alteram Resilience/Vigilance também recalculam a parcela de atributo.
+- Mudanças diretas de Resilience/Vigilance preservam a quantidade de dano e Focus gasto, em vez de reiniciar recursos indevidamente. Adicionar/remover um efeito passivo altera a capacidade, sem conceder cura/Focus automaticamente.
+- Veículos existentes permanecem em modo manual até o Mestre habilitar **Recursos automáticos** na ficha, evitando substituir máximos personalizados de modelos já usados. No modo automático, os campos máximos são de leitura; Health/Focus atuais continuam editáveis e utilizáveis por MMDR.
+- Mantidos movimento, tripulação, HUD, combate, fichas de NPC, conteúdo de compêndios e permissões de jogadores. Nenhuma migração automática de dados do mundo.
+
+## v0.2.145 — 2026-11-06 — Veículos 1.3: tripulação e visualização do piloto
+- Corrigido o atraso percebido pelo Mestre no modo Oculto: os tokens embarcados acompanham a animação do veículo mesmo quando aparecem semitransparentes para o GM.
+- Sincronização usa a posição renderizada da nave depois do quadro nativo e mantém o acompanhamento até a gravação do destino, sem criar outra animação dos passageiros.
+- Quadro Tripulação movido para depois das seções Powers e Traits & Tags.
+- Ficha do jogador conserva o mesmo layout de controles, painéis e cartões, porém com opções de administração inativas; somente o Mestre pode alterá-las.
+- Adicionada tradução do tipo de Actor Veículo nas interfaces en/pt-BR.
+- Preservados compêndios, automações, NPCs originais e os veículos já convertidos.
+
+## v0.2.144 — 2026-11-05
+- Veículos: sincronização visual dos passageiros visíveis diretamente com a animação do token da nave no Foundry v14, eliminando o atraso entre os tokens.
+- Veículos: atualização dos documentos da tripulação após a animação, sem uma segunda animação independente.
+- Ficha Veículo: novo quadro Movimento, abaixo de Damage, com modos ativos e velocidades de combate e fora de combate.
+- Sem alterações em dados de compêndios, motor de combate ou automações.
+
+## v0.2.143 — Correção da conversão de NPC para Veículo (2026-11-05)
+
+- Corrigida falha ao usar **Criar cópia como veículo** em NPCs com Active Effects legados, como o **Flight speed 2** do Blackbird: `duration.value: null` era revalidado pelo Foundry v14.369 e impedia a criação do Actor.
+- A cópia recebe uma normalização pontual dos valores legados de duração **nos efeitos associados aos itens**. Valores inteiros válidos e campos como `transfer`, `changes` e `expiry` são preservados; a duração indefinida é deixada ao padrão do Foundry, sem convertê-la para zero segundos.
+- O NPC original, seus itens, tokens e efeitos não são modificados. A solução mantém a conversão por cópia e as demais funcionalidades de tripulação da v0.2.142.
+- Novos testes reproduzem a estrutura de Flight 2, validam o dado enviado a `Actor.create` e protegem a duração de efeitos temporários.
+- Nenhuma migração do mundo ou alteração dos compêndios. Recomendado reiniciar o Foundry e repetir a conversão do Blackbird.
+
+## v0.2.142 — Veículos 1.0: tripulação embarcada e visibilidade por veículo (2026-11-05)
+
+- Novo tipo de Actor **Veículo** no Foundry v14, com ficha própria baseada no visual do NPC e preservando Health, Focus, habilidades, poderes e itens.
+- **Conversão não destrutiva**: NPCs existentes como Blackbird possuem o botão *Criar cópia como veículo*. O NPC e os seus tokens existentes continuam intactos.
+- **Embarque por arrastar** Actor ou Token para a área Tripulação da ficha, com alternativa por token selecionado. Nesta primeira versão, cada tripulante precisa ter token na mesma cena da nave.
+- **Tripulação por token de veículo**, para não misturar os passageiros de duas naves do mesmo tipo. Funções: piloto, copiloto, operador e passageiro.
+- **Visibilidade por veículo**: modo Oculto (padrão: apenas a nave aparece) ou Visível (tokens dos tripulantes acompanham a nave). A opção pode ser trocada pelo Mestre sem alterar fichas originais.
+- **Movimento conjunto**: mudar as coordenadas do veículo transporta seus passageiros; os passageiros embarcados não podem arrastar independentemente o próprio token. A movimentação técnica dos passageiros não deve gastar ações de movimento. A pilotagem por usuários depende das permissões nativas do Foundry para o Actor Veículo.
+- **Desembarque**: devolve o token à cena próximo ao veículo, recupera sua visibilidade anterior e remove seu vínculo com a nave.
+- **Escopo e limitações da 1.0**: apenas uma cena por viagem; sem transferência entre cenas, sem combate veicular dedicado ou automação de permissões por função. O Mestre deve evitar mover/deletar os tokens ocultos à mão e usar Desembarcar. Testar no Foundry v14 antes da aprovação.
+- Preservados os seis compêndios e as automações e regras de combate existentes. Nenhuma publicação automática no GitHub.
+
 ## v0.2.141 — Correção da expiração de condições por turno (2026-11-04)
 
 - Corrigido `powerConditionExpiryDecision`: condições nativas configuradas para durar **1 turno do alvo** (incluindo Atordoado) não são mais removidas na vez do próximo participante ou na passagem de rodada.

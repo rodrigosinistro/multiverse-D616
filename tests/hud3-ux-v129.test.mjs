@@ -82,5 +82,5 @@ test('v129: alphabetic grid is column-major, bottom slots follow right after top
   assert.equal(props['--mmrpg-persistent-body-columns'],'5');
   assert.equal(props['--mmrpg-persistent-body-rows'],'2');
   assert.match(css,/grid-auto-flow:\s*column;[\s\S]*grid-template-rows:\s*repeat\(var\(--mmrpg-persistent-body-rows\)/);
-  assert.equal(manifest.version,'0.2.141');
+  assert.equal(manifest.version,'0.2.153');
 });

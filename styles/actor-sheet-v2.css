@@ -228,3 +228,10 @@
 .multiverse-d616.sheet.actor.mm-actor-v2 .mm-actor-bio-content {min-height:120px;max-height:340px;overflow:auto;padding:10px;color:#18161a;background:#fff7f2;border:2px solid #c43819;border-radius:4px;white-space:normal;overflow-wrap:anywhere;}
 .multiverse-d616.sheet.actor.mm-actor-v2 .mm-actor-bio-buttons {display:flex;gap:8px;margin-top:7px;justify-content:flex-end;}
 .multiverse-d616.sheet.actor.mm-actor-v2 .mm-actor-bio-editor[hidden] {display:none!important;}
+
+/* 0.2.147 — automatic resource maxima shared by Characters/NPCs/Vehicles. */
+.multiverse-d616.sheet.actor.mm-actor-v2 .mm-v2-numbers .m616-actor-auto-max {
+ display:flex;align-items:center;justify-content:center;min-height:29px;
+ width:47%;min-width:0;background:#fff;color:#161316;
+ border:1px solid #555;font-weight:700;font-size:16px;
+}

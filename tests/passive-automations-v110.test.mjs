@@ -87,5 +87,5 @@ test('v110: builder offers passive trigger, source power, type scope and guided 
  assert.match(ui,/data-load-example/);assert.match(ui,/Blazing Fast Fists/);
  assert.match(ui,/CUSTOM_ATTACK_SCOPES/);
  const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url),'utf8'));
- assert.equal(manifest.version,'0.2.141');
+ assert.equal(manifest.version,'0.2.153');
 });

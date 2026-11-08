@@ -60,7 +60,7 @@ test('v104: portrait includes private resources, vector icons and refresh hooks'
   const css=src('../styles/native-action-hud.css');
   assert.match(hud,/mmrpg-native-action-hud__portrait-frame/);
   assert.match(hud,/this\.updatePortraitTurnResources\(profile,actor\)/);
-  assert.match(hud,/token:this\.selectedToken/);
+  assert.match(hud,/token:this\.hudActionToken/);
   assert.match(hud,/Hooks\.on\("updateCombatant"/);
   assert.match(hud,/hand-fist\.svg/);
   assert.match(hud,/shield-halved\.svg/);
@@ -87,13 +87,13 @@ test('v104: UI paints portrait resources and clears them when selection disappea
   const wrapper=new Element(),resources=new Element(),movement=new Element();
   wrapper.querySelector=selector=>selector.includes('turn-resources')?resources:movement;
   const profile={querySelector:()=>wrapper};
-  const context={selectedToken:friendly};
+  const context={hudActionToken:friendly};
   NativeActionHud.prototype.updatePortraitTurnResources.call(context,profile,hero);
   assert.equal(wrapper._classes['is-hidden'],false);
   assert.equal(resources.children.length,3);
   assert.equal(movement.children.length,4);
   assert.equal(movement.children[3].children[1].style.width,'0%');
-  context.selectedToken=enemy;
+  context.hudActionToken=enemy;
   NativeActionHud.prototype.updatePortraitTurnResources.call(context,profile,hero);
   assert.equal(wrapper._classes['is-hidden'],true);
   assert.equal(resources.children.length,0);

@@ -1386,3 +1386,15 @@ body:has(#mmrpg-native-action-hud.is-persistent:not(.is-collapsed)) #players {
 #mmrpg-native-action-hud .mmrpg-native-action-hud__movement-mode img {
   width: 19px; height: 19px; object-fit: contain;
 }
+
+/* Vehicle 2.0: navigation belongs above normal favorite Powers in both HUDs. */
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.is-vehicle-command {
+  border-color: rgba(232,132,32,.85);
+  background: rgba(72,49,33,.96);
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__action.is-vehicle-command > i {
+  flex: 0 0 24px;
+  font-size: 19px;
+  text-align: center;
+  color: #ffbf79;
+}

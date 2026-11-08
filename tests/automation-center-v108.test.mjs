@@ -125,9 +125,9 @@ test('v108: condition recovery and end-turn damage connect individual toggles wi
   assert.match(source('../scripts/ongoing-power-effects.mjs'),/automationEnabled\('ongoingConditions',undefined,'Flames of the Faltine'\)/);
   assert.match(source('../scripts/ongoing-power-effects.mjs'),/automationEnabled\('ongoingConditions',undefined,'Healing Factor'\)/);
   const manifest=JSON.parse(source('../system.json'));
-  assert.equal(manifest.version,'0.2.141');
-  assert.match(source('../CHANGELOG.md'),/^## v0\.2\.141/);
-  assert.match(source('../README.md'),/Só alteradas/);
+  assert.equal(manifest.version,'0.2.153');
+  assert.match(source('../CHANGELOG.md'),/^## v0\.2\.153/);
+  assert.match(source('../README.md'),/Condições automáticas de Powers em Concentração/);
 });
 
 test('v108: paused Bleeding recovery still advances the Health baseline and cannot cure on a later damage update',async()=>{
