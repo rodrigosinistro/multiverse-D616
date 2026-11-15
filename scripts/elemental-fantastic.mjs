@@ -430,7 +430,12 @@ async function resolveActor(ref = {}) {
   return null;
 }
 
-export async function applyElementalFantasticFromDamageMessage(message, action = "full", blockedTargetUuids = new Set()) {
+export function eligibleElementalDamageResults(results,action='full'){
+  if(action==='heal')return new Set();
+  return new Set((results??[]).filter(r=>r?.targetUuid && !r.blocked && !r.heal &&
+    Number(r.delta)>0).map(r=>String(r.targetUuid)));
+}
+export async function applyElementalFantasticFromDamageMessage(message, action = "full", blockedTargetUuids = new Set(), positiveDamageTargetUuids=null) {
   if (!automationEnabled('elementalEffects') || !message || action === "heal") return [];
 
   const scoped = message.flags?.[SYSTEM_ID] ?? {};
@@ -491,6 +496,7 @@ export async function applyElementalFantasticFromDamageMessage(message, action =
   const applied = [];
   for (const entry of entries) {
     if (blockedTargetUuids.has(entry.targetUuid)) continue;
+    if (positiveDamageTargetUuids && !positiveDamageTargetUuids.has(String(entry.targetUuid))) continue;
     const targetKey = entry.actorUuid || entry.targetUuid;
     if (!targetKey || already.has(targetKey)) continue;
     const actor = await resolveActor(entry);
@@ -505,7 +511,7 @@ export async function applyElementalFantasticFromDamageMessage(message, action =
         sourceSpeaker: sourceMessage?.speaker ?? message.speaker ?? null,
         targetTokenUuid: entry.targetUuid ?? null,
       });
-      applied.push({ actor, targetKey, rule });
+      applied.push({ actor, targetKey, targetUuid:entry.targetUuid, rule });
       already.add(targetKey);
     } catch (error) {
       console.error(`[${SYSTEM_ID}] Failed to apply ${meta.key} Fantastic effect to ${actor.name}`, error);

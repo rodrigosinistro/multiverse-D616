@@ -1,3 +1,4 @@
+import {passivePowerBenefits} from '../custom-automations.mjs';
 /**
  * Multiverse-D616: resource maximums derived from owned traits.
  * The actor's item collection is authoritative; embedded grants nested inside
@@ -24,7 +25,7 @@ export function hasCombatReflexes(actor) {
 
 /** Combat Reflexes grants one additional Reaction each round. */
 export function actorReactionMaximum(actor) {
-  return hasCombatReflexes(actor) ? 2 : 1;
+  return (hasCombatReflexes(actor) ? 2 : 1) + passivePowerBenefits(actor).extraReactions;
 }
 
 /**
@@ -32,5 +33,5 @@ export function actorReactionMaximum(actor) {
  * maximum. This fixes existing actors without a destructive data migration.
  */
 export function resolveTurnResourceState(state, actor) {
-  return { ...state, reactionMax: actorReactionMaximum(actor) };
+  return { ...state, actionMax: 1 + passivePowerBenefits(actor).extraActions, reactionMax: actorReactionMaximum(actor) };
 }

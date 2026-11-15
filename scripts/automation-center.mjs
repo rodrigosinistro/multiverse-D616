@@ -8,6 +8,7 @@ import {
   getAutomationPowerOverrides, automationEnabled,
 } from './automation-settings.mjs';
 import {POWER_CONDITIONS} from './power-conditions.mjs';
+import {CONDITION_VFX_SETTING,configuredConditionVfx,validateConditionVfx} from './condition-token-vfx.mjs';
 import {POWER_DAMAGE_FACTORS} from './power-fantastic-damage.mjs';
 import {ELEMENTAL_FANTASTIC_RULES} from './elemental-fantastic.mjs';
 import {RICOCHET_POWERS} from './rico-shield-chain.mjs';
@@ -16,6 +17,15 @@ import {CUSTOM_RULES_KEY,CUSTOM_RULES_ENABLED_KEY,CUSTOM_TRIGGERS,CUSTOM_EFFECTS
 import {CUSTOM_LIBRARY_KEY,MAX_BUNDLE_BYTES,getAutomationLibrary,mergeAutomationLibrary,
   installAutomationFromLibrary,exportAutomationBundle,parseAutomationBundle} from './automation-library.mjs';
 
+function conditionVfxChoices(){
+  const choices=new Map(Object.entries(CUSTOM_STATUSES));
+  const catalog=globalThis.CONFIG?.statusEffects;
+  for(const entry of (Array.isArray(catalog)?catalog:Object.values(catalog??{}))){
+    const id=String(entry?.id??'');
+    if(/^mmrpg\.[a-z-]{2,40}(?:\.[1-6])?$/.test(id))choices.set(id,String(entry.name??entry.label??choices.get(id)??id));
+  }
+  return [...choices].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR'));
+}
 const STATUS_LABELS=Object.freeze({
   stunned:'Atordoado',prone:'Caído',blinded:'Cego',deafened:'Surdo',bleeding:'Sangrando',
   paralyzed:'Paralisado',pinned:'Imobilizado',grabbed:'Agarrado',
@@ -154,6 +164,17 @@ export class D616AutomationCenter extends ApplicationBase{
         <button type="button" data-export-active title="Baixar todas as regras deste mundo em JSON"><i class="fa-solid fa-file-export"></i> Exportar minhas regras</button>
         <label class="d616-auto__custom-enabled"><input type="checkbox" data-custom-enabled checked /> Executar minhas automações</label>
       </div>
+      <details class="d616-auto__condition-vfx" style="margin:10px 0;padding:12px;border:1px solid #726453;border-radius:8px">
+        <summary style="cursor:pointer;font-weight:bold"><i class="fa-solid fa-wand-magic-sparkles"></i> Animações nos tokens por condição (Sequencer)</summary>
+        <p class="d616-auto__hint">Quando uma condição como Paralisado estiver ativa, reproduz uma animação persistente no token. Remove automaticamente o efeito visual ao remover a condição. Não altera as regras.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+          <label>Condição<select data-condition-vfx-status>${conditionVfxChoices().map(([id,label])=>`<option value="${escapeHTML(id)}">${escapeHTML(label)}</option>`).join('')}</select></label>
+          <label style="flex:2 1 200px">Arquivo de animação (Sequencer)<input data-condition-vfx-path type="text" maxlength="500" placeholder="worlds/meu-mundo/animations/paralisado.webm" /></label>
+          <label>Escala<input data-condition-vfx-scale type="number" min="0.2" max="4" step="0.1" value="1" style="width:78px" /></label>
+          <button type="button" data-save-condition-vfx><i class="fa-solid fa-floppy-disk"></i> Salvar animação</button>
+        </div>
+        <div data-condition-vfx-list style="margin-top:8px"></div>
+      </details>
       <div class="d616-auto__builder">
         <section class="d616-auto__my-rules"><div class="d616-auto__builder-title"><strong>Minhas regras</strong><button type="button" data-new-rule><i class="fa-solid fa-plus"></i> Nova</button></div><div class="d616-auto__my-list" data-rule-list></div></section>
         <section class="d616-auto__editor"><div class="d616-auto__builder-title"><strong data-editor-title>Nova automação</strong><small>Gatilho → Condição → Efeitos</small></div>
@@ -164,6 +185,8 @@ export class D616AutomationCenter extends ApplicationBase{
               <div data-power-field class="d616-auto__power-picker">
                 <label>Selecionar poder da ficha ou compêndio<select data-power-picker aria-label="Selecionar poder do catálogo"><option value="">Carregando poderes…</option></select></label>
                 <label><span data-power-label>Poder selecionado</span><input name="powerName" maxlength="100" placeholder="Escolha acima ou digite um poder personalizado" /></label>
+                <label>Power Set (opcional — distingue poderes com o mesmo nome)<input name="powerSet" maxlength="100" placeholder="Ex.: Super-Speed" /></label>
+                <label>ID do poder ou origem (opcional, avançado)<input name="powerId" maxlength="250" placeholder="Para vincular a uma cópia específica" /></label>
                 <small data-picker-status>Buscando poderes das fichas e dos compêndios de Itens disponíveis.</small>
               </div>
               <p class="d616-auto__hint" data-passive-hint hidden>Esta regra entra em ação automaticamente enquanto o personagem possuir o poder na ficha. Você não precisa rolar o poder.</p>
@@ -184,6 +207,7 @@ export class D616AutomationCenter extends ApplicationBase{
                 <label>Como remover? (opcional)<textarea name="conditionRemoval" maxlength="200" rows="2" placeholder="Ex.: Teste de Logic TN 12 como Ação Padrão. Deixe vazio para usar as regras nativas quando existirem."></textarea></label>
                 <p class="d616-auto__hint">Turnos e rodadas exigem combate iniciado. As condições temporárias expiram automaticamente; no começo do turno, o chat lista as condições ativas e como removê-las.</p>
               </div>
+              <p data-energy-hint class="d616-auto__hint" hidden>Energy Absorption agora é ativado diretamente pelo poder no HUD: o defensor gasta 1 Reação e 15 Focus para preparar a proteção. A Central não precisa gerar uma segunda reação.</p>
               <label data-healing-effect hidden>Quantidade de Health a recuperar<input name="healAmount" type="number" min="1" max="100" step="1" value="5" /></label>
               <label data-chat-effect hidden>Texto da mensagem<textarea name="message" rows="3" maxlength="250" placeholder="Ex.: As chamas envolvem o personagem!"></textarea></label>
               <label data-attack-scope hidden>Afeta quais ataques?<select name="attackScope">${Object.entries(CUSTOM_ATTACK_SCOPES).map(([key,label])=>`<option value="${key}">${escapeHTML(label)}</option>`).join('')}</select></label>
@@ -207,6 +231,7 @@ export class D616AutomationCenter extends ApplicationBase{
               </div>
               <p class="d616-auto__hint" data-vfx-hint hidden>Reproduz a animação já configurada na aba Visuais do poder. Requer Sequencer ativo e arquivo de animação disponível. Não altera dano nem condições.</p>
               <p class="d616-auto__hint" data-effect-hint>Os efeitos são aplicados ao personagem que rolou o poder ou que está iniciando/terminando o turno.</p>
+              <div class="d616-auto__example" data-lightning-example hidden><strong>Exemplo: Lightning Actions</strong><p>Enquanto possuir Lightning Actions · +1 Ação Padrão · +1 Reação · dado Marvel vira M automaticamente na Iniciativa. O efeito opcional Edge na Iniciativa fica disponível para outros poderes.</p><button type="button" data-load-lightning-example>Preencher Lightning Actions</button></div>
               <div class="d616-auto__example" data-passive-example hidden><strong>Exemplo: Blazing Fast Fists</strong><p>Poder de origem: Blazing Fast Fists · Edge · Ataques corpo a corpo. O benefício é considerado na rolagem de um ataque, inclusive com arma corpo a corpo.</p><button type="button" data-load-example>Preencher este exemplo</button></div>
               <div class="d616-auto__example" data-power-example hidden><strong>Exemplo: Elemental Blast</strong><p>Ao rolar Elemental Blast · Edge · Ataques à distância. O poder original já traz Edge; a regra personalizada não duplica a vantagem nativa.</p><button type="button" data-load-power-example>Preencher este exemplo</button></div>
             </div>
@@ -266,9 +291,13 @@ export class D616AutomationCenter extends ApplicationBase{
       if(installModel){void this._installLibraryModel(installModel.dataset.installLibrary);return;}
       const removeModel=event.target.closest('[data-delete-library]');
       if(removeModel){void this._deleteLibraryModel(removeModel.dataset.deleteLibrary);return;}
+      if(event.target.closest('[data-save-condition-vfx]')){void this._saveConditionVfx();return;}
+      const removeVfx=event.target.closest('[data-remove-condition-vfx]');
+      if(removeVfx){void this._removeConditionVfx(removeVfx.dataset.removeConditionVfx);return;}
       if(event.target.closest('[data-new-rule]')){void this._switchRule(null);return;}
       if(event.target.closest('[data-reset-rule]')){this._editRule(null);return;}
       if(event.target.closest('[data-load-example]')){this._loadPassiveExample();return;}
+      if(event.target.closest('[data-load-lightning-example]')){this._loadLightningExample();return;}
       if(event.target.closest('[data-load-power-example]')){this._loadPowerExample();return;}
       if(event.target.closest('[data-convert-target]')){this._convertPowerRuleToTarget();return;}
       if(event.target.closest('[data-add-effect]')){this._changeEffects('add');return;}
@@ -291,7 +320,14 @@ export class D616AutomationCenter extends ApplicationBase{
       const input=event.target;
       if(input.matches('[data-library-file]')){void this._importLibraryFile(input.files?.[0]);input.value='';return;}
       if(input.matches('[data-power-picker]')){
-        if(input.value){const field=root.querySelector('[name="powerName"]');field.value=input.value;}return;
+        if(input.value){
+          const field=root.querySelector('[name="powerName"]');field.value=input.value;
+          // The selected option encodes the specific set, preserving duplicates.
+          const selected=this._powerChoices?.find(choice=>choice.id===input.value);
+          if(selected)root.querySelector('[name="powerSet"]').value=selected.powerSet??'';
+          root.querySelector('[name="powerId"]').value='';
+        }
+        return;
       }
       if(input.matches('[name="trigger"],[name="effectType"],[name="conditionDurationMode"],[name="damageBonusMode"],[data-effect-field="effectType"],[data-effect-field="conditionDurationMode"],[data-effect-field="damageBonusMode"]')){this._syncRuleFields();this._updateEditorSaveHint();return;}
       if(input.closest('[data-rule-form]'))this._updateEditorSaveHint();
@@ -315,6 +351,7 @@ export class D616AutomationCenter extends ApplicationBase{
     this._refreshRules();
     this._refreshLibrary();
     this._syncRuleFields();
+    this._renderConditionVfx();
     void this._populatePowerPicker();
   }
   _refresh(){
@@ -434,54 +471,58 @@ export class D616AutomationCenter extends ApplicationBase{
     if(!picker)return;
     if(!this._powerChoices){
       const found=new Map();
-      const add=(name,origin)=>{
+      const add=(name,origin,powerSet='')=>{
         name=String(name??'').trim();if(!name||name.length>100)return;
-        if(!found.has(name))found.set(name,origin);
+        powerSet=String(powerSet??'').trim().slice(0,100);
+        const id=JSON.stringify([name,powerSet]);
+        if(!found.has(id))found.set(id,{id,name,origin,powerSet});
       };
       const values=collection=>Array.from(collection?.contents??collection?.values?.()??collection??[]);
       for(const actor of values(globalThis.game?.actors))
-        for(const item of values(actor?.items))if(item?.type==='power')add(item.name,'Ficha');
+        for(const item of values(actor?.items))if(item?.type==='power')add(item.name,'Ficha',item.system?.powerSet);
       const packs=values(globalThis.game?.packs).filter(p=>p.documentName==='Item' || p.metadata?.type==='Item');
-      const indexes=await Promise.allSettled(packs.map(pack=>pack.getIndex?.({fields:['name','type']})));
+      const indexes=await Promise.allSettled(packs.map(pack=>pack.getIndex?.({fields:['name','type','system.powerSet']})));
       for(let i=0;i<packs.length;i++){
         if(indexes[i].status!=='fulfilled')continue;
         const index=indexes[i].value;
-        for(const item of values(index))if(item?.type==='power')add(item.name,packs[i].metadata?.label??'Compêndio');
+        for(const item of values(index))if(item?.type==='power')add(item.name,packs[i].metadata?.label??'Compêndio',item.system?.powerSet);
       }
-      this._powerChoices=[...found].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR',{sensitivity:'base'})).slice(0,2500);
+      this._powerChoices=[...found.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'})||a.powerSet.localeCompare(b.powerSet)).slice(0,2500);
     }
     // The window may have been closed/re-rendered during an async pack lookup.
     if(this.element?.querySelector?.('[data-power-picker]')!==picker)return;
     const previous=picker.value;
     picker.replaceChildren();
     picker.add(new Option('Escolha um poder (ou digite abaixo)', ''));
-    for(const [name,origin] of this._powerChoices)picker.add(new Option(`${name} · ${origin}`,name));
-    if(this._powerChoices.some(([name])=>name===previous))picker.value=previous;
+    for(const choice of this._powerChoices)picker.add(new Option(`${choice.name}${choice.powerSet?' — '+choice.powerSet:''} · ${choice.origin}`,choice.id));
+    if(this._powerChoices.some(choice=>choice.id===previous))picker.value=previous;
     if(status)status.textContent=`${this._powerChoices.length} poderes encontrados nas fichas e compêndios. Também é possível escrever um nome personalizado.`;
   }
   _syncRuleFields(){
     const form=this.element?.querySelector?.('[data-rule-form]');if(!form)return;
     const trigger=form.elements.namedItem('trigger')?.value;
-    const passive=trigger==='passiveAttack',power=trigger==='powerRoll',target=trigger==='targetHit';
+    const passive=trigger==='passiveAttack',passivePower=trigger==='passivePower',power=trigger==='powerRoll',target=trigger==='targetHit';
     const select=form.elements.namedItem('effectType');
     for(const option of select.options){
       const rollModifier=option.value==='edge'||option.value==='trouble';
       // Active power rolls can use any effect. Passive attacks only alter dice.
       // Turn events remain instantaneous: future-roll buffs need their own
       // duration and consumption logic, so are not falsely advertised here.
-      option.disabled=passive?!rollModifier:!power&&rollModifier;
+      const passiveBenefit=['extraAction','extraReaction','initiativeMarvelM','initiativeEdge'].includes(option.value);
+      option.disabled=passivePower?!passiveBenefit:passive?!rollModifier:passiveBenefit||(!power&&rollModifier);
       if(option.value==='vfx'&&!(power||target))option.disabled=true;
       if(option.value==='damageBonus'&&!target)option.disabled=true;
       option.hidden=option.disabled;
     }
-    if(select.selectedOptions[0]?.disabled)select.value=passive?'edge':'condition';
+    if(select.selectedOptions[0]?.disabled)select.value=passivePower?'extraAction':passive?'edge':'condition';
     const type=select.value,rollModifier=type==='edge'||type==='trouble';
-    form.querySelector('[data-power-field]').hidden=!(power||passive||target);
+    form.querySelector('[data-power-field]').hidden=!(power||passive||passivePower||target);
     form.querySelector('[data-target-outcome]').hidden=!target;
     form.querySelector('[data-target-hint]').hidden=!target;
     form.querySelector('[data-status-subject]').hidden=!target;
-    form.querySelector('[data-power-label]').textContent=passive?'Poder passivo (presente na ficha)':target?'Poder que acertou o alvo':'Nome exato do poder rolado';
-    form.querySelector('[data-passive-hint]').hidden=!passive;
+    form.querySelector('[data-power-label]').textContent=(passive||passivePower)?'Poder passivo (presente na ficha)':target?'Poder que acertou o alvo':'Nome exato do poder rolado';
+    form.querySelector('[data-passive-hint]').hidden=!(passive||passivePower);
+    form.querySelector('[data-passive-hint]').textContent=passivePower?'Enquanto o personagem possuir este poder, os recursos e a iniciativa serão modificados automaticamente, sem consumir ações ou criar Active Effects.':'Esta regra entra em ação automaticamente enquanto o personagem possuir o poder na ficha. Você não precisa rolar o poder.';
     form.querySelector('[data-fantastic-field]').hidden=!power||rollModifier;
     if(rollModifier)form.elements.namedItem('fantasticOnly').checked=false;
     form.querySelector('[data-condition-effect]').hidden=type!=='condition';
@@ -491,6 +532,7 @@ export class D616AutomationCenter extends ApplicationBase{
     form.querySelector('[data-chat-effect]').hidden=type!=='chat';
     form.querySelector('[data-attack-scope]').hidden=!rollModifier;
     form.querySelector('[data-vfx-hint]').hidden=type!=='vfx';
+    form.querySelector('[data-energy-hint]').hidden=type!=='energyAbsorption';
     form.querySelector('[data-damage-effect]').hidden=type!=='damageBonus';
     form.querySelector('[data-ongoing-effect]').hidden=type!=='ongoingDamage';
     form.querySelector('[data-damage-fixed]').hidden=type!=='damageBonus'||form.elements.namedItem('damageBonusMode')?.value!=='fixed';
@@ -499,21 +541,24 @@ export class D616AutomationCenter extends ApplicationBase{
     form.querySelector('[data-effect-hint]').textContent=rollModifier
       ?passive?'A vantagem/desvantagem vale para ataques do personagem enquanto ele possuir o poder. Não modifica testes comuns.'
         :'Edge/Trouble entra ANTES dos dados serem rolados e só no ataque do poder selecionado. O poder precisa ser um ataque. Uma vantagem nativa idêntica não será duplicada.'
+      :passivePower?'Recurso permanente enquanto o poder permanecer na ficha. Ação e Reação extras são restauradas a cada turno. M na iniciativa é automático; Edge permite rerrolagem opcional após a iniciativa.'
       :target?type==='damageBonus'?'Dano modificado no card MMDR do alvo atingido, respeitando RD e barreiras. Os demais efeitos continuam após a confirmação do Mestre.':type==='ongoingDamage'?'Após confirmar o acerto/dano, cria dano periódico no alvo; o primeiro tick acontece no próximo início de turno desse alvo.':'O efeito será aplicado individualmente a cada alvo realmente atingido. Não altera automaticamente a rolagem.'
       :'Os efeitos são aplicados ao personagem que rolou o poder ou que está iniciando/terminando o turno.';
     form.querySelector('[data-passive-example]').hidden=!passive;
+    form.querySelector('[data-lightning-example]').hidden=!passivePower;
     form.querySelector('[data-power-example]').hidden=!power;
     form.querySelector('[data-caster-warning]').hidden=!(power&&!rollModifier);
     for(const section of form.querySelectorAll?.('[data-multi-effect]')??[]){
       const select=section.querySelector('[data-effect-field="effectType"]');
       for(const option of select.options){
         const roll=option.value==='edge'||option.value==='trouble';
-        option.disabled=passive?!roll:!power&&roll;
+        const passiveBenefit=['extraAction','extraReaction','initiativeMarvelM','initiativeEdge'].includes(option.value);
+        option.disabled=passivePower?!passiveBenefit:passive?!roll:passiveBenefit||(!power&&roll);
         if(option.value==='vfx')option.disabled=!(power||target);
         if(option.value==='damageBonus')option.disabled=!target;
         option.hidden=option.disabled;
       }
-      if(select.selectedOptions[0]?.disabled)select.value=passive?'edge':'condition';
+      if(select.selectedOptions[0]?.disabled)select.value=passivePower?'extraAction':passive?'edge':'condition';
       const current=select.value;
       for(const node of section.querySelectorAll('[data-extra-kind]')){
         node.hidden=node.dataset.extraKind!==current && !(node.hasAttribute('data-extra-kind-roll')&&current==='trouble');
@@ -565,6 +610,21 @@ export class D616AutomationCenter extends ApplicationBase{
     this.element.querySelector('[data-editor-title]').textContent='Nova automação — exemplo';
     this._syncRuleFields();this._refreshRules();this._updateEditorSaveHint();
   }
+  _loadLightningExample(){
+    const form=this.element?.querySelector?.('[data-rule-form]');if(!form)return;
+    this._ruleEditingId=null;
+    form.reset();
+    form.elements.namedItem('name').value='Lightning Actions — recursos e iniciativa';
+    form.elements.namedItem('trigger').value='passivePower';
+    form.elements.namedItem('powerName').value='Lightning Actions';
+    this._renderEffectEditors([
+      {effectType:'extraAction'},
+      {effectType:'extraReaction'},
+      {effectType:'initiativeMarvelM'},
+    ]);
+    this.element.querySelector('[data-editor-title]').textContent='Nova automação — Lightning Actions';
+    this._syncRuleFields();this._refreshRules();this._updateEditorSaveHint();
+  }
   _loadPowerExample(){
     const form=this.element?.querySelector?.('[data-rule-form]');if(!form)return;
     this._ruleEditingId=null;
@@ -598,6 +658,11 @@ export class D616AutomationCenter extends ApplicationBase{
       <label data-extra-kind="chat">Mensagem<textarea data-effect-field="message" maxlength="250" rows="2"></textarea></label>
       <label data-extra-kind="edge" data-extra-kind-roll>Afeta quais ataques?<select data-effect-field="attackScope">${scopes}</select></label>
       <p data-extra-kind="vfx" class="d616-auto__hint">Reproduz a animação já configurada para o poder. Requer Sequencer.</p>
+      <p data-extra-kind="extraAction" class="d616-auto__hint">Concede uma Ação Padrão adicional a cada turno.</p>
+      <p data-extra-kind="extraReaction" class="d616-auto__hint">Concede uma Reação adicional a cada turno.</p>
+      <p data-extra-kind="initiativeMarvelM" class="d616-auto__hint">Transforma automaticamente o dado Marvel em M na iniciativa, antes de registrar o resultado.</p>
+      <p data-extra-kind="initiativeEdge" class="d616-auto__hint">Permite Edge opcional na iniciativa; usa os controles atuais de rerrolagem.</p>
+      <p data-extra-kind="energyAbsorption" class="d616-auto__hint">Legado: a reação Energy Absorption agora é preparada ao clicar no poder pelo HUD. Não utilize esta regra para repetir a ativação; a Central conserva seu cadastro para compatibilidade.</p>
       <div data-extra-kind="ongoingDamage" class="d616-auto__condition-timing" data-extra-ongoing>
         <label>Dano por turno<input data-effect-field="ongoingAmount" type="number" min="1" max="100" value="5"></label>
         <label>Recurso<select data-effect-field="ongoingResource">${Object.entries(CUSTOM_ONGOING_RESOURCES).map(([key,label])=>`<option value="${key}">${escapeHTML(label)}</option>`).join('')}</select></label>
@@ -685,7 +750,7 @@ export class D616AutomationCenter extends ApplicationBase{
    */
   _ruleEditorSnapshot(){
     const form=this.element?.querySelector?.('[data-rule-form]');if(!form)return null;
-    const fields=['name','trigger','powerName','fantasticOnly','hitOutcome','statusSubject',
+    const fields=['name','trigger','powerName','powerSet','powerId','fantasticOnly','hitOutcome','statusSubject',
       'requiresStatus','effectType','effectStatus','conditionDurationMode',
       'conditionDurationCount','conditionRemoval','healAmount','message','attackScope','damageBonusMode','damageBonusAmount','damageAbility','damageMultiplierFactor','enabled',
       'ongoingAmount','ongoingTurns','ongoingResource'];
@@ -745,7 +810,7 @@ export class D616AutomationCenter extends ApplicationBase{
     if(id&&!rule)return;
     this._ruleEditingId=rule?.id??null;
     form.reset();
-    for(const field of ['name','trigger','powerName','requiresStatus','effectType','effectStatus','conditionDurationMode','conditionDurationCount','conditionRemoval','healAmount','message','attackScope','damageBonusMode','damageBonusAmount','damageAbility','damageMultiplierFactor','ongoingAmount','ongoingTurns','ongoingResource','hitOutcome','statusSubject']){
+    for(const field of ['name','trigger','powerName','powerSet','powerId','requiresStatus','effectType','effectStatus','conditionDurationMode','conditionDurationCount','conditionRemoval','healAmount','message','attackScope','damageBonusMode','damageBonusAmount','damageAbility','damageMultiplierFactor','ongoingAmount','ongoingTurns','ongoingResource','hitOutcome','statusSubject']){
       if(rule && form.elements.namedItem(field))form.elements.namedItem(field).value=
         field==='conditionDurationCount'&&(!rule.conditionDurationCount)?'1':
         field==='ongoingAmount'&&!Number(rule[field])?'5':field==='ongoingTurns'&&!Number(rule[field])?'3':
@@ -774,7 +839,7 @@ export class D616AutomationCenter extends ApplicationBase{
       const item=document.createElement('article');item.className='d616-auto__my-rule';
       if(this._ruleEditingId===rule.id)item.classList.add('is-editing');
       item.innerHTML=`<div class="d616-auto__my-rule-head"><strong>${escapeHTML(rule.name)}</strong><label class="d616-auto__toggle" title="Ativar/desativar regra"><input type="checkbox" data-rule-enabled="${escapeHTML(rule.id)}" ${rule.enabled?'checked':''} ${this._busy||!game.user?.isGM?'disabled':''} aria-label="Habilitar ${escapeHTML(rule.name)}"/><span></span></label></div>
-      <p>${escapeHTML(CUSTOM_TRIGGERS[rule.trigger])}${rule.powerName?' · '+escapeHTML(rule.powerName):''}${rule.fantasticOnly?' · Dado M':''}${rule.trigger==='targetHit'?' · '+escapeHTML(CUSTOM_TARGET_OUTCOMES[rule.hitOutcome])+' · No alvo':' '}</p>
+      <p>${escapeHTML(CUSTOM_TRIGGERS[rule.trigger])}${rule.powerName?' · '+escapeHTML(rule.powerName)+(rule.powerSet?' / '+escapeHTML(rule.powerSet):''):''}${rule.fantasticOnly?' · Dado M':''}${rule.trigger==='targetHit'?' · '+escapeHTML(CUSTOM_TARGET_OUTCOMES[rule.hitOutcome])+' · No alvo':' '}</p>
       <p>${ruleEffects(rule).map((effect,index)=>`${index+1}. ${escapeHTML(CUSTOM_EFFECTS[effect.effectType])}${effect.effectType==='condition'?' · '+escapeHTML(CUSTOM_STATUSES[effect.effectStatus])+ ' (' +escapeHTML(effect.conditionDurationMode==='manual'?'Até remover':`${effect.conditionDurationCount} ${effect.conditionDurationMode==='turns'?'turno(s)':'rodada(s)'}`)+')':effect.effectType==='healing'?' · '+effect.healAmount+' Health':effect.effectType==='ongoingDamage'?' · '+effect.ongoingAmount+' '+(CUSTOM_ONGOING_RESOURCES[effect.ongoingResource]??'Health')+' / turno por '+effect.ongoingTurns+' turno(s)':effect.effectType==='damageBonus'?(effect.damageBonusMode==='multiplier'?' · ×'+effect.damageMultiplierFactor+' dano':' · +'+(effect.damageBonusMode==='ability'?escapeHTML(CUSTOM_DAMAGE_ABILITIES[effect.damageAbility]??'atributo'):effect.damageBonusAmount)+' dano'):''}`).join(' → ')}</p>
       <div class="d616-auto__my-rule-foot"><small>${!rule.enabled?'Desativada':paused?'Pausada':'Ativa'}</small><button type="button" data-edit-rule="${escapeHTML(rule.id)}"><i class="fa-solid fa-pen"></i> Editar</button><button type="button" data-store-library="${escapeHTML(rule.id)}"><i class="fa-solid fa-bookmark"></i> Guardar modelo</button><button type="button" data-delete-rule="${escapeHTML(rule.id)}" class="is-danger"><i class="fa-solid fa-trash"></i> Excluir</button></div>`;
       list.append(item);
@@ -794,7 +859,7 @@ export class D616AutomationCenter extends ApplicationBase{
     try{
       rule=normalizeCustomRule({
         id:this._ruleEditingId??'',name:field('name').value,trigger:field('trigger').value,
-        powerName:field('powerName').value,fantasticOnly:field('fantasticOnly').checked,
+        powerName:field('powerName').value,powerSet:field('powerSet').value,powerId:field('powerId').value,fantasticOnly:field('fantasticOnly').checked,
         hitOutcome:field('hitOutcome').value,statusSubject:field('statusSubject').value,
         requiresStatus:field('requiresStatus').value,effectType:field('effectType').value,
         effectStatus:field('effectStatus').value,conditionDurationMode:field('conditionDurationMode').value,
@@ -853,7 +918,7 @@ export class D616AutomationCenter extends ApplicationBase{
     for(const rule of rules){
       const el=document.createElement('article');el.className='d616-auto__library-card';
       el.innerHTML=`<div class="d616-auto__my-rule-head"><strong>${escapeHTML(rule.name)}</strong><span>Modelo · Inativo</span></div>
-        <p>${escapeHTML(CUSTOM_TRIGGERS[rule.trigger])}${rule.powerName?' · '+escapeHTML(rule.powerName):''} · ${ruleEffects(rule).length} efeito(s)</p>
+        <p>${escapeHTML(CUSTOM_TRIGGERS[rule.trigger])}${rule.powerName?' · '+escapeHTML(rule.powerName)+(rule.powerSet?' / '+escapeHTML(rule.powerSet):''):''} · ${ruleEffects(rule).length} efeito(s)</p>
         <div class="d616-auto__library-card-actions">
           <button type="button" data-install-library="${escapeHTML(rule.id)}"><i class="fa-solid fa-plus"></i> Adicionar às minhas regras</button>
           <button type="button" data-delete-library="${escapeHTML(rule.id)}" class="is-danger"><i class="fa-solid fa-trash"></i> Remover modelo</button>
@@ -943,6 +1008,31 @@ export class D616AutomationCenter extends ApplicationBase{
       content:`<p>Remover o modelo <strong>${escapeHTML(model.name)}</strong> da biblioteca?</p><p>Isso não exclui automações ativas já instaladas.</p>`});
     if(confirmed&&await this._saveCustomData(CUSTOM_LIBRARY_KEY,rules.filter(rule=>rule.id!==id)))
       this._refreshLibrary();
+  }
+  _renderConditionVfx(){
+    const root=this.element?.querySelector?.('.d616-auto');
+    const list=root?.querySelector?.('[data-condition-vfx-list]');if(!list)return;
+    const configs=configuredConditionVfx();
+    list.innerHTML=configs.length?configs.map(cfg=>`<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #71685d"><span>${escapeHTML(conditionVfxChoices().find(([id])=>id===cfg.status)?.[1]??cfg.status)} — ${escapeHTML(cfg.path)} (×${Number(cfg.scale)||1})</span><button type="button" data-remove-condition-vfx="${escapeHTML(cfg.status)}">Remover</button></div>`).join('')
+      :'<p class="d616-auto__hint">Nenhuma animação cadastrada. Requer módulo Sequencer ativo.</p>';
+    for(const el of root.querySelectorAll('[data-condition-vfx-status],[data-condition-vfx-path],[data-condition-vfx-scale],[data-save-condition-vfx]'))el.disabled=!game.user?.isGM;
+  }
+  async _saveConditionVfx(){
+    if(!game.user?.isGM)return;
+    const root=this.element?.querySelector?.('.d616-auto');if(!root)return;
+    try{
+      const entry=validateConditionVfx({status:root.querySelector('[data-condition-vfx-status]').value,
+        path:root.querySelector('[data-condition-vfx-path]').value,
+        scale:root.querySelector('[data-condition-vfx-scale]').value});
+      const current=configuredConditionVfx().filter(cfg=>cfg.status!==entry.status);
+      if(await this._saveCustomData(CONDITION_VFX_SETTING,[...current,entry])){
+        this._renderConditionVfx();ui?.notifications?.info?.('Animação por condição registrada.');
+      }
+    }catch(error){ui?.notifications?.warn?.(error.message);}
+  }
+  async _removeConditionVfx(status){
+    if(!game.user?.isGM||!conditionVfxChoices().some(([id])=>id===status))return;
+    if(await this._saveCustomData(CONDITION_VFX_SETTING,configuredConditionVfx().filter(cfg=>cfg.status!==status)))this._renderConditionVfx();
   }
   async _saveCustomData(key,value){
     const root=this.element?.querySelector?.('.d616-auto');if(!root||this._busy||!game.user?.isGM)return false;

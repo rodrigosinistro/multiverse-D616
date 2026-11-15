@@ -1,3 +1,4 @@
+import { effectiveTeamDamageReduction } from './team-maneuvers-effects.mjs';
 /** Multiverse D616 v0.2.62 — recurring Power effects with explicit timing.
  * Do not conflate Flames of the Faltine (END OF ROUND) with Ablaze
  * (END OF VICTIM TURN). Healing Factor is a passive END OF OWNER TURN rule.
@@ -43,7 +44,7 @@ export async function healOutsideCombat(actor){
 }
 export function damageFromFaltine(actor){
   // Match the existing end-turn conditions engine: each DR point prevents 5 Health.
-  const dr=Math.max(0,Number(actor?.system?.healthDamageReduction)||0);
+  const dr=effectiveTeamDamageReduction(actor,'health');
   return Math.max(0,FLAME_DAMAGE-dr*5);
 }
 async function actorFromUuid(uuid){
@@ -82,7 +83,7 @@ export async function confirmFaltineDamage(damageMessage,action,results){
     const mixed=source.getFlag?.(SYSTEM,'conditionEdges')?.ambiguousTargets===true;
     const decisions=source.getFlag?.(SYSTEM,'multiTargetDecisionRollSignature')===sig
       ?(source.getFlag?.(SYSTEM,MULTI_TARGET_DECISION_KEY)??{}):{};
-    const outcome=adjudicateTargetOutcome(getMarvelOutcome(source.rolls[0],defense),{
+    const outcome=adjudicateTargetOutcome(getMarvelOutcome(source.rolls[0],defense,{message:source,targetActor:target}),{
       requiresReview:mixed,decision:decisions[r.targetUuid],
     });
     if(outcome?.pending||!outcome?.success||!outcome?.fantastic)continue;

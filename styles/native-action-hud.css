@@ -1398,3 +1398,144 @@ body:has(#mmrpg-native-action-hud.is-persistent:not(.is-collapsed)) #players {
   text-align: center;
   color: #ffbf79;
 }
+
+/* v0.2.155 — team action stays next to the concentration gauge in both HUDs.
+   It is never a power cell, so it does not disrupt favorite-first ordering. */
+#mmrpg-native-action-hud .mmrpg-native-action-hud__team-maneuver {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  order: -1;
+  flex: 0 0 auto;
+  min-height: 27px;
+  padding: 3px 7px;
+  margin: 0;
+  border: 1px solid rgba(239, 171, 81, .72);
+  border-radius: 6px;
+  color: #ffe0b1;
+  background: rgba(95, 55, 23, .8);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: none;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__team-maneuver:hover,
+#mmrpg-native-action-hud .mmrpg-native-action-hud__team-maneuver:focus-visible {
+  border-color: #ffd18e;
+  color: #fff;
+  background: #76471f;
+  outline: 2px solid rgba(255, 209, 142, .5);
+  outline-offset: 1px;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__team-maneuver i {
+  font-size: 13px;
+  line-height: 1;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__team-maneuver {
+  min-height: 27px;
+  padding: 3px 6px;
+  font-size: 10px;
+}
+
+/* HUD 4.0: one compact, read-only, scrollable tray of temporary
+   conditions and benefits. Never clip the utility controls at the left. */
+#mmrpg-native-action-hud .mmrpg-native-action-hud__hud3-status {
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__hud4-effects {
+  box-sizing: border-box;
+  order: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 60px;
+  min-width: 32px;
+  max-width: 100%;
+  height: 34px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(226, 170, 99, .7) transparent;
+  overscroll-behavior-x: contain;
+  padding: 2px 1px;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__hud4-effects:focus-visible {
+  outline: 1px solid rgba(255, 198, 125, .7);
+  outline-offset: -1px;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__status-conditions {
+  order: initial;
+  flex: 0 0 auto;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__hud4-chip {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 29px;
+  height: 29px;
+  flex: 0 0 29px;
+  border: 1px solid rgba(165, 179, 218, .68);
+  border-radius: 6px;
+  background: rgba(44, 52, 75, .84);
+  color: #d6e6ff;
+  font-size: 15px;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__hud4-chip img {
+  display: block;
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__hud4-chip.is-offensive {
+  border-color: rgba(244, 159, 75, .85);
+  background: rgba(99, 56, 30, .92);
+  color: #ffd09b;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__hud4-chip.is-defensive {
+  border-color: rgba(116, 183, 235, .88);
+  background: rgba(31, 70, 97, .9);
+  color: #bfddff;
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__hud4-chip.is-ongoing {
+  border-color: rgba(255, 119, 105, .88);
+  background: rgba(94, 36, 44, .91);
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__hud4-chip.is-concentration {
+  border-color: rgba(178, 127, 242, .8);
+  background: rgba(66, 40, 99, .92);
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__hud4-chip.is-passive {
+  border-color: rgba(134, 199, 139, .72);
+  background: rgba(34, 66, 49, .84);
+}
+#mmrpg-native-action-hud .mmrpg-native-action-hud__hud4-value {
+  position: absolute;
+  right: -1px;
+  bottom: -2px;
+  min-width: 10px;
+  padding: 0 2px;
+  background: #181b23;
+  border: 1px solid rgba(220, 218, 197, .5);
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 12px;
+  color: #fff7df;
+  text-align: center;
+  pointer-events: none;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__hud4-effects { height: 31px; }
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__hud4-chip {
+  width: 27px; height: 27px; flex-basis: 27px; font-size: 14px;
+}
+#mmrpg-native-action-hud.is-persistent .mmrpg-native-action-hud__hud4-chip img {
+  width: 23px; height: 23px;
+}

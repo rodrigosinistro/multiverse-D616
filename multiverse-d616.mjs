@@ -11,7 +11,12 @@
  * @param {(number)} [options.targetValue]       Assign a target value against which the result of this roll should be
  *
  */
+import { isEnergyAbsorptionPower, activateEnergyAbsorption, applyAbsorptionFocusCapacity } from './scripts/energy-absorption-custom.mjs';
+import { prepareCombatantInitiativeRoll } from "./scripts/combat/initiative-passive-roll.mjs";
 import { combatChangeAffectsActorSheets, makeCombatSheetRefreshScheduler } from './scripts/combat/sheet-refresh-core.mjs';
+import { openTeamManeuverDialog } from './scripts/team-maneuvers.mjs';
+import { registerTeamManeuverRoundHooks, teamAttackSnapshot, teamOffensive3ForcesRoll, teamFantasticForTarget, effectiveTeamDamageReduction } from './scripts/team-maneuvers-effects.mjs';
+import { registerTeamManeuverRollHooks } from './scripts/team-maneuvers-rolls.mjs';
 import { registerVehicleHooks, rollVehicleCrewInitiative, crewContext, boardByUuid, boardPassenger, disembarkPassenger, setVehicleVisibility, setCrewRole } from './scripts/vehicles/vehicle-system.mjs';
 import { prepareActorResourceBase, finalizeActorResourceMaximums } from './scripts/vehicles/vehicle-resources.mjs';
 import { isRicochetPower, ricoOriginalContext, registerRicoShieldHooks } from "./scripts/rico-shield-chain.mjs";
@@ -23,7 +28,7 @@ import { casterTokenForItem } from "./scripts/combat-preflight.mjs";
 import { registerAutomationSettings, automationEnabled } from "./scripts/automation-settings.mjs";
 import { registerAutomationCenterMenu } from "./scripts/automation-center.mjs";
 import { registerDiagnosticCenterMenu } from "./scripts/diagnostic-center.mjs";
-import { registerCustomAutomationSettings, registerCustomAutomationHooks, customDamageBonusForTarget, applyCustomDamageMultiplier } from "./scripts/custom-automations.mjs";
+import { registerCustomAutomationSettings, registerCustomAutomationHooks, customDamageBonusForTarget, applyCustomDamageMultiplier, passivePowerBenefits } from "./scripts/custom-automations.mjs";
 import { prepareD616Movement } from "./scripts/movement-calculator.mjs";
 import { chooseD616Dialog, promptD616FocusExtra } from "./scripts/dialog-v14.mjs";
 import { growPowerLevel, promptGrowChoice, applyGrowChoice } from "./scripts/grow-size.mjs";
@@ -55,6 +60,7 @@ import { calculatePowerDamage } from "./scripts/power-fantastic-damage.mjs";
 import { buildItemRollFormula } from "./scripts/roll-formula.mjs";
 import { resolvePowerRoll, checkPowerOutcome, hasNaturalUltimateFantastic, powerDamageReductionCategory } from "./scripts/power-rolls.mjs";
 import { mayCreateBangingHeadsDamage } from "./scripts/power-target-rules.mjs";
+import {naturalSixM6, combatAttackLabel, combatChatVisibleOutcome, combatChatDamageBreakdown} from "./scripts/combat-chat-v164.mjs";
 import {
   canUseShieldBearerPower,
   markShieldThrown,
@@ -285,12 +291,20 @@ class MarvelMultiverseRoll extends Roll {
     this.options.configured = true;
   }
 
+  /** Ensure an automatic Marvel M becomes part of the initiative total BEFORE
+   * Foundry v14 saves Combatant.initiative. Converting only in toMessage is too late. */
+  async evaluate(options = {}) {
+    const evaluated = await super.evaluate(options);
+    if (evaluated?.options?.forceMarvelM) evaluated.applyForcedMarvelM?.();
+    return evaluated;
+  }
+
   /**
    * Secret Wars: Ultimate Fantastic Initiative (6M6) can turn the Marvel die
    * to M on one action check during the bonus round.
    */
   applyForcedMarvelM() {
-    if (!this._evaluated || !this.options?.forceMarvelM || !this.validD616Roll) return false;
+    if (!this._evaluated || !this.options?.forceMarvelM || !this.validD616Roll || this.options?.ultimateFantasticApplied) return false;
     const marvelDie = this.dice?.[1];
     if (!marvelDie) return false;
     const active = marvelDie.results?.find((result) => result.active && !result.discarded) ??
@@ -300,6 +314,12 @@ class MarvelMultiverseRoll extends Roll {
 
     const oldValue = active.result === 1 ? 6 : Number(active.count ?? active.result ?? 0);
     const oldTotal = Number(this.total ?? 0);
+    const pool = this.terms?.[0] instanceof foundry.dice.terms.PoolTerm
+      ? this.terms[0]
+      : this.terms?.[0]?.roll?.terms?.[0] instanceof foundry.dice.terms.PoolTerm
+        ? this.terms[0].roll.terms[0]
+        : null;
+    const oldPoolTotal = pool ? Number(pool.total) : NaN;
     active.result = 1;
     active.count = 6;
     active.active = true;
@@ -307,12 +327,7 @@ class MarvelMultiverseRoll extends Roll {
     marvelDie._total = 6;
 
     const delta = 6 - oldValue;
-    const pool = this.terms?.[0] instanceof foundry.dice.terms.PoolTerm
-      ? this.terms[0]
-      : this.terms?.[0]?.roll?.terms?.[0] instanceof foundry.dice.terms.PoolTerm
-        ? this.terms[0].roll.terms[0]
-        : null;
-    if (pool && Number.isFinite(Number(pool.total))) pool._total = Number(pool.total) + delta;
+    if (pool && Number.isFinite(oldPoolTotal)) pool._total = oldPoolTotal + delta;
     if (Number.isFinite(oldTotal)) this._total = oldTotal + delta;
     this.options.ultimateFantasticApplied = true;
     return true;
@@ -529,17 +544,23 @@ class MarvelMultiverseActor extends Actor {
    * @returns {MarvelMultiverseRoll}                               The constructed but unevaluated MarvelMultiverseRoll
    */
   getInitiativeRoll(options = {}) {
-    // Use a temporarily cached initiative roll
-    if (this._cachedInitiativeRoll) return this._cachedInitiativeRoll.clone();
-
-    this.system.attributes?.init;
-    const data = this.getRollData();
-    // Create the initiative roll
-
-    const parts = ["{1d6,1dm,1d6}"];
-    const formula = parts.join(" + ");
-
-    return new CONFIG.Dice.MarvelMultiverseRoll(formula, data, options);
+    // Central passives apply automatically while the source power is owned.
+    // A forced M must affect the evaluated roll BEFORE Foundry sets Combatant
+    // initiative, not merely change the image shown later in ChatMessage.
+    const forceMarvelM=passivePowerBenefits(this).marvelM;
+    const roll=this._cachedInitiativeRoll?.clone?.() ??
+      new CONFIG.Dice.MarvelMultiverseRoll("{1d6,1dm,1d6}",this.getRollData(),
+        {...options,forceMarvelM:forceMarvelM||!!options.forceMarvelM});
+    if(forceMarvelM){
+      roll.options.forceMarvelM=true;
+      const nativeEvaluate=roll.evaluate.bind(roll);
+      roll.evaluate=async (...args)=>{
+        const evaluated=await nativeEvaluate(...args);
+        evaluated.applyForcedMarvelM?.();
+        return evaluated;
+      };
+    }
+    return roll;
   }
 }
 
@@ -579,6 +600,9 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
    * @private
    */
   async roll() {
+    // Energy Absorption is an explicit pre-damage Reaction, not an attack roll.
+    // Handle it before generic Focus/turn spending to prevent duplicate costs.
+    if(isEnergyAbsorptionPower(this))return activateEnergyAbsorption(this);
     // Smart targeting is shared by weapons and targeted powers. Cancel before
     // Focus, Concentration, effects or chat; self-use powers are never prompted.
     if (shouldPromptForTargets(this,resolvePowerRoll(this))) {
@@ -830,9 +854,14 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         ui.notifications?.warn?.(combatTrickery.warning);
       }
 
-      // If Combat Trickery already guarantees M, do not ask to consume an Ultimate
-      // Fantastic Initiative use for the same roll.
-      const useUltimateFantastic = combatTrickery.apply
+      // If Combat Trickery or Offensive 3 already guarantees M, do not
+      // spend a limited Ultimate Fantastic use on the same attack.
+      const markedCount = Number(game.user?.targets?.size ?? 0);
+      const markedActors = localTargetActors();
+      const forceTeamMarvelM = isAttackItem(this) && markedCount > 0 &&
+        markedActors.length === markedCount &&
+        teamOffensive3ForcesRoll(this.actor,markedActors);
+      const useUltimateFantastic = (combatTrickery.apply || forceTeamMarvelM)
         ? false
         : await maybeRequestUltimateFantastic(this.actor);
       // Base item Edge/Trouble is separate from temporary Force; the latter
@@ -840,6 +869,14 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       const itemEdgeMode = String(powerRoll.edgeMode || this.system.attackEdgeMode || '').toLowerCase();
       const elementalEdgeMode = itemEdgeMode==='edge'?1:itemEdgeMode==='trouble'?-1:0;
       const rollOptions = useUltimateFantastic ? { forceMarvelM: true } : {};
+      // For Offensive 3, force the ACTUAL Marvel die to M when every selected
+      // target is Rank-eligible. Keeping an existing Foundry target is valid;
+      // the player never needs to reselect it. Mixed-rank rolls still resolve
+      // a separate Fantastic outcome for each eligible target in the chat.
+      if (forceTeamMarvelM) {
+        rollOptions.forceMarvelM = true;
+        rollOptions.teamOffensive3Forced = true;
+      }
       if (combatTrickery.apply) {
         rollOptions.forceMarvelM = true;
         rollOptions.combatTrickery = true;
@@ -887,6 +924,9 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       const systemFlags = {
         actorId: this.actor?.id ?? null,
         itemId: this._id,
+        // Snapshot buffs only on genuine attacks, never on ordinary checks.
+        ...(isAttackItem(this) && teamAttackSnapshot(this.actor)
+          ? {teamAttackBenefits:teamAttackSnapshot(this.actor)} : {}),
         ability: abilityKey,
         // The attack ability and the defense targeted by a power/weapon are
         // independent in Marvel Multiverse (e.g. Logic vs Agility). Persist
@@ -2249,6 +2289,14 @@ class ChatMessageMarvel extends ChatMessage {
      */
     Hooks.callAll("multiverse-d616.renderChatMessage", this, html);
 
+    // Combat Chat 2.0: damage-calculation messages are GM-only presentation.
+    // Once applied, their details live in the collapsible section of the
+    // original attack; players only receive its released outcome + final delta.
+    if (this.getFlag("multiverse-d616", "damageApplication")?.sourceMessageId &&
+        (!game.user?.isGM || this.getFlag("multiverse-d616", "mmdrResolved"))) {
+      html.hidden = true;
+      html.style.display = "none";
+    }
     return html;
   }
 
@@ -2386,13 +2434,15 @@ class ChatMessageMarvel extends ChatMessage {
       const canAdjustInitiative = mmCanAdjustInitiativeMessage(this);
 
       const combatTrickeryFlag = this.getFlag(M616_SYSTEM_ID, "combatTrickery");
+      const naturalUltimateRoll = naturalSixM6(this.rolls?.[0]);
+      const initiativeMarvelLocked = isInitiative && this.rolls?.[0]?.options?.forceMarvelM===true;
       for (const el of html.querySelectorAll("button.retroEdgeMode")) {
         const action = String(el.dataset.retroAction ?? "");
         const dieIndex = Number(el.dataset.index ?? -1);
         if (
-          combatTrickeryFlag?.noMarvelTrouble &&
-          action === "trouble" &&
-          dieIndex === 1
+          (naturalUltimateRoll && action === "trouble") ||
+          (initiativeMarvelLocked && dieIndex===1) ||
+          (combatTrickeryFlag?.noMarvelTrouble && action === "trouble" && dieIndex === 1)
         ) {
           el.hidden = true;
           el.disabled = true;
@@ -2486,6 +2536,7 @@ class ChatMessageMarvel extends ChatMessage {
           row.appendChild(damageButton);
         }
       }
+      if (!game.user?.isGM) damageButton?.remove();
       const isPowerCheck = this.getFlag("multiverse-d616", "powerCheck") === true;
       const fantasticDamageOnly = this.getFlag("multiverse-d616", "fantasticDamageOnly") === true;
       const fantasticRoll = getMarvelOutcome(this.rolls?.[0],1)?.fantastic === true;
@@ -2699,8 +2750,10 @@ class ChatMessageMarvel extends ChatMessage {
     }
 
     const total = Number.isFinite(attackRoll.total) ? attackRoll.total : 0;
-    const naturalUltimate = hasNaturalUltimateFantastic(attackRoll, isFantastic);
+    const naturalUltimate = naturalSixM6(attackRoll) || hasNaturalUltimateFantastic(attackRoll, isFantastic);
     const isCheck = this.getFlag("multiverse-d616", "powerCheck") === true;
+    const released = this.getFlag("multiverse-d616", "combatChatResolution");
+    const releasedResolution = released?.signature === rollSignature(attackRoll) ? released : null;
     const esc = foundry.utils.escapeHTML;
     const fixedTNResult = fixedTN > 0
       ? checkPowerOutcome(total, fixedTN, {fantastic: isFantastic, ultimate: naturalUltimate})
@@ -2708,7 +2761,13 @@ class ChatMessageMarvel extends ChatMessage {
     if (fixedTNResult) {
       const info = document.createElement("div");
       info.classList.add("m616-power-check-tn");
-      info.textContent = `TESTE — TN ${fixedTN} | Total ${total} | ${fixedTNResult.label}`;
+      // Do not reveal the defense/target number or outcome of a targeted
+      // ATTACK on the player's pre-confirmation card. Unopposed checks keep
+      // their established skill-check feedback.
+      const isPublicPowerCheck=this.getFlag('multiverse-d616','powerCheck')===true;
+      info.textContent=game.user?.isGM || isPublicPowerCheck
+        ? `TESTE — TN ${fixedTN} | Total ${total} | ${fixedTNResult.label}`
+        : 'ATAQUE REALIZADO — Defesa ??';
       html.querySelector(".message-content")?.appendChild(info);
     }
     const isGM = !!game.user?.isGM;
@@ -2784,32 +2843,64 @@ class ChatMessageMarvel extends ChatMessage {
           : null;
         const name=tokenDoc?.name??t.name??a?.name??'Target';
         const shownName=crossing?`${name} — ${crossing.guard.name}`:name;
-        const img=tokenDoc?.texture?.src??t.img??a?.img??'';
         const defense=crossing?guardTargetDefense(crossing.actor,crossing.guard)
           :(currentAc==null?null:Number(currentAc));
+        // Offensive 3: per-target Fantastic only when the victim's Rank is
+        // at least the attacker's. Never spread a Fantastic to weaker targets.
+        const teamFantastic=teamFantasticForTarget(attackRoll,this,a);
         const calculated=isGM && defense!=null
-          ? checkPowerOutcome(total,defense,{fantastic:isFantastic,ultimate:naturalUltimate}):null;
+          ? (teamFantastic
+            ? getMarvelOutcome(attackRoll,defense,{message:this,targetActor:a})
+            : checkPowerOutcome(total,defense,{fantastic:isFantastic,ultimate:naturalUltimate}))
+          : null;
         const result=calculated?adjudicateTargetOutcome(calculated,{
-          requiresReview:mixedConditions&&!crossing,
-          decision:targetDecisions[t.uuid],
+          requiresReview:mixedConditions&&!crossing&&!naturalUltimate,
+          decision:naturalUltimate?null:targetDecisions[t.uuid],
         }):null;
-        const resultText=result
-          ?(result.pending?'REVISAR EDGE/TROUBLE':isCheck?result.label:result.success?hitText:missText)
-          :targetText;
-        const outcomeClass=result&&!result.pending?(result.success?'hit':'miss'):'';
+        const revealed = releasedResolution?.targets?.find?.(entry=>entry.targetUuid===t.uuid);
+        const resultText = isCheck
+          ? (isGM ? (result?.label??targetText) : targetText)
+          : isGM
+            ? (result?.pending ? 'REVISAR EDGE/TROUBLE' : result
+                ? combatAttackLabel(result,{ultimate:naturalUltimate}) : targetText)
+            : combatChatVisibleOutcome({isGM:false,resolved:releasedResolution,targetUuid:t.uuid});
+        const outcomeClass = isGM ? (result&&!result.pending?(result.success?'hit':'miss'):'')
+          : (revealed ? (/^(ACERTOU|ACERTO FANTÁSTICO|SUCESSO FANTÁSTICO)$/.test(resultText)?'hit':'miss') : '');
+        const defenseLine = isGM && defense != null
+          ? `<small class="m616-v164-defense">Defesa: <b>${esc(defense)}</b></small>`
+          : '<small class="m616-v164-defense">Defesa: <b>??</b></small>';
+        // A resolução final aparece UMA vez no quadro destacado abaixo do
+        // ataque, não repetida em cada badge do alvo.
+        const finalLine = '';
         const perTargetEdges=this.getFlag('multiverse-d616','targetConditionEdges')?.[t.uuid];
         const separateModifier=perTargetEdges
           ? `<small class="m616-target-condition-note">${perTargetEdges.net>0?`${perTargetEdges.net} Edge`:
               perTargetEdges.net<0?`${Math.abs(perTargetEdges.net)} Trouble`:'Edge/Trouble cancelados'} — ${esc((perTargetEdges.sources??[]).map(x=>x.source).join(', ')||'Poder/condições')}</small>`:'';
         const decisionNote=mixedConditions&&targetDecisions[t.uuid]&&isGM
           ? `<span class="m616-target-decided">Mestre: ${esc(targetDecisions[t.uuid])}</span>`:'';
+        const teamFantasticBadge=teamFantastic
+          ? `<small class="m616-target-condition-note m616-team-offensive3-note">`+
+            `Ofensiva 3: Marvel = M (6) · Total efetivo: ${total+(teamFantastic.delta??0)} · `+
+            `${result?.fantastic?'Fantástico':'aguardando avaliação'}</small>` : '';
         const reviewControls=result?.pending && isGM
-          ? `${separateModifier}<div class="m616-target-review"> <button type="button" data-target-decision="hit" data-target-uuid="${esc(t.uuid)}">Confirmar acerto</button><button type="button" data-target-decision="miss" data-target-uuid="${esc(t.uuid)}">Confirmar falha</button></div>`
-          : `${separateModifier}${decisionNote}`;
+          ? `${separateModifier}${teamFantasticBadge}<div class="m616-target-review"> <button type="button" data-target-decision="hit" data-target-uuid="${esc(t.uuid)}">Confirmar acerto</button><button type="button" data-target-decision="miss" data-target-uuid="${esc(t.uuid)}">Confirmar falha</button></div>`
+          : `${separateModifier}${decisionNote}${teamFantasticBadge}`;
+        // Card vertical do conceito aprovado: nome e Defesa em cima, painel
+        // largo com ícone, tipografia e estado abaixo — sem foto do alvo.
+        const isUltimate=resultText==='SUCESSO FANTÁSTICO';
+        const isFantasticResult=/FANTÁSTIC[OA]/.test(resultText);
+        const statusIcon=isFantasticResult?'fa-star':outcomeClass==='hit'?'fa-check-circle':
+          outcomeClass==='miss'?'fa-times-circle':'fa-crosshairs';
+        const statusKind=isUltimate?' ultimate':outcomeClass==='hit'?' is-hit':
+          outcomeClass==='miss'?' is-miss':' is-pending';
+        const outcomeSubtitle=isGM && isUltimate?'6 M 6 — Sucesso automático':
+          isGM && isFantasticResult?'Dado Marvel = M (6)':'';
         return `<li data-uuid="${esc(t.uuid??'')}" class="target ${outcomeClass}">
-          <img src="${esc(img??'')}" alt="${esc(name)}">
-          <div class="name-stacked"><span class="title">${esc(shownName)}</span>${reviewControls}</div>
-          <div class="result">${esc(resultText)}</div>
+          <div class="name-stacked"><span class="title">${esc(shownName)}</span>${reviewControls}${defenseLine}</div>
+          <div class="m616-v164-outcome m616-v167-status${statusKind}">
+            <div class="result"><i class="far ${statusIcon}" aria-hidden="true"></i> ${esc(resultText)}</div>
+            ${outcomeSubtitle?`<small>${esc(outcomeSubtitle)}</small>`:''}${finalLine}
+          </div>
         </li>`;
       })
     );
@@ -2836,14 +2927,122 @@ class ChatMessageMarvel extends ChatMessage {
     const messageContent = html.querySelector(".message-content");
     messageContent?.appendChild(evaluation);
 
-    const elementalFantastic = this.getFlag("multiverse-d616", "elementalFantastic");
-    if (isFantastic && elementalFantastic?.key && elementalFantastic?.text) {
-      html.querySelector(".m616-elemental-fantastic")?.remove();
-      const elemental = document.createElement("div");
-      elemental.className = "m616-elemental-fantastic";
-      elemental.innerHTML = `<b>EFEITO ELEMENTAL — ${esc(String(elementalFantastic.label ?? elementalFantastic.key).toUpperCase())}</b><br>${esc(elementalFantastic.text)}`;
-      messageContent?.appendChild(elemental);
+    // The three GM-only confirmations remain underneath the hit/miss status.
+    // They delegate to the unchanged MMDR calculation/application engine.
+    if (isGM && !isCheck && targets.length) {
+      const actions=document.createElement('div');
+      actions.className='m616-v164-quick-actions';
+      actions.innerHTML='<button type="button" data-m616-quick="full">DANO</button>'+ 
+        '<button type="button" data-m616-quick="half">1/2 DANO</button>'+ 
+        '<button type="button" data-m616-quick="heal">CURA</button>';
+      for(const btn of actions.querySelectorAll('[data-m616-quick]')){
+        btn.disabled=Boolean(releasedResolution);
+        btn.addEventListener('click',async event=>{
+          event.preventDefault();event.stopPropagation();btn.disabled=true;
+          try{
+            const current=game.messages?.get?.(this.id)??this;
+            const quick=game.multiverseD616?.applyAttackQuickAction;
+            if(typeof quick!=='function')throw Error('Confirmação de dano indisponível.');
+            await quick(current,btn.dataset.m616Quick);
+          }catch(error){console.error('[D616] Falha no comando do Chat 2.0',error);
+            ui.notifications?.error?.(error?.message??'Não foi possível confirmar o dano.');}
+          finally{btn.disabled=Boolean((game.messages?.get?.(this.id)??this).getFlag('multiverse-d616','combatChatResolution'));
+            if(!btn.disabled)btn.disabled=false;}
+        });
+      }
+      messageContent?.appendChild(actions);
+      // O botão antigo de preparação pertence ao fluxo anterior. Os três
+      // comandos acima já preparam o dano automaticamente e, se uma barreira
+      // exigir decisão, abrem o card técnico reservado ao Mestre. Não exibir
+      // uma QUARTA ação no chat (nem manter um botão que permita duplicar a
+      // preparação quando o ataque já foi resolvido).
+      html.querySelector('.marvel-roll .mm-roll-actions button.damage')?.remove();
     }
+
+    // Um único resumo visual para ambos os papéis: valor final destacado,
+    // sem revelar RD, multiplicadores ou Defesa aos jogadores.
+    // O detalhamento do Mestre usa <details> NATIVO, fechado por padrão.
+    if(releasedResolution && messageContent){
+      const lines=releasedResolution.targets??[];
+      const summary=document.createElement('div');summary.className='m616-v164-summary';
+      const healing=releasedResolution.action==='heal';
+      const valueLabel=healing?'CURA APLICADA':'DANO FINAL';
+      const escLabel=value=>esc(String(value??''));
+      summary.innerHTML=`<div class="m616-v164-summary-heading">${esc(valueLabel)}</div>`+
+        lines.map(t=>{
+          const amount=Math.max(0,Number(t.damage)||0);
+          const snapshotTarget=targets.find(ref=>(typeof ref==='string'?ref:ref?.uuid)===t.targetUuid);
+          const name=escLabel(t.name||t.targetName||snapshotTarget?.name||'');
+          return `<div class="m616-v164-summary-target">`+
+            `<div class="m616-v164-summary-description">`+
+            `${lines.length>1&&name?`<strong>${name}</strong>`:''}`+
+            `<small>${amount>0?(healing?'Cura aplicada ao alvo':'Aplicado ao alvo'):(healing?'Nenhuma cura aplicada':'Nenhum dano aplicado')}</small>`+
+            `</div><strong class="m616-v164-summary-value">${esc(amount)}</strong></div>`;
+        }).join('');
+      messageContent.appendChild(summary);
+      if(isGM){
+        const details=document.createElement('details');details.className='m616-v164-details';
+        details.innerHTML='<summary>Resolução do Dano <i class="fas fa-chevron-right" aria-hidden="true"></i><small>Detalhes</small></summary>';
+        const body=document.createElement('div');body.className='m616-v164-details-body';
+        const damageCards=Array.from(game.messages?.contents??[]).filter(msg=>
+          msg.getFlag?.('multiverse-d616','sourceMessageId')===this.id &&
+          msg.getFlag?.('multiverse-d616','mmdrResolved'));
+        const damageMessage=damageCards[damageCards.length-1];
+        const recorded=damageMessage?.getFlag('multiverse-d616','damageApplication')?.entries??[];
+        const resolvedInfo=damageMessage?.getFlag('multiverse-d616','mmdrResolved');
+        const actual=new Map((resolvedInfo?.results??[]).map(r=>[r.targetUuid,r]));
+        const rows=(label,value,extra='')=>`<div class="m616-v164-detail-row ${extra}"><span>${escLabel(label)}</span><strong>${escLabel(value)}</strong></div>`;
+        if(!recorded.length){body.textContent='Ataque resolvido sem aplicação de dano.';}
+        for(const entry of recorded){
+          const breakdown=combatChatDamageBreakdown(entry,resolvedInfo?.action);
+          const line=document.createElement('div');line.className='m616-v164-detail-target';
+          const receipt=actual.get(entry.targetUuid);
+          const applied=receipt?.delta!=null?Math.max(0,Number(receipt.delta)||0):breakdown.final;
+          const diceValue=breakdown.marvelDie;
+          const effective=breakdown.effective;
+          const focusBonus=breakdown.focusBonus;
+          const customBonus=breakdown.customBonus;
+          const otherBonus=breakdown.otherBonus;
+          // Não inventar uma fórmula quando um Power especial aplica uma
+          // transformação de dano. A aritmética básica é indicada apenas
+          // quando coincide com o valor real armazenado no card técnico.
+          const normalFormula=breakdown.normalFormulaValid
+            ? effective>0
+              ? `${diceValue} × (${breakdown.multiplier} − ${breakdown.reduction}) + ${breakdown.ability}`+
+                `${focusBonus?` + ${focusBonus}`:''}${customBonus?` + ${customBonus}`:''}`+
+                `${otherBonus?` + ${otherBonus}`:''} = ${breakdown.normal}`
+              : `Multiplicador zerado pela RD (${breakdown.multiplier} − ${breakdown.reduction} ≤ 0): dano 0`
+            : '';
+          const fantasticDoubled=breakdown.fantastic && breakdown.normal>0 &&
+            breakdown.final===breakdown.normal*2;
+          line.innerHTML=`<b class="m616-v164-detail-name">${escLabel(entry.name||'Alvo')}</b>`+
+            rows('Dado Marvel', `${diceValue}${breakdown.fantastic&&diceValue===6?' (M)':''}`)+
+            rows('Multiplicador do atacante', `×${breakdown.multiplier}`)+
+            rows('RD do alvo', `−${breakdown.reduction}`)+
+            rows('Multiplicador efetivo', `×${effective}`,'is-effective')+
+            `<div class="m616-v164-detail-separator"></div>`+
+            rows('Dano do dado', `${diceValue} × ${effective} = ${effective>0?diceValue*effective:0}`)+
+            (effective>0?rows('Bônus da habilidade', `+${breakdown.ability}`):'')+
+            (focusBonus&&effective>0?rows('Bônus de Focus', `+${focusBonus}`):'')+
+            (customBonus&&effective>0?rows('Bônus de automações', `+${customBonus}`):'')+
+            (otherBonus&&effective>0?rows('Outros bônus', `+${otherBonus}`):'')+
+            rows('Dano normal após RD',breakdown.normal,'is-normal')+
+            (normalFormula?`<div class="m616-v164-detail-formula">${escLabel(normalFormula)}</div>`:'')+
+            (fantasticDoubled?rows('Dano Fantástico','×2','is-fantastic'):'')+
+            (breakdown.final!==breakdown.normal*(fantasticDoubled?2:1)
+              ?rows('Ajustes do poder / automações', `${breakdown.final} calculado`):'')+
+            (resolvedInfo?.action==='half'?rows('Aplicação 1/2 DANO',`${applied}`):'')+
+            (resolvedInfo?.action==='heal'?rows('Aplicação CURA',`${applied}`):'')+
+            (receipt?.blocked?rows('Proteção', 'Dano bloqueado'):'')+
+            `<div class="m616-v164-detail-separator"></div>`+
+            rows(healing?'Cura final aplicada':'Dano final aplicado',applied,'is-applied');
+          body.appendChild(line);
+        }
+        details.appendChild(body);messageContent.appendChild(details);
+      }
+    }
+
+    // Efeito elemental somente na confirmação de dano (>0), nunca aqui.
   }
 
   /* -------------------------------------------- */
@@ -3024,7 +3223,7 @@ class ChatMessageMarvel extends ChatMessage {
    * @param {string} fantastic
    */
 
-  async _handleDamageChatButton(messageId, flavorText) {
+  async _handleDamageChatButton(messageId, flavorText, {resolveMisses=false}={}) {
     const chatMessage = game.messages.get(messageId);
     if (!chatMessage) {
       ui.notifications?.warn(
@@ -3286,16 +3485,25 @@ class ChatMessageMarvel extends ChatMessage {
       const key=normalizeConditionDefense(attackTarget,target);
       const defense=boundary?guardTargetDefense(boundary.actor,boundary.guard)
         :fixedTargetNumber||Number(target.system?.abilities?.[key]?.defense??0);
-      const base=getMarvelOutcome(roll,defense);
+      const base=getMarvelOutcome(roll,defense,{message:chatMessage,targetActor:target});
+      const naturalUltimateTarget=naturalSixM6(roll);
       const outcome=adjudicateTargetOutcome(base,{
-        requiresReview:mixedConditions&&!boundary,
-        decision:decisions[ref.uuid],
+        requiresReview:mixedConditions&&!boundary&&!naturalUltimateTarget,
+        decision:naturalUltimateTarget?null:decisions[ref.uuid],
       });
       outcomes.set(ref.uuid,outcome);
     }
     if(!targetResultsReady([...outcomes.values()])){
       ui.notifications?.warn?.('Há alvos com Edge/Trouble diferentes. O Mestre deve confirmar seus resultados no card do ataque antes de calcular dano.');
       return;
+    }
+    // A miss has no damage card to confirm. The new GM action can close that
+    // attack (0 damage) without manufacturing a hit or touching any resources.
+    if(resolveMisses && resolvedTargets.length && [...outcomes.values()].every(x=>x && !x.success)){
+      return {noHit:true,targets:resolvedTargets.map(({ref,actor:target})=>({
+        targetUuid:ref.uuid,name:ref.name??target?.name??'Alvo',category:damageType,
+        label:combatAttackLabel(outcomes.get(ref.uuid),{ultimate:naturalSixM6(roll)}),
+      }))};
     }
     let damageTargets=resolvedTargets.length?filterHitTargets(resolvedTargets,outcomes):resolvedTargets;
     // Shared attack: Banging Heads succeeds ONLY if both Melee defenses are
@@ -3311,6 +3519,12 @@ class ChatMessageMarvel extends ChatMessage {
       }));
     }
     if(resolvedTargets.length&&!damageTargets.length){
+      if(resolveMisses && [...outcomes.values()].every(x=>x && !x.pending && !x.success)) {
+        const records=resolvedTargets.map(({ref,actor:target})=>({targetUuid:ref.uuid,
+          name:ref.name??target?.name??'Alvo',category:damageType,
+          label:combatAttackLabel(outcomes.get(ref.uuid),{ultimate:naturalSixM6(roll)})}));
+        return {noHit:true,targets:records};
+      }
       ui.notifications?.warn?.('Nenhum alvo marcado foi atingido ou cumpriu a condição de dano deste poder.');
       return;
     }
@@ -3333,15 +3547,19 @@ class ChatMessageMarvel extends ChatMessage {
       // Suppressive/Covering/Return Fire damage Focus but subtract HEALTH
       // Damage Reduction, as explicitly required by their descriptions.
       const drCategory=powerDamageReductionCategory(item?.type==='power'?item.name:null,damageType);
-      const rawDamageReduction=drCategory==='focus'
+      const baseTargetDR=drCategory==='focus'
         ?target.system?.focusDamageReduction
         :target.system?.healthDamageReduction;
+      const rawDamageReduction=Math.max(Number(baseTargetDR)||0,
+        effectiveTeamDamageReduction(target,drCategory));
       const piercing=applyAdamantiumToHealthDr(
         rawDamageReduction,
         chatMessage.getFlag('multiverse-d616','adamantiumHealthDrIgnore') ?? 0,
         drCategory, item?.type,
       );
       const targetFantastic=Boolean(outcomes.get(ref.uuid)?.fantastic);
+      const teamMarvel=teamFantasticForTarget(roll,chatMessage,target);
+      const targetMarvelTotal=marvelTotal+(teamMarvel?.delta??0);
       // Central 4.5: evaluate custom bonuses on the verified, individual
       // target BEFORE the existing damage/DR/guard/MMDR confirmation pipeline.
       // This does not execute extra damage on the victim after confirmation.
@@ -3354,7 +3572,7 @@ class ChatMessageMarvel extends ChatMessage {
       } = applyCustomDamageMultiplier(calculatePowerDamage({
         powerName:chatMessage.getFlag('multiverse-d616','heldFollowUp')?.name==='Coiling Crush'
           ?null:(item?.type==='power'?item.name:null),
-        marvelDie:marvelTotal,
+        marvelDie:targetMarvelTotal,
         damageMultiplier,damageReduction:piercing.effectiveDr,
         ability:abilityValue,bonus:focusBonus+customDamage.bonus,
         fantastic:targetFantastic,
@@ -3380,6 +3598,12 @@ class ChatMessageMarvel extends ChatMessage {
         originalDamageReduction: piercing.originalDr,
         adamantiumIgnored: piercing.ignored,
         effectiveDamageMultiplier,
+        // Exact GM-only breakdown snapshot from the authoritative calculation.
+        marvelDie:targetMarvelTotal, damageMultiplier,
+        abilityDamage:abilityValue, flatBonus:focusBonus+customDamage.bonus,
+        normalDamage:calculateD616Damage({marvelDie:targetMarvelTotal,damageMultiplier,
+          damageReduction:piercing.effectiveDr,ability:abilityValue,
+          bonus:focusBonus+customDamage.bonus,fantastic:false}).damage,
         hit: true,
         fantastic: targetFantastic,
         damageFactor: powerDamageFactor,
@@ -3391,9 +3615,9 @@ class ChatMessageMarvel extends ChatMessage {
       });
 
       return `<p><b>${esc(targetName)}</b> takes <b>${damage} ${
-        isFantastic ? "Fantastic" : ""
+        targetFantastic ? "Fantastic" : ""
       } </b> ${esc(damageType)} damage.<br/> re: MarvelDie: ${
-        marvelTotal
+        targetMarvelTotal
       } &#42; damage multiplier: &#40; ${baseDamageMultiplier} + bonus: ${effectiveBonus} &#61; ${damageMultiplier} - damageReduction: ${damageReduction} &#61; ${effectiveDamageMultiplier} &#41;${piercing.ignored ? ` <strong>Adamantium:</strong> RD Health ${piercing.originalDr} - ${piercing.ignored} = ${piercing.effectiveDr}.` : ''} + ${esc(
         ability
       )} score ${abilityValue} of damage${esc(focusExplain)}${specialDamage
@@ -3430,6 +3654,10 @@ class ChatMessageMarvel extends ChatMessage {
       img: ref.img ?? target.img ?? "",
     }));
 
+    const chatOutcomeRecords=resolvedTargets.map(({ref,actor:target})=>({
+      targetUuid:ref.uuid,name:ref.name??target?.name??'Alvo',category:damageType,
+      label:combatAttackLabel(outcomes.get(ref.uuid),{ultimate:naturalSixM6(roll)}),
+    }));
     const msgData = {
       // Keep the same speaker so the damage message matches the token/actor used to roll.
       speaker: chatMessage.speaker ?? ChatMessageMarvel.getSpeaker({ actor: actor }),
@@ -3450,13 +3678,22 @@ class ChatMessageMarvel extends ChatMessage {
             isFantastic,
             rollSignature: rollSignature(roll),
             targetDecisionSignature: JSON.stringify(decisions),
+            chatOutcomeRecords,
             entries: damageEntries,
           },
           elementalFantastic: chatMessage.getFlag("multiverse-d616", "elementalFantastic") ?? null,
         },
       },
     };
-    return ChatMessageMarvel.create(mmApplyMessageMode(msgData));
+    // This preparation includes true damage and target defenses. Keep it GM-
+    // only until confirmation, then publish ONLY outcome labels and final delta
+    // on the original public attack message.
+    const gmIds=Array.from(game.users?.contents??game.users?.values?.()??[])
+      .filter(u=>u.isGM).map(u=>u.id);
+    if(!gmIds.length && game.user?.isGM)gmIds.push(game.user.id);
+    if(!gmIds.length){ui.notifications?.error?.('Não foi possível determinar o Mestre para o cálculo reservado.');return;}
+    msgData.whisper=gmIds;
+    return ChatMessageMarvel.create(msgData);
   }
 
 
@@ -3515,6 +3752,10 @@ class ChatMessageMarvel extends ChatMessage {
       M616_SYSTEM_ID,
       "combatTrickery"
     );
+    if (action === "trouble" && naturalSixM6(chatMessage.rolls?.[0])) {
+      ui.notifications?.info?.("SUCESSO FANTÁSTICO (6 M 6): Trouble não se aplica.");
+      return false;
+    }
     if (
       combatTrickeryFlag?.noMarvelTrouble &&
       action === "trouble" &&
@@ -3528,6 +3769,10 @@ class ChatMessageMarvel extends ChatMessage {
 
     const initiativeContext = mmInitiativeContext(chatMessage);
     const isInitiative = !!isInit || mmIsInitiativeMessage(chatMessage);
+    if(isInitiative && dieIndex===1 && chatMessage.rolls?.[0]?.options?.forceMarvelM===true){
+      ui.notifications?.info?.('Iniciativa: o dado Marvel convertido em M não pode ser rerrolado.');
+      return false;
+    }
     if (isInitiative) {
       if (!mmCanAdjustInitiativeMessage(chatMessage)) {
         ui.notifications?.warn?.("Você não pode alterar a iniciativa deste combatente.");
@@ -3955,7 +4200,7 @@ render(force = false, options = {}) {
     context.teamManeuverTypes = Object.fromEntries(
       CONFIG.MULTIVERSE_D616.teamManeuvers.map((teamMan) => [
         teamMan.maneuverType.toLowerCase(),
-        teamMan.maneuverType,
+        ({Offensive:"Ofensiva",Defensive:"Defensiva",Rally:"Reagrupamento"})[teamMan.maneuverType] ?? teamMan.maneuverType,
       ])
     );
     context.teamManeuverLevels = Object.fromEntries(
@@ -4470,7 +4715,7 @@ render(force = false, options = {}) {
     context.teamManeuverTypes = Object.fromEntries(
       CONFIG.MULTIVERSE_D616.teamManeuvers.map((teamMan) => [
         teamMan.maneuverType.toLowerCase(),
-        teamMan.maneuverType,
+        ({Offensive:"Ofensiva",Defensive:"Defensiva",Rally:"Reagrupamento"})[teamMan.maneuverType] ?? teamMan.maneuverType,
       ])
     );
     context.teamManeuverLevels = Object.fromEntries(
@@ -4893,7 +5138,7 @@ async function d616ActorSheetContext(sheet, context, legacy) {
     Object.entries(CONFIG.MULTIVERSE_D616.sizes).map(([key, size]) =>
       [key, game.i18n.localize(size.label)]));
   context.teamManeuverTypes = Object.fromEntries(
-    CONFIG.MULTIVERSE_D616.teamManeuvers.map(t => [t.maneuverType.toLowerCase(), t.maneuverType]));
+    CONFIG.MULTIVERSE_D616.teamManeuvers.map(t => [t.maneuverType.toLowerCase(), ({Offensive:"Ofensiva",Defensive:"Defensiva",Rally:"Reagrupamento"})[t.maneuverType] ?? t.maneuverType]));
   context.teamManeuverLevels = {1:'1',2:'2',3:'3'};
   context.elements = Object.fromEntries(Object.entries(CONFIG.MULTIVERSE_D616.elements)
     .map(([key, element]) => [key, element.label]));
@@ -5154,6 +5399,15 @@ class D616ActorSheetV2Common extends D616ActorSheetV2Base {
         new Picker({type:'image',current:this.actor.img,
           callback:path => this.actor.update({img:path})}).render(true);
       }));
+    }
+    // Team Maneuver stays accessible to the owner even when a sheet is
+    // read-only; only the GM can confirm spending Focus from multiple Actors.
+    if (this.actor.type === 'character') {
+      root.querySelectorAll('.d616-team-open').forEach(button =>
+        button.addEventListener('click', async event => {
+          event.preventDefault();
+          await openTeamManeuverDialog(this.actor);
+        }));
     }
     // The v1 getActorSheetHeaderButtons hook no longer runs on V2 sheets.
     const header = root.querySelector('.window-header');
@@ -6601,6 +6855,7 @@ class MarvelMultiverseActorBase extends foundry.abstract
       }
     }
     finalizeActorResourceMaximums(this);
+    applyAbsorptionFocusCapacity(this);
   }
 }
 
@@ -6950,6 +7205,16 @@ globalThis.MarvelMultiverse = {
 };
 
 /* -------------------------------------------- */
+/*  Foundry v14 initiative rolls originate on Combatant, NOT Actor. */
+/* -------------------------------------------- */
+class MarvelMultiverseCombatant extends (CONFIG.Combatant?.documentClass ?? foundry.documents.Combatant) {
+  getInitiativeRoll(formula) {
+    return prepareCombatantInitiativeRoll(this, super.getInitiativeRoll(formula),
+      CONFIG.Dice.MarvelMultiverseRoll);
+  }
+}
+
+/* -------------------------------------------- */
 /*  Init Hook                                   */
 /* -------------------------------------------- */
 
@@ -6992,6 +7257,7 @@ Hooks.once("init", () => {
 
   // Define custom Document and DataModel classes
   CONFIG.Actor.documentClass = MarvelMultiverseActor;
+  CONFIG.Combatant.documentClass = MarvelMultiverseCombatant;
 
   // Note that you don't need to declare a DataModel
   // for the base actor/item classes - they are included
@@ -7178,6 +7444,8 @@ registerOngoingPowerHooks();
   installRepeatPowerHooks();
   registerHeldConcentrationHooks();
   registerConditionEdgeHooks();
+  registerTeamManeuverRoundHooks();
+  registerTeamManeuverRollHooks();
   registerElementalAdvancedHooks();
   // Wait to register hotbar drop hook on ready so that modules could register earlier if they want to
   Hooks.on("hotbarDrop", (bar, data, slot) => {

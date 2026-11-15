@@ -73,8 +73,8 @@ test('Disembark is GM-authorized but requested by any owning passenger; no movem
 
 test('User README is byte-for-byte unchanged and only CHANGELOG receives this release',()=>{
   const readme=source('../README.md');
-  assert.doesNotMatch(readme,/v0\.2\.153/);
-  assert.match(source('../CHANGELOG.md'),/^## v0\.2\.153/);
+  assert.doesNotMatch(readme,/v0\.2\.178/);
+  assert.match(source('../CHANGELOG.md'),/^## v0\.2\.178/);
 });
 
 

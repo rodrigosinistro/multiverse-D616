@@ -6,6 +6,7 @@ const SYSTEM = 'multiverse-d616';
 const PREFIX = 'mmrpg.';
 import { isPowerGrabbed, hasPhysicalGrab } from './power-grabbed.mjs';
 import { passiveAttackModifiers, powerRollModifiers } from './custom-automations.mjs';
+import { teamManeuverAttackEdge } from './team-maneuvers-effects.mjs';
 const labels = Object.freeze({
   'mmrpg.pinned':'Imobilizado','mmrpg.prone':'Caído',
   'mmrpg.restrained':'Restrito','mmrpg.blinded':'Cego',
@@ -67,6 +68,10 @@ export function resolveConditionEdges({actor,targetActors=[],ability='',attack=f
   if(forceTrouble)matches.push(describe('Atacante: Elemento Force','Trouble elemental temporário',-1));
   if((ab==='mle'||ab==='agl')&&own.has('mmrpg.pinned'))add(-1,'Atacante','mmrpg.pinned','Trouble em Melee/Agility');
   if(attack){
+    // One automatic Edge on attack rolls while Offensive 1 remains active in
+    // this specific combat round. Never grant it to generic ability checks.
+    const teamEdge=teamManeuverAttackEdge(actor);
+    if(teamEdge)matches.push(teamEdge);
     if(ab==='mle'&&own.has('mmrpg.prone'))add(-1,'Atacante','mmrpg.prone','Trouble em ataques Melee');
     if(hasPhysicalGrab(actor))add(targeted?-1:1,'Atacante','mmrpg.grabbed',targeted?'Trouble em ataque contra alvo específico':'Edge em ataque sem alvo específico');
   }

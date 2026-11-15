@@ -1,7 +1,11 @@
+import {isEnergyAbsorptionPower,pendingAbsorption,activeAbsorption,absorbedFocusCredit} from './energy-absorption-custom.mjs';
 import { resolveConditionEdges, resolveConditionReroll } from "./condition-edge.mjs";
 import { hudResourceState } from "./combat/hud-resource-state.mjs";
+import { openTeamManeuverDialog } from "./team-maneuvers.mjs";
+import { teamAttackSnapshot, teamOffensive3ForcesRoll } from "./team-maneuvers-effects.mjs";
 import { hudVehicleContext,requestVehicleDisembark } from "./vehicles/vehicle-system.mjs";
 import { hudConditionSnapshot, hudConcentrationSnapshot, hudMovementSnapshot, favoriteItemKey, hudActorFavorites, withFavoriteFirst } from './hud3-presentation.mjs';
+import { hudActiveEffectSnapshot } from './hud4-active-effects.mjs';
 /**
  * Multiverse-D616 — native Token Action HUD
  *
@@ -354,14 +358,22 @@ async function rollAbility(actor, abilityKey) {
   const meleeAttack=mode==='combat'&&key==='mle'&&Boolean(game.user?.targets?.size);
   const conditionEdges=resolveConditionEdges({actor,ability:key,attack:meleeAttack,
     kind:meleeAttack?'close':'',targeted:meleeAttack,action:'standard'});
-  const roll=new RollClass(formula,actor.getRollData(),conditionEdges.edgeMode?{edgeMode:conditionEdges.edgeMode}:{});
+  const options=conditionEdges.edgeMode?{edgeMode:conditionEdges.edgeMode}:{};
+  const marked=Array.from(game.user?.targets??[]);
+  const targets=marked.map(token=>token?.actor??token?.document?.actor).filter(Boolean);
+  if(meleeAttack && targets.length===marked.length && teamOffensive3ForcesRoll(actor,targets)){
+    options.forceMarvelM=true;
+    options.teamOffensive3Forced=true;
+  }
+  const roll=new RollClass(formula,actor.getRollData(),options);
   const message=await roll.toMessage(
     {
       author: game.user?.id,
       speaker,
       flavor: `ability: ${label}`,
       title: mode === 'noncom' ? `${label} (Non-Combat)` : label,
-      flags:{'multiverse-d616':{conditionEdges}},
+      flags:{'multiverse-d616':{conditionEdges,
+        ...(meleeAttack && teamAttackSnapshot(actor) ? {teamAttackBenefits:teamAttackSnapshot(actor)} : {})}},
     },
     { messageMode }
   );
@@ -785,15 +797,21 @@ class NativeActionHud {
 
   /** Read-only HUD 3.0 indicators. No ActiveEffect changes or turn mutations. */
   updateHud3Status(root, actor) {
-    const conditions = hudConditionSnapshot(actor, game.combat?.started ? game.combat : null);
+    const combat = game.combat?.started ? game.combat : null;
+    const conditions = hudConditionSnapshot(actor, combat);
+    const activeEffects = hudActiveEffectSnapshot(actor, combat, {displayedConditions:conditions});
     const concentration = hudConcentrationSnapshot(actor);
     const movement = hudMovementSnapshot(actor, this.hudActionToken, game.combat);
+    const canPrepareTeamManeuver = actor?.type === 'character' && userCanUseActor(actor);
     const registry = Array.from(root.querySelectorAll?.('.mmrpg-native-action-hud__hud3-status') ?? []);
     const renderSignature = JSON.stringify([
       actor?.uuid ?? actor?.id ?? null,
+      canPrepareTeamManeuver,
       [concentration.used, concentration.maximum, concentration.names],
       movement ? [movement.label, movement.icon, movement.img ?? null] : null,
-      conditions.map(status => [status.id, status.label, status.icon]),
+      conditions.map(status => [status.id, status.label, status.icon, status.duration, status.removal]),
+      activeEffects.map(effect => [effect.id, effect.name, effect.icon, effect.iconClass,
+        effect.value, effect.origin, effect.duration, effect.description, effect.kind]),
     ]);
     for (const panel of registry) {
       // Turn/chat hooks are frequent. Keep tooltip, focus and icons in place
@@ -802,7 +820,24 @@ class NativeActionHud {
       panel.replaceChildren();
       panel.classList.toggle('is-empty', !actor);
       if (!actor) continue;
-      // Fixed order: concentration (left) → selected movement → conditions (right).
+      // Maneuver is a utility control, not a Power shortcut. Keep it first,
+      // immediately before Concentration, in classic and persistent HUDs.
+      if (canPrepareTeamManeuver) {
+        const team = document.createElement('button');
+        team.type = 'button';
+        team.className = 'mmrpg-native-action-hud__team-maneuver';
+        team.dataset.action = 'team-maneuver';
+        team.title = 'Manobra de Equipe — preparar manobra com combatentes da iniciativa';
+        team.setAttribute('aria-label', team.title);
+        const icon = document.createElement('i');
+        icon.className = 'fa-solid fa-people-group';
+        icon.setAttribute('aria-hidden', 'true');
+        const name = document.createElement('span');
+        name.textContent = 'Equipe';
+        team.append(icon, name);
+        panel.appendChild(team);
+      }
+      // Fixed order: team maneuver → concentration → selected movement → conditions.
       if (concentration.maximum) {
         const gauge = document.createElement('span');
         gauge.className = 'mmrpg-native-action-hud__concentration';
@@ -837,31 +872,63 @@ class NativeActionHud {
         }
         panel.appendChild(mode);
       }
-      if (conditions.length) {
-        const block = document.createElement('div');
-        block.className = 'mmrpg-native-action-hud__status-conditions';
-        block.setAttribute('aria-label', `${conditions.length} condições ativas`);
-        for (const status of conditions.slice(0, 5)) {
+      // HUD 4.0: a single horizontally scrollable tray for conditions
+      // and Team Maneuvers only. Do not display generic ActiveEffects from
+      // Traits/Powers/Items here. Nothing writes an ActiveEffect or combat flag.
+      // Team button / Concentration / Movement stay outside the scroll area.
+      if (conditions.length || activeEffects.length) {
+        const tray = document.createElement('div');
+        tray.className = 'mmrpg-native-action-hud__hud4-effects';
+        tray.setAttribute('role', 'group');
+        tray.setAttribute('aria-label', `${conditions.length} condições e ${activeEffects.length} manobras de equipe ativas`);
+        tray.setAttribute('tabindex', '0');
+        tray.title = 'Condições e manobras — role horizontalmente para visualizar todos';
+        if (conditions.length) {
+          const block = document.createElement('div');
+          block.className = 'mmrpg-native-action-hud__status-conditions';
+          block.setAttribute('aria-label', `${conditions.length} condições ativas`);
+          for (const status of conditions) {
+            const chip = document.createElement('span');
+            chip.className = 'mmrpg-native-action-hud__status-chip';
+            const details = [status.label,
+              status.duration ? `Duração: ${status.duration}` : '',
+              status.removal ? `Remoção: ${status.removal}` : ''].filter(Boolean).join('\n');
+            chip.title = details;
+            chip.setAttribute('aria-label', details);
+            if (status.icon) {
+              const img = document.createElement('img'); img.src = status.icon; img.alt = '';
+              chip.appendChild(img);
+            } else { chip.textContent = '◆'; }
+            block.appendChild(chip);
+          }
+          tray.appendChild(block);
+        }
+        for (const effect of activeEffects) {
           const chip = document.createElement('span');
-          chip.className = 'mmrpg-native-action-hud__status-chip';
-          // HUD compact: the native Foundry status indicator owns the detailed
-          // condition tooltip. Show only the name here to avoid repetition.
-          chip.title = status.label;
-          chip.setAttribute('aria-label', status.label);
-          if (status.icon) {
-            const img = document.createElement('img'); img.src = status.icon; img.alt = '';
-            chip.appendChild(img);
-          } else { chip.textContent = '◆'; }
-          block.appendChild(chip);
+          chip.className = `mmrpg-native-action-hud__hud4-chip is-${effect.kind}`;
+          const details = [effect.name, `Origem: ${effect.origin}`,
+            `Duração: ${effect.duration}`, effect.description || ''].filter(Boolean).join('\n');
+          chip.title = details;
+          chip.setAttribute('aria-label', details);
+          if (effect.icon) {
+            const image = document.createElement('img');
+            image.src = effect.icon; image.alt = '';
+            chip.appendChild(image);
+          } else {
+            const icon = document.createElement('i');
+            icon.className = effect.iconClass || 'fa-solid fa-wand-magic-sparkles';
+            icon.setAttribute('aria-hidden', 'true');
+            chip.appendChild(icon);
+          }
+          if (effect.value) {
+            const value = document.createElement('span');
+            value.className = 'mmrpg-native-action-hud__hud4-value';
+            value.textContent = effect.value;
+            chip.appendChild(value);
+          }
+          tray.appendChild(chip);
         }
-        if (conditions.length > 5) {
-          const more = document.createElement('span');
-          more.className = 'mmrpg-native-action-hud__status-more';
-          more.textContent = `+${conditions.length - 5}`;
-          more.title = conditions.slice(5).map(c => c.label).join('\n');
-          block.appendChild(more);
-        }
-        panel.appendChild(block);
+        panel.appendChild(tray);
       }
       hudStatusRenderCache.set(panel, renderSignature);
     }
@@ -1349,7 +1416,6 @@ class NativeActionHud {
       empty.className = "mmrpg-native-action-hud__empty";
       empty.textContent = localize("MULTIVERSE_D616.ActionHud.NoPowers");
       body.appendChild(empty);
-      return;
     }
     for (const item of powers) {
       const itemId = item.id ?? item._id;
@@ -1359,7 +1425,8 @@ class NativeActionHud {
       button.className = "mmrpg-native-action-hud__action power";
       button.dataset.action = "power";
       button.dataset.itemId = itemId;
-      button.disabled = !canUse;
+      const energyBlocked=isEnergyAbsorptionPower(item)&&(!!pendingAbsorption(actor)||activeAbsorption(actor));
+      button.disabled = !canUse || energyBlocked;
       const image = document.createElement("img");
       image.src = item.img || `systems/${SYSTEM_ID}/icons/super-powers.svg`;
       image.alt = "";
@@ -1368,6 +1435,11 @@ class NativeActionHud {
       name.textContent = item.name ?? "(Power)";
       button.append(image, name);
       applyPowerTooltip(button, item);
+      if(energyBlocked){
+        const reason=pendingAbsorption(actor)?'Reação já preparada; aguardando dano Health confirmado.'
+          :`Energy Absorption ativo: gaste ${absorbedFocusCredit(actor)} Focus absorvido antes de usar novamente.`;
+        button.title=reason;button.dataset.mmhtTitle=reason;
+      }
       body.appendChild(button);
     }
     if (weapons.length) {
@@ -1475,6 +1547,12 @@ class NativeActionHud {
       return;
     }
 
+    const maneuverButton=event.target.closest?.('[data-action="team-maneuver"]');
+    if(maneuverButton && !maneuverButton.disabled) {
+      const actor=this.selectedActor;
+      if(actor?.type==='character' && userCanUseActor(actor)) await openTeamManeuverDialog(actor);
+      return;
+    }
     const vehicleButton=event.target.closest?.('[data-action="vehicle-switch"], [data-action="vehicle-disembark"]');
     if(vehicleButton && !vehicleButton.disabled) {
       const context=this.vehicleHudContext;
@@ -1540,7 +1618,11 @@ class NativeActionHud {
         const carrier=actor.items?.get?.(actionButton.dataset.itemId);
         actionButton.disabled=!userCanUseActor(actor)||!attachedPowerUsable(carrier,actor)||
           !actionableAttachedPowers(carrier).some(entry=>entry.id===actionButton.dataset.powerId);
-      } else actionButton.disabled = !userCanUseActor(actor);
+      } else {
+        const used=actor.items?.get?.(actionButton.dataset.itemId);
+        actionButton.disabled = !userCanUseActor(actor) || (isEnergyAbsorptionPower(used)&&
+          (!!pendingAbsorption(actor)||activeAbsorption(actor)));
+      }
     }
   }
 

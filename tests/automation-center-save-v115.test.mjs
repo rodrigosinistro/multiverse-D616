@@ -16,10 +16,10 @@ function setup(rules=[savedRule()]){
       if(fails)throw new Error('save failed');stored=structuredClone(value);}};
   const warnings=[];globalThis.game={user:{isGM:true},settings};
   globalThis.ui={notifications:{info(){},warn(text){warnings.push(text);},error(text){warnings.push(text);}}};
-  const fieldNames=['name','trigger','powerName','requiresStatus','effectType','effectStatus',
+  const fieldNames=['name','trigger','powerName','powerSet','powerId','requiresStatus','effectType','effectStatus',
     'conditionDurationMode','conditionDurationCount','conditionRemoval','healAmount','message',
     'attackScope','damageBonusMode','damageBonusAmount','damageAbility','hitOutcome','statusSubject','fantasticOnly','enabled'];
-  const defaultField={name:'',trigger:'powerRoll',powerName:'',requiresStatus:'',effectType:'condition',
+  const defaultField={name:'',trigger:'powerRoll',powerName:'',powerSet:'',powerId:'',requiresStatus:'',effectType:'condition',
     effectStatus:'mmrpg.confused',conditionDurationMode:'manual',conditionDurationCount:'1',
     conditionRemoval:'',healAmount:'1',message:'',attackScope:'all',damageBonusMode:'fixed',damageBonusAmount:'5',damageAbility:'mle',hitOutcome:'success',statusSubject:'caster',fantasticOnly:false,enabled:true};
   const fields=Object.fromEntries(fieldNames.map(name=>[name,{type:['enabled','fantasticOnly'].includes(name)?'checkbox':'text',

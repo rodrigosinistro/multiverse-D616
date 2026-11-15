@@ -16,7 +16,7 @@ const pc=readFileSync(new URL('../scripts/power-conditions.mjs',import.meta.url)
 const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url)));
 
 test('v0.2.44 installer and dedicated multi-target module',()=>{
-  assert.equal(manifest.version,'0.2.153');
+  assert.equal(manifest.version,'0.2.178');
   assert.match(main,/scripts\/multi-target-combat\.mjs/);
 });
 
@@ -33,7 +33,8 @@ test('only hit targets proceed to damage (same roll, no reroll or Focus spending
   const decisions=new Map([['A',{success:true}],['B',{success:false}],['C',{success:true}]]);
   assert.deepEqual(filterHitTargets(targets,decisions).map(x=>x.ref.uuid),['A','C']);
   assert.match(main,/filterHitTargets\(resolvedTargets,outcomes\)/);
-  assert.match(main,/return ChatMessageMarvel\.create\(mmApplyMessageMode\(msgData\)\)/);
+  assert.match(main,/return ChatMessageMarvel\.create\(msgData\)/);
+  assert.match(main,/msgData\.whisper=gmIds/);
 });
 
 test('power checks respect Evasion defensive swap (Melee to Agility)',()=>{

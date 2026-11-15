@@ -235,3 +235,11 @@
  width:47%;min-width:0;background:#fff;color:#161316;
  border:1px solid #555;font-weight:700;font-size:16px;
 }
+
+/* Team Maneuvers 1.0 — compact launcher beside the existing actor settings. */
+.multiverse-d616.sheet.actor .mm-styled-field > .d616-team-open {
+  min-width:0;width:100%;min-height:25px;margin-top:4px;padding:3px 6px;
+  border:1px solid #b45c35;background:#8f2914;color:#fff;font-size:10px;
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;
+}
+.multiverse-d616.sheet.actor .mm-styled-field > .d616-team-open:hover {background:#b44820;}

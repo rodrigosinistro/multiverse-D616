@@ -30,30 +30,27 @@ function render(statuses){
   const panel=new Node('section');
   const root={querySelectorAll(sel){return sel==='.mmrpg-native-action-hud__hud3-status'?[panel]:[]}};
   new NativeActionHud().updateHud3Status(root,actor);
-  const cond=panel.children.find(n=>n.className==='mmrpg-native-action-hud__status-conditions');
+  const tray=panel.children.find(n=>n.className==='mmrpg-native-action-hud__hud4-effects');
+  const cond=tray?.children.find(n=>n.className==='mmrpg-native-action-hud__status-conditions');
   return cond?.children??[];
 }
 
-test('v130 condition chip tooltip and accessible label include only condition name',()=>{
+test('v160 condition chip tooltip includes duration and removal without repeating an effect icon',()=>{
   const [chip]=render(['mmrpg.confused']);
-  assert.equal(chip.title,'Confuso');
-  assert.equal(chip.attributes['aria-label'],'Confuso');
+  assert.match(chip.title,/Confuso/);
+  assert.match(chip.attributes['aria-label'],/Confuso/);
   assert.equal(chip.children[0].src,'icons/confused.webp');
-  assert.doesNotMatch(chip.title,/Duração|Remoção|turno|teste/i);
-  assert.match(source,/more.title = conditions.slice\(5\).map\(c => c.label\)/);
+  assert.match(source,/for \(const status of conditions\)/);
 });
 
-test('v130 +N hover lists only additional condition names',()=>{
+test('v160 all condition icons remain accessible rather than hiding the sixth behind +N',()=>{
   const rows=render(Array.from({length:6},(_,i)=>`custom.${i}`));
-  assert.equal(rows.length,6,'five icons plus one counter');
-  const more=rows.at(-1);
-  assert.equal(more.textContent,'+1');
-  assert.equal(more.title,'Condição 5');
-  assert.doesNotMatch(more.title,/Duração|Remoção|:/);
+  assert.equal(rows.length,6,'each condition is represented by its own icon');
+  assert.equal(rows.at(-1).title,'Condição 5\nDuração: até remoção conforme a regra');
 });
 
 test('v130 update is limited to HUD copy; native conditions module is unchanged',()=>{
-  assert.doesNotMatch(source,/chip.title = `\$\{status.label\}\nDuração/);
+  assert.match(source,/status.duration \? `Duração: \$\{status.duration\}`/);
   assert.match(source,/gauge.title = `Concentração/);
   assert.match(source,/mode.title = `Movimento atual:/);
 });

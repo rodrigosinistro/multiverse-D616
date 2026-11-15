@@ -30,6 +30,59 @@ export function samePower(a,b) {
     descriptionKey(a) === descriptionKey(b);
 }
 
+/** Core-rulebook prerequisite corrections verified against official reference material.
+ * Apply to stale compendium/world copies at runtime without mutating world documents.
+ * Preserve any unrelated, more restrictive requirements set by the GM.
+ */
+export const VERIFIED_POWER_PREREQUISITES = Object.freeze({
+  'basic::energy absorption': 'Rank 4',
+  'super-speed::blazing fast fists': 'Rank 2',
+  'resize::grow 2': 'Grow 1',
+  'martial arts::do this all day': 'Rank 2',
+  'shield bearer::do this all day': 'Rank 2',
+  'super-speed::speed run 2': 'Speed Run 1, Rank 3',
+  'ranged weapons::return fire': 'Suppressive Fire, Rank 2'
+});
+export const VERIFIED_POWER_IDS = Object.freeze({
+  '9M3g5S4KjZZ7X5dO': 'Rank 4',
+  'MCGRVGvWxnwQYHgB': 'Rank 2',
+  'Ppt16p6K3tw1hz9e': 'Rank 2',
+  'aJk0RuuAOQjkSWW7': 'Rank 2',
+  'uXEh42PCsVE2X8Po': 'Grow 1',
+  'RF4L6FVzbxDyPJRY': 'Speed Run 1, Rank 3',
+  'fd3AyzufIQFe4TqS': 'Suppressive Fire, Rank 2',
+});
+
+export function applyVerifiedPowerPrerequisites(power) {
+  if (!power?.system) return power;
+  const required = VERIFIED_POWER_IDS[idKey(power)] || VERIFIED_POWER_PREREQUISITES[powerIdentity(power)];
+  if (!required) return power;
+  const existing = String(power.system.prerequisites || '').trim();
+  // Known legacy typo from the distributed pack: Rank 8 exceeds the game maximum.
+  if (powerIdentity(power)==='ranged weapons::return fire' &&
+      canon(existing)==='suppressive fire, rank 8') {
+    return {...power, system:{...power.system, prerequisites:required}};
+  }
+  const parts = /^(?:none|nenhum)$/i.test(existing) ? [] : existing.split(/[,;]/).map(v=>v.trim()).filter(Boolean);
+  for (const token of required.split(/[,;]/).map(v=>v.trim()).filter(Boolean)) {
+    const requirement = token.match(/^Rank (\d+)$/i);
+    if (requirement) {
+      const minimum = Number(requirement[1]);
+      let found = false;
+      for (let i=parts.length-1; i>=0; i--) {
+        const match = parts[i].match(/^Rank\s*(\d+)$/i);
+        if (!match) continue;
+        if (found) parts.splice(i,1);
+        else { parts[i] = `Rank ${Math.max(minimum, Number(match[1]))}`; found = true; }
+      }
+      if (!found) parts.push(token);
+    } else if (!parts.some(v=>canon(v)===canon(token))) parts.push(token);
+  }
+  const corrected = parts.join(', ');
+  if (corrected === existing) return power;
+  return {...power, system:{...power.system, prerequisites:corrected}};
+}
+
 /** Merge genuinely identical entries while preserving similarly-named variants. */
 export function reconcilePowerCatalog(base=[], packs=[], world=[], corrections=new Map()) {
   const rows = [];
@@ -72,7 +125,7 @@ export function reconcilePowerCatalog(base=[], packs=[], world=[], corrections=n
   for (const p of base || []) add(p,'base');
   for (const p of packs || []) add(p,'pack');
   for (const p of world || []) add(p,'world');
-  return rows.sort((a,b)=>String(a.name).localeCompare(String(b.name)) ||
+  return rows.map(applyVerifiedPowerPrerequisites).sort((a,b)=>String(a.name).localeCompare(String(b.name)) ||
     powerSetKey(a).localeCompare(powerSetKey(b)));
 }
 

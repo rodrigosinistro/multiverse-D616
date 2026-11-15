@@ -1,0 +1,97 @@
+/* Scoped native DialogV2 design — Team Maneuvers assistant. */
+.d616-team-dialog .window-content {background:#1b202b;color:#e7e8ed;}
+.d616-team {display:grid;gap:12px;font-size:13px;line-height:1.45;padding:8px 4px;}
+.d616-team p {margin:0;line-height:1.55;}
+.d616-team__field {display:grid;gap:5px;font-weight:700;color:#f6d7aa;}
+.d616-team__field select {min-height:34px;padding:5px 9px;border:1px solid #5a6475;border-radius:5px;background:#29313e;color:#fafafa;}
+.d616-team fieldset {border:1px solid #4c5667;border-radius:7px;padding:10px;min-width:0;}
+.d616-team legend {color:#f0c68d;font-weight:700;padding:0 6px;}
+.d616-team__members {display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;max-height:230px;overflow:auto;}
+.d616-team__member {display:flex;align-items:center;gap:9px;padding:8px;border-radius:5px;border:1px solid #48566b;background:#263140;cursor:pointer;}
+.d616-team__member input {width:16px;height:16px;accent-color:#dbac74;flex:none;margin:0;}
+.d616-team__member span {display:grid;gap:3px;min-width:0;}
+.d616-team__member strong {font-size:12px;color:#fcf8f2;overflow-wrap:anywhere;}
+.d616-team__member small {font-size:11px;color:#c7d4e4;}
+.d616-team__note {color:#d7bc93;background:#36302c;padding:9px 11px;border-radius:5px;font-size:11px;line-height:1.5;}
+.d616-team__report {color:#e6ebf2;font-size:12px;line-height:1.5;padding:5px 4px;}
+.d616-team__report h3 {color:#ffd0a0;margin:0 0 10px;font-size:17px;}
+.d616-team__report p {margin:7px 0;}
+.d616-team__report ul {padding-left:20px;margin:8px 0;}
+.d616-team__report li {margin:4px 0;}
+
+/* v0.2.155 — chat messages use a light, high-contrast card, regardless of
+   Foundry chat theme. DialogV2 keeps its existing dark-preview palette. */
+.chat-message .message-content .d616-team__report {
+  box-sizing: border-box;
+  padding: 12px 13px;
+  margin: 5px 0;
+  border: 1px solid #ad977b;
+  border-radius: 7px;
+  background: #fffaf0;
+  color: #1c2430;
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.chat-message .message-content .d616-team__report :is(p, li, strong, b) {
+  color: #1c2430;
+}
+.chat-message .message-content .d616-team__report h3 {
+  margin: 0 0 10px;
+  color: #7b3708;
+  font-size: 17px;
+  line-height: 1.3;
+}
+.chat-message .message-content .d616-team__report ul {
+  margin: 8px 0;
+  padding-left: 19px;
+}
+.chat-message .message-content .d616-team__report .d616-team__note {
+  color: #fff0d2;
+  background: #362a20;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.chat-message .message-content .d616-team__report .d616-team__proposal {
+  margin-bottom: 9px;
+  color: #6b370e;
+  font-weight: 800;
+}
+
+/* v0.2.157 — clear one-time full-attack reroll and per-target buff details. */
+.d616-team-attack-benefits {
+  margin: 8px 0 4px;
+  padding: 8px 10px;
+  color: #f4e8d5;
+  background: #342820;
+  border: 1px solid #c88b50;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.d616-team-attack-benefits p {margin: 0 0 5px;}
+.d616-team-attack-benefits button.d616-team-reroll {
+  color: #261800;
+  background: #f4c078;
+  border: 1px solid #c98b43;
+  font-weight: 700;
+  border-radius: 5px;
+  padding: 7px;
+  width: 100%;
+  min-height: 30px;
+  cursor: pointer;
+}
+.d616-team-attack-benefits button.d616-team-reroll:disabled {opacity: .5;cursor: wait;}
+
+/* v0.2.158 — make eligible Fantastic result visible in the target card. */
+.chat-message .m616-team-offensive3-note {
+  display: block;
+  color: #fff1c9;
+  background: #432c14;
+  border: 1px solid #c99a44;
+  border-radius: 4px;
+  padding: 3px 5px;
+  margin-top: 3px;
+  font-weight: 700;
+  line-height: 1.3;
+}

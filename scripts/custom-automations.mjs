@@ -12,12 +12,14 @@ import {cleanupExpiredElementalEffects} from './elemental-fantastic.mjs';
 import {conditionReference} from './condition-reference.mjs';
 import {powerConditionExpiryDecision} from './power-conditions.mjs';
 import {playPowerVfx} from './power-vfx.mjs';
+import {ENERGY_ACTIVE_STATUS,absorbedFocusCredit} from './energy-absorption-custom.mjs';
 
 export const CUSTOM_RULES_KEY='customAutomationRules';
 export const CUSTOM_RULES_ENABLED_KEY='customAutomationsEnabled';
 export const CUSTOM_TRIGGERS=Object.freeze({
   powerRoll:'Ao rolar um poder',turnStart:'Início do turno',turnEnd:'Fim do turno',
   passiveAttack:'Passiva: ao realizar um ataque',
+  passivePower:'Passiva: enquanto possuir o poder',
   targetHit:'Após acertar um alvo (resultado confirmado)',
 });
 export const CUSTOM_EFFECTS=Object.freeze({
@@ -26,6 +28,11 @@ export const CUSTOM_EFFECTS=Object.freeze({
   vfx:'Executar animação configurada no poder (Sequencer)',
   damageBonus:'Modificar dano (cálculo nativo/MMDR)',
   ongoingDamage:'Dano contínuo por turno (Health/Focus)',
+  energyAbsorption:'Energy Absorption (ativar pelo HUD)',
+  extraAction:'Adicionar 1 Ação Padrão por turno',
+  extraReaction:'Adicionar 1 Reação por turno',
+  initiativeMarvelM:'Converter dado Marvel em M na iniciativa',
+  initiativeEdge:'Conceder Edge na iniciativa',
 });
 // Deliberately exclude concentration levels and system/internal statuses.
 export const CUSTOM_ATTACK_SCOPES=Object.freeze({
@@ -61,12 +68,29 @@ export const CUSTOM_STATUSES=Object.freeze({
   'mmrpg.dominated':'Dominado','mmrpg.shattered':'Arrasado',
   'mmrpg.surprised':'Surpreso','mmrpg.unconscious':'Inconsciente',
   'mmrpg.incapacitated':'Incapacitado','mmrpg.infected':'Infectado',
+  'mmrpg.energy-absorption':'Energy Absorption (preparado)',
+  [ENERGY_ACTIVE_STATUS]:'Energy Absorption (ativo)',
 });
 const list=collection=>Array.from(collection?.contents??collection?.values?.()??collection??[]);
 const safeText=(x,max)=>String(x??'').trim().slice(0,max);
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const hasOwn=(object,key)=>Object.hasOwn(object,key);
 const normalizedName=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
+// Scope a rule to a specific edition of an identically-named power when the
+// GM opts in. Rules from <=v174 have no scope and keep their old behavior.
+export function powerMatchesRule(rule,item){
+  if(!item||item.type!=='power'||normalizedName(rule?.powerName)!==normalizedName(item.name))return false;
+  if(rule.powerSet&&normalizedName(rule.powerSet)!==normalizedName(item.system?.powerSet))return false;
+  if(rule.powerId){
+    const origins=[item.id,item._id,item.uuid,item.sourceId,item._stats?.compendiumSource,
+      item.flags?.core?.sourceId,item.flags?.['scene-packer']?.sourceId];
+    if(!origins.some(id=>id&&(String(id)===rule.powerId||String(id).split('.').at(-1)===rule.powerId)))return false;
+  }
+  return true;
+}
+export function ownedPowersForRule(actor,rule){
+  return list(actor?.items).filter(item=>powerMatchesRule(rule,item));
+}
 const rollEffects=new Set(['edge','trouble']);
 const activeGM=()=>Boolean(globalThis.game?.user?.isGM) &&
   (!game.users?.activeGM || game.users.activeGM.id===game.user.id);
@@ -80,6 +104,10 @@ export function normalizeCustomEffect(input,trigger){
   const effectType=safeText(input.effectType,30);
   if(!hasOwn(CUSTOM_EFFECTS,effectType))throw new Error('Efeito não disponível.');
   const passive=trigger==='passiveAttack',rollModifier=rollEffects.has(effectType);
+  const passivePower=trigger==='passivePower';
+  const passivePowerEffects=new Set(['extraAction','extraReaction','initiativeMarvelM','initiativeEdge']);
+  if(passivePower!==passivePowerEffects.has(effectType))
+    throw new Error('Ações, Reações e modificadores de iniciativa exigem o gatilho Passiva: enquanto possuir o poder.');
   if(passive&&!rollModifier)throw new Error('Gatilhos passivos só podem conceder Edge/Trouble.');
   if(rollModifier&&!passive&&trigger!=='powerRoll')
     throw new Error('Edge/Trouble só pode ser aplicado durante rolagem de poder ou ataque passivo.');
@@ -152,10 +180,12 @@ export function normalizeCustomRule(input){
   const effects=rawEffects.map(effect=>normalizeCustomEffect(effect,trigger));
   if(trigger==='powerRoll'&&input.fantasticOnly===true&&effects.some(e=>rollEffects.has(e.effectType)))
     throw new Error('Edge/Trouble altera a rolagem antes dos dados: não pode exigir M nessa mesma rolagem.');
-  const passive=trigger==='passiveAttack',targetHit=trigger==='targetHit';
-  const powerName=(trigger==='powerRoll'||passive||targetHit)?safeText(input.powerName,100):'';
+  const passive=trigger==='passiveAttack',passivePower=trigger==='passivePower',targetHit=trigger==='targetHit';
+  const powerName=(trigger==='powerRoll'||passive||passivePower||targetHit)?safeText(input.powerName,100):'';
+  const powerSet=powerName?safeText(input.powerSet,100):'';
+  const powerId=powerName?safeText(input.powerId,250):'';
   if(trigger==='powerRoll'&&!powerName)throw new Error('Informe o nome do poder para o gatilho.');
-  if(passive&&!powerName)throw new Error('Informe o poder passivo que concede o modificador.');
+  if((passive||passivePower)&&!powerName)throw new Error('Informe o poder passivo que concede o modificador.');
   if(targetHit&&!powerName)throw new Error('Selecione o poder que deve atingir o alvo.');
   const hitOutcome=targetHit?safeText(input.hitOutcome??'success',20):'success';
   if(!hasOwn(CUSTOM_TARGET_OUTCOMES,hitOutcome))throw new Error('Resultado do ataque não suportado.');
@@ -164,7 +194,7 @@ export function normalizeCustomRule(input){
   const requiresStatus=safeText(input.requiresStatus,80);
   if(requiresStatus&&!hasOwn(CUSTOM_STATUSES,requiresStatus))throw new Error('Condição exigida não suportada.');
   return {
-    id:safeText(input.id,70),name,trigger,powerName,hitOutcome,statusSubject,
+    id:safeText(input.id,70),name,trigger,powerName,powerSet,powerId,hitOutcome,statusSubject,
     fantasticOnly:trigger==='powerRoll'&&input.fantasticOnly===true,
     requiresStatus,effects, ...effects[0],enabled:input.enabled!==false,
   };
@@ -195,8 +225,12 @@ function hasRequiredStatus(rule,actor){
 export function matchesCustomRule(rule,event){
   if(!rule?.enabled||rule.trigger!==event?.trigger||!event.actor)return false;
   if(rule.trigger==='powerRoll'){
-    if(String(event.powerName??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()!==
-       rule.powerName.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase())return false;
+    if(normalizedName(event.powerName)!==normalizedName(rule.powerName))return false;
+    if(rule.powerSet||rule.powerId){
+      const item=event.powerItem??list(event.actor.items).find(power=>power.type==='power'&&
+        normalizedName(power.name)===normalizedName(event.powerName));
+      if(!powerMatchesRule(rule,item))return false;
+    }
     if(rule.fantasticOnly&&!event.fantastic)return false;
   }
   return hasRequiredStatus(rule,event.actor);
@@ -213,12 +247,11 @@ export function passiveAttackModifiers({actor,attack=false,kind='',ability='',se
   const scope=(attackKind==='close'||attackKind==='melee'||
     (!attackKind&&(ab==='mle'||ab==='melee')))?'melee':
     attackKind==='ranged'?'ranged':'unknown';
-  const owned=new Set(list(actor.items).filter(item=>item?.type==='power')
-    .map(item=>name(item.name)));
+  // Match the actual owned item, not just its title: duplicate names can exist across Power Sets.
   const modifiers=[];
   for(const rule of getCustomRules(settings)){
     if(!rule.enabled||rule.trigger!=='passiveAttack'||
-       !owned.has(name(rule.powerName))||!hasRequiredStatus(rule,actor))continue;
+       !ownedPowersForRule(actor,rule).length||!hasRequiredStatus(rule,actor))continue;
     for(const effect of ruleEffects(rule)){
       if(!rollEffects.has(effect.effectType)||effect.attackScope!=='all'&&effect.attackScope!==scope)continue;
       modifiers.push({source:`Automação: ${rule.name} (${rule.powerName})`,
@@ -227,6 +260,30 @@ export function passiveAttackModifiers({actor,attack=false,kind='',ability='',se
     }
   }
   return modifiers;
+}
+
+/** Passive resources and initiative benefits, evaluated live from the owned
+ * power and the Master's enabled world rules. No Actor flags or permanent
+ * ActiveEffects are written, so deleting the power/revoking a rule immediately
+ * removes its benefit. Independent matching rules add a maximum of +3 each.
+ */
+export function passivePowerBenefits(actor,settings=globalThis.game?.settings){
+  const result={extraActions:0,extraReactions:0,marvelM:false,initiativeEdge:false,sources:[]};
+  if(!actor||!customRulesEnabled(settings))return result;
+  for(const rule of getCustomRules(settings)){
+    if(!rule.enabled||rule.trigger!=='passivePower'||!ownedPowersForRule(actor,rule).length||!hasRequiredStatus(rule,actor))continue;
+    let matched=false;
+    for(const effect of ruleEffects(rule)){
+      switch(effect.effectType){
+        case 'extraAction':result.extraActions=Math.min(3,result.extraActions+1);matched=true;break;
+        case 'extraReaction':result.extraReactions=Math.min(3,result.extraReactions+1);matched=true;break;
+        case 'initiativeMarvelM':result.marvelM=true;matched=true;break;
+        case 'initiativeEdge':result.initiativeEdge=true;matched=true;break;
+      }
+    }
+    if(matched)result.sources.push(rule.name);
+  }
+  return result;
 }
 
 /** Edge/Trouble on a specific power is resolved before its own dice are rolled.
@@ -244,7 +301,7 @@ export function powerRollModifiers({actor,item,attack=false,kind='',ability='',b
   const modifiers=[];
   for(const rule of getCustomRules(settings)){
     if(!rule.enabled||rule.trigger!=='powerRoll'||
-       normalizedName(rule.powerName)!==normalizedName(item.name)||!hasRequiredStatus(rule,actor))continue;
+       !powerMatchesRule(rule,item)||!hasRequiredStatus(rule,actor))continue;
     for(const effect of ruleEffects(rule)){
       if(!rollEffects.has(effect.effectType)||effect.attackScope!=='all'&&effect.attackScope!==scope)continue;
       const sign=effect.effectType==='edge'?1:-1;
@@ -270,7 +327,7 @@ export function customDamageBonusForTarget({actor,item,targetActor,outcome,setti
   let bonus=0,multiplier=1;
   for(const rule of getCustomRules(settings)){
     if(!rule.enabled||rule.trigger!=='targetHit'||
-       normalizedName(rule.powerName)!==normalizedName(item.name)||
+       !powerMatchesRule(rule,item)||
        (rule.hitOutcome==='fantastic'&&!outcome.fantastic))continue;
     const statusActor=rule.statusSubject==='target'?targetActor:actor;
     if(!hasRequiredStatus(rule,statusActor))continue;
@@ -317,7 +374,7 @@ export function applyCustomDamageMultiplier(result, multiplier=1){
  * independently reimplemented by the customization layer. */
 export function targetRuleOutcome({rule,item,roll,targetActor,targetUuid,message,confirmed=false}={}){
   if(rule?.trigger!=='targetHit'||item?.type!=='power'||!targetActor||!roll||!message)return null;
-  if(normalizedName(rule.powerName)!==normalizedName(item.name))return null;
+  if(!powerMatchesRule(rule,item))return null;
   const context=resolvePowerRoll(item);
   const defenseKey=message.getFlag?.(AUTOMATION_SYSTEM,'attackTarget') || context.attackTarget;
   const tn=Number(message.getFlag?.(AUTOMATION_SYSTEM,'powerTargetNumber')??0)||context.targetNumber||0;
@@ -325,7 +382,7 @@ export function targetRuleOutcome({rule,item,roll,targetActor,targetUuid,message
   const key=normalizeConditionDefense(defenseKey,targetActor);
   const defense=tn||Number(targetActor.system?.abilities?.[key]?.defense??0);
   if(!Number.isFinite(defense)||defense<=0)return null;
-  const outcome=getMarvelOutcome(roll,defense);
+  const outcome=getMarvelOutcome(roll,defense,{message,targetActor});
   const ambiguous=message.getFlag?.(AUTOMATION_SYSTEM,'conditionEdges')?.ambiguousTargets===true;
   const decisions=message.getFlag?.(AUTOMATION_SYSTEM,'multiTargetDecisionRollSignature')===rollSignature(roll)
     ?message.getFlag?.(AUTOMATION_SYSTEM,MULTI_TARGET_DECISION_KEY)??{}:{};
@@ -470,10 +527,13 @@ export async function startCustomOngoingDamage(rule,actor,context={}){
 }
 
 export async function executeCustomRule(rule,actor,context={}){
+  // v176: The damage Reaction now belongs to the native power/HUD workflow.
+  // Keep legacy saved rules readable, but never arm a free, unpaid reaction.
+  if(rule.effectType==='energyAbsorption')return false;
   if(rule.effectType==='ongoingDamage')return startCustomOngoingDamage(rule,actor,context);
   if(rule.effectType==='vfx'){
     const power=context.powerItem??list(actor?.items).find(item=>item?.type==='power'&&
-      normalizedName(item.name)===normalizedName(rule.powerName));
+      powerMatchesRule(rule,item));
     if(!power)return false;
     // A confirmed target must never accidentally animate a different token
     // from the GM's current selection when the canvas Token is unavailable.
@@ -616,7 +676,7 @@ export function ruleFromPowerMessage(message){
   const actor=scene?.tokens?.get?.(message.speaker?.token)?.actor??game.actors?.get?.(message.speaker?.actor);
   const item=actor?.items?.get?.(itemId);
   if(!item||item.type!=='power')return null;
-  return {trigger:'powerRoll',actor,powerName:item.name,
+  return {trigger:'powerRoll',actor,powerName:item.name,powerItem:item,
     fantastic:marvelDieIsM(message.rolls[0],message.fantastic)};
 }
 // Deduplicate messages during rapid hook updates; never re-run for a reroll/edit.
@@ -680,7 +740,9 @@ export function conditionTurnEntries(actor,combat){
       const registered=list(Array.isArray(globalThis.CONFIG?.statusEffects)?CONFIG.statusEffects:Object.values(globalThis.CONFIG?.statusEffects??{}))
         .find(entry=>entry?.id===id);
       if(!registered)continue;
-      const label=CUSTOM_STATUSES[id]??registered.name??registered.label??id;
+      const label=id===ENERGY_ACTIVE_STATUS
+        ?`Energy Absorption — Ativo (${absorbedFocusCredit(actor)} Focus)`
+        :CUSTOM_STATUSES[id]??registered.name??registered.label??id;
       const elemental=effect.flags?.[AUTOMATION_SYSTEM]?.elementalFantastic;
       // Fantastic elemental effects are native statuses, not rules created in
       // the Central. Their duration belongs to the elemental engine and must
@@ -753,7 +815,7 @@ export async function processCustomConditionTurn(combat){
       await effect.update({[`flags.${AUTOMATION_SYSTEM}.${CONDITION_FLAG}.turnStarts`]:(Number(f.turnStarts)||0)+1,
         [`flags.${AUTOMATION_SYSTEM}.${CONDITION_FLAG}.lastTurnKey`]:key});
     }
-    if(!entries.length){conditionTurnSeen.add(key);return false;}
+    if(!entries.length)return false; // Condition may arrive later in this same turn.
     const already=list(globalThis.game?.messages).some(m=>m.getFlag?.(AUTOMATION_SYSTEM,'customConditionTurnNotice')?.turnKey===key);
     if(already){conditionTurnSeen.add(key);return false;}
     if(typeof globalThis.ChatMessage?.create!=='function')return false;
@@ -855,6 +917,20 @@ export function registerCustomAutomationHooks(){
     // A hit/miss decision or confirmed damage card may arrive after roll creation.
     if(activeGM()&&('rolls' in (change??{})||flags?.targets||flags?.multiTargetDecisions||
       flags?.powerConditionDamage))void enqueueCustomTargetSync(message);
+  });
+  // In Foundry v14 and third-party turn trackers, `combatTurn` may fire even
+  // when `updateCombat` provides only partial change fields. Both routes are
+  // safe because each turn has a unique persisted message flag.
+  Hooks.on('combatTurn',combat=>{
+    if(activeGM()&&combat?.started)void processCustomConditionTurn(combat)
+      .catch(error=>console.error('[D616] Aviso de condições (combatTurn)',error));
+  });
+  Hooks.on('createActiveEffect',effect=>{
+    const combat=game.combat;
+    if(!activeGM()||!combat?.started)return;
+    const actor=combat.combatant?.token?.actor??combat.combatant?.actor;
+    if(actor&&(effect?.parent===actor||effect?.parent?.actor===actor))
+      void processCustomConditionTurn(combat).catch(error=>console.error('[D616] Aviso de condição criada',error));
   });
   Hooks.on('updateCombat',(combat,change)=>{
     if(!activeGM()||!combat?.started)return;

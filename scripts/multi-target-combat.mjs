@@ -16,6 +16,9 @@ export function normalizeTargetDecision(value) {
 export function adjudicateTargetOutcome(outcome, {requiresReview=false, decision=null}={}) {
   const chosen=normalizeTargetDecision(decision);
   if (!outcome) return {success:false,fantastic:false,pending:false,label:'DEFESA INDISPONÍVEL'};
+  // 6-M-6 cannot suffer Trouble and must never be overridden by a per-target
+  // miss decision, regardless of defense or heterogeneous target modifiers.
+  if (outcome.ultimate) return {...outcome,success:true,fantastic:true,pending:false,adjudicated:false};
   if (requiresReview && !chosen) return {...outcome,success:false,pending:true,label:'REVISAR EDGE/TROUBLE'};
   if (chosen) {
     const success=chosen==='hit';

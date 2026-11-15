@@ -26,7 +26,7 @@ function rig() {
 
 test('Vehicle 1.0 keeps separate native Actor type and sheet without replacing NPCs',()=>{
  const manifest=JSON.parse(read('../system.json')),template=JSON.parse(read('../template.json'));
- assert.equal(manifest.version,'0.2.153');
+ assert.equal(manifest.version,'0.2.178');
  assert.deepEqual(template.Actor.types,['character','npc','vehicle']);
  const main=read('../multiverse-d616.mjs');
  assert.match(main,/class MarvelMultiverseVehicle extends MarvelMultiverseActorBase/);

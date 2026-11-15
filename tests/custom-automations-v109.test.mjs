@@ -109,7 +109,7 @@ test('v109: power roll hook resolves real actor/item via itemId and scene speake
   const actor={name:'A',items:new Map([['p1',{type:'power',name:'Venom Burst'}],['w1',{type:'weapon',name:'Sword'}]])};
   const settings=mockSettings();setGame(settings);game.actors.set('a1',actor);
   const message={id:'m1',rolls:[{isFantastic:true}],speaker:{actor:'a1'},getFlag:(ns,key)=>key==='itemId'?'p1':null};
-  assert.deepEqual(ruleFromPowerMessage(message),{trigger:'powerRoll',actor,powerName:'Venom Burst',fantastic:true});
+  assert.deepEqual(ruleFromPowerMessage(message),{trigger:'powerRoll',actor,powerName:'Venom Burst',powerItem:actor.items.get('p1'),fantastic:true});
   assert.equal(ruleFromPowerMessage({...message,rolls:[]}),null);
   assert.equal(ruleFromPowerMessage({...message,getFlag:()=> 'w1'}),null);
 });

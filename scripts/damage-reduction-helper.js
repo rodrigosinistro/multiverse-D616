@@ -1,12 +1,15 @@
+import { effectiveTeamDamageReduction } from './team-maneuvers-effects.mjs';
 import { calculateD616Damage } from "./damage-calculation.js";
 import {damageCardStillCurrent, rollSignature} from "./multi-target-combat.mjs";
+import {combatChatPublicResolution} from "./combat-chat-v164.mjs";
 import { confirmRepeatedAttackDamage, confirmHeldHellfireHealthDamage } from "./repeat-power-attacks.mjs";
 import { confirmRicoShieldDamage } from "./rico-shield-chain.mjs";
 import { confirmFaltineDamage } from './ongoing-power-effects.mjs';
 import { confirmPowerDamageFromCard, getMarvelOutcome } from "./power-conditions.mjs";
 import { confirmCustomTargetDamageFromCard } from "./custom-automations.mjs";
+import {tryAbsorbHealthDamage} from './energy-absorption-custom.mjs';
 import { activeElementalGuards, selectGuard, selectElementalDefense, assessGuardHit, consumeGuard, guardTargetDefense, findCrossingElementalBarrier } from "./elemental-shields.mjs";
-import { applyElementalFantasticFromDamageMessage, postElementalFantasticConfirmation } from "./elemental-fantastic.mjs";
+import { applyElementalFantasticFromDamageMessage, eligibleElementalDamageResults, postElementalFantasticConfirmation } from "./elemental-fantastic.mjs";
 
 const MODULE_ID = "multiverse-d616";
 const MMDR_VER = "1.0.0";
@@ -27,6 +30,7 @@ Hooks.once("ready", () => {
   console.log(`[MMDR] v${MMDR_VER} ready`);
   game.multiverseD616 ??= {};
   game.multiverseD616.applyCustomRecurringDamage = applyCustomRecurringDamage;
+  game.multiverseD616.applyAttackQuickAction = applyAttackQuickAction;
 });
 
 function dbg(...args) {
@@ -161,11 +165,7 @@ function categoryFromText(text) {
 }
 
 function readDamageReduction(actor, category) {
-  const field =
-    category === "focus"
-      ? "focusDamageReduction"
-      : "healthDamageReduction";
-  return Math.abs(Number(actor?.system?.[field] ?? 0) || 0);
+  return effectiveTeamDamageReduction(actor,category);
 }
 
 function statPaths(category) {
@@ -184,7 +184,7 @@ async function applyDelta({ actor, category, delta, heal }) {
     : Math.max(0, current - amount);
   const update = {};
   setProperty(update, paths.current, next);
-  await actor.update(update);
+  await actor.update(update, category==='focus'&&!heal?{d616FocusDamage:true}:{});
 }
 
 async function resolveActor(targetUuid, actorUuid = "") {
@@ -228,6 +228,12 @@ function getStructuredEntries(message) {
         0,
         Number(entry?.effectiveDamageMultiplier ?? 0) || 0
       ),
+      marvelDie: Number(entry?.marvelDie ?? 0) || 0,
+      damageMultiplier: Number(entry?.damageMultiplier ?? 0) || 0,
+      abilityDamage: Number(entry?.abilityDamage ?? 0) || 0,
+      flatBonus: Number(entry?.flatBonus ?? 0) || 0,
+      normalDamage: Math.max(0,Number(entry?.normalDamage ?? 0) || 0),
+      fantastic: Boolean(entry?.fantastic),
     }))
     .filter((entry) => entry.targetUuid || entry.actorUuid);
 }
@@ -487,7 +493,7 @@ function appendUi(message, rootElement) {
     false;
   const badge = category.toUpperCase();
   const canApply =
-    Boolean(game.user?.isGM) &&
+    Boolean(game.user?.isGM) && !message?.getFlag?.(MODULE_ID,'mmdrResolved') &&
     targetRefs.some((target) => target.uuid || target.actorUuid);
 
   const actions = canApply
@@ -584,14 +590,20 @@ async function applyExactEntries(entries, action, modes={}, damageMessage=null) 
     }
     const delta=guarded?.blocked ? 0 :
       (action==='half'?Math.ceil(Math.max(0,Number(entry.damage)||0)/2):Math.max(0,Number(entry.damage)||0));
-    if(delta>0||heal)await applyDelta({actor,category:entry.category,delta,heal});
+    // Energy Absorption was already paid and armed by the defender on Item.roll().
+    // GM damage application converts Health into Focus without another prompt.
+    let absorption=null;
+    if(delta>0&&!heal&&entry.category==='health'&&!guarded?.blocked){
+      absorption=await tryAbsorbHealthDamage(actor,delta,{tokenDoc:victimToken});
+    }
+    if(!absorption&&(delta>0||heal))await applyDelta({actor,category:entry.category,delta,heal});
     results.push({
       name: entry.name || actor.name,
       targetUuid: entry.targetUuid, actorUuid: entry.actorUuid,
       category: entry.category,
-      delta,heal,
+      delta:absorption?0:delta,heal,absorbed:Boolean(absorption),
       blocked:Boolean(guarded?.blocked),
-      description:guarded?.blocked
+      description:absorption?`Energy Absorption: ${absorption.absorbed} Health ignorados; +${absorption.focusGained} Focus (15 Focus e 1 Reação já gastos na ativação).`:guarded?.blocked
         ? `${guard.name} absorveu ${rawAmount} dano${guarded.destroyed?' e foi destruída':' e permanece ativa'}.`
         : '',
     });
@@ -677,43 +689,26 @@ async function postConfirmation(results, action) {
 }
 
 const pendingDamageCards=new Set();
-document.addEventListener(
-  "click",
-  async (event) => {
-    const button = event.target?.closest?.(".mmdr-apply-btn");
-    if (!button) return;
+const pendingAttackActions=new Set();
 
-    event.preventDefault();
-    event.stopImmediatePropagation();
-
-    if (!game.user?.isGM) {
-      ui.notifications?.warn(
-        "Somente o Mestre pode aplicar dano ou cura por este card."
-      );
-      return;
-    }
-
-    const messageElement = button.closest("[data-message-id]");
-    const messageId = messageElement?.dataset?.messageId;
-    const message = messageId ? game.messages?.get?.(messageId) : null;
-    if (!message) {
-      ui.notifications?.warn("MMDR: card de dano não encontrado.");
-      return;
-    }
-
-    const action = button.dataset.action ?? "full";
+/** Shared confirmation for the original MMDR buttons and the new GM-only
+ * attack-card shortcuts. All damage/guards/ongoing hooks are unchanged.
+ */
+async function confirmDamageMessage(message,action='full',messageElement=null,button=null){
+  if(!game.user?.isGM){ui.notifications?.warn?.('Somente o Mestre pode aplicar dano ou cura.');return;}
+  if(!message || !['full','half','heal'].includes(action))return;
     if(pendingDamageCards.has(message.id)){
       ui.notifications?.warn?.('Este card já está processando o dano.');
       return;
     }
     pendingDamageCards.add(message.id);
-    button.disabled = true;
+    if(button)button.disabled = true;
 
     try {
       const structuredEntries = getStructuredEntries(message);
       const legacyEntries = structuredEntries.length
         ? []
-        : getLegacyEntries(message, messageElement);
+        : messageElement ? getLegacyEntries(message, messageElement) : [];
       const exactEntries = structuredEntries.length
         ? structuredEntries
         : legacyEntries;
@@ -725,13 +720,19 @@ document.addEventListener(
       }
       const sourceId=message.getFlag(MODULE_ID,'sourceMessageId');
       const sourceMessage=sourceId?game.messages?.get?.(sourceId):null;
+      // An older duplicate preparation of the same attack may still exist.
+      // Once the source has a confirmed result, NONE may apply damage again.
+      if(sourceMessage?.getFlag(MODULE_ID,'combatChatResolution')){
+        ui.notifications?.warn?.('Este ataque já foi confirmado e não pode aplicar dano novamente.');
+        return;
+      }
       const decisions=sourceMessage?.getFlag(MODULE_ID,'multiTargetDecisionRollSignature')===rollSignature(sourceMessage?.rolls?.[0])
         ?(sourceMessage.getFlag(MODULE_ID,'multiTargetDecisions')??{}):{};
       if(sourceMessage && !damageCardStillCurrent(message.getFlag(MODULE_ID,'damageApplication'),sourceMessage.rolls?.[0],decisions)){
         ui.notifications?.warn?.('Os dados do ataque foram modificados depois do cálculo. Gere outro card de dano para usar os resultados atualizados.');
         return;
       }
-      const modes=Object.fromEntries(Array.from(messageElement.querySelectorAll('.mmdr-guard-mode'))
+      const modes=Object.fromEntries(Array.from(messageElement?.querySelectorAll?.('.mmdr-guard-mode')??[])
         .map(select=>[select.dataset.target,select.value]));
       const results = exactEntries.length
         ? await applyExactEntries(exactEntries, action,modes,message)
@@ -744,7 +745,11 @@ document.addEventListener(
         return;
       }
 
-      await message.setFlag(MODULE_ID,'mmdrResolved',{action,at:Date.now()});
+      // Immutable post-application receipt. No damage engine changes.
+      const receipt=results.map(r=>({targetUuid:r.targetUuid,name:r.name,
+        delta:Math.max(0,Number(r.delta)||0),category:r.category,
+        heal:!!r.heal,blocked:!!r.blocked}));
+      await message.setFlag(MODULE_ID,'mmdrResolved',{action,at:Date.now(),results:receipt});
       await postConfirmation(results, action);
       await confirmPowerDamageFromCard(message, action, results.filter(r=>!r.blocked));
       // Uma falha em regra personalizada nunca desfaz nem interrompe o dano já aplicado.
@@ -754,9 +759,29 @@ document.addEventListener(
       await confirmRicoShieldDamage(message,action,results);
       await confirmRepeatedAttackDamage(message,action,results);
       await confirmHeldHellfireHealthDamage(message,action,results);
-      const elementalApplied = await applyElementalFantasticFromDamageMessage(
-        message, action, new Set(results.filter(r=>r.blocked).map(r=>r.targetUuid)));
-      await postElementalFantasticConfirmation(message, elementalApplied);
+      // O efeito especial deve ser aplicado apenas em alvos com dano REAL > 0;
+      // não publicar um segundo card solto, pois isso duplica o aviso.
+      let elementalApplied=[];
+      try{
+        elementalApplied=await applyElementalFantasticFromDamageMessage(message,action,
+          new Set(results.filter(r=>r.blocked).map(r=>r.targetUuid)),
+          eligibleElementalDamageResults(receipt,action));
+      }catch(error){console.error('[D616] Falha no efeito Fantástico elemental',error);}
+      // Somente agora o Mestre libera o resultado do ataque e os efeitos
+      // realmente aplicados, sem a Defesa ou o cálculo reservado.
+      if(sourceMessage && message.getFlag(MODULE_ID,'damageApplication')?.version){
+        const snapshot=message.getFlag(MODULE_ID,'damageApplication');
+        const published=combatChatPublicResolution(snapshot.chatOutcomeRecords??[],receipt,
+          {action,signature:rollSignature(sourceMessage.rolls?.[0])});
+        if(published.targets.length){
+          try{await sourceMessage.setFlag(MODULE_ID,'combatChatResolution',published);}
+          catch(error){console.error('[D616] Não foi possível publicar resultado do ataque',error);}
+        }
+      }
+      // A ÚNICA mensagem do efeito vem DEPOIS da mensagem DANO/1/2 DANO
+      // realmente aplicada, jamais na prévia do card de ataque.
+      try{await postElementalFantasticConfirmation(message,elementalApplied);}
+      catch(error){console.warn('[D616] Efeito aplicado, mas confirmação no chat falhou:',error);}
       const summary = results
         .map(
           (result) =>
@@ -764,7 +789,8 @@ document.addEventListener(
         )
         .join(", ");
       ui.notifications?.info(`MMDR: ${summary}`);
-      dbg("applied", { messageId, action, results });
+      dbg("applied", { messageId:message.id, action, results });
+      return {resolved:true,results};
     } catch (error) {
       console.error("[MMDR] apply error", error);
       ui.notifications?.error(
@@ -772,8 +798,56 @@ document.addEventListener(
       );
     } finally {
       pendingDamageCards.delete(message.id);
-      button.disabled = false;
+      if(button)button.disabled = false;
     }
-  },
-  true
-);
+
+}
+
+/** Quickly confirm from the attack message using the existing preparation
+ * method. If a guard requires a decision, leave the classic GM-only damage
+ * card open with its selector, rather than silently bypassing that guard.
+ */
+async function applyAttackQuickAction(source,action='full'){
+  if(!game.user?.isGM || !source?.id)return;
+  if(pendingAttackActions.has(source.id)){
+    ui.notifications?.warn?.('Este ataque já está sendo processado.');return;
+  }
+  pendingAttackActions.add(source.id);
+  try{
+    if(source.getFlag(MODULE_ID,'combatChatResolution')){
+      ui.notifications?.warn?.('Este ataque já foi resolvido pelo Mestre.');return;
+    }
+    const all=Array.from(game.messages?.contents??[]);
+    const signature=rollSignature(source.rolls?.[0]);
+    const existing=all.filter(msg=>msg.getFlag?.(MODULE_ID,'sourceMessageId')===source.id &&
+      msg.getFlag?.(MODULE_ID,'damageApplication')?.rollSignature===signature &&
+      !msg.getFlag?.(MODULE_ID,'mmdrResolved'));
+    let card=existing[existing.length-1];
+    if(!card){
+      if(typeof source._handleDamageChatButton!=='function')throw Error('Card de ataque incompatível com a aplicação de dano.');
+      card=await source._handleDamageChatButton(source.id,source.flavor,{resolveMisses:true});
+    }
+    if(card?.noHit){
+      const published=combatChatPublicResolution(card.targets,[],{action,signature});
+      if(published.targets.length)await source.setFlag(MODULE_ID,'combatChatResolution',published);
+      return {resolved:true,results:[]};
+    }
+    if(!card?.getFlag?.(MODULE_ID,'damageApplication'))return;
+    const entries=getStructuredEntries(card);
+    if(entries.some(entry=>Boolean(renderGuardSelector(entry,card)))){
+      ui.notifications?.info?.('O alvo possui proteção ativa: confirme o modo de proteção no card de dano do Mestre.');
+      return {requiresGuardDecision:true};
+    }
+    return await confirmDamageMessage(card,action,null,null);
+  }finally{pendingAttackActions.delete(source.id);}
+}
+
+document.addEventListener('click',async event=>{
+  const button=event.target?.closest?.('.mmdr-apply-btn');
+  if(!button)return;
+  event.preventDefault();event.stopImmediatePropagation();
+  const messageElement=button.closest('[data-message-id]');
+  const message=game.messages?.get?.(messageElement?.dataset?.messageId);
+  if(!message){ui.notifications?.warn?.('MMDR: card de dano não encontrado.');return;}
+  await confirmDamageMessage(message,button.dataset.action??'full',messageElement,button);
+},true);

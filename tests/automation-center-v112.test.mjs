@@ -109,7 +109,7 @@ test('v112: painel oferece seleção de poderes e decisão por alvo; MMDR chama 
   const ui=readFileSync(new URL('../scripts/automation-center.mjs',import.meta.url),'utf8');
   const mmdr=readFileSync(new URL('../scripts/damage-reduction-helper.js',import.meta.url),'utf8');
   assert.match(ui,/data-power-picker/);
-  assert.match(ui,/getIndex\?\.\(\{fields:\['name','type'\]\}\)/);
+  assert.match(ui,/getIndex\?\.\(\{fields:\['name','type','system\.powerSet'\]\}\)/);
   assert.match(ui,/data-target-outcome/);
   assert.match(ui,/data-status-subject/);
   assert.match(mmdr,/await confirmCustomTargetDamageFromCard\(message, action, results/);

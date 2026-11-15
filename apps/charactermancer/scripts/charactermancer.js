@@ -395,7 +395,7 @@ static async _mmcEnsureType(stub, fallback){
     this.mmcState.data.traits = traits.items ?? [];
     this.mmcState.data.tags = tags.items ?? [];
     this.mmcState.data.powers = powers.items ?? [];
-    const correctedPowerIds = new Set(["8MaB6fHzANxJzpbq", "zFthXeiXzdI646hT", "V29Yrxdf0uiGQgMF", "nnmvCBn8OGU03QvH", "UbhhYpzKg4XTis2V", "491xrGpqoQAbGdGo", "JowNvBE3za7LGiV4", "fIYIWtQcvFzwnjNg", "fd3AyzufIQFe4TqS", "KQxISBVt5QDnkh6C", "IBkz80gRi2Kq3Tgt", "2bWg8lf2ZwkyiKiB", "6PApDX5qMnMqgRa3", "KOGbtsAQoEHQm7gg", "KdVAEjrKMnvmyfIV", "UQG3sZnzI8JvK34o", "VLbgw5shFgAQcYDI", "WUKnnYcEInYLJBfp", "YknqhTMOfiRP7aZX", "ZughvwBl1xGSpx6Q", "ZzRySxUQjMJ6rZ7S", "iEWHhcouN1guY3TE", "n7LkZDiJaeOk3ChY", "v4wnQsxkb32CNQay", "vvAff82Tqkg2SS1q"]);
+    const correctedPowerIds = new Set(["RF4L6FVzbxDyPJRY", "9M3g5S4KjZZ7X5dO", "MCGRVGvWxnwQYHgB", "Ppt16p6K3tw1hz9e", "aJk0RuuAOQjkSWW7", "uXEh42PCsVE2X8Po", "8MaB6fHzANxJzpbq", "zFthXeiXzdI646hT", "V29Yrxdf0uiGQgMF", "nnmvCBn8OGU03QvH", "UbhhYpzKg4XTis2V", "491xrGpqoQAbGdGo", "JowNvBE3za7LGiV4", "fIYIWtQcvFzwnjNg", "fd3AyzufIQFe4TqS", "KQxISBVt5QDnkh6C", "IBkz80gRi2Kq3Tgt", "2bWg8lf2ZwkyiKiB", "6PApDX5qMnMqgRa3", "KOGbtsAQoEHQm7gg", "KdVAEjrKMnvmyfIV", "UQG3sZnzI8JvK34o", "VLbgw5shFgAQcYDI", "WUKnnYcEInYLJBfp", "YknqhTMOfiRP7aZX", "ZughvwBl1xGSpx6Q", "ZzRySxUQjMJ6rZ7S", "iEWHhcouN1guY3TE", "n7LkZDiJaeOk3ChY", "v4wnQsxkb32CNQay", "vvAff82Tqkg2SS1q"]);
     this._mmcCanonicalPowerCorrections = new Map(
       (this.mmcState.data.powers || []).filter(p=>correctedPowerIds.has(p._id)).map(p=>[
         p._id, { name:p.name, prerequisites:p.system?.prerequisites || '' }

@@ -190,6 +190,20 @@
       "icon": "icons/weapons.svg",
       "description": "O escudo foi arremessado e só retorna no início do próximo turno do personagem. Até lá, ele não pode usar poderes de Shield Bearer nem recebe os benefícios do escudo.",
       "remove": "Retorna automaticamente no início do próximo turno do personagem."
+    },
+    {
+      "id": "mmrpg.energy-absorption",
+      "name": "Energy Absorption (preparado)",
+      "icon": "icons/m.svg",
+      "description": "Reação já gasta: 15 Focus e 1 Reação consumidos ao usar o poder pelo HUD. No próximo dano Health confirmado após RD, converte o dano em Focus (até o dobro do máximo).",
+      "remove": "Consumido ao converter dano ou encerrado com o combate."
+    },
+    {
+      "id": "mmrpg.energy-absorption-active",
+      "name": "Energy Absorption (ativo)",
+      "icon": "icons/m.svg",
+      "description": "O Focus absorvido ainda não foi inteiramente gasto. Enquanto restar crédito de absorção, o poder não pode ser usado novamente.",
+      "remove": "Gaste todo o Focus obtido por Energy Absorption. Focus excedente ao máximo normal desaparece ao fim do combate."
     }
   ]
 }

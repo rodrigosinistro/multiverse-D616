@@ -110,7 +110,7 @@ async function targetOutcomes(message){
     if(!doc?.actor)continue;
     const ability=normalizeConditionDefense(defenseKey,doc.actor);
     const defense=Number(doc.actor.system?.abilities?.[ability]?.defense??0);
-    const outcome=getMarvelOutcome(roll,defense);
+    const outcome=getMarvelOutcome(roll,defense,{message,targetActor:doc.actor});
     targets.push({doc,outcome});
   }
   return {actor,item,token,targets};
@@ -126,6 +126,50 @@ async function choose(title,content,field,choices){
 }
 const ARROWS=Object.freeze({NW:'↖',N:'↑',NE:'↗',W:'←',E:'→',SW:'↙',S:'↓',SE:'↘'});
 const SOCKET=`system.${SYSTEM}`;
+// A mensagem de socket, por si só, NÃO confirma que o Mestre recebeu ou
+// aceitou o desenho. O emissor aguarda resposta explícita e apresenta erros.
+const pendingAreaRequests=new Map();
+export function elementalAreaReplyMessage(payload){
+  if(payload?.ok)return String(payload.message||'Área criada pelo Mestre.');
+  return String(payload?.message||'O Mestre não aprovou ou não conseguiu criar a área.');
+}
+async function requestAreaApproval(message,draw){
+  if(!game.users?.activeGM)throw new Error('O Mestre precisa estar conectado para autorizar o desenho.');
+  const requestId=foundry.utils.randomID();
+  const name=flagged(message,'elementalAreaPower')??flagged(message,'advancedElemental')?.name;
+  const isWall=AREA_WALL_NAMES.has(name);
+  const payload={type:'elemental-area',requesterId:game.user.id,requestId,messageId:message.id,
+    ...(isWall?{start:draw.start,end:draw.end,elementKey:draw.elementKey}:
+      {x:draw.center.x,y:draw.center.y,radius:draw.radius})};
+  ui.notifications?.info?.('Pedido de desenho enviado. Aguardando aprovação do Mestre.');
+  const result=await new Promise((resolve,reject)=>{
+    const timeout=setTimeout(()=>{
+      pendingAreaRequests.delete(requestId);
+      reject(new Error('O Mestre não confirmou o desenho. Verifique se ele está conectado e abra novamente o controle do poder.'));
+    },90000);
+    pendingAreaRequests.set(requestId,{resolve:reply=>{clearTimeout(timeout);resolve(reply);}});
+    try{game.socket.emit(SOCKET,payload);}
+    catch(error){clearTimeout(timeout);pendingAreaRequests.delete(requestId);reject(error);}
+  });
+  if(!result.ok)throw new Error(elementalAreaReplyMessage(result));
+  ui.notifications?.info?.(elementalAreaReplyMessage(result));
+  return result;
+}
+async function confirmAreaRequest(message,requesterId){
+  const user=game.users?.get?.(requesterId);
+  const scene=game.scenes?.get?.(message.speaker?.scene);
+  const power=flagged(message,'elementalAreaPower')??flagged(message,'advancedElemental')?.name??'Poder';
+  const D=foundry.applications?.api?.DialogV2;
+  if(!D?.wait)throw new Error('O diálogo de aprovação do Mestre está indisponível.');
+  const label=esc(user?.name??'Jogador');
+  return !!(await D.wait({
+    window:{title:'Autorizar desenho de área'},rejectClose:false,
+    content:`<p><b>${label}</b> solicita criar a área de <b>${esc(power)}</b>.</p>`+
+      `<p>Cena: <b>${esc(scene?.name??'Indisponível')}</b>. Confira o desenho solicitado antes de autorizar.</p>`,
+    buttons:[{action:'deny',label:'Recusar',callback:()=>false},
+      {action:'approve',label:'Autorizar desenho',default:true,callback:()=>true}],
+  }));
+}
 function ownerOfRoll(message){return String(message?.user?.id??message?.user??'');}
 function casterForMessage(message){
   const scene=game.scenes?.get?.(message?.speaker?.scene);
@@ -393,13 +437,7 @@ async function drawAreaFromCard(message){
   const draw=await dragAreaFromCard(message);
   if(!draw)return;
   if(activeGM())await createAreaRegion(message,draw);
-  else {
-    if(!game.users?.activeGM)throw new Error('O Mestre deve estar online para criar a área.');
-    game.socket.emit(SOCKET,{type:'elemental-area',requesterId:game.user.id,messageId:message.id,
-      ...(AREA_WALL_NAMES.has(flagged(message,'elementalAreaPower')??flagged(message,'advancedElemental')?.name)
-        ?{start:draw.start,end:draw.end,elementKey:draw.elementKey}:{x:draw.center.x,y:draw.center.y,radius:draw.radius})});
-    ui.notifications?.info?.('Pedido de desenho enviado ao Mestre.');
-  }
+  else await requestAreaApproval(message,draw);
 }
 async function cleanupAreas(effect){
   if(!activeGM()||!effect?.flags?.[SYSTEM]?.concentrationPower?.itemId)return;
@@ -468,15 +506,45 @@ export function registerElementalAdvancedHooks(){
     (html.querySelector('.message-content')??html).appendChild(wrapper);
   });
   if(game.socket)game.socket.on(SOCKET,async (payload,senderId)=>{
+    // Resposta direcionada ao jogador: sem esta confirmação, o pedido não
+    // pode ser apresentado como executado.
+    if(payload?.type==='elemental-area-result'){
+      if(payload.requesterId!==game.user?.id)return;
+      const pending=pendingAreaRequests.get(payload.requestId);
+      if(!pending)return;
+      pendingAreaRequests.delete(payload.requestId);
+      pending.resolve(payload);
+      return;
+    }
     if(!activeGM()||!['elemental-move','elemental-area'].includes(payload?.type))return;
     const msg=game.messages?.get?.(payload.messageId);
     const claimed=String(payload.requesterId??'');
-    if(!msg||!validElementalRequester(msg,claimed) || (typeof senderId==='string' && senderId!==claimed))return;
+    const reply=(ok,message)=>{
+      if(payload.type==='elemental-area'&&payload.requestId)
+        game.socket.emit(SOCKET,{type:'elemental-area-result',requestId:payload.requestId,
+          requesterId:claimed,ok,message});
+    };
+    if(!msg||!validElementalRequester(msg,claimed) || (typeof senderId==='string' && senderId!==claimed)){
+      console.warn(`[${SYSTEM}] Pedido elemental ignorado por falta de permissão ou card inválido`,{messageId:payload.messageId,claimed});
+      reply(false,'Solicitação recusada: personagem sem permissão ou card não encontrado.');
+      return;
+    }
     try{
       if(payload.type==='elemental-move')await performMovement(msg,payload.targetUuid,payload.dir,payload.steps,claimed);
-      if(payload.type==='elemental-area')await createAreaRegion(msg,payload.start&&payload.end
-        ?{start:payload.start,end:payload.end,elementKey:payload.elementKey}:{center:{x:Number(payload.x),y:Number(payload.y)},radius:Number(payload.radius)},claimed);
-    }catch(e){console.warn(`[${SYSTEM}] Pedido elemental recusado:`,e);ui.notifications?.warn?.(String(e.message??e));}
+      if(payload.type==='elemental-area'){
+        if(!await confirmAreaRequest(msg,claimed)){
+          reply(false,'O Mestre recusou o desenho da área.');return;
+        }
+        await createAreaRegion(msg,payload.start&&payload.end
+          ?{start:payload.start,end:payload.end,elementKey:payload.elementKey}
+          :{center:{x:Number(payload.x),y:Number(payload.y)},radius:Number(payload.radius)},claimed);
+        reply(true,'Área criada e aprovada pelo Mestre.');
+      }
+    }catch(e){
+      console.warn(`[${SYSTEM}] Pedido elemental recusado:`,e);
+      ui.notifications?.warn?.(String(e.message??e));
+      reply(false,String(e.message??e));
+    }
   });
   Hooks.on('deleteActiveEffect',effect=>{void cleanupAreas(effect);});
   Hooks.on('updateActiveEffect',(effect,changes)=>{if(changes.disabled===true)void cleanupAreas(effect);});

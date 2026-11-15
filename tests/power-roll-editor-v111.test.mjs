@@ -80,7 +80,7 @@ test('v111: all regular conditions in catalog accessible, but internal control s
   const catalogue=JSON.parse(readFileSync(new URL('../data/conditions.json',import.meta.url),'utf8'));
   const blocked=new Set(['mmrpg.grabbed','mmrpg.power-grabbed','mmrpg.shield-thrown']);
   const ordinary=catalogue.conditions.filter(x=>!x.id.startsWith('mmrpg.concentration.')&&!blocked.has(x.id));
-  assert.equal(ordinary.length,22);
+  assert.equal(ordinary.length,24);
   for(const c of ordinary)assert.ok(CUSTOM_STATUSES[c.id],c.id);
   for(const c of catalogue.conditions.filter(x=>x.id.startsWith('mmrpg.concentration.')||blocked.has(x.id)))
     assert.equal(CUSTOM_STATUSES[c.id],undefined);
@@ -103,10 +103,10 @@ test('v111: builder has power example, all power effects and per-roll resolver u
     assert.match(root.innerHTML,/Elemental Blast/);
     assert.match(root.innerHTML,/data-attack-scope/);
   }finally{globalThis.document=original;}
-  assert.match(source,/option.disabled=passive\?!rollModifier:!power&&rollModifier/);
+  assert.match(source,/option.disabled=passivePower\?!passiveBenefit:passive\?!rollModifier/);
   assert.match(source,/form\.querySelector\('\[data-attack-scope\]'\)\.hidden=!rollModifier/);
   assert.match(engine,/attack: isAttackItem\(this\),\s*item: this/);
   assert.match(engine,/item:this,kind:this\.system\.attackKind/);
   const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url),'utf8'));
-  assert.equal(manifest.version,'0.2.153');
+  assert.equal(manifest.version,'0.2.178');
 });

@@ -70,3 +70,17 @@ test('v133: registered hook uses current combatant after round transition where 
     assert.match(f.messages[0].content,/Pensativo Sentinel/);
   }finally{f.restore();}
 });
+
+test('v168: condição aplicada depois de uma tentativa vazia ainda é anunciada no mesmo turno',async()=>{
+  const f=setup();try{
+    f.target.statuses.clear();f.target.effects.length=0;
+    f.fire({round:2,turn:1});await drain();
+    assert.equal(f.messages.length,0);
+    f.target.statuses.add('mmrpg.paralyzed');f.target.effects.push(f.effect);
+    f.fire({turn:1});await drain();
+    assert.equal(f.messages.length,1);
+    assert.match(f.messages[0].content,/Paralisado/);
+    f.fire({turn:1});await drain();
+    assert.equal(f.messages.length,1);
+  }finally{f.restore();}
+});

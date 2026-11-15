@@ -3022,7 +3022,7 @@
       "system": {
         "description": "O personagem transforma dano em poder.",
         "powerSet": "Basic",
-        "prerequisites": "",
+        "prerequisites": "Rank 4",
         "action": "Reaction",
         "trigger": "O personagem sofre dano em Health.",
         "duration": "Instant",
@@ -7341,7 +7341,7 @@
       "system": {
         "description": "<p>O personagem recorre à sua força interior para se curar.</p>",
         "powerSet": "Shield Bearer",
-        "prerequisites": "",
+        "prerequisites": "Rank 2",
         "action": "Standart",
         "trigger": "",
         "duration": "Instant",
@@ -8843,7 +8843,7 @@
       "system": {
         "description": "<p>O personagem recorre à sua força interior para se curar.</p>",
         "powerSet": "Martial Arts",
-        "prerequisites": "",
+        "prerequisites": "Rank 2",
         "action": "Standard",
         "trigger": "",
         "duration": "Instant",
@@ -13115,7 +13115,7 @@
       "system": {
         "description": "<p>O personagem pode atacar em supervelocidade.</p>",
         "powerSet": "Super-Speed",
-        "prerequisites": "",
+        "prerequisites": "Rank 2",
         "action": "",
         "trigger": "",
         "duration": "Permanente",
@@ -19438,7 +19438,7 @@
       "system": {
         "description": "O personagem fica ainda maior!",
         "powerSet": "Resize",
-        "prerequisites": "",
+        "prerequisites": "Grow 1",
         "action": "Standard or reaction",
         "trigger": "O personagem é atacado.",
         "duration": "Permanent",

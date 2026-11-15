@@ -50,7 +50,8 @@ test('v135 condition/concentration/movement icons reuse DOM until displayed stat
   actor.statuses.add('mmrpg.confused');
   hud.updateHud3Status(root, actor);
   assert.equal(panel.replaceCount, 2, 'new condition must repaint');
-  assert.ok(panel.children.some(child => child.className === 'mmrpg-native-action-hud__status-conditions'));
+  const tray = panel.children.find(child => child.className === 'mmrpg-native-action-hud__hud4-effects');
+  assert.ok(tray?.children.some(child => child.className === 'mmrpg-native-action-hud__status-conditions')); // v160: nested scrollable tray
   hud.updateHud3Status(root, actor);
   assert.equal(panel.replaceCount, 2);
   actor.statuses.clear();

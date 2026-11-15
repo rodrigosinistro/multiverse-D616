@@ -95,7 +95,7 @@ export async function confirmRicoShieldDamage(damageMessage,action,results){
  if(!token?.actor)return false;
  const defenseKey=normalizeConditionDefense(source.getFlag(SYSTEM,'attackTarget')??'agl',token.actor);
  const defense=Number(token.actor.system?.abilities?.[defenseKey]?.defense??0);
- const outcome=getMarvelOutcome(source.rolls[0],defense);
+ const outcome=getMarvelOutcome(source.rolls[0],defense,{message:source,targetActor:token.actor});
  if(!outcome?.success||!outcome.fantastic)return false;
  // Do not offer the next bounce before the GM has confirmed REAL damage.
  // The prior attack may have been absorbed entirely by a separate barrier.

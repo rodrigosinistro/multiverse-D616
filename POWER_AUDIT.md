@@ -1,3 +1,54 @@
+# Auditoria de pré-requisitos — v0.2.165 (13/11/2026)
+
+**Escopo:** 398 registros de poderes em `apps/charactermancer/data/powers.json`,
+compêndio LevelDB `mmc-powers-v0186` e reconciliação do Charactermancer. Auditoria
+interna de consistência complementada por verificações pontuais no Core Rulebook,
+Tony’s Workshop e Roll20; **não é comparação exaustiva dos 398 poderes com todos
+os livros e expansões da Marvel**.
+
+## Registros do catálogo corrigidos
+
+| Poder | Power Set | Antes | Corrigido | Evidência |
+|---|---|---|---|---|
+| Energy Absorption | Basic | vazio | **Rank 4** | Tony’s Workshop, 14/06/2024, p. 2 |
+| Blazing Fast Fists | Super-Speed | vazio | **Rank 2** | Core Rulebook / carta de poder |
+| Grow 2 | Resize | vazio | **Grow 1** | Core Rulebook / Roll20 |
+| Do This All Day | Martial Arts | vazio | **Rank 2** | Core Rulebook / Roll20 |
+| Do This All Day | Shield Bearer | vazio | **Rank 2** | Core Rulebook / Roll20 |
+
+**Compêndio:** além desses cinco registros, havia **23 IDs de compêndio** cujo
+pré-requisito divergia do JSON (alguns incluíam registros anteriores substituídos
+no log). Todos foram ajustados para o valor canônico do catálogo, sem alterar
+efeitos, nomes, IDs ou outras propriedades. Exemplos de erros graves:
+`Speed Run 2` (Rank 2 no pack vs Rank 3 no JSON), `Return Fire` (Rank 8 no
+pack vs Rank 2 no JSON), `Dance of Death` (dependência truncada) e requisitos
+com erros de pontuação/grafia, que poderiam bloquear poderes válidos.
+O teste `power-prerequisites-v165.test.mjs` exige que **todos os 398 registros
+mais recentes** do compêndio tenham os mesmos pré-requisitos do catálogo.
+
+**Camada de proteção:** sete entradas (os cinco registros acima, `Speed Run 2` e
+`Return Fire`) são corrigidas em memória ao combinar o catálogo com cópias
+antigas de compêndios ou itens do Mundo. O sistema não modifica automaticamente
+as fichas de personagens nem elimina poderes já escolhidos. O Mestre deve
+revisar as fichas afetadas. A exceção legítima de `Surprising Power` continua
+aplicável. A normalização preserva requisitos adicionais personalizados.
+
+**Anomalias deliberadamente não alteradas:** existem cadeias com Ranks aparentemente
+inconsistentes no livro, por exemplo `Blur` e `Speed Blast` (`Rank 2` mas
+dependentes de `Speed Run 2`, que exige Rank 3), e `Precognition 2` com requisito
+inferior ao de seu antecessor. O validador já exige o poder antecessor; não
+transformamos estas ambiguidades editoriais em regras novas sem uma errata
+verificada. Dependências como `Sorcerous`, `Chaotic` e `Cursed` são Traits,
+não poderes ausentes; `None` pode significar ausência de requisitos.
+
+**Referências:**
+- https://cdn.marvel.com/u/prod/marvel/i/pdf/MMRPG_Tonys_Workshop_20240614.pdf
+- https://cdn.marvel.com/u/prod/marvel/i/pdf/MMRPG_Errata_20241220.pdf
+- https://roll20.net/compendium/marvel616/Do%20This%20All%20Day
+- https://roll20.net/compendium/marvel616/Grow%202
+
+---
+
 ## Validação adicional — v0.2.124
 
 Durante testes reais da v0.2.123, o Sucesso Fantástico de **Speed Blast** aplicava Caído ao **lançador**, por causa da marcação `self:true` no mapeamento de condições. Corrigido para aplicar **Atordoado** (acerto) e **Caído** adicional (Sucesso Fantástico) exclusivamente ao **alvo atingido**. Adicionado teste de regressão cobrindo ataque, acerto comum, Fantástico, rerrolagem e falha.

@@ -1,3 +1,185 @@
+## v0.2.178 — 2026-11-14 — Corrigir cancelamento global de atualizações de Health e Focus
+- **Correção crítica (Foundry v14):** o hook `preUpdateActor` do Energy Absorption devolvia `false` quando não havia crédito absorvido para gastar. O Foundry interpreta esse `false` como cancelamento da **atualização inteira** do Actor — inclusive dano de Health, gasto de Focus, cura e outras alterações de recursos em qualquer personagem/NPC. O hook continua calculando o crédito quando necessário, mas agora nunca devolve `false` ao motor do Foundry.
+- **Combate restaurado:** o motor de dano, RD, HUD e custos não foi substituído nem reescrito; as atualizações normais voltam a ser processadas pelo Foundry, preservando a mecânica de Energy Absorption preparada/ativa e a capacidade 2× da v0.2.177.
+- **Regressões de integração:** testes novos simulam o cancelamento do próprio Foundry quando um hook `preUpdateActor` retorna `false`, comprovando a gravação de dano, Focus, cura e gasto do crédito. Cobrem também updates internos sem consumo duplicado, atributos não relacionados, e o efeito existente de 2× Focus.
+- **Conservação:** base v0.2.177; README, LICENSE, compêndios, opções de combate, HUD, Central e automações não alterados. ZIP completo, sem publicar no GitHub. Requer validação real em Mestre/Jogador antes de aprovar como estável.
+
+## v0.2.177 — 2026-11-14 — Energy Absorption: capacidade temporária, crédito persistente e gastos corrigidos
+- **Focus 2× visível e funcional:** o máximo exibido pela ficha e pelo HUD dobra durante o combate de absorção enquanto houver crédito do poder, sem alterar permanentemente o máximo armazenado nem as regras de Health/Focus. Ex.: Thermal Prime com 60/60 gasta 15 ao preparar e absorve 24: fica com **69/120 Focus**; Health não é reduzido por esse dano.
+- **Saldo da condição confiável:** o número de Focus obtidos pela absorção é gravado no Actor **e** na própria condição `Energy Absorption — Ativo (N Focus)`. A condição serve como registro de recuperação se o flag do Actor estiver ausente/atrasado, evitando o estado incorreto `Ativo (0 Focus)` após absorver dano. Novo uso permanece bloqueado até que todos os pontos creditados sejam gastos.
+- **Gasto efetivo de Focus:** no `preUpdateActor`, cada gasto de Focus desconta do crédito restante atomicamente, inclusive atualizações aninhadas. O efeito ativo sincroniza seu nome e saldo e é removido quando chegar a zero. Dano recebido em Focus continua não sendo contado como gasto.
+- **Compatibilidade e defesa contra truncamento:** caso algum fluxo limite a primeira gravação ao máximo antigo, o sistema atualiza novamente após a criação da condição que amplia o máximo. Se ainda houver divergência, a mensagem de erro pede verificação da ficha e o valor não é anunciado falsamente como totalmente creditado. Condições obsoletas v176 com 0 Focus e sem crédito válido são limpas ao reativar o poder.
+- **Encerramento:** o máximo temporário volta ao normal após o combate; Focus que exceder o limite normal é descartado e abatido do crédito pendente, preservando a proibição de nova absorção caso ainda exista crédito não gasto.
+- **Preservação:** v0.2.176 como base; HUD, Central, iniciativa, RD, condições de outros poderes, compêndios e README intactos. Novos testes cobrindo limite dobrado, saldo após gastos, flags ausentes/obsoletos, Focus damage, overflow, reparação de gravação limitada e compatibilidade com a versão anterior. ZIP completo, não publicado no GitHub.
+
+## v0.2.176 — 2026-11-14 — Energy Absorption: Reação pelo HUD e Focus absorvido rastreado
+- **Ativação reativa:** ao clicar em Energy Absorption na ficha ou HUD, o defensor valida o poder, Focus disponível e Reação no combate; gasta **15 Focus e 1 Reação** apenas nesse momento e ganha o status **Preparado**. O uso não faz rolagem, não gasta Ação Padrão e é comunicado no chat. Se a Reação não for autorizada, o Focus é estornado.
+- **Dano confirmado:** ao selecionar **DANO** no card do Mestre, o MMDR utiliza o dano real **Health pós-Redução de Dano**, ignora a perda de Health e soma o valor ao Focus até **2× o máximo normal**, sem novo custo e sem segunda confirmação. Outros alvos e poderes seguem o fluxo existente.
+- **Bloqueio persistente:** o status **Energy Absorption — Ativo (N Focus)** acompanha o Focus recebido pela absorção, inclusive quando o total fica abaixo do máximo normal. O HUD desabilita novo uso enquanto Preparado ou Ativo; o crédito diminui com os gastos reais de Focus e o status é automaticamente removido quando chega a zero. Dano recebido em Focus **não** conta como gasto para remover o bloqueio.
+- **Fim do combate:** remove preparações pendentes, incluindo personagens retirados do rastreador; remove o Focus excedente ao máximo normal e deduz a parcela descartada do crédito absorvido. Mantém o bloqueio para crédito absorvido ainda não gasto e evita double-spend de Reações. Compêndios inalterados.
+- **Migração da Central:** regras antigas com o efeito especial Energy Absorption ficam legíveis, mas não armam mais absorções gratuitas. Para utilizar o poder, basta clicar no HUD; condições legadas são limpas ao ativar. Central genérica, automações já cadastradas e demais funcionalidades preservadas.
+- **Testes:** regressões para ativação, gasto único, cap de Focus, status Preparado/Ativo, bloqueio, gastos, Focus damage, limpeza sem combatente e formulário legado. README e licença intactos; ZIP completo, sem publicação no GitHub.
+
+## v0.2.175 — 2026-11-14 — Correções da auditoria técnica (A-01, A-02, R-01, R-02)
+- **Energy Absorption (A-02):** registra no próprio combate os UUIDs dos personagens cujo Focus ultrapassa o máximo. Ao encerrar ou excluir o combate, normaliza o Focus mesmo se o combatente tiver sido removido da iniciativa; compatível com atores de tokens não vinculados e limpeza idempotente. Se o registro falhar, a absorção não gasta a Reação nem modifica o Focus.
+- **VFX por condição (A-01):** a Central passa a considerar o caminho **e a escala** do Sequencer. Alterar qualquer um recria o efeito; efeitos persistentes de uma sessão anterior são conciliados com a configuração atual, e VFX desconfigurados são encerrados.
+- **Socket do Controle de Turno (R-01):** o Mestre valida o ID de usuário fornecido pelo transporte do Foundry v14 antes de aceitar operações do Jogador, em vez de confiar apenas em `payload.userId`; respostas e avisos do Mestre exigem remetente GM. Sem identidade autenticada, o pedido não é executado.
+- **Central de Automações (R-02):** automações podem distinguir poderes de mesmo nome pelo **Power Set** e, opcionalmente, pelo **ID/UUID de origem**. A seleção do catálogo preserva o Power Set, inclusive nos nomes repetidos. Regras antigas apenas por nome continuam válidas sem migração nem mudança de comportamento.
+- **Testes:** novas regressões para escala e VFX persistente, Focus após exclusão do combatente, falha no registro de excedente, identidade do remetente, nomes duplicados e compatibilidade das regras antigas. README e seis compêndios preservados; sem alteração de regras de dano, HUD ou mecânica de iniciativa. ZIP completo; nenhuma publicação no GitHub.
+
+## v0.2.174 — 2026-11-14 — Central: M automático na iniciativa (Foundry v14)
+- Corrigido o ponto de integração da conversão de iniciativa da Central: Foundry v14 chama `Combatant.getInitiativeRoll`, e não `Actor.getInitiativeRoll`. Agora a regra passiva vinculada ao poder alcança a rolagem efetivamente utilizada.
+- O dado Marvel passa a exibir M e contar como 6 antes de o Foundry salvar a iniciativa, preservando o resultado Fantástico e a regra de Rodada Bônus; um M convertido não é confundido com um 6 M 6 natural.
+- Preservados o Edge opcional de iniciativa, a automação salva do Lightning Actions e os bônus de Ação/Reação, sem cadastrar efeitos novos no personagem.
+- Corrigida a captura do total anterior do pool antes da conversão, evitando reaplicar a diferença de valor quando o total do pool é recalculado.
+- Testes regressivos para Combatant v14, poder presente/ausente, conversão e invariantes do HUD. README e compêndios preservados, sem publicação no GitHub.
+
+## v0.2.173 — 2026-11-14 — Central de Automações: passivas de Ação, Reação e Iniciativa
+
+- Novo gatilho **Passiva: enquanto possuir o poder**. Regras do Mestre só operam se o poder estiver na ficha e a Central estiver ativa; não criam Active Effects permanentes.
+- Novos efeitos seguros e reutilizáveis: **+1 Ação Padrão/turno**, **+1 Reação/turno**, **Converter dado Marvel em M na Iniciativa** (automático) e **Edge na Iniciativa** (rerrolagem opcional).
+- Limites do HUD/rastreador são calculados a partir das regras ativas; recursos extras são renovados no turno e respeitam consumo e validação no Mestre. Combat Reflexes continua cumulativo com bônus independentes.
+- Iniciativa: o M convertido entra no resultado efetivo antes da atualização do Combatant e permanece protegido de rerrolagens; Edge usa o controle de iniciativa já existente, sem ser duplicado por Situational Awareness.
+- Editor com exemplo **Lightning Actions** de 3 efeitos pronto para preencher e salvar; Edge de iniciativa fica como opção separada para outros poderes.
+- Compatibilidade: Biblioteca, regras antigas, compêndios e README preservados. ZIP completo; não publicar no GitHub.
+
+## v0.2.172 — 2026-11-14 — Retorno ao indicador MARVEL nativo do Foundry
+- **Reversão solicitada:** removidas as duas configurações personalizadas “Combate — MARVEL atrás dos tokens” e “Combate — tamanho do MARVEL atrás dos tokens”. O sistema não intercepta mais o desenho nem altera a camada, escala ou renderização do marcador de turno nativo do Foundry v14.
+- **Compatibilidade:** as escolhas antigas salvas no mundo deixam de ter qualquer efeito; a posição/camada do Token (Depth / Profundidade) e o marcador nativo passam a ser controlados exclusivamente pelo Foundry. Não houve alteração de fichas nem de tokens.
+- **Central de Automações:** comportamento original preservado. A versão atual ainda não oferece efeitos genéricos de Ação/Reação extra ou conversão do dado Marvel na iniciativa; não serão simulados com mensagens ou Edge incorretos. O poder Lightning Actions requer esses controles antes de poder ser automatizado integralmente pela Central.
+- **Preservação:** demais automações, compêndios e README intactos. ZIP completo, sem publicação no GitHub.
+
+## v0.2.171 — 2026-11-14 — Marcador MARVEL adaptado ao tamanho dos tokens
+- **Escala proporcional corrigida:** ao invés de multiplicar toda a largura do token por 1,60, o desenho do MARVEL recebe uma margem fixa de 0,60 quadrícula. Assim, 1×1 → 1,60 quadrículas; 2×2 → 2,60; 3×3 (Sentinel Huge) → 3,60, evitando o logotipo gigantesco.
+- **Configuração existente preservada:** o ajuste “Combate — tamanho do MARVEL atrás dos tokens” continua de 1,25 a 2,30, mas agora representa a margem com base em uma quadrícula. Um valor salvo de 1,35 adiciona 0,35 quadrícula ao maior lado do token, independentemente do tamanho da criatura. Dica atualizada na configuração.
+- **Camada e textura preservadas:** usa a mesma imagem do MARVEL do Foundry, na camada 650 abaixo de todos os tokens (700), sem alterar suas dimensões, a iniciativa ou efeitos de combate. Desligar a opção inferior ainda retorna ao marcador nativo; caso a textura não esteja disponível, o nativo permanece visível.
+- **Regressões:** testes com tokens de 1×1, 2×2 e 3×3, escalas configuráveis e restauração do marcador nativo. Arquivos de personagem, compêndios e README preservados; ZIP completo, sem publicar no GitHub.
+
+## v0.2.170 — 2026-11-13 — MARVEL atrás do token em tamanho compacto configurável
+- **Tamanho corrigido:** o MARVEL inferior deixa de aproveitar dimensões infladas do marcador nativo (até 2,5×); usa tamanho padrão de **1,60× o token**, mantendo a mesma textura e camada inferior (sortLayer 650, tokens 700).
+- **Ajuste pelo Mestre:** nova configuração de mundo **Combate — tamanho do MARVEL atrás dos tokens** (1,25× a 2,30×, passo 0,05), aplicada imediatamente, sem precisar desativar o MARVEL inferior. É possível reduzir para 1,25× ou ampliar conforme os tokens do mapa.
+- **Compatibilidade:** mantém a opção existente **Combate — MARVEL atrás dos tokens** ativa; desativá-la retorna ao marcador nativo do Foundry, que, por projeto do core, aparece na frente. Falhas de textura mantêm o fallback original; troca de turno preserva a limpeza e restauração.
+- **Escopo estritamente visual:** não altera iniciativa, HUD, regras, chat, automações, compêndios ou conteúdo dos personagens. README preservado; pacote ZIP completo, sem publicação no GitHub. Testes específicos de escala, camada, restauração e não duplicação.
+
+## v0.2.169 — 2026-11-13 — MARVEL original atrás dos tokens, com restauração segura
+- **Indicador de turno restaurado:** a configuração da v0.2.168 deixava o token sem indicador perceptível. Não usamos mais o anel dourado invisível sob o retrato. A própria imagem MARVEL do marcador nativo é reaproveitada como cópia gráfica abaixo da camada de tokens (PrimaryCanvasGroup sortLayer 650, tokens na 700), visível ao redor do token ativo mas sem cobrir personagens vizinhos.
+- **Fallback obrigatório:** se textura ou camada gráfica estiver indisponível, mantém o marcador original do Foundry sem ocultar nada. É possível desativar em Configurações de Jogo → Combate — MARVEL atrás dos tokens para usar sempre o marcador original em primeiro plano. A configuração já salva na v0.2.168 permanece válida.
+- **Estados protegidos:** aplica o desenho somente ao combatente ativo na cena correspondente; não modifica turno, documento de Token, imagem, vídeo, condição, iniciativa ou mecânica. Restaura o objeto nativo ao encerrar turno, mudar configuração ou trocar cena. Faz uma segunda checagem breve para a criação assíncrona do marcador do Foundry v14.
+- **Validação:** regressões de camada, mesma textura, troca de turno, fallback, cenas e visibilidade; suíte total do sistema. README, compêndios e recursos de automação idênticos à v0.2.168; ZIP completo sem publicação no GitHub. O visual deve ser confirmado em uma sessão real do Foundry v14.
+
+## v0.2.168 — 2026-11-13 — Indicador sob tokens, VFX por condição e absorção reativa
+- **Indicador de turno sem obstrução:** o marcador gigante do Foundry v14 é ocultado somente na apresentação e substituído por um anel dourado discreto desenhado sob o token ativo. Configuração de mundo "Combate — indicador discreto sob tokens", habilitada por padrão, reversível. Barra compacta de iniciativa e ordem dos combatentes preservadas.
+- **Animações de condições na Central:** seção "Animações nos tokens por condição (Sequencer)" na aba de regras personalizadas. O Mestre associa uma condição (como Paralisado ou Atordoado) a um arquivo de animação e escala. O sistema inicia VFX persistente quando a condição aparece e o encerra quando ela termina; não altera condições ou regras de combate. Requer Sequencer e caminho de arquivo válido; sem o módulo, nenhum efeito é aplicado.
+- **Energy Absorption como automação opcional:** novo efeito da Central "Preparar reação Energy Absorption (15 Focus)" e condição "Energy Absorption (preparado)" no catálogo. Quando o portador receber dano real de Health após RD e proteções, Mestre escolhe se quer gastar 1 Reação e 15 Focus: o dano é ignorado e adicionado ao Focus, limitado a 2× o máximo normal. A preparação é consumida, e Focus acima do máximo é normalizado ao encerrar o combate. Não concede automaticamente o poder Rank 4 a personagens sem esse poder.
+- **Avisos de condições no início do turno:** reforço do processamento por `combatTurn`, além de `updateCombat`, com deduplicação. Uma primeira consulta vazia não bloqueia avisos de condições aplicadas posteriormente no mesmo turno. Ex.: Paralisado por Elemental Blast — Ice.
+- **Segurança:** não foram alterados motor de rolagens, fórmulas de RD e Sucessos Fantásticos, compêndios nem README. Validação automatizada adicionada. ZIP completo, sem publicação no GitHub.
+
+## v0.2.167 — 2026-11-13 — Chat 2.0: fidelidade visual, efeitos únicos e confirmação de áreas
+- **Resultado do ataque como no conceito:** removida a imagem/miniatura do alvo. Alvo e Defesa ficam em texto; ACERTOU, ERROU, ACERTO FANTÁSTICO, FALHA FANTÁSTICA e SUCESSO FANTÁSTICO (6 M 6) agora aparecem em painel largo com ícone, cores suaves e tipografia destacada. A Defesa permanece ?? para jogadores; antes da confirmação, veem só ATAQUE REALIZADO.
+- **Efeito especial elemental sem duplicação:** eliminado o aviso prematuro disparado apenas porque o dado foi M; removida a mensagem redundante de confirmação. Após o Mestre aplicar DANO ou 1/2 DANO, o efeito Fantástico realmente aplicado aparece uma única vez em mensagem de chat **depois da mensagem DANO aplicado**, para alvos com dano efetivo maior que zero. Nenhum efeito especial é aplicado/publicado quando o dano foi zero, o ataque falhou, houve proteção total ou o Mestre usou CURA.
+- **Desenho de área por jogador:** o botão passa a enviar solicitação com ID, aguarda confirmação real e informa sucesso, recusa, erro ou ausência de resposta. Mestre ativo recebe janela para APROVAR ou RECUSAR o desenho; só cria a região/parede após autorizar. Ambos recebem comunicação clara da decisão, inclusive erros de permissão/concentração. As geometrias e a mecânica de estruturas ficam intactas.
+- **Preservação:** mantidos três botões exclusivos do Mestre, Resolução do Dano recolhida por padrão, RD e bônus de Focus existentes, cálculos, poderes, compêndios e alterações da v0.2.165. README sem mudanças, nenhum envio ao GitHub.
+
+## v0.2.166 — 2026-11-13 — Chat de Combate 2.0: apresentação fiel ao conceito
+- **Sem quarta ação:** removido o botão redundante “Preparar dano / proteção” dos ataques que já oferecem os três comandos DANO, 1/2 DANO e CURA exclusivos do Mestre. Esses comandos continuam preparando e aplicando com o motor existente; barreiras e proteções que exigem decisão continuam abrindo o card reservado ao Mestre automaticamente.
+- **Dano Final em destaque:** um único quadro, com valor numérico grande, sem repetir o número nos badges dos alvos. Suporta vários alvos e visibilidade do Jogador somente após confirmação do Mestre; a Defesa continua ?? para o Jogador.
+- **Explicação conforme o conceito:** “Resolução do Dano” continua recolhida por padrão com seta. Ao expandir, o Mestre vê dado Marvel, multiplicador ofensivo, RD reduzindo multiplicador, multiplicador efetivo, bônus da habilidade, bônus de Focus e automações, dano normal, Fantástico e valor efetivamente aplicado (inclusive 1/2 Dano, Cura e bloqueios).
+- **Caso real da Zima:** 4 × (3 − 2) + 6 Agility + 7 Focus = 17. A tela anterior apresentava 17 sem explicitar o +7 Focus.
+- **Escopo e segurança:** somente interface e funções de formatação; motor de combate, efeitos, dados dos personagens, compêndios e as alterações de pré-requisitos da v0.2.165 permanecem preservados. README intacto; nenhuma publicação no GitHub.
+
+## v0.2.165 — 2026-11-13 — Auditoria de pré-requisitos dos Powers
+- **Energy Absorption:** pré-requisito **Rank 4** restaurado conforme Tony’s Workshop / Core Rulebook; anteriormente estava vazio, permitindo seleção indevida por Rank 3.
+- **Outros erros confirmados no catálogo:** **Blazing Fast Fists** (Rank 2), **Grow 2** (Grow 1) e **Do This All Day** (Rank 2; entradas Martial Arts e Shield Bearer). Total de **5 registros** corrigidos, representando **4 poderes distintos**.
+- **Compêndio e Charactermancer:** sincronizados os pré-requisitos dos **398 poderes** no LevelDB com o catálogo. Foram corrigidos **23 IDs de compêndio adicionais** com divergências preexistentes (inclusive Speed Run 2: Rank 2 → 3, Return Fire: Rank 8 → 2, e dependências digitadas incorretamente). Um total de **7 registros** recebe proteção em runtime contra requisitos antigos de itens no Mundo (os cinco corrigidos no catálogo, Speed Run 2 e Return Fire), sem apagar outros requisitos mais restritivos definidos pelo Mestre. Poderes concedidos legitimamente por origens/traits continuam preservados.
+- **Auditoria adicional:** analisadas as 398 entradas para requisitos vazios, referências a poderes inexistentes e cadeias de Rank. Divergências editoriais de Rank presentes nas próprias regras (como Blur / Speed Blast dependerem de Speed Run 2) não foram alteradas sem errata; demais casos suspeitos permanecem para revisão, sem correção especulativa.
+- **Segurança:** sem alterações de ficha, remoção automática de poderes existentes, motor de combate, HUD, README ou publicação no GitHub. Personagens já criados com Rank inferior devem ser revisados pelo Mestre.
+- **Testes:** adicionados testes de auditoria e regressão cobrindo os 398 requisitos do catálogo contra o compêndio e a normalização de cópias antigas; suíte geral de 954 testes aprovada.
+
+## v0.2.164 — 2026-11-12 — Chat de Combate 2.0: resultados e resolução reservada
+- **Cinco resultados no card:** ACERTOU, ERROU, ACERTO FANTÁSTICO, FALHA FANTÁSTICA e SUCESSO FANTÁSTICO (6 M 6 natural). Mantido o valor 6 do M; 6 M 6 acerta independentemente da Defesa e os botões retroativos de Trouble são bloqueados, inclusive no handler.
+- **Privacidade por etapa:** jogador vê antes da confirmação apenas ATAQUE REALIZADO e Defesa ??; após o Mestre aplicar DANO/1/2 DANO/CURA, vê o resultado e dano final de cada alvo, sem Defesa ou cálculo. A mensagem técnica de preparação do dano fica exclusiva dos Mestres.
+- **Comandos integrados:** os três botões DANO, 1/2 DANO e CURA aparecem abaixo da avaliação do card de ataque, apenas para o Mestre. Utilizam o mesmo pipeline MMDR já existente; preservam proteção/Barreira (quando necessário, solicitar confirmação no card de preparação clássico), múltiplos alvos, automações e conferência de rolagem.
+- **Cálculo visual do Mestre:** DANO FINAL fica visível; os detalhes da RD aplicada ao multiplicador, bônus e resultado ficam sob Resolução do Dano, com seta e recolhidos por padrão. O cálculo de dano do sistema não foi modificado, inclusive RD que zera o multiplicador e regras específicas de Powers.
+- **Segurança e 6 M 6:** confirmação idempotente e divulgação de resultado somente após aplicação pelo Mestre; dados de Defesa, multiplicadores e RD nunca entram no resumo público de confirmação. Um 6 M 6 natural também prevalece sobre revisão de Edge/Trouble por alvo. Usar o card técnico clássico continua possível quando precisar ajustar o modo de proteção.
+- **Validação:** regressões do Chat 2.0 e suíte geral; README preservado sem alteração, compêndios intactos, sem publicar no GitHub.
+
+## v0.2.163 — 2026-11-11 — HUD 4.0: remover ícones genéricos de Active Effects
+- **Correção definitiva de poluição visual:** removida a coleta de Active Effects do HUD, incluindo efeitos transferidos de Traits, Powers, Origins, Occupations e equipamentos. O HUD não consulta mais `actor.effects` ou `allApplicableEffects` para gerar ícones.
+- **Casos reais corrigidos:** `initiative edge` da característica Situational Awareness (Jean Grey Amaldiçoada e Sentinel) e `Extra Focus` de Battle Ready (Sentinel). Efeitos de tamanho, bônus permanentes e temporários de itens também não viram ícones adicionais.
+- **Escopo visível:** a faixa mostra condições reais do sistema e Manobras de Equipe Ofensivas/Defensivas da rodada; Concentração e Movimento continuam com seus indicadores existentes. Danos contínuos continuam sendo processados, mas não geram ícones genéricos a partir de Active Effects (uma condição existente pode continuar sendo exibida).
+- **Mecânicas preservadas:** nenhuma alteração, exclusão ou desativação de Active Effects, regras, atributos, Focus, dano, automações, compêndios ou migração do mundo. Mudança restrita à visualização do HUD clássico e persistente.
+- **Regressão:** testes com efeitos transferidos representando os JSONs fornecidos e com acesso a Active Effects deliberadamente bloqueado, garantindo que o HUD não volte a consultá-los.
+- **Entrega:** ZIP completo, README canônico preservado e GitHub não atualizado.
+
+## v0.2.162 — 2026-11-11 — HUD 4.0: ocultar Active Effects derivados de poderes
+- **Faixa de efeitos mais limpa:** Active Effects derivados de poderes deixam de aparecer no HUD 4.0, incluindo bônus passivos e temporários originados por Powers (como buffs de iniciativa). Os poderes continuam funcionando normalmente; a alteração é apenas visual.
+- **Mantidos na faixa:** Manobras de Equipe, condições exibidas pelo sistema, danos contínuos da Central de Automações e outros efeitos temporários não derivados de poderes com duração explícita.
+- **Concentração preservada sem duplicação:** o medidor próprio de Concentração continua sendo a referência visual; efeitos de poderes em Concentração e outros Active Effects originados de Powers não ocupam mais espaço na faixa.
+- **Average Effects e efeitos técnicos:** continuam ocultos; nenhum Active Effect é removido das fichas.
+- **Validação:** novos testes de regressão para buffs derivados de poderes, origem `power` e origem por `Item` do tipo `power`, além da suíte geral.
+- **Entrega:** ZIP completo, README preservado e nenhuma publicação direta no GitHub.
+
+## v0.2.161 — 2026-11-11 — HUD 4.0: somente efeitos temporários
+- **Faixa de efeitos sem poluição visual:** removida a exibição de Poderes Permanentes, modificadores passivos, efeitos transferidos permanentemente de itens/equipamentos e Healing Factor. Todos continuam funcionando normalmente; apenas não ocupam ícones no HUD.
+- **Average Effects explicado e ocultado:** este é um Active Effect técnico de tamanho Average (médio), sem benefício temporário. Os demais efeitos técnicos de tamanho também não são mostrados. Nenhum Active Effect é removido ou alterado nas fichas.
+- **Permanecem visíveis:** Manobras Ofensivas e Defensivas da rodada, condições, poderes ativos por Concentração, danos contínuos (incluindo Chamas de Faltine) e outros Active Effects com duração explicitamente limitada em rodadas, turnos ou segundos.
+- **Mesma organização:** Equipe, indicador de Concentração, movimento e faixa horizontal compacta, nos HUDs clássico e persistente. Sem alteração de regras de combate, cálculos, automações, compêndios ou migração do mundo.
+- **Validação:** testes de regressão da filtragem de passivos, itens, técnica de tamanho, temporários, concentração e duração, além da suíte geral.
+- **Entrega:** ZIP completo, README inalterado e nenhuma publicação direta no GitHub.
+
+## v0.2.160 — 2026-11-11 — HUD 4.0: Efeitos Ativos
+- **HUD clássico e persistente:** nova faixa horizontal compacta de ícones para todos os estados ativos identificáveis nas fontes nativas do sistema: Manobras de Equipe Ofensivas 1–3 e Defensivas 1–3, condições, Concentrações nomeadas, Active Effects do personagem, efeitos transferidos de poderes/equipamentos, dano contínuo da Central de Automações e Chamas de Faltine. Healing Factor (passiva sem Active Effect) é indicado somente quando o sistema reconhece o poder.
+- **Leitura sem duplicação:** as condições existentes são exibidas uma única vez, junto com os benefícios no mesmo painel. O medidor de Concentração mantém sua posição e os estados de nível de concentração não recebem ícones duplicados. Efeitos desabilitados, suprimidos e expirados não aparecem; poderes e equipamentos usam `allApplicableEffects` do Foundry v14 quando disponível.
+- **Visual:** ícones coloridos por categoria (Ofensivo, Defensivo, Dano contínuo, Concentração, Passivo e Efeito genérico) com nome, origem e duração no tooltip. O Mestre e o jogador podem rolar a faixa horizontalmente, inclusive com teclado, sem deslocar Equipe, Concentração ou Movimento.
+- **Mecânicas intocadas:** nenhuma alteração de cálculos de dano, Focus, Edge/Trouble, status, durações, duração de rodada, condições, Concentration, consumos, hooks de negócio ou compêndios. O painel não cria nem modifica efeitos.
+- **Limite do inventário:** efeitos puramente instantâneos de uma rolagem e passivas sem representação de estado (exceto Healing Factor, reconhecida explicitamente) não têm ícones próprios. A lista mostra efeitos com estado real, evitando inventar bônus ou durações.
+- **Distribuição:** ZIP completo, README preservado sem alterações; sem publicação no GitHub e sem migração de mundo.
+
+## v0.2.159 — 2026-11-11 — Consolidação do Combate: transações e durações seguras
+- **Revisão geral:** auditados os fluxos de Manobras de Equipe com Focus, Edge/Trouble, Ofensiva 3 (Fantástico por alvo e dado M visível), RD das Defensivas, Reações e transições de rodada; preservadas as mecânicas aprovadas na v0.2.158, os poderes e os compêndios.
+- **Focus e rodada:** se o Mestre mudar a rodada enquanto o sistema desconta Focus dos participantes ou salva o benefício, a confirmação é cancelada e os gastos efetuados são reembolsados; efeitos de rodadas anteriores são removidos mesmo quando a gravação terminou após a mudança.
+- **Concorrência:** confirmações simultâneas de manobras diferentes no mesmo combate, feitas pelo mesmo cliente, não conseguem processar o mesmo Focus em paralelo. A escrita das flags de manobra e a limpeza de fim de rodada são serializadas para evitar a perda de benefícios novos por uma limpeza antiga atrasada.
+- **Reembolso:** em caso de falha, devolve somente o custo cobrado pela manobra, sem restaurar uma fotografia antiga de Focus que poderia descartar outras alterações feitas durante a operação.
+- **Chat:** a confirmação registra a rodada efetiva da manobra mesmo quando a iniciativa avança imediatamente após a gravação.
+- **Testes:** acrescentados cenários de regressão com mudanças de rodada durante atualizações assíncronas de Actor e Combat, disputa entre confirmações, limpezas atrasadas, duração de Edge/RD, Fantástico por Rank e reinicialização de recursos de turno.
+- **Limitações:** testes automatizados em Node não substituem testes com jogadores conectados no Foundry v14; serialização de escrita é local ao cliente autorizado e não é uma trava distribuída entre Mestres em máquinas diferentes.
+- **Distribuição:** ZIP completo; README preservado integralmente, alterações documentadas neste CHANGELOG; nenhuma publicação no GitHub e nenhuma migração de dados.
+
+## v0.2.158 — 2026-11-10 — Ofensiva 3: M visível e alvos já selecionados
+- **Ofensiva 3:** quando todos os alvos marcados têm Rank igual ou superior ao atacante, a rolagem agora força o próprio dado Marvel a M (1), atualizando dados, total, Fantástico, dano e condições no card original. **Usar/manter alvos já selecionados** funciona sem selecionar o alvo novamente.
+- **Múltiplos Ranks:** com alvos mistos, mantém o dado físico compartilhado e calcula M/Fantástico apenas por alvo elegível; nunca força um M indevido contra inimigo de Rank inferior.
+- **Chat:** resultado por alvo exibe ACERTO FANTÁSTICO (ou FALHA FANTÁSTICA), e o aviso da manobra informa M (6) e total efetivo contra aquele alvo. O card de dano continua usando o benefício Fantástico e seu multiplicador corretamente.
+- **Escopo:** ataques com poder/arma e ataques básicos de Melee do HUD; não altera as Ofensivas 1–2, as Defensivas, Rally, compêndios ou README.
+
+## v0.2.157 — 2026-11-10 — Manobras de Equipe: todos os bônus de Ofensiva e Defensiva
+- **Ofensiva 1:** mantém Edge situacional nos ataques, com expiração ao trocar de rodada.
+- **Ofensiva 2:** cada card de ataque oferece um reroll completo único (três dados) durante a rodada; o sistema conserva o melhor total, desempatando em favor do Fantástico, sem novo gasto de Focus.
+- **Ofensiva 3:** calculadora de acerto, dano e condições avalia o dado Marvel como M somente para alvos com Rank igual ou superior ao atacante; alvos de Rank menor não recebem conversão indevida. As permissões ficam registradas no card do ataque.
+- **Defensiva 1–3:** concede RD 2/4/8 de forma transitória (Health e Focus), prevalecendo a maior RD entre manobra e proteções preexistentes, integrando danos de ataque, MMDR, danos contínuos e seguimentos.
+- **Rally:** continua apenas texto, sem adicionar efeitos automáticos.
+- **Escopo:** flags do combate por rodada; sem escrever modificadores permanentes no Actor ou empilhar RD de forma artificial.
+
+## v0.2.156 — 2026-11-10 — Manobras de Equipe: tradução e Ofensiva Nível 1 automática
+- **Idioma:** descrições dos nove benefícios (Ofensiva, Defensiva e Reagrupamento, níveis 1–3) exibidas em português brasileiro na janela de confirmação e no chat; nomes de manobras também traduzidos nos seletores das fichas; catálogo e valores originais mantidos, sem afetar compêndios ou dados do mundo.
+- **Ofensiva 1:** após confirmação exclusiva do Mestre e desconto de 5 Focus por participante, grava benefício vinculado ao combate e à rodada, aplicando 1 Edge automaticamente nas rolagens de ataque de cada participante. A seleção do dado a rerrolar continua com o jogador, conforme o fluxo existente de Edge/Trouble. Não aplica Edge em testes comuns.
+- **Duração:** benefício válido apenas na rodada em que foi ativado; deixa de se aplicar na rodada seguinte mesmo antes da limpeza assíncrona, que remove registros expirados. Não fica gravado permanentemente na ficha.
+- **Consistência:** pagamento e registro do efeito constituem uma transação com reversão de Focus se a gravação falhar; impede confirmação repetida da mesma manobra para a mesma equipe e rodada. O chat informa exatamente qual benefício foi automatizado.
+- **Demais níveis:** permanecem sob acompanhamento do Mestre, sem automação presumida de Redução de Dano, recuperação ou modificação de dados. Sem alterações nas regras de outros poderes, HUD, compêndios ou manuais. README preservado; GitHub não atualizado.
+
+## v0.2.155 — 2026-11-10 — Manobras de Equipe: legibilidade do chat e posição no HUD
+- **Chat:** corrigido o contraste dos relatórios de manobras confirmadas e propostas. O cartão no chat passa a ter fundo claro opaco, títulos escuros e textos de custos, participantes, Rank e descrição legíveis; o aviso de Focus permanece destacado com alto contraste. A janela de confirmação conserva o visual escuro.
+- **HUD:** removido o atalho de Manobra de Equipe da grade de Powers e adicionado um botão compacto **Equipe**, imediatamente **antes de Concentração**, na faixa de status do HUD clássico e do HUD persistente. O botão funciona independentemente da aba selecionada e mantém a seleção e validações originais.
+- Preservados a ordenação dos favoritos, os indicadores Concentração/Movimento/Condições, consumo de Focus, permissões do Mestre, veículos, compêndios, automações e regras de combate. Sem migração. `README.md` mantido sem alterações; nenhuma publicação no GitHub.
+
+## v0.2.154 — 2026-11-10 — Team Maneuvers 1.0: assistente de manobras de equipe
+- Integrado o catálogo **Team Maneuvers** já existente (Offensive, Defensive e Rally, níveis 1–3) ao fluxo do Foundry v14. As descrições, faixas de Rank médio e custos de Focus são lidos de `CONFIG.MULTIVERSE_D616.teamManeuvers`, sem inventar novas regras.
+- Novo botão **Manobra** junto dos campos Team Maneuver na ficha de Personagem e atalho **Manobra de Equipe** na aba Powers do HUD nativo, também disponível no HUD persistente e no personagem embarcado em veículo.
+- Assistente permite selecionar pelo menos dois participantes distintos da iniciativa, visualizar Rank médio, faixa cadastrada, custo individual, total e Focus disponível. Verificações impedem seleções inválidas, participantes removidos e Focus insuficiente.
+- Jogadores podem publicar **propostas** no chat sem gastar recursos de outros personagens. Apenas o Mestre confirma a manobra, desconta o Focus de cada participante após nova validação e publica um relatório de custo e efeito.
+- Proteção contra gasto parcial: se alguma atualização de Focus falhar, o sistema tenta restaurar os valores dos participantes já atualizados e alerta explicitamente se uma restauração falhar.
+- **Escopo conservador:** Edge/Trouble, Redução de Dano, novos testes, recuperação e modificação de dado Marvel **não são aplicados automaticamente** nesta primeira fase. O relatório apresenta a descrição do catálogo para adjudicação pelo Mestre, evitando alterar o motor de combate sem validar timing e requisitos completos das regras.
+- Nenhum novo compêndio ou migração. Preservados os poderes, automações, Veículos 2.0, HUD, iniciativa, MMDR e as condições. `README.md` mantido integralmente sem alterações; histórico registrado apenas neste CHANGELOG. Nenhuma publicação no GitHub.
+
 ## v0.2.153 — 2026-11-07 — Veículos: iniciativa sem duplicar tripulantes
 - Corrigida a duplicação de um personagem embarcado na iniciativa quando o Foundry já havia incluído outro token da mesma ficha (Actor). A inclusão da tripulação agora verifica `actorId` além de `tokenId`.
 - Incluída proteção na criação nativa de Combatants para impedir uma segunda entrada de um personagem já representado no mesmo combate. Duplicatas existentes da tripulação são reconciliadas quando processadas, preservando preferencialmente o combatente ativo ou com iniciativa já rolada.

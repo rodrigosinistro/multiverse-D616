@@ -1683,3 +1683,61 @@
  display:flex;align-items:center;justify-content:center;min-height:27px;
  font-weight:700;min-width:40px;text-align:center;
 }
+
+/* Multiverse-D616 v0.2.164 — Combat Chat 2.0 (visual only). */
+.multiverse-d616.evaluation .target {flex-wrap:wrap;align-items:center;}
+.multiverse-d616.evaluation .target .name-stacked{min-width:0;flex:1 1 115px;}
+.multiverse-d616.evaluation .m616-v164-outcome{display:flex;flex-direction:column;align-items:flex-end;gap:3px;max-width:100%;text-align:right;}
+.multiverse-d616.evaluation .m616-v164-outcome .result{font-size:11px;line-height:1.35;max-width:190px;white-space:normal;overflow-wrap:anywhere;}
+.multiverse-d616.evaluation .m616-v164-defense{display:block;font-size:10px;opacity:.74;margin-top:3px;}
+.multiverse-d616.evaluation .m616-v164-final{display:block;font-size:10px;color:#922b13;background:rgba(239,216,198,.72);padding:2px 5px;border-radius:4px;}
+.m616-v164-quick-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:8px 0;}
+.m616-v164-quick-actions button{min-width:0;min-height:30px;line-height:1.2;font-size:11px;font-weight:700;padding:6px 3px;background:#ae2e1a;color:#fff;border:1px solid #6c271c;border-radius:5px;}
+.m616-v164-quick-actions button[data-m616-quick="half"]{background:#996122;border-color:#744d1f;}
+.m616-v164-quick-actions button[data-m616-quick="heal"]{background:#247348;border-color:#185436;}
+.m616-v164-quick-actions button:disabled{opacity:.52;cursor:default;}
+/* v0.2.166 — Um único resumo de dano, alinhado ao conceito aprovado. */
+.m616-v164-summary{border:1px solid rgba(171,131,95,.45);border-radius:7px;background:#f2e5d5;color:#30251c;padding:10px 12px;display:flex;flex-direction:column;gap:4px;margin-top:8px;line-height:1.5;}
+.m616-v164-summary-heading{font-size:11px;font-weight:750;letter-spacing:.03em;color:#35291f;}
+.m616-v164-summary-target{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 0;}
+.m616-v164-summary-target + .m616-v164-summary-target{border-top:1px solid rgba(171,131,95,.28);padding-top:8px;}
+.m616-v164-summary-description{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.m616-v164-summary-description strong{font-size:11px;overflow-wrap:anywhere;}
+.m616-v164-summary-description small{font-size:10px;color:#675a4e;}
+.m616-v164-summary-value{font-size:26px;font-weight:800;line-height:1.1;color:#ae341c;min-width:32px;text-align:right;font-variant-numeric:tabular-nums;}
+.m616-v164-details{margin-top:7px;border:1px solid rgba(158,121,89,.55);border-radius:6px;background:#faf4eb;color:#35281e;font-size:11px;}
+.m616-v164-details summary{display:flex;align-items:center;gap:8px;list-style:none;cursor:pointer;padding:9px 10px;font-weight:700;user-select:none;}
+.m616-v164-details summary::-webkit-details-marker{display:none;}
+.m616-v164-details summary i{font-size:10px;transition:transform .12s ease;}
+.m616-v164-details[open] summary i{transform:rotate(90deg);}
+.m616-v164-details-body{padding:8px 10px 10px;border-top:1px solid rgba(158,121,89,.45);}
+.m616-v164-detail-target{display:flex;flex-direction:column;gap:4px;line-height:1.4;padding:5px 0;border-bottom:1px solid rgba(158,121,89,.25);}
+.m616-v164-detail-target:last-child{border-bottom:0;}
+.m616-v164-detail-target b{font-weight:700;}
+
+
+.m616-v164-details summary small{margin-left:auto;color:#7e6c5d;font-size:10px;font-weight:400;}
+.m616-v164-detail-name{font-size:12px;display:block;margin-bottom:3px;}
+.m616-v164-detail-row{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-size:11px;}
+.m616-v164-detail-row span{min-width:0;overflow-wrap:anywhere;}
+.m616-v164-detail-row strong{text-align:right;white-space:nowrap;font-weight:700;font-variant-numeric:tabular-nums;}
+.m616-v164-detail-row.is-effective strong,.m616-v164-detail-row.is-fantastic strong{color:#247546;}
+.m616-v164-detail-row.is-normal{font-weight:650;}
+.m616-v164-detail-row.is-applied{font-weight:750;font-size:12px;}
+.m616-v164-detail-row.is-applied strong{font-size:17px;color:#ae341c;}
+.m616-v164-detail-separator{border-top:1px solid rgba(158,121,89,.35);margin:3px 0;}
+.m616-v164-detail-formula{font-size:10px;color:#736253;overflow-wrap:anywhere;}
+
+/* v0.2.167 — Resultado de ataque em bloco, fiel ao conceito, sem avatar. */
+.multiverse-d616.evaluation .target{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:10px;background:#faf6ee;border:1px solid #cbb9a6;opacity:1;}
+.multiverse-d616.evaluation .target .name-stacked{display:block;flex:auto;width:100%;min-width:0;color:#29231f;}
+.multiverse-d616.evaluation .target .name-stacked .title{font-size:12px;font-weight:700;}
+.multiverse-d616.evaluation .target .m616-v164-defense{font-size:11px;opacity:1;color:#63594c;}
+.multiverse-d616.evaluation .m616-v167-status{box-sizing:border-box;width:100%;max-width:none;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;background:#e8e6e0;border-radius:7px;padding:12px 8px;gap:4px;}
+.multiverse-d616.evaluation .m616-v167-status.is-hit,.multiverse-d616.evaluation .m616-v167-status.ultimate{background:#e1efe4;}
+.multiverse-d616.evaluation .m616-v167-status.is-miss{background:#f6e5dc;}
+.multiverse-d616.evaluation .m616-v167-status .result{max-width:none;margin:0;text-align:center;font-size:14px;line-height:1.4;font-weight:800;letter-spacing:.15px;color:#37332e;}
+.multiverse-d616.evaluation .m616-v167-status.is-hit .result,.multiverse-d616.evaluation .m616-v167-status.ultimate .result{color:#287348;}
+.multiverse-d616.evaluation .m616-v167-status.is-miss .result{color:#a6402a;}
+.multiverse-d616.evaluation .m616-v167-status small{color:#57564e;font-size:11px;line-height:1.3;}
+.m616-v167-special{margin-top:8px;}

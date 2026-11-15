@@ -1,3 +1,4 @@
+import { teamFantasticForTarget } from './team-maneuvers-effects.mjs';
 import { automationEnabled } from './automation-settings.mjs';
 import {hasEquipmentPermanentPower} from './equipment-permanent-effects.mjs';
 import {endUnneededHellfireConcentration} from './held-concentration.mjs';
@@ -170,7 +171,7 @@ export function normalizeConditionDefense(ability, actor) {
   return key;
 }
 
-export function getMarvelOutcome(roll, defense) {
+export function getMarvelOutcome(roll, defense, {message=null,targetActor=null}={}) {
   if (!roll || !Number.isFinite(Number(roll.total))) return null;
   const first = roll.terms?.[0];
   const pool = first?.roll?.terms?.[0]?.rolls ? first.roll.terms[0] : (first?.rolls ? first : null);
@@ -188,7 +189,12 @@ export function getMarvelOutcome(roll, defense) {
     !roll.options?.forceMarvelM && !roll.options?.ultimateFantasticApplied &&
     !roll.options?.combatTrickery;
   const ultimate = naturalPool || hasNaturalUltimateFantastic(roll, fantastic);
-  return checkPowerOutcome(roll.total, defense, {fantastic, ultimate});
+  const adjustment=teamFantasticForTarget(roll,message,targetActor);
+  const outcome=checkPowerOutcome(Number(roll.total)+(adjustment?.delta??0), defense,
+    {fantastic:fantastic||Boolean(adjustment), ultimate});
+  // Carry the natural 6-M-6 signal through GM target adjudication. It is an
+  // unconditional success, not a result requiring Trouble/target decisions.
+  return outcome && ultimate ? {...outcome,ultimate:true} : outcome;
 }
 export function conditionsForOutcome(power, outcome, { self = false } = {}) {
   if (!outcome?.success) return [];
@@ -342,7 +348,8 @@ export async function syncPowerConditions(message){
     const key=normalizeConditionDefense(defenseKey,token.actor);
     const defense=tn||Number(token.actor.system?.abilities?.[key]?.defense??0);
     if(!Number.isFinite(defense)||defense<=0)continue;
-    const outcome=adjudicateTargetOutcome(getMarvelOutcome(roll,defense),{
+    const outcome=adjudicateTargetOutcome(getMarvelOutcome(roll,defense,
+      {message,targetActor:token.actor}),{
       requiresReview:mixed,
       decision:decisions[token.uuid],
     });
@@ -511,7 +518,8 @@ export async function confirmPowerDamageFromCard(damageMessage, action, results)
       const targetActor=tokenId?game.scenes?.get?.(tokenId[1])?.tokens?.get?.(tokenId[2])?.actor:null;
       const defenseKey=normalizeConditionDefense(original.getFlag(SYSTEM,'attackTarget')||'ego',targetActor);
       const defense=Number(targetActor?.system?.abilities?.[defenseKey]?.defense??0);
-      const outcome=defense?getMarvelOutcome(original.rolls[0],defense):null;
+      const outcome=defense?getMarvelOutcome(original.rolls[0],defense,
+        {message:original,targetActor}):null;
       return outcome?.success&&outcome?.fantastic;
     });
     if(!hasFantasticHit)await endUnneededHellfireConcentration(actor?.uuid,item.id);

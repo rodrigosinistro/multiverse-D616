@@ -1,3 +1,4 @@
+import { effectiveTeamDamageReduction } from './team-maneuvers-effects.mjs';
 /** D616 v0.2.65 — Explicit optional follow-up attacks, never background attacks.
  * Area melee repeats are new paid rolls, but not new Standard Actions.
  * Sustained holds require an active provenance-linked condition, a later round,
@@ -220,7 +221,7 @@ export function heldFocusDamageCardData({item,original,message,target,actor}={})
  const dm=message?.getFlag?.(SYS,'damageMultiplier')??message?.flags?.[SYS]?.damageMultiplier??original?.getFlag?.(SYS,'damageMultiplier')??{};
  const damage=calculatePowerDamage({powerName:null,marvelDie:marvelValue,
    damageMultiplier:Number(dm.finalDM??dm.base??0),
-   damageReduction:Number(target.actor.system?.focusDamageReduction??0),
+   damageReduction:effectiveTeamDamageReduction(target.actor,'focus'),
    ability:Number(actor.system?.abilities?.ego?.value??0),
    fantastic:Boolean(outcome.fantastic)});
  const ref=rollRef(target);

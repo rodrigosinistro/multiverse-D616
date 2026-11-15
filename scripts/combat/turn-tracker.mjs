@@ -18,6 +18,7 @@ import {
   validateTurnConsumption,
 } from "./turn-tracker-core.mjs";
 import { resolveTurnResourceState } from "./reaction-limits.mjs";
+import {passivePowerBenefits} from '../custom-automations.mjs';
 import { findCombatById } from "./combat-lookup.mjs";
 
 const SYSTEM_ID = "multiverse-d616";
@@ -274,8 +275,8 @@ async function requestUpdate(combatant, request, {waitForAck=false}={}) {
     type: "turnTrackerRequest",
     combatId: combatant.combat?.id ?? game.combat?.id,
     combatantId: combatant.id,
-    userId: game.user.id,
     ...request,
+    userId: game.user.id,
   };
 
   if (game.user.isGM) return serializeSpend(payload, game.user);
@@ -297,15 +298,29 @@ async function requestUpdate(combatant, request, {waitForAck=false}={}) {
   });
 }
 
-async function handleSocket(payload) {
+/** Foundry includes the authenticated sender id as the second argument in
+ * relayed system socket messages. Never authorize with payload.userId alone.
+ * If the transport does not provide it, fail closed instead of impersonating
+ * an arbitrary player. Local GM operations bypass this socket path.
+ */
+export function authorizedTurnSocketSender(payload, senderId, users) {
+  if(typeof senderId!=='string'||!senderId.trim()||!payload||!users?.get)return null;
+  if(payload.userId!=null&&payload.userId!==senderId)return null;
+  return users.get(senderId)??null;
+}
+
+async function handleSocket(payload, senderId) {
   if (!payload?.type) return;
+  const sender=authorizedTurnSocketSender(payload,senderId,game.users);
+  if(!sender)return;
   if(payload.type==='turnTrackerResult'){
+    if(!sender.isGM)return;
     if(payload.userId===game.user?.id&&spendAcks.has(payload.requestId))spendAcks.get(payload.requestId)(!!payload.success);
     return;
   }
 
   if (payload.type === "initiativePrompt") {
-    if (game.user?.isGM) return;
+    if(!sender.isGM||game.user?.isGM)return;
     const combat = combatForId(payload.combatId);
     if (!combat) return;
     window.setTimeout(() => {
@@ -317,7 +332,7 @@ async function handleSocket(payload) {
   }
 
   if (payload.type === 'movementAlert') {
-    if (game.user?.isGM) return; // originating GM already saw the notification
+    if(!sender.isGM||game.user?.isGM)return; // originating GM already saw the notification
     const combatant = resolveCombatant(payload.combatId,payload.combatantId);
     if (combatant && canControl(combatant,game.user)) {
       ui.notifications?.[payload.warning?'warn':'info']?.(String(payload.text||''));
@@ -325,8 +340,7 @@ async function handleSocket(payload) {
     return;
   }
   if (!isPrimaryGM()) return;
-  const requestingUser = game.users?.get?.(payload.userId);
-  if (!requestingUser) return;
+  const requestingUser = sender;
 
   try {
     if (payload.type === "turnTrackerRequest") {
@@ -411,7 +425,8 @@ function initiativeOutcomeFromMessage(message) {
   const marvel = activeDieResult(pool.rolls[1]?.terms?.[0]);
   const right = activeDieResult(pool.rolls[2]?.terms?.[0]);
   const fantastic = marvel === 1;
-  return { fantastic, ultimate: fantastic && left === 6 && right === 6 };
+  return { fantastic, ultimate: fantastic && left === 6 && right === 6 &&
+    !roll.options?.forceMarvelM && !roll.options?.ultimateFantasticApplied };
 }
 
 function actorHasPower(actor, name) {
@@ -432,8 +447,11 @@ function actorIsSurprised(actor) {
 
 function initiativeModifierForCombatant(combatant) {
   const init = combatantActor(combatant)?.system?.attributes?.init ?? {};
-  const edge = !!init.edge;
-  const trouble = !!init.trouble;
+  const bonus=passivePowerBenefits(combatantActor(combatant));
+  // The Central grants the same optional initiative Edge used by the native
+  // initiative card; do not double the existing Situational Awareness Edge.
+  const edge=!!init.edge||bonus.initiativeEdge;
+  const trouble=!!init.trouble;
   if (edge === trouble) return null;
   return edge ? "edge" : "trouble";
 }
@@ -2005,6 +2023,7 @@ Hooks.once("ready", () => {
     consumeAction: (combatant) => requestUpdate(combatant, { operation: 'consume', resources: ['action'] }),
     consumeMovement: (combatant) => requestUpdate(combatant, { operation: 'consume', resources: ['movement'] }, {waitForAck:true}),
     consumeReaction: (combatant) => requestUpdate(combatant, { operation: 'consume', resources: ['reaction'] }, {waitForAck:true}),
+    refundReaction: (combatant) => requestUpdate(combatant, { operation: 'adjust', resource: 'reaction', delta: -1 }, {waitForAck:true}),
     getState: stateFor,
     reset: (combatant) => requestUpdate(combatant, { operation: "reset" }),
     resolveInitiative: requestInitiativeResolution,
