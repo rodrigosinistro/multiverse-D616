@@ -57,7 +57,7 @@ test('Offensive 3: actual-die force and Fantastic label wired into items and HUD
  const main=readFileSync(new URL('../multiverse-d616.mjs',import.meta.url),'utf8');
  const hud=readFileSync(new URL('../scripts/native-action-hud.mjs',import.meta.url),'utf8');
  const styles=readFileSync(new URL('../styles/team-maneuvers.css',import.meta.url),'utf8');
- assert.match(main,/const forceTeamMarvelM = isAttackItem\(this\)/);
+ assert.match(main,/const forceTeamMarvelM = !isDampened && isAttackItem\(this\)/);
  assert.match(main,/combatTrickery\.apply \|\| forceTeamMarvelM/);
  assert.match(main,/rollOptions\.teamOffensive3Forced = true/);
  assert.match(hud,/options\.teamOffensive3Forced=true/);
@@ -67,5 +67,5 @@ test('Offensive 3: actual-die force and Fantastic label wired into items and HUD
  assert.match(main,/Total efetivo: \$\{total\+\(teamFantastic\.delta\?\?0\)\}/);
  assert.match(styles,/m616-team-offensive3-note/);
  const config=JSON.parse(readFileSync(new URL('../system.json',import.meta.url),'utf8'));
- assert.equal(config.version,'0.2.178');
+ assert.equal(config.version,'0.2.237');
 });

@@ -1,18 +1,26 @@
-/** Multiverse D616 v0.2.64 — Rico-Shield's optional Fantastic bounce.
+/** Multiverse D616 v0.2.217 — Rico-Shield / Elemental Ricochet Fantastic bounce.
  * Each ricochet is a NEW independent attack roll against a DIFFERENT token,
  * but never a second activation, action, Focus cost or shield throw.
- * The Narrator must first confirm the previous Fantastic hit's damage.
+ * The Narrator must first resolve the previous Fantastic hit. Actual damage
+ * is NOT a requirement: DR, shields and absorption may reduce it to zero.
  */
 import { automationEnabled } from './automation-settings.mjs';
 import { getMarvelOutcome, normalizeConditionDefense } from './power-conditions.mjs';
 import { rollSignature } from './multi-target-combat.mjs';
 import { centerDistanceInSpaces, sightCollision } from './combat-preflight.mjs';
 import { resolveConditionEdges, resolveConditionReroll } from './condition-edge.mjs';
+import { chooseSmartTargets } from './smart-targets.mjs';
 
 const SYSTEM='multiverse-d616';
 const BUTTON='m616-rico-follow-up';
 export const RICOCHET_POWERS=Object.freeze(['Rico-Shield','Elemental Ricochet']);
-export function isRicochetPower(item){return item?.type==='power'&&RICOCHET_POWERS.includes(item.name);}
+export function isRicochetPower(item){
+ // A shared name is not an official identity: the two powers belong to
+ // distinct Power Sets, and an imported Item may have a different local ID.
+ return item?.type==='power' && (
+   (item.name==='Rico-Shield'&&item.system?.powerSet==='Shield Bearer')||
+   (item.name==='Elemental Ricochet'&&item.system?.powerSet==='Elemental Control'));
+}
 const pending=new Set();
 const values=coll=>Array.from(coll?.contents??coll?.values?.()??coll??[]);
 const normalized=n=>String(n??'').trim().toLowerCase();
@@ -77,30 +85,47 @@ export function ricoTargetCheck({chain,newTarget,lastTarget,sourceToken,scene,gr
  if(travel>maxRange+0.01)return {ok:false,reason:`Alcance acumulado do ricochete: ${travel.toFixed(1)} / ${maxRange} espaços.`};
  return {ok:true,travel,segment};
 }
+/** Only a GM-resolved attack card with the CURRENT roll signature may
+ * authorize a new bounce. This guard establishes that the selected target was
+ * actually processed (not a stale/pending card), even if a shield, damage
+ * reduction, or Energy Absorption made the effective damage zero. The final
+ * Fantastic success is independently checked against the target's defense by
+ * confirmRicoShieldDamage, after any Edge/Trouble rerolls. */
+export function confirmedRicochetDamage({source,damageMessage,action,results,actor,item}={}){
+ if(!isRicochetPower(item)||!actor||!source?.id||!['full','half'].includes(action))return false;
+ const chain=source.getFlag?.(SYSTEM,'ricoShield');
+ const target=chain?.lastTargetUuid;
+ if(!target||source.getFlag?.(SYSTEM,'ricoShieldConsumed')||source.getFlag?.(SYSTEM,'ricoShieldReady'))return false;
+ const snap=damageMessage?.getFlag?.(SYSTEM,'damageApplication');
+ if(!snap||snap.sourceMessageId!==source.id||snap.rollSignature!==rollSignature(source.rolls?.[0]))return false;
+ const entry=values(snap.entries).find(e=>e.targetUuid===target);
+ if(!entry||entry.hit===false)return false;
+ // A resolved Fantastic hit may ricochet when protection absorbs ALL damage.
+ // `blocked`, `absorbed` and `delta === 0` are defensive outcomes, NOT misses.
+ // Still require a real GM damage-resolution result for this same target;
+ // healing, a different target, or an empty result set must not authorize it.
+ if(!values(results).some(r=>r.targetUuid===target&&!r.heal))return false;
+ return true;
+}
 export async function confirmRicoShieldDamage(damageMessage,action,results){
- if(!automationEnabled('extraAttacks')||action==='heal')return false;
- if(!game.user?.isGM)return false;
+ if(!automationEnabled('extraAttacks')||!game.user?.isGM)return false;
  const sourceId=damageMessage?.getFlag?.(SYSTEM,'sourceMessageId');
  const source=sourceId?game.messages?.get?.(sourceId):null;
  const {actor,item}=source?powerForMessage(source):{};
- if(!isRicochetPower(item)||!actor||!automationEnabled('extraAttacks',undefined,item.name))return false;
+ if(!actor||!automationEnabled('extraAttacks',undefined,item?.name)||
+    !confirmedRicochetDamage({source,damageMessage,action,results,actor,item}))return false;
  const chain=source.getFlag(SYSTEM,'ricoShield');
- const target=chain?.lastTargetUuid;
- if(!target||source.getFlag(SYSTEM,'ricoShieldConsumed'))return false;
- const signature=rollSignature(source.rolls?.[0]);
- if(damageMessage?.getFlag?.(SYSTEM,'damageApplication')?.rollSignature!==signature)return false;
- const matched=results?.some(r=>r.targetUuid===target&&!r.blocked&&!r.heal);
- if(!matched)return false;
- const token=await globalThis.fromUuid?.(target);
+ const token=await globalThis.fromUuid?.(chain.lastTargetUuid);
  if(!token?.actor)return false;
  const defenseKey=normalizeConditionDefense(source.getFlag(SYSTEM,'attackTarget')??'agl',token.actor);
  const defense=Number(token.actor.system?.abilities?.[defenseKey]?.defense??0);
  const outcome=getMarvelOutcome(source.rolls[0],defense,{message:source,targetActor:token.actor});
  if(!outcome?.success||!outcome.fantastic)return false;
- // Do not offer the next bounce before the GM has confirmed REAL damage.
- // The prior attack may have been absorbed entirely by a separate barrier.
+ // The GM has resolved the attack in MMDR (including complete absorption).
+ // Publish the next ricochet only after a confirmed Fantastic HIT.
  await source.setFlag(SYSTEM,'ricoShieldReady',{
-   rollSignature:signature,targetUuid:target,damageMessageId:damageMessage.id,confirmed:true,
+   rollSignature:rollSignature(source.rolls[0]),targetUuid:chain.lastTargetUuid,
+   damageMessageId:damageMessage.id,confirmed:true,
  });
  return true;
 }
@@ -153,11 +178,20 @@ export async function useRicoShieldBounce(source,{targets=values(game.user?.targ
    const speaker=source.speaker??ChatMessage.getSpeaker({actor});
    let messageMode='public';
    try {messageMode=game.settings?.get?.('core','messageMode')??'public';}catch(_e){}
+   // An ordinary attack posts a Roll WITHOUT a custom `content` property:
+   // Foundry then renders the 3d616 dice, and our standard attack card exposes
+   // the per-die EDGE/TROUBLE controls. A custom content string hides that UI.
+   // Keep the chain metadata in flavor and flags, not in the Roll body.
    const message=await roll.toMessage({title:item.name,speaker,
-     flavor:`ability: Agility<br/>power: ${item.name}<br/>damagetype: health, [ability] agl`,
-     content:`<p><b>${item.name} — Ricochete ${next.step}</b></p><p>Ataque extra contra ${foundry.utils.escapeHTML(targetRef.name)}. Sem nova Ação Padrão nem Focus.</p><p>Distância acumulada: ${checked.travel.toFixed(1)} / ${rank(actor)*10} espaços.</p>`,
+     flavor:`ability: Agility<br/>power: ${item.name}<br/>damagetype: health, [ability] agl<br/>`+
+       `<strong>Ricochete ${next.step}</strong>: novo ataque contra ${foundry.utils.escapeHTML(targetRef.name)}; `+
+       `sem nova Ação Padrão ou Focus. Distância acumulada: ${checked.travel.toFixed(1)} / ${rank(actor)*10} espaços.`,
      flags:{[SYSTEM]:flags}}, {messageMode,itemId:item.id});
-   if(edges.sources.length&&edges.autoCount)await resolveConditionReroll(message,edges);
+   if(!message?.id)throw Error('O novo ataque de ricochete não foi publicado.');
+   if(edges.sources.length&&edges.autoCount){
+     try{await resolveConditionReroll(message,edges);}
+     catch(error){console.warn('[D616] Ricochete: rerrolagem opcional indisponível',error);}
+   }
    return message;
  }catch(error){
    // A transient chat/roll failure must not consume the optional bounce.
@@ -165,7 +199,7 @@ export async function useRicoShieldBounce(source,{targets=values(game.user?.targ
    throw error;
  }
 }
-export function registerRicoShieldHooks(){
+export function registerRicoShieldHooks({chooseTargets=chooseSmartTargets}={}){
  Hooks.on('renderChatMessageHTML',(message,html)=>{
    if(!(html instanceof HTMLElement)||!message?.rolls?.length)return;
    const {actor,item}=powerForMessage(message);
@@ -188,7 +222,15 @@ export function registerRicoShieldHooks(){
    const message=game.messages?.get?.(sourceId);
    if(!message)return;
    pending.add(sourceId);button.disabled=true;
-   try {await useRicoShieldBounce(message);}
+   try {
+     const {item}=powerForMessage(message);
+     if(!item)throw Error('O poder do ataque original não foi encontrado.');
+     // Each bounce gets the SAME target picker as an ordinary power attack,
+     // even if the client uses the default manual-targeting preference.
+     // Cancellation costs nothing, creates no roll and does not consume bounce.
+     if(!await chooseTargets(item,{force:true,requireTargets:true}))return;
+     await useRicoShieldBounce(message);
+   }
    catch(error){ui.notifications?.warn?.(`Ricochete: ${error.message}`);}
    finally {pending.delete(sourceId);button.disabled=false;}
  },true);

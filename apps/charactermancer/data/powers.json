@@ -7577,7 +7577,7 @@
         "action": "Standard",
         "trigger": "",
         "duration": "Concentração",
-        "range": "Alcance",
+        "range": "Reach",
         "cost": "5 Focus",
         "effect": "O personagem pode eliminar os efeitos de um alvo que perdeu todo o seu Focus. Em vez de se tornar desmoralizado, o alvo pode funcionar normalmente sem ter dificuldades em todas as suas ações devido à falta de Focus. No entanto, ele não pode gastar mais Focus e ainda pode ser quebrado. Uma vez que o poder entra em efeito, o alvo não precisa permanecer dentro do alcance do personagem. Quando o efeito termina, se o alvo tiver 0 de Focus ou menos, ele se torna desmoralizado. Se o Focus do alvo subir acima de 0 em qualquer momento, este poder termina automaticamente.",
         "quantity": 1,

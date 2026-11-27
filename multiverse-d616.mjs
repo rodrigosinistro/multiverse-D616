@@ -1,3 +1,5 @@
+import {isPowerControl,isCopyPower,isDampenPower,copiedPowerUsable,dampenedPower,dampenedAttackMultiplier,suppressFantastic,dampenedTransferData} from './scripts/power-control-rules.mjs';
+import {selectPowerControl,postCopyRequest,registerPowerControlHooks} from './scripts/native-power-control.mjs';
 /**
  * Extend the base Roll document by defining a pool for evaluating rolls with the Marvel DiceTerms.
  * @extends {Roll}
@@ -11,7 +13,33 @@
  * @param {(number)} [options.targetValue]       Assign a target value against which the result of this roll should be
  *
  */
-import { isEnergyAbsorptionPower, activateEnergyAbsorption, applyAbsorptionFocusCapacity } from './scripts/energy-absorption-custom.mjs';
+import { isEnergyAbsorptionPower, applyAbsorptionFocusCapacity } from './scripts/energy-absorption-custom.mjs';
+import { scrollCombatChatToResult } from './scripts/combat-chat-scroll.mjs';
+import {checkNativePowerUse,commitNativePowerAfterFocus,nativeDamageBonusForAttack,nativeStanceDamageBonusForAttack,nativeFocusedDamageForPower,nativeFocusedDamageHint,dispatchNativeExistingPreRoll} from './scripts/native-power-automations.mjs';
+import {nativeSupportRule,dispatchNativeSupportPower,registerNativeSupportRequestHooks} from './scripts/native-power-support.mjs';
+import {isNativeReactiveDodge,declareNativeReactiveDodge,reactionCombatant} from './scripts/native-power-spider-defenses.mjs';
+import {isCounterstrikeTechnique,activateCounterstrike} from './scripts/native-power-counterstrike.mjs';
+import {isKillZone,checkKillZone,finishKillZone,isVenomSwordWeapon,isActiveVenomSwordWeapon,registerNativePriorityLot1Hooks} from './scripts/native-priority-lot1.mjs';
+import {isElementalInfusion,isReinforcementPower,infusionEligibility,bindElementalInfusion,infusedWeaponAttack} from './scripts/native-priority-lot5.mjs';
+import {useRetroactiveReinforcement,registerRetroactiveReinforcementHooks} from './scripts/reinforcement-after-damage.mjs';
+import {isExploit,isCatchBullets,isQuickToss,isProtectionHex,isInstantReplay,
+  exploitEligibility,consumeExploit,exploitDamageReduction,selectQuickTossTargets,quickTossOutcome,
+  selectCatchSource,applyProtectionHexRoll,protectionHexDerived,replayEligibility,
+  confirmReplayFailure,executeInstantReplay,registerNativePriorityLot2Hooks} from './scripts/native-priority-lot2.mjs';
+import {isDispelSpell,dispelSpellEligibility,registerNativePriorityLot4Hooks} from './scripts/native-priority-lot4.mjs';
+import {isAreaLot6,isVaporsOfValtorr,chooseEnvironmentSelection,activateEnvironmentalAfterPay,registerNativePriorityLot6Hooks} from './scripts/native-priority-lot6.mjs';
+import {registerNativePriorityLot10Hooks} from './scripts/native-priority-lot10.mjs';
+import {isLot11Support,selectLot11Targets,activateLot11AfterPay,zeroRescueActionBlocked,registerNativePriorityLot11Hooks} from './scripts/native-priority-lot11.mjs';
+import {isBodySphere,isProbabilityHex,isBounceBack,isLot12Group,selectLot12Allies,activateLot12AfterPay,bounceBackAfterPay,registerNativePriorityLot12Hooks} from './scripts/native-priority-lot12.mjs';
+import {isGroupLot7,selectGroupTargets,activateGroupAfterPay,registerNativePriorityLot7Hooks} from './scripts/native-priority-lot7.mjs';
+import {isAdvance,isWebtrapping,isPhaseSelf,phaseSelfActive,phasePhysicalContact,
+  selectAdvanceAllies,selectWebCells,tokenFromTargetRef,activateNativeLot3AfterPay,registerNativePriorityLot3Hooks} from './scripts/native-priority-lot3.mjs';
+import {nativeReactionScopes,nativeScopedReactionDecision} from './scripts/combat/native-scoped-reactions.mjs';
+import {genericReactionMaximum} from './scripts/combat/reaction-limits.mjs';
+import {classifyItemAction} from './scripts/combat/turn-tracker-core.mjs';
+import {nativeGuardReactionRule,declareNativeGuardReaction} from './scripts/native-power-reactive-guards.mjs';
+import {tacticalOnceModifier,consumeTacticalOnce,tacticalMarvelLock} from './scripts/native-power-tactical-once.mjs';
+import {isCharmedLife,armCharmedLife,consumeCharmedLifeRoll} from './scripts/native-power-charmed-life.mjs';
 import { prepareCombatantInitiativeRoll } from "./scripts/combat/initiative-passive-roll.mjs";
 import { combatChangeAffectsActorSheets, makeCombatSheetRefreshScheduler } from './scripts/combat/sheet-refresh-core.mjs';
 import { openTeamManeuverDialog } from './scripts/team-maneuvers.mjs';
@@ -22,7 +50,7 @@ import { prepareActorResourceBase, finalizeActorResourceMaximums } from './scrip
 import { isRicochetPower, ricoOriginalContext, registerRicoShieldHooks } from "./scripts/rico-shield-chain.mjs";
 import { getPowerVfxConfig, playPowerVfx, registerPowerVfxSettings, registerPowerVfxLifecycleHooks } from "./scripts/power-vfx.mjs";
 import { openPowerVfxBrowser } from "./scripts/power-vfx-browser.mjs";
-import { originalRepeatContext, installRepeatPowerHooks } from "./scripts/repeat-power-attacks.mjs";
+import { originalRepeatContext, stoppingPowerOriginalContext, hitNRunOriginalContext, installRepeatPowerHooks } from "./scripts/repeat-power-attacks.mjs";
 import { registerHeldConcentrationHooks } from "./scripts/held-concentration.mjs";
 import { casterTokenForItem } from "./scripts/combat-preflight.mjs";
 import { registerAutomationSettings, automationEnabled } from "./scripts/automation-settings.mjs";
@@ -258,6 +286,7 @@ class MarvelMultiverseRoll extends Roll {
    */
   get isFantastic() {
     if (!this._evaluated) return undefined;
+    if(this.options?.nativeDampenedPower)return false;
     return this.dice[1].result === 1;
   }
 
@@ -498,7 +527,11 @@ class MarvelMultiverseActor extends Actor {
   *allApplicableEffects() {
     const effects=resolveEquipmentPermanentEffects(this,super.allApplicableEffects(),
       data=>new CONFIG.ActiveEffect.documentClass(data,{parent:this}));
-    yield* effects;
+    for(const effect of effects){
+      if(effect.parent?.type==='power'&&!copiedPowerUsable(effect.parent))continue;
+      const data=dampenedTransferData(effect);
+      yield data?new CONFIG.ActiveEffect.documentClass(data,{parent:effect.parent}):effect;
+    }
   }
 
   /**
@@ -568,6 +601,50 @@ class MarvelMultiverseActor extends Actor {
  * Extend the basic Item with some very simple modifications.
  * @extends {Item}
  */
+/** v198: Jinx You uses the SAME Marvel dice and chat card as ordinary attacks,
+ * but its cost/concentration must be authorized only AFTER the real Melee
+ * touch outcome and all manual EDGE/TROUBLE decisions have been finalized.
+ * This function creates a CHECK CARD ONLY. No Focus, Action or Concentration
+ * is committed here; the atomic GM support transaction does that exactly once.
+ */
+async function mmD616RollJinxTouchCheck(item,sourceToken,targetToken){
+  if(item?.type!=='power'||item.name!=='Jinx You'||item.system?.powerSet!=='Luck')
+    throw new Error('O teste especial só aceita Jinx You oficial.');
+  const target=targetToken?.actor,actor=item.actor;
+  if(!actor||!target||!sourceToken?.id||!targetToken?.id||!canvas?.scene?.id)
+    throw new Error('Jinx You: token de origem ou alvo não encontrado.');
+  const rollData=item.getRollData(),info=resolvePowerRoll(item);
+  if(info.ability!=='mle'||info.attackTarget!=='mle'||!rollData?.formula)
+    throw new Error('Jinx You: configuração de teste Melee inválida.');
+  const baseMode=String(info.edgeMode??'').toLowerCase()==='edge'?1:
+    String(info.edgeMode??'').toLowerCase()==='trouble'?-1:0;
+  const conditions=resolveConditionEdges({actor,targetActors:[target],ability:'mle',
+    attack:true,kind:'close',action:'standard',item,targeted:true,baseMode});
+  const options={};if(conditions.edgeMode)options.edgeMode=conditions.edgeMode;
+  const roll=new CONFIG.Dice.MarvelMultiverseRoll(rollData.formula,rollData.actor,options);
+  const dm=mmGetDamageMultiplierContext(actor,'mle');
+  const otherBonus=Number(dm.otherBonus??0),otherPenalty=Number(dm.otherPenalty??0);
+  const damageMultiplier={base:Number(dm.base??0),otherBonus,otherPenalty,weaponBonus:0,
+    effectiveBonus:otherBonus,finalDM:Number(dm.base??0)+otherBonus+otherPenalty};
+  const metadata={sceneId:canvas.scene.id,sourceTokenId:sourceToken.id,targetTokenId:targetToken.id,
+    sourceActorId:sourceToken.actorId,powerId:'c2t2WUvH8Bx4Qnzi',itemId:item.id};
+  const flags={actorId:actor.id,itemId:item.id,ability:'mle',attackTarget:'mle',
+    powerCheck:true,fantasticDamageOnly:true,damageType:'health',damageMultiplier,
+    nativeJinxTouchCheck:metadata,
+    targets:[{uuid:targetToken.uuid??`Scene.${canvas.scene.id}.Token.${targetToken.id}`,
+      actorUuid:target.uuid,name:targetToken.name??target.name,img:targetToken.texture?.src??target.img??''}]};
+  if(conditions.sources.length||conditions.ambiguousTargets||conditions.targetSourcesDiffer)
+    flags.conditionEdges=conditions;
+  const message=await roll.toMessage({
+    title:item.name,
+    speaker:ChatMessage.getSpeaker({actor,token:sourceToken.object??undefined}),
+    flavor:'ability: Melee<br/>power: Jinx You, [ability] mle — Teste para tocar (antes do efeito)',
+    flags:{'multiverse-d616':flags},
+  },{messageMode:mmGetMessageMode(),itemId:item.id});
+  if(!message?.id)throw new Error('Jinx You: o teste não foi publicado no chat.');
+  return message;
+}
+
 let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
   /**
    * Prepare a data object which defines the data schema used by dice roll commands against this Item
@@ -600,14 +677,79 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
    * @private
    */
   async roll() {
+    if(!copiedPowerUsable(this)){ui.notifications?.warn?.('Copy Power: Concentração encerrada.');return;}
+    const isDampened=dampenedPower(this);
+    if(isDampened)ui.notifications?.info?.(`${this.name}: Dampen Power ativo. Sem Fantásticos; confira os limites especiais com o Mestre.`);
+    let powerControlSelection=null;
+    if(isPowerControl(this)){
+      try{powerControlSelection=await selectPowerControl(this);}catch(error){ui.notifications?.warn?.(String(error?.message??error));return;}
+      if(!powerControlSelection)return;
+    }
+    // Counterstrike Technique triggers only AFTER a confirmed damaging Melee hit.
+    // The GM calculates the return damage from the original attack receipt and
+    // publishes a one-shot MMDR damage card. Never run the generic roll path.
+    if(isCounterstrikeTechnique(this))return activateCounterstrike(this);
+    // Player-selectable permanent Luck power, consumed on the NEXT actual roll.
+    if(isCharmedLife(this)){
+      try{return await armCharmedLife(this);}catch(error){ui.notifications?.warn?.(String(error?.message??error));return false;}
+    }
+    // v205: triggered defensive Reactions are declared AFTER the attack is
+    // announced/rolled, before its final adjudication. These powers only post
+    // their official rules; the attacking user/Narrator clicks TROUBLE on the
+    // ORIGINAL attack card. No prepared effect, extra roll or auto-reroll.
+    if(isNativeReactiveDodge(this)){
+      try{
+        await declareNativeReactiveDodge(this,{
+          applyMode:data=>mmApplyMessageMode(data),
+        });
+        return this;
+      }catch(error){
+        console.warn('[D616] Reação defensiva:',error);
+        ui.notifications?.warn?.(String(error?.message??error));
+        return false;
+      }
+    }
+    // v207: Hurled Shield Block now goes through the GM-authoritative
+    // ally-targeting support transaction rather than the text-only guard.
+    // v206: other bounded defensive Reactions are declared after their
+    // triggering attack/damage/knockback. Never arm an effect before attack.
+    if(nativeGuardReactionRule(this)){
+      try{
+        const posted=await declareNativeGuardReaction(this,{applyMode:data=>mmApplyMessageMode(data)});
+        return posted ? this : false;
+      }catch(error){
+        console.warn('[D616] Reação defensiva:',error);
+        ui.notifications?.warn?.(String(error?.message??error));
+        return false;
+      }
+    }
+    // v225: the player uses this Reaction AFTER the Narrator has applied
+    // Health overflow on the original damage card. The GM refunds Health and
+    // charges Focus from that receipt; not from a second damage roll.
+    if(isReinforcementPower(this)){
+      try{
+        const converted=await useRetroactiveReinforcement(this);
+        if(converted)ui.notifications?.info?.(`${this.name}: dano excedente convertido em Focus; Health restaurado.`);
+        return converted?this:false;
+      }catch(error){ui.notifications?.warn?.(String(error?.message??error));return false;}
+    }
     // Energy Absorption is an explicit pre-damage Reaction, not an attack roll.
     // Handle it before generic Focus/turn spending to prevent duplicate costs.
-    if(isEnergyAbsorptionPower(this))return activateEnergyAbsorption(this);
+    if(isEnergyAbsorptionPower(this))return dispatchNativeExistingPreRoll(this);
+    // Official support powers use one GM-authoritative target transaction.
+    // They do not enter the generic Focus/Action pipeline a second time.
+    if(nativeSupportRule(this))return dispatchNativeSupportPower(this,{rollJinxTouch:mmD616RollJinxTouchCheck});
+    // A summoned Venom Sword can only be used while its source Concentration
+    // remains live. The owner may keep the unequipped record for old damage cards.
+    if(isVenomSwordWeapon(this) && !isActiveVenomSwordWeapon(this)){
+      ui.notifications?.warn?.('Venom Sword: ative a Concentração antes de atacar com a espada.');
+      return;
+    }
     // Smart targeting is shared by weapons and targeted powers. Cancel before
     // Focus, Concentration, effects or chat; self-use powers are never prompted.
-    if (shouldPromptForTargets(this,resolvePowerRoll(this))) {
-      try {
-        const confirmed=await chooseSmartTargets(this);
+    if (!powerControlSelection && (isDispelSpell(this)||shouldPromptForTargets(this,resolvePowerRoll(this)))) {
+      if(!isBodySphere(this))try {
+        const confirmed=await chooseSmartTargets(this,isDispelSpell(this)?{force:true,requireTargets:true}:{});
         if(!confirmed)return;
       } catch(error) {
         console.error('[D616] Falha na seleção inteligente de alvos',error);
@@ -615,7 +757,103 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         return;
       }
     }
-    // Both Banging Heads variants require exactly TWO marked targets for the
+    // Dispel Spell must target a currently concentrating Magic caster before
+    // committing Focus or a Standard Action. Its check remains non-damaging.
+    const dispelContext=isDispelSpell(this)
+      ?dispelSpellEligibility(this,mmD616CollectLocalTargets()):null;
+    if(dispelContext&&!dispelContext.ok){
+      ui.notifications?.warn?.(dispelContext.reason);return;
+    }
+    // Phase Self blocks only physical Health attacks between characters in
+    // different phases. Focus/mental effects retain their existing rules.
+    if (isAttackItem(this) && phaseSelfActive(this.actor) &&
+        String(resolvePowerRoll(this).damageType??this.system?.damageType??'health').toLowerCase()!=='focus' &&
+        mmD616CollectLocalTargets().some(t=>{const target=tokenFromTargetRef(t)?.actor;return target&&!phasePhysicalContact(this.actor,target,'health');})) {
+      ui.notifications?.warn?.('Phase Self: não é possível atingir fisicamente um alvo fora de fase.');
+      return;
+    }
+    // Priority batch 3: interactive map/ally selection precedes every Focus,
+    // Reaction or Standard Action spend. Cancel returns without mutation.
+    let lot3Selection=null;
+    if(isAdvance(this)){
+      try{lot3Selection=await selectAdvanceAllies(this,mmD616CollectLocalTargets());}
+      catch(error){ui.notifications?.warn?.(String(error?.message??error));return;}
+      if(!lot3Selection)return;
+    }
+    if(isWebtrapping(this)){
+      if(!game.users?.activeGM&&!game.user?.isGM){
+        ui.notifications?.warn?.('Webtrapping requer um Mestre conectado para criar a Região.');return;
+      }
+      const scene=canvas?.scene;
+      if(!scene){ui.notifications?.warn?.('Webtrapping requer uma cena ativa.');return;}
+      try{
+        const cells=await selectWebCells(scene);
+        if(!cells)return;
+        lot3Selection={version:1,sceneId:scene.id,cells};
+      }catch(error){ui.notifications?.warn?.(String(error?.message??error));return;}
+    }
+    // Lot 6: environmental geometry is selected BEFORE committing Action, Focus
+    // or Concentration. Cancel makes no state changes, as with Webtrapping.
+    let lot6Selection=null;
+    if(isAreaLot6(this)){
+      if(!game.users?.activeGM&&!game.user?.isGM){
+        ui.notifications?.warn?.(`${this.name}: um Mestre conectado é necessário.`);return;
+      }
+      try{lot6Selection=await chooseEnvironmentSelection(this);}
+      catch(error){ui.notifications?.warn?.(String(error?.message??error));return;}
+      if(!lot6Selection)return;
+    }
+    // Lot 7: select group members BEFORE Focus/Action/Concentration spend.
+    let lot7Selection=null;
+    if(isGroupLot7(this)){
+      try{lot7Selection=await selectGroupTargets(this);}
+      catch(error){ui.notifications?.warn?.(String(error?.message??error));return;}
+      if(!lot7Selection)return;
+    }
+    // Lot 12: choose Body Sphere mode and participants before spending resources.
+    // Group-protection mode is non-damaging; its alternative Agility check
+    // follows the standard attack/condition flow on exactly one enemy.
+    let lot12Selection=null,lot12Grab=false;
+    if(isBodySphere(this)){
+      const mode=await chooseD616Dialog({title:'Body Sphere — modo',width:460,
+        content:'<p>Escolha <b>Proteger aliados</b> (RD Health 3 e co-localização) ou <b>Envolver atacante</b> (Agility contra Agility; Agarrado e Imobilizado no Fantástico).</p>',
+        buttons:[{action:'protect',label:'Proteger aliados',value:'protect'},
+          {action:'grab',label:'Envolver atacante',value:'grab'},
+          {action:'cancel',label:'Cancelar',value:null}],defaultAction:'protect'});
+      if(!mode)return;
+      if(mode==='grab'){
+        const selected=await chooseSmartTargets(this,{force:true,requireTargets:true});
+        if(!selected||mmD616CollectLocalTargets().length!==1){ui.notifications?.warn?.('Body Sphere: escolha exatamente um atacante.');return;}
+        lot12Grab=true;
+      }else{
+        try{lot12Selection=await selectLot12Allies(this);}
+        catch(error){ui.notifications?.warn?.(String(error?.message??error));return;}
+        if(!lot12Selection)return;
+      }
+    }else if(isProbabilityHex(this)){
+      try{lot12Selection=await selectLot12Allies(this);}
+      catch(error){ui.notifications?.warn?.(String(error?.message??error));return;}
+      if(!lot12Selection)return;
+    }
+    // Bounce Back is a reaction to a fall or being knocked prone. No unrelated
+    // attack or arbitrary turn should silently trigger a fall-damage rollback.
+    if(isBounceBack(this)){
+      const prone=this.actor?.statuses?.has?.('mmrpg.prone');
+      if(!prone){
+        const confirmed=await chooseD616Dialog({title:'Bounce Back — gatilho',width:450,
+          content:'<p>Confirme que esta Reação está sendo usada contra uma <b>queda atual</b> ou um efeito que acabou de derrubar o personagem. O Mestre precisa conferir o dano da queda.</p>',
+          buttons:[{action:'yes',label:'Confirmar queda',value:true},{action:'cancel',label:'Cancelar',value:false}],defaultAction:'yes'});
+        if(!confirmed)return;
+      }
+    }
+    // Lot 11: select rescue/mental shelter recipients before charging Focus.
+    let lot11Selection=null;
+    if(isLot11Support(this)){
+      try{lot11Selection=await selectLot11Targets(this);}
+      catch(error){ui.notifications?.warn?.(String(error?.message??error));return;}
+      if(!lot11Selection)return;
+    }
+        // Both Banging Heads variants require exactly TWO marked targets for the
     // shared Melee roll. Validate before spending Focus/action/Concentration.
     if (this.type === 'power' && this.name === 'Banging Heads' &&
         mmD616CollectLocalTargets().length !== 2) {
@@ -629,6 +867,56 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       ui.notifications?.warn?.('Ricochete: marque exatamente um alvo antes do ataque.');
       return;
     }
+    // Priority batch 2: all special role/source selection happens before Focus,
+    // Action/Reaction or the GM damage workflow. Cancel without payment.
+    let quickTossContext=null,catchContext=null,replayContext=null;
+    if(isQuickToss(this)){
+      try{
+        quickTossContext=await selectQuickTossTargets(this,mmD616CollectLocalTargets());
+        if(!quickTossContext)return;
+      }catch(error){ui.notifications?.warn?.(String(error?.message??error));return;}
+    }
+    if(isCatchBullets(this)){
+      try{catchContext=await selectCatchSource(this);if(!catchContext)return;}
+      catch(error){ui.notifications?.warn?.(String(error?.message??error));return;}
+    }
+    const exploitContext=isExploit(this)?exploitEligibility(this,{targets:mmD616CollectLocalTargets()}):null;
+    if(exploitContext&&!exploitContext.ok){ui.notifications?.warn?.(exploitContext.reason);return;}
+    if(isInstantReplay(this)){
+      replayContext=replayEligibility(this);
+      if(!replayContext.ok){ui.notifications?.warn?.(replayContext.reason);return;}
+      if(!await confirmReplayFailure(this,replayContext))return;
+    }
+    const killZoneContext=isKillZone(this)
+      ?checkKillZone(this,{combat:game.combat,targets:mmD616CollectLocalTargets()})
+      :null;
+    if(killZoneContext && !killZoneContext.ok){
+      ui.notifications?.warn?.(killZoneContext.reason);return;
+    }
+    if(killZoneContext?.applicable){
+      const accepted=await chooseD616Dialog({
+        title:'Kill Zone — Gatilho de movimento',
+        content:'<p>Confirme com o Mestre: o inimigo selecionado <strong>começou a se mover</strong> nesta rodada e está na linha de visão do personagem?</p><p>Um mesmo inimigo só pode ser atacado uma vez por rodada por Kill Zone.</p>',
+        buttons:[{action:'confirm',label:'Confirmar movimento',value:true},
+          {action:'cancel',label:'Cancelar',value:false}],
+        defaultAction:'confirm',width:460,
+      });
+      if(!accepted)return;
+    }
+    // Choose exactly which currently held weapon receives Elemental Infusion
+    // BEFORE any Focus or Standard Action is committed.
+    let infusionWeaponId=null;
+    if(isElementalInfusion(this)){
+      const eligible=infusionEligibility(this);
+      if(!eligible.ok){ui.notifications?.warn?.(eligible.reason);return;}
+      const buttons=eligible.weapons.map((weapon,i)=>({action:`weapon${i}`,
+        label:weapon.name,value:weapon.id}));
+      buttons.push({action:'cancel',label:'Cancelar',value:null});
+      infusionWeaponId=await chooseD616Dialog({title:'Elemental Infusion — Arma de mão',
+        content:`<p>Escolha a arma <strong>equipada</strong> que receberá o elemento ${eligible.element.label}. O efeito depende da Concentração.</p>`,
+        buttons,width:480,defaultAction:'weapon0'});
+      if(!infusionWeaponId)return;
+    }
     // v0.2.24: Warn about reliably-detectable out-of-range attacks and sight
     // walls before any Focus, Concentration, turn use or chat is committed.
     // Override is deliberate and recorded on the originating roll card.
@@ -641,6 +929,10 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       return;
     }
     if (!preflight.ok) return;
+    if(powerControlSelection&&isDampenPower(this)){
+      const selected=mmD616CollectLocalTargets();
+      if(selected.length!==1||selected[0].uuid!==`Scene.${powerControlSelection.sceneId}.Token.${powerControlSelection.targetTokenId}`){ui.notifications?.warn?.('Dampen Power: o alvo mudou. Recomece a seleção.');return;}
+    }
     // Grow 1–4: prompt BEFORE spending Focus/Concentration or announcing use.
     // Cancel keeps the actor and combat state unchanged.
     let growSelection;
@@ -725,6 +1017,11 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       }
     }
 
+    // Let's Go at zero Health permits Movement but never Standard/Reaction.
+    if(zeroRescueActionBlocked(this.actor,this)){
+      ui.notifications?.warn?.("Let's Go: enquanto Health estiver em zero, somente Movimento é permitido.");
+      return;
+    }
     // While Body Sheet is maintained, the character cannot make attacks.
     if (hasActiveBodySheet(this.actor) && isAttackItem(this)) {
       ui.notifications?.warn?.("Body Sheet ativo: o personagem não pode realizar ataques enquanto mantiver essa Concentração.");
@@ -735,15 +1032,103 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
     // this character's next turn.
     if (!canUseShieldBearerPower(this.actor, this)) return;
 
+    // Native Anger has an exclusive Concentration restriction. Check BEFORE
+    // variable Focus prompts or any resource/status mutation.
+    const nativePreflight = checkNativePowerUse(this.actor,this);
+    if (!nativePreflight.ok) {
+      ui.notifications?.warn?.(nativePreflight.reason);
+      return;
+    }
     // v0.2.9: resolve Focus selection and availability BEFORE making any
     // Concentration changes. Cancelling an expenditure never replaces an
     // existing Concentration. The deduction commits only after acceptance.
     const preFocus = await mmPreSpendFocusForPowerUse(this.actor, advancedSelection ? resolvedAdvancedFocusItem(this,this.actor) : this);
     if (preFocus === null) return;
+    // v209: when this Actor owns an additional class-restricted Reaction,
+    // reserve an eligible Reaction BEFORE paying Focus. Otherwise the GM could
+    // reject an ineligible item *after* its Focus was already deducted.
+    // This does not touch established Support/Guard/Reactive Dodge dispatches.
+    const scopedReaction = this.type==='power' && (killZoneContext?.applicable || nativeReactionScopes(this.actor).length>0) &&
+      automationEnabled('turnActions') &&
+      classifyItemAction(this).kind==='single' &&
+      classifyItemAction(this).resources[0]==='reaction';
+    let scopedReserved=false;
+    const refundScoped=async()=>{
+      if(!scopedReserved)return;
+      scopedReserved=false;
+      try{
+        const combatant=reactionCombatant(this.actor,game.combat);
+        if(combatant)await game.multiverseD616?.turnTracker?.refundReaction?.(combatant);
+      }catch(error){console.warn('[D616] Estorno de Reação reservada:',error);}
+    };
+    if(scopedReaction){
+      try{scopedReserved=!!(await game.multiverseD616?.turnTracker?.trackItemUse?.(this));}
+      catch(error){console.warn('[D616] Reserva de Reação:',error);}
+      if(!scopedReserved){
+        // The GM still decides authoritatively. Explain a likely local reason
+        // rather than reporting every denied Reaction as a generic error.
+        const combatant=reactionCombatant(this.actor,game.combat);
+        const state=combatant&&game.multiverseD616?.turnTracker?.getState?.(combatant);
+        const decision=state?nativeScopedReactionDecision({actor:this.actor,state,itemId:this.id,
+          genericMax:genericReactionMaximum(this.actor)}):null;
+        const reason=decision&&!decision.ok?decision.reason:
+          (combatant?'Não foi possível confirmar a Reação com o Mestre. Confira o estado do turno.':
+            'Não foi encontrado um Combatant para este personagem na iniciativa.');
+        ui.notifications?.warn?.(`${reason} Nenhum Focus gasto.`);
+        return;
+      }
+    }
     const __okConc = await handleConcentrationOnUse(this.actor, this);
-    if (!__okConc) return;
+    if (!__okConc){await refundScoped();return;}
     const focusCommitted = await mmCommitFocusForPowerUse(this.actor, preFocus);
-    if (!focusCommitted) return;
+    if (!focusCommitted){await refundScoped();return;}
+    // The registry dispatches only compiled native handlers. Anger attaches its
+    // bonus and Logic penalty to the existing transient Concentration effect.
+    let nativeActivationFeedback = '';
+    try {
+      const nativeEffect = await commitNativePowerAfterFocus(this.actor,this,Number(preFocus?.spent??0));
+      if (nativeEffect?.meleeDamageBonus) nativeActivationFeedback =
+        `<p><strong>Anger ativo:</strong> +${nativeEffect.meleeDamageBonus} bônus fixo de dano Melee; ` +
+        `${nativeEffect.logicPenalty} em Logic/Defesa de Logic; ` +
+        `${nativeEffect.spent} Focus investidos. Termina com a Concentração.</p>`;
+      else if (nativeEffect?.kind==='native-attack-stance') {
+        nativeActivationFeedback='<p><strong>Attack Stance ativo:</strong> o bônus de Melee para dano é dobrado enquanto durar a Concentração.</p>';
+      }
+      else if (nativeEffect?.kind==='native-venom-sword') {
+        nativeActivationFeedback='<p><strong>Venom Sword ativa:</strong> use a arma <strong>Venom Sword — Bioeletricidade</strong> na ficha/HUD para atacar. DM +2 sem acumular com outros bônus equivalentes; Atordoado no Fantástico após dano real.</p>';
+      }
+      else if (nativeEffect?.kind==='native-blur') {
+        nativeActivationFeedback='<p><strong>Blur:</strong> ataques contra o personagem recebem 1 Trouble até o início do próximo turno. Rerolls manuais.</p>';
+      }
+      else if (nativeEffect?.kind==='native-recovery') {
+        const label=nativeEffect.resource==='focus'?'Focus':'Health';
+        const paid=nativeEffect.spent>0?` (${nativeEffect.spent} Focus gastos)`:'';
+        nativeActivationFeedback=`<p><strong>${label} recuperado:</strong> +${nativeEffect.gained}` +
+          ` (${nativeEffect.before} → ${nativeEffect.after}/${nativeEffect.maximum})${paid}.</p>`;
+      }
+    } catch (error) {
+      console.error('[multiverse-d616] Falha na automação nativa do poder:',error);
+      // No chat or action is committed when the native setup fails.
+      if (Number(preFocus?.spent??0)>0) {
+        try { await this.actor.update({'system.focus.value':focusAvailable(this.actor)+Number(preFocus.spent)}); }
+        catch(refundError) { console.error('[D616] Falha ao estornar Focus após erro nativo:',refundError); }
+      }
+      await refundScoped();
+      ui.notifications?.error?.('A automação nativa não foi aplicada. Focus estornado quando possível; confira a Concentração.');
+      return;
+    }
+    let infusionFeedback='';
+    if(infusionWeaponId){
+      try{
+        await bindElementalInfusion(this,infusionWeaponId);
+        const weapon=this.actor?.items?.get?.(infusionWeaponId);
+        infusionFeedback=`<p><b>Elemental Infusion:</b> ${foundry.utils.escapeHTML(weapon?.name??'Arma')} infundida. O efeito especial do elemento será aplicado no Sucesso Fantástico enquanto a Concentração continuar.</p>`;
+      }catch(error){
+        console.error('[D616] Elemental Infusion: falha ao vincular arma',error);
+        ui.notifications?.warn?.(String(error?.message??error));
+        return;
+      }
+    }
     let resizeOtherFeedback = '';
     if (resizeOtherSelection) {
       try {
@@ -757,6 +1142,7 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
           try { await this.actor.update({'system.focus.value':focusAvailable(this.actor)+Number(preFocus.spent)}); }
           catch(refundError){console.error('[multiverse-d616] Falha ao estornar Focus de Resize Other:',refundError);}
         }
+        await refundScoped();
         ui.notifications?.error?.(String(error?.message ?? error));
         return;
       }
@@ -768,6 +1154,7 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       await beginFocusMaintenance(this.actor, this);
     } catch (error) {
       console.error('[multiverse-d616] Falha ao iniciar manutenção de Focus:', error);
+      await refundScoped();
       ui.notifications?.error?.('Não foi possível iniciar a manutenção de Focus deste poder.');
       return;
     }
@@ -796,10 +1183,9 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
     }
 
     // Assisted turn tracking must never prevent an Item from being used.
-    try {
-      await game.multiverseD616?.turnTracker?.trackItemUse?.(this);
-    } catch (error) {
-      console.warn("[multiverse-d616] Turn Tracker could not record Item use", error);
+    if(!scopedReserved){
+      try { await game.multiverseD616?.turnTracker?.trackItemUse?.(this); }
+      catch(error){console.warn('[multiverse-d616] Turn Tracker could not record Item use',error);}
     }
 
     // Initialize chat data.
@@ -828,9 +1214,59 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         : {}),
       content: `<div>${this.system.description}</div><div>${
         this.system.effect ? this.system.effect : ""
-      }</div>${growFeedback}${resizeOtherFeedback}${preflightNotes}${mmAttackEdgeModeCardHtml(this)}`,
+      }</div>${growFeedback}${resizeOtherFeedback}${nativeActivationFeedback}${infusionFeedback}${preflightNotes}${mmAttackEdgeModeCardHtml(this)}`,
     }, messageMode));
 
+    if(powerControlSelection&&isCopyPower(this)){await postCopyRequest(this,powerControlSelection);return this;}
+    // Create the separate GM-authorized Advance/Webtrapping action card only
+    // after the usual Focus, Action and Concentration pipeline has succeeded.
+    if(lot3Selection){
+      try{await activateNativeLot3AfterPay(this,lot3Selection);}
+      catch(error){console.error('[D616] Lote 3:',error);
+        ui.notifications?.warn?.('A ativação foi paga, mas não foi possível completar o efeito. Peça ao Mestre para revisar.');}
+    }
+    // Lot 6: native scene region/darkness/fog, created with GM authority.
+    if(lot6Selection){
+      try{await activateEnvironmentalAfterPay(this,lot6Selection);}
+      catch(error){console.error('[D616] Lote 6:',error);
+        ui.notifications?.warn?.('A ativação foi paga, mas a área não foi concluída. Revise recursos com o Mestre.');}
+    }
+    // Vapors creates a Concentration area now; its first possible attack
+    // is on a subsequent turn, not an immediate attack during creation.
+    if(lot6Selection&&isVaporsOfValtorr(this))return this;
+    if(lot7Selection){
+      try{await activateGroupAfterPay(this,lot7Selection);}
+      catch(error){console.error('[D616] Lote 7:',error);
+        ui.notifications?.warn?.('Ativação paga, mas o efeito coletivo não foi concluído. Revise os recursos com o Mestre.');}
+    }
+    // Lot 12: group RD and Probability aura reuse the same authenticated GM
+    // Concentration transaction. The Body Sphere grab mode rolls normally.
+    if(lot12Selection){
+      try{await activateLot12AfterPay(this,lot12Selection);}
+      catch(error){console.error('[D616] Lote 12:',error);ui.notifications?.warn?.('Ativação paga, mas incompleta. Revise com o Mestre.');}
+      return this;
+    }
+    if(isBounceBack(this)){
+      try{await bounceBackAfterPay(this);}catch(error){console.error('[D616] Bounce Back:',error);}
+      return this;
+    }
+    // Lot 11 support powers have no attack roll: only the GM-confirmed
+    // targets and Concentration effects, never an invented damage card.
+    if(lot11Selection){
+      try{await activateLot11AfterPay(this,lot11Selection);}
+      catch(error){console.error('[D616] Lote 11:',error);ui.notifications?.warn?.('Suporte pago, mas não concluído. Revise recursos com o Mestre.');}
+      return this;
+    }
+        // Instant Replay replaces the actual ORIGINAL roll. It never rolls a new
+    // unmodified power check or changes the original GM damage receipt.
+    if(replayContext?.applicable){
+      try{
+        const result=await executeInstantReplay(this,replayContext);
+        ui.notifications?.info?.(`Instant Replay: ${result.oldTotal} → ${result.newTotal}.`);
+      }catch(error){console.error('[D616] Instant Replay:',error);
+        ui.notifications?.error?.(String(error?.message??error));}
+      return this;
+    }
     // Fire-and-forget optional visual effect AFTER validation, Focus and turn use.
     // This does not mutate rules, and a missing Sequencer must never stop rolling.
     void playPowerVfx(this).catch(error=>console.warn('[D616] VFX:',error));
@@ -858,10 +1294,12 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       // spend a limited Ultimate Fantastic use on the same attack.
       const markedCount = Number(game.user?.targets?.size ?? 0);
       const markedActors = localTargetActors();
-      const forceTeamMarvelM = isAttackItem(this) && markedCount > 0 &&
+      const forceTeamMarvelM = !isDampened && isAttackItem(this) && markedCount > 0 &&
         markedActors.length === markedCount &&
         teamOffensive3ForcesRoll(this.actor,markedActors);
-      const useUltimateFantastic = (combatTrickery.apply || forceTeamMarvelM)
+      const tacticalOnce=tacticalOnceModifier(this.actor);
+      const useTacticalM=!isDampened && !!tacticalOnce.forcedMarvelEffect && !combatTrickery.apply && !forceTeamMarvelM;
+      const useUltimateFantastic = (isDampened || combatTrickery.apply || forceTeamMarvelM || useTacticalM)
         ? false
         : await maybeRequestUltimateFantastic(this.actor);
       // Base item Edge/Trouble is separate from temporary Force; the latter
@@ -869,6 +1307,7 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       const itemEdgeMode = String(powerRoll.edgeMode || this.system.attackEdgeMode || '').toLowerCase();
       const elementalEdgeMode = itemEdgeMode==='edge'?1:itemEdgeMode==='trouble'?-1:0;
       const rollOptions = useUltimateFantastic ? { forceMarvelM: true } : {};
+      if(isDampened)rollOptions.nativeDampenedPower=true;
       // For Offensive 3, force the ACTUAL Marvel die to M when every selected
       // target is Rank-eligible. Keeping an existing Foundry target is valid;
       // the player never needs to reselect it. Mixed-rank rolls still resolve
@@ -877,7 +1316,12 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         rollOptions.forceMarvelM = true;
         rollOptions.teamOffensive3Forced = true;
       }
-      if (combatTrickery.apply) {
+      if(useTacticalM){
+        rollOptions.forceMarvelM = true;
+        rollOptions.lockMarvelTrouble = true;
+        rollOptions.tacticalCombatSupport = true;
+      }
+      if (combatTrickery.apply && !isDampened) {
         rollOptions.forceMarvelM = true;
         rollOptions.combatTrickery = true;
         rollOptions.lockMarvelTrouble = true;
@@ -901,7 +1345,7 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       );
       // If you need to store the value first, uncomment the next line.
       // const result = await roll.evaluate();
-      const modLabel = `${label}, [ability] ${powerRoll.ability}${preflight.overridden.length ? '<br/>Aviso de alcance/visão aceito pelo jogador' : ''}`;
+      const modLabel = `${label}, [ability] ${powerRoll.ability}${isDampened?'<br/>Dampen Power: sem benefícios Fantásticos':''}${preflight.overridden.length ? '<br/>Aviso de alcance/visão aceito pelo jogador' : ''}`;
 
       // Damage Multiplier context.
       // IMPORTANT (book rule): weapon Damage Multiplier bonuses DO NOT STACK with any other DM *bonus*.
@@ -911,21 +1355,27 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
       const dmgCtx = mmGetDamageMultiplierContext(this.actor, abilityKey);
       const weaponBonus =
         this.type === "weapon" && this.system.equipped
-          ? Number(this.system.damageMultiplierBonus ?? 0) || 0
+          ? Math.max(0,(Number(this.system.damageMultiplierBonus ?? 0) || 0)-(isDampened&&isVenomSwordWeapon(this)?1:0))
           : 0;
       const otherBonus = Number(dmgCtx.otherBonus ?? 0) || 0;
       const otherPenalty = Number(dmgCtx.otherPenalty ?? 0) || 0;
       const effectiveBonus = Math.max(weaponBonus, otherBonus);
+      // A Venom Sword is a distinct summoned Weapon; +2 is scoped to THIS
+      // weapon roll. Other Melee weapons never gain the bonus passively.
       const baseDamageMultiplier = Number(dmgCtx.base ?? 0) || 0;
-      const finalDamageMultiplier = baseDamageMultiplier + otherPenalty + effectiveBonus;
+      const undampenedAttackDM = baseDamageMultiplier + otherPenalty + effectiveBonus;
+      const finalDamageMultiplier = dampenedAttackMultiplier(this,undampenedAttackDM);
+      const dampenPenalty = Math.max(0,undampenedAttackDM-finalDamageMultiplier);
 
       // Capture current targets for attack rolls so the chat card can show HIT/MISS.
       // We store token UUID + defense at the moment of the roll.
       const systemFlags = {
         actorId: this.actor?.id ?? null,
         itemId: this._id,
+        ...(powerControlSelection&&isDampenPower(this)?{nativePowerControlRequest:powerControlSelection}:{}),
+        ...(isDampened?{nativeDampenedPower:true}:{}),
         // Snapshot buffs only on genuine attacks, never on ordinary checks.
-        ...(isAttackItem(this) && teamAttackSnapshot(this.actor)
+        ...(!isDampened && isAttackItem(this) && teamAttackSnapshot(this.actor)
           ? {teamAttackBenefits:teamAttackSnapshot(this.actor)} : {}),
         ability: abilityKey,
         // The attack ability and the defense targeted by a power/weapon are
@@ -935,7 +1385,7 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         attackTarget: powerRoll.attackTarget ?? null,
         powerCheck: powerRoll.checkOnly,
         fantasticDamageOnly: powerRoll.fantasticDamage,
-        powerTargetNumber: powerRoll.targetNumber || null,
+        powerTargetNumber: (catchContext?.attackTotal ?? powerRoll.targetNumber) || null,
         combatPreflight: preflight.overridden.length ? {
           warningAccepted:true,
           affected:preflight.overridden.map(r=>({name:r.name,warnings:r.warning})),
@@ -944,11 +1394,25 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
           String(powerRoll.damageType ?? "").toLowerCase() === "focus"
             ? "focus"
             : "health",
+        ...(exploitContext?.applicable?{nativeExploit:{version:1,
+          sourceMessageId:exploitContext.mark.sourceMessageId,weaponId:exploitContext.mark.weaponId}}:{}),
+        ...(quickTossContext?{nativeQuickToss:quickTossContext}:{}),
+        ...(catchContext?{nativeCatchBullets:catchContext}:{}),
+        ...(dispelContext?.applicable?{nativeDispelSpell:{version:1,sceneId:dispelContext.sceneId,
+          targetUuid:dispelContext.targetUuid,targetActorUuid:dispelContext.targetActorUuid,
+          egoDefense:dispelContext.egoDefense}}:{}),
         // Adamantium is a property of the ATTACKING weapon, not its bearer.
         // Snapshot it now, before any future equipment or effect changes.
         adamantiumHealthDrIgnore: this.type === 'weapon' && this.system.equipped
           ? weaponAdamantiumValue(this)
           : 0,
+        // Snapshot current Anger only on actual Melee attacks. The source
+        // attack card owns this value even if Concentration ends before GM damage.
+        nativeAngerMeleeBonus: nativeDamageBonusForAttack(this.actor,abilityKey,isAttackItem(this)),
+        nativeStanceMeleeBonus: nativeStanceDamageBonusForAttack(this.actor,abilityKey,isAttackItem(this)),
+        ...(isVenomSwordWeapon(this)&&isActiveVenomSwordWeapon(this)
+          ?{nativeVenomSword:{version:1,weaponId:this.id,
+            sourcePowerId:this.flags['multiverse-d616'].nativeVenomSwordWeapon.sourceItemId}}:{}),
         damageMultiplier: {
           base: baseDamageMultiplier,
           otherBonus,
@@ -956,9 +1420,18 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
           weaponBonus,
           effectiveBonus,
           finalDM: finalDamageMultiplier,
+          dampenPenalty,
         },
       };
 
+      if(this.type==='power'&&this.name==='Hit n Run'&&this.system?.powerSet==='Melee Weapons'){
+        const snap=hitNRunOriginalContext(this,mmD616CollectLocalTargets());
+        if(snap)systemFlags.hitNRun=snap;
+      }
+      if(this.type==='power'&&this.name==='Stopping Power'&&this.system?.powerSet==='Ranged Weapons'){
+        const snap=stoppingPowerOriginalContext(this,mmD616CollectLocalTargets());
+        if(snap)systemFlags.stoppingPower=snap;
+      }
       if(['Unstoppable Assault','Unrelenting Smash'].includes(this.name)){
         const scene=canvas?.scene;
         const token=scene?casterTokenForItem(this.actor,scene,canvas.tokens?.placeables??[]):null;
@@ -1001,11 +1474,18 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         systemFlags.targetConditionEdges=separate;
       }
 
+      const infusedAttack=isAttackItem(this)?infusedWeaponAttack(this):null;
+      if(infusedAttack)systemFlags.nativeElementalInfusion={version:1,
+        powerId:infusedAttack.powerId,weaponId:infusedAttack.weaponId,
+        effectId:infusedAttack.effectId};
       const elementalFantastic = getElementalFantasticMetadata(this, this.actor);
-      if (elementalFantastic) systemFlags.elementalFantastic = elementalFantastic;
+      if (elementalFantastic||infusedAttack) systemFlags.elementalFantastic = elementalFantastic??infusedAttack.elementalFantastic;
       if (advancedSelection) systemFlags.advancedElemental=advancedSelection;
 
-      if (combatTrickery.apply) {
+      if(useTacticalM)systemFlags.tacticalCombatSupport={
+        applied:true,noMarvelTrouble:true,sourceItemId:tacticalOnce.forcedMarvelEffect.flags?.['multiverse-d616']?.nativeTacticalOnce?.sourceItemId??null,
+      };
+      if (combatTrickery.apply && !isDampened) {
         systemFlags.combatTrickery = {
           applied: true,
           noMarvelTrouble: true,
@@ -1048,13 +1528,42 @@ let MarvelMultiverseItem$1 = class MarvelMultiverseItem extends Item {
         messageMode,
         itemId: this._id,
       });
+      // Consume only after an actual chat roll exists, so canceled targeting
+      // never eats the one-shot Exploit trigger.
+      if(exploitContext?.applicable){
+        try{await consumeExploit(this,exploitContext.mark);}
+        catch(error){console.warn('[D616] Exploit: não foi possível consumir gatilho',error);}
+      }
+      if(isProtectionHex(this)){
+        try{await applyProtectionHexRoll(this,createdRollMessage);}
+        catch(error){console.error('[D616] Protection Hex: falha ao salvar a Defesa',error);
+          ui.notifications?.warn?.('Protection Hex: verifique a Concentração e a Defesa.');}
+      }
+      // Kill Zone always returns its spent Reaction (hit or miss). The
+      // attack/target was recorded only after a real roll card was created.
+      if(killZoneContext?.applicable){
+        try{
+          const done=await finishKillZone({item:this,combat:game.combat,
+            targetUuid:killZoneContext.targetUuid,refund:scopedReserved});
+          if(done?.refunded)scopedReserved=false;
+          if(!done?.refunded&&scopedReserved)ui.notifications?.warn?.(
+            'Kill Zone: confira o estorno da Reação no rastreador do Mestre.');
+        }catch(error){console.error('[D616] Kill Zone: erro ao registrar/estornar Reação',error);
+          ui.notifications?.warn?.('Kill Zone: confira o uso por alvo e o estorno da Reação.');}
+      }
       // A mandatory single Trouble rerolls the best die. Edge lets the
       // player choose which die using the existing EDGE buttons on the card.
       if (conditionEdges.sources.length && conditionEdges.autoCount) {
         await resolveConditionReroll(createdRollMessage, conditionEdges);
       }
 
-      if (combatTrickery.apply) {
+      // Consume only after a real check card exists; never on a canceled roll.
+      // This is an owner-authorized Actor effect removal, not a GM macro.
+      try{await consumeTacticalOnce(this.actor,{marvelM:useTacticalM,edge:true});}
+      catch(error){console.warn('[D616] Consumo de benefício tático:',error);}
+      try{await consumeCharmedLifeRoll(this.actor,conditionEdges);}
+      catch(error){console.warn('[D616] Consumo de Charmed Life:',error);}
+      if (combatTrickery.apply && !isDampened) {
         await mmD616ConsumeCombatTrickery(this.actor);
         ui.notifications?.info?.(
           "Combat Trickery aplicado: dado Marvel transformado em MARVEL (1)."
@@ -1694,7 +2203,8 @@ async function mmPreSpendFocusForPowerUse(actor, item) {
         ui.notifications?.warn?.(`Focus insuficiente: precisa de ${spend}, mas tem ${available}.`);
         return null;
       }
-      const { bonus, summary } = mmComputeFocusDamageBonus(item.system?.effect ?? "", spend);
+      const { bonus, summary } = nativeFocusedDamageForPower(item,spend) ??
+        mmComputeFocusDamageBonus(item.system?.effect ?? "", spend);
       return { spent: spend, bonus: bonus ?? 0, summary: summary ?? "" };
     }
 
@@ -1710,9 +2220,9 @@ async function mmPreSpendFocusForPowerUse(actor, item) {
 
     const maxExtra = Math.max(0, maxTotal - min);
     const scaling = mmParseFocusScaling(item.system?.effect ?? "");
-    const scalingHelp = scaling
+    const scalingHelp = nativeFocusedDamageHint(item) ?? (scaling
       ? `Este poder escala: +${scaling.per} bônus de dano${scaling.ability ? ` ${scaling.ability}` : ""} a cada ${scaling.step} Focus gasto.`
-      : "Não consegui identificar automaticamente o escalonamento no campo EFEITO.";
+      : "Não consegui identificar automaticamente o escalonamento no campo EFEITO.");
 
     const chosen = await promptD616FocusExtra({
       title:`Gastar Focus — ${item.name}`,
@@ -1735,7 +2245,8 @@ async function mmPreSpendFocusForPowerUse(actor, item) {
       return null;
     }
 
-    const { bonus, summary } = mmComputeFocusDamageBonus(item.system?.effect ?? "", spend);
+    const { bonus, summary } = nativeFocusedDamageForPower(item,spend) ??
+        mmComputeFocusDamageBonus(item.system?.effect ?? "", spend);
     return { spent: spend, bonus: bonus ?? 0, summary: summary ?? "" };
   } catch (e) {
     console.error("[multiverse-d616] mmPreSpendFocusForPowerUse error", e);
@@ -2437,12 +2948,18 @@ class ChatMessageMarvel extends ChatMessage {
       const naturalUltimateRoll = naturalSixM6(this.rolls?.[0]);
       const initiativeMarvelLocked = isInitiative && this.rolls?.[0]?.options?.forceMarvelM===true;
       for (const el of html.querySelectorAll("button.retroEdgeMode")) {
+        // Dispel Spell permanently changes another actor after GM approval.
+        // Retrospective Edge/Trouble is forbidden ONLY once GM has resolved it.
+        if (this.getFlag(M616_SYSTEM_ID,'nativeDispelSpellResolved')||this.getFlag(M616_SYSTEM_ID,'nativePowerControlResolved')) {
+          el.hidden=true; el.disabled=true; continue;
+        }
         const action = String(el.dataset.retroAction ?? "");
         const dieIndex = Number(el.dataset.index ?? -1);
         if (
           (naturalUltimateRoll && action === "trouble") ||
           (initiativeMarvelLocked && dieIndex===1) ||
-          (combatTrickeryFlag?.noMarvelTrouble && action === "trouble" && dieIndex === 1)
+          (combatTrickeryFlag?.noMarvelTrouble && action === "trouble" && dieIndex === 1) ||
+          (tacticalMarvelLock(this) && action === "trouble" && dieIndex === 1)
         ) {
           el.hidden = true;
           el.disabled = true;
@@ -2512,7 +3029,8 @@ class ChatMessageMarvel extends ChatMessage {
       // Follow-up rolls must have their own independent DAMAGE action, even
       // when the original roll template does not render that button.
       const repeatedOrHeld = Boolean(this.getFlag(M616_SYSTEM_ID,'repeatAttack')?.step ||
-        this.getFlag(M616_SYSTEM_ID,'heldFollowUp'));
+        this.getFlag(M616_SYSTEM_ID,'heldFollowUp') ||
+        this.getFlag(M616_SYSTEM_ID,'stoppingPowerExtra'));
       if (!damageButton && repeatedOrHeld) {
         const row = html.querySelector('.mm-roll-actions') ?? html.querySelector('.message-content');
         if(row){
@@ -2749,8 +3267,9 @@ class ChatMessageMarvel extends ChatMessage {
       isFantastic = !!attackRoll.isFantastic;
     }
 
+    if(suppressFantastic(attackRoll,this))isFantastic=false;
     const total = Number.isFinite(attackRoll.total) ? attackRoll.total : 0;
-    const naturalUltimate = naturalSixM6(attackRoll) || hasNaturalUltimateFantastic(attackRoll, isFantastic);
+    const naturalUltimate = !suppressFantastic(attackRoll,this)&&(naturalSixM6(attackRoll) || hasNaturalUltimateFantastic(attackRoll, isFantastic));
     const isCheck = this.getFlag("multiverse-d616", "powerCheck") === true;
     const released = this.getFlag("multiverse-d616", "combatChatResolution");
     const releasedResolution = released?.signature === rollSignature(attackRoll) ? released : null;
@@ -3074,7 +3593,8 @@ class ChatMessageMarvel extends ChatMessage {
       this.flavor ??
       "";
 
-    await this._handleDamageChatButton(messageId, flavorText);
+    const damageCard = await this._handleDamageChatButton(messageId, flavorText);
+    if (damageCard?.id) void scrollCombatChatToResult();
   }
 
   /**
@@ -3160,9 +3680,9 @@ class ChatMessageMarvel extends ChatMessage {
       const currentExtra = Math.max(0, currentTotal - min);
       const maxExtra = Math.max(0, maxTotal - min);
       const scaling = mmParseFocusScaling(item.system?.effect ?? "");
-      const scalingHelp = scaling
+      const scalingHelp = nativeFocusedDamageHint(item) ?? (scaling
         ? `Este poder escala: +${scaling.per} bônus de dano${scaling.ability ? ` ${scaling.ability}` : ""} a cada ${scaling.step} Focus gasto.`
-        : "Não consegui identificar automaticamente o escalonamento no campo EFEITO."
+        : "Não consegui identificar automaticamente o escalonamento no campo EFEITO.")
       ;
 
       // Ask "extra" beyond minimum.
@@ -3202,7 +3722,8 @@ class ChatMessageMarvel extends ChatMessage {
       return;
     }
 
-    const { bonus, summary } = mmComputeFocusDamageBonus(item.system?.effect ?? "", newSpent);
+    const { bonus, summary } = nativeFocusedDamageForPower(item,newSpent) ??
+      mmComputeFocusDamageBonus(item.system?.effect ?? "", newSpent);
 
     await actor.update({ "system.focus.value": newActorFocus });
     await chatMessage.update({
@@ -3279,6 +3800,14 @@ class ChatMessageMarvel extends ChatMessage {
     const focusBonus = Number(
       chatMessage.getFlag("multiverse-d616", "focusDamageBonus") ?? 0
     );
+    // Flat Anger bonus is applied in the existing calculation BEFORE Fantastic
+    // damage. Snapshot from the original attack; never re-read active statuses.
+    const nativeAngerBonus = abilityAbr==='mle'
+      ? Math.max(0,Number(chatMessage.getFlag('multiverse-d616','nativeAngerMeleeBonus')??0)||0)
+      : 0;
+    const nativeStanceBonus = abilityAbr==='mle'
+      ? Number(chatMessage.getFlag('multiverse-d616','nativeStanceMeleeBonus')??0)||0
+      : 0;
     const focusSpent = Number(
       chatMessage.getFlag("multiverse-d616", "focusSpent") ?? 0
     );
@@ -3332,6 +3861,7 @@ class ChatMessageMarvel extends ChatMessage {
         ) ?? false;
     }
 
+    if(suppressFantastic(roll,chatMessage))isFantastic=false;
     // Resolve the attacker actor robustly.
     // IMPORTANT: when rolling from an *unlinked token*, chatMessage.alias is the *token name*
     // (often different from the Actor name). If we look up the Actor by alias, we can get undefined.
@@ -3485,7 +4015,8 @@ class ChatMessageMarvel extends ChatMessage {
       const key=normalizeConditionDefense(attackTarget,target);
       const defense=boundary?guardTargetDefense(boundary.actor,boundary.guard)
         :fixedTargetNumber||Number(target.system?.abilities?.[key]?.defense??0);
-      const base=getMarvelOutcome(roll,defense,{message:chatMessage,targetActor:target});
+      const base=quickTossOutcome(getMarvelOutcome(roll,defense,{message:chatMessage,targetActor:target}),
+        ref.uuid,chatMessage.getFlag('multiverse-d616','nativeQuickToss'));
       const naturalUltimateTarget=naturalSixM6(roll);
       const outcome=adjudicateTargetOutcome(base,{
         requiresReview:mixedConditions&&!boundary&&!naturalUltimateTarget,
@@ -3512,6 +4043,15 @@ class ChatMessageMarvel extends ChatMessage {
         !mayCreateBangingHeadsDamage(item.name, resolvedTargets, damageTargets)) {
       ui.notifications?.warn?.('Banging Heads: os dois alvos precisam ser atingidos; sem dano se qualquer um falhar.');
       return;
+    }
+    // A phased target cannot receive a physical Health hit from an attacker
+    // in a different phase; neither can a phased attacker inflict one.
+    if(damageType==='health'){
+      const unaffected=damageTargets.filter(({actor:target})=>!phasePhysicalContact(actor,target,'health'));
+      if(unaffected.length){
+        ui.notifications?.info?.(`Phase Self: ${unaffected.map(t=>t.actor?.name??'alvo').join(', ')} ignorou o contato físico.`);
+        damageTargets=damageTargets.filter(({actor:target})=>phasePhysicalContact(actor,target,'health'));
+      }
     }
     if(advanced?.name && isAdvancedElementalPower(advanced.name)){
       damageTargets=damageTargets.filter(({ref,document})=>advancedNeedsDamage(advanced.name,outcomes.get(ref.uuid),{
@@ -3553,7 +4093,7 @@ class ChatMessageMarvel extends ChatMessage {
       const rawDamageReduction=Math.max(Number(baseTargetDR)||0,
         effectiveTeamDamageReduction(target,drCategory));
       const piercing=applyAdamantiumToHealthDr(
-        rawDamageReduction,
+        exploitDamageReduction(item,chatMessage,rawDamageReduction,drCategory),
         chatMessage.getFlag('multiverse-d616','adamantiumHealthDrIgnore') ?? 0,
         drCategory, item?.type,
       );
@@ -3574,7 +4114,7 @@ class ChatMessageMarvel extends ChatMessage {
           ?null:(item?.type==='power'?item.name:null),
         marvelDie:targetMarvelTotal,
         damageMultiplier,damageReduction:piercing.effectiveDr,
-        ability:abilityValue,bonus:focusBonus+customDamage.bonus,
+        ability:abilityValue,bonus:focusBonus+nativeAngerBonus+nativeStanceBonus+customDamage.bonus,
         fantastic:targetFantastic,
         suppressFantastic:Boolean(advanced?.name && advanced.name!=="Elemental Suffocation"),
       }),customDamage.multiplier);
@@ -3600,10 +4140,11 @@ class ChatMessageMarvel extends ChatMessage {
         effectiveDamageMultiplier,
         // Exact GM-only breakdown snapshot from the authoritative calculation.
         marvelDie:targetMarvelTotal, damageMultiplier,
-        abilityDamage:abilityValue, flatBonus:focusBonus+customDamage.bonus,
+        abilityDamage:abilityValue, flatBonus:focusBonus+nativeAngerBonus+nativeStanceBonus+customDamage.bonus,
+        nativeAngerBonus,
         normalDamage:calculateD616Damage({marvelDie:targetMarvelTotal,damageMultiplier,
           damageReduction:piercing.effectiveDr,ability:abilityValue,
-          bonus:focusBonus+customDamage.bonus,fantastic:false}).damage,
+          bonus:focusBonus+nativeAngerBonus+nativeStanceBonus+customDamage.bonus,fantastic:false}).damage,
         hit: true,
         fantastic: targetFantastic,
         damageFactor: powerDamageFactor,
@@ -3618,9 +4159,9 @@ class ChatMessageMarvel extends ChatMessage {
         targetFantastic ? "Fantastic" : ""
       } </b> ${esc(damageType)} damage.<br/> re: MarvelDie: ${
         targetMarvelTotal
-      } &#42; damage multiplier: &#40; ${baseDamageMultiplier} + bonus: ${effectiveBonus} &#61; ${damageMultiplier} - damageReduction: ${damageReduction} &#61; ${effectiveDamageMultiplier} &#41;${piercing.ignored ? ` <strong>Adamantium:</strong> RD Health ${piercing.originalDr} - ${piercing.ignored} = ${piercing.effectiveDr}.` : ''} + ${esc(
+      } &#42; damage multiplier: &#40; ${baseDamageMultiplier} + bonus: ${effectiveBonus}${otherPenalty ? ` + (${otherPenalty})` : ""}${dmFlags.dampenPenalty ? ` - Dampen Power: ${dmFlags.dampenPenalty}` : ""} &#61; ${damageMultiplier} - damageReduction: ${damageReduction} &#61; ${effectiveDamageMultiplier} &#41;${piercing.ignored ? ` <strong>Adamantium:</strong> RD Health ${piercing.originalDr} - ${piercing.ignored} = ${piercing.effectiveDr}.` : ''} + ${esc(
         ability
-      )} score ${abilityValue} of damage${esc(focusExplain)}${specialDamage
+      )} score ${abilityValue} of damage${esc(focusExplain)}${nativeAngerBonus ? `; Anger: +${nativeAngerBonus} bônus de dano Melee` : ''}${specialDamage
         ? `; regra especial de ${esc(item.name)}: ${powerDamageFactor}× dano normal`
         : ''}${customDamage.bonus ? `; bônus da Central: +${customDamage.bonus} (${customDamage.sources.filter(s=>s.mode!=='multiplier').map(s=>esc(s.name)).join(', ')})` : ''}${customDamage.multiplier>1 ? `; multiplicador da Central: ×${customDamage.multiplier} (${customDamage.sources.filter(s=>s.mode==='multiplier').map(s=>esc(s.name)).join(', ')})` : ''}.</p>`;
     });
@@ -3633,7 +4174,7 @@ class ChatMessageMarvel extends ChatMessage {
         marvelDie: marvelTotal,
         damageMultiplier,
         ability: abilityValue,
-        bonus: focusBonus,
+        bonus: focusBonus+nativeAngerBonus,
         fantastic: isFantastic,
       });
       damageContent.push(
@@ -3643,7 +4184,7 @@ class ChatMessageMarvel extends ChatMessage {
           marvelTotal
         } &#42; damage multiplier: ${effectiveDamageMultiplier} + ${esc(
           ability
-        )} score ${abilityValue} of damage${esc(focusExplain)}.</p>`
+        )} score ${abilityValue} of damage${esc(focusExplain)}${nativeAngerBonus ? `; Anger: +${nativeAngerBonus} dano Melee` : ''}.</p>`
       );
     }
 
@@ -3748,6 +4289,14 @@ class ChatMessageMarvel extends ChatMessage {
     const chatMessage = game.messages.get(messageId);
     if (!chatMessage) throw new Error("Chat message not found");
 
+    if(chatMessage.getFlag(M616_SYSTEM_ID,'nativeDispelSpellResolved')||chatMessage.getFlag(M616_SYSTEM_ID,'nativePowerControlResolved')){
+      ui.notifications?.warn?.('O efeito já foi resolvido pelo Mestre. Edge/Trouble não pode alterar esta rolagem.');
+      return false;
+    }
+    if(chatMessage.getFlag(M616_SYSTEM_ID,'nativeJinxTouchResolved')){
+      ui.notifications?.warn?.('Jinx You: a tentativa já foi resolvida. Não é possível alterar os dados após aplicar ou rejeitar o efeito.');
+      return false;
+    }
     const combatTrickeryFlag = chatMessage.getFlag(
       M616_SYSTEM_ID,
       "combatTrickery"
@@ -3843,7 +4392,7 @@ class ChatMessageMarvel extends ChatMessage {
       return Number(result.count ?? result.result ?? 0) || 0;
     };
     const isMarvelResult = (result) =>
-      targetIsMarvel && Number(result?.result) === 1;
+      targetIsMarvel && !suppressFantastic(roll,chatMessage) && Number(result?.result) === 1;
 
     const oldResult = resultValue(oldRollResult);
     const oldFantastic = isMarvelResult(oldRollResult);
@@ -4569,11 +5118,14 @@ render(force = false, options = {}) {
         }, messageMode));
       }
 
-      const useUltimateFantastic = await maybeRequestUltimateFantastic(this.actor);
+      const tacticalOnce=tacticalOnceModifier(this.actor);
+      const useTacticalM=!!tacticalOnce.forcedMarvelEffect;
+      const useUltimateFantastic = useTacticalM?false:await maybeRequestUltimateFantastic(this.actor);
       const actorEdgeMode = 0; // Force is included by resolveConditionEdges
       const conditionEdges = resolveConditionEdges({actor:this.actor, ability:dataset.label,
         action:'standard', baseMode:actorEdgeMode});
       const rollOptions = useUltimateFantastic ? { forceMarvelM: true } : {};
+      if(useTacticalM){rollOptions.forceMarvelM=true;rollOptions.lockMarvelTrouble=true;rollOptions.tacticalCombatSupport=true;}
       if (conditionEdges.edgeMode) rollOptions.edgeMode = conditionEdges.edgeMode;
       const roll = new CONFIG.Dice.MarvelMultiverseRoll(
         dataset.formula,
@@ -4586,12 +5138,16 @@ render(force = false, options = {}) {
           speaker: speaker,
           flavor: label,
           title: title,
-          flags:{'multiverse-d616':{conditionEdges}},
+          flags:{'multiverse-d616':{conditionEdges,...(useTacticalM?{tacticalCombatSupport:{applied:true,noMarvelTrouble:true}}:{})}},
         },
         { messageMode, itemId: itemId }
       );
       if(conditionEdges.sources.length && conditionEdges.autoCount)
         await resolveConditionReroll(message,conditionEdges);
+      try{await consumeTacticalOnce(this.actor,{marvelM:useTacticalM,edge:true});}
+      catch(error){console.warn('[D616] Consumo de benefício tático:',error);}
+      try{await consumeCharmedLifeRoll(this.actor,conditionEdges);}
+      catch(error){console.warn('[D616] Consumo de Charmed Life:',error);}
       return roll;
     }
   }
@@ -5064,11 +5620,14 @@ render(force = false, options = {}) {
         ? `${label} [damageType] ${dataset.damageType}`
         : label;
 
-      const useUltimateFantastic = await maybeRequestUltimateFantastic(this.actor);
+      const tacticalOnce=tacticalOnceModifier(this.actor);
+      const useTacticalM=!!tacticalOnce.forcedMarvelEffect;
+      const useUltimateFantastic = useTacticalM?false:await maybeRequestUltimateFantastic(this.actor);
       const actorEdgeMode = 0; // Force is included by resolveConditionEdges
       const conditionEdges = resolveConditionEdges({actor:this.actor, ability:dataset.label,
         action:'standard', baseMode:actorEdgeMode});
       const rollOptions = useUltimateFantastic ? { forceMarvelM: true } : {};
+      if(useTacticalM){rollOptions.forceMarvelM=true;rollOptions.lockMarvelTrouble=true;rollOptions.tacticalCombatSupport=true;}
       if (conditionEdges.edgeMode) rollOptions.edgeMode = conditionEdges.edgeMode;
       const roll = new CONFIG.Dice.MarvelMultiverseRoll(
         dataset.formula,
@@ -5081,12 +5640,16 @@ render(force = false, options = {}) {
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
           flavor: label,
           title: title,
-          flags:{'multiverse-d616':{conditionEdges}},
+          flags:{'multiverse-d616':{conditionEdges,...(useTacticalM?{tacticalCombatSupport:{applied:true,noMarvelTrouble:true}}:{})}},
         },
         { messageMode: mmGetMessageMode() }
       );
       if(conditionEdges.sources.length && conditionEdges.autoCount)
         await resolveConditionReroll(message,conditionEdges);
+      try{await consumeTacticalOnce(this.actor,{marvelM:useTacticalM,edge:true});}
+      catch(error){console.warn('[D616] Consumo de benefício tático:',error);}
+      try{await consumeCharmedLifeRoll(this.actor,conditionEdges);}
+      catch(error){console.warn('[D616] Consumo de Charmed Life:',error);}
       return roll;
     }
   }
@@ -6856,6 +7419,9 @@ class MarvelMultiverseActorBase extends foundry.abstract
     }
     finalizeActorResourceMaximums(this);
     applyAbsorptionFocusCapacity(this);
+    // Protection Hex owns all six defenses while its specific Concentration
+    // effect is live. Removing that effect restores native defenses instantly.
+    protectionHexDerived(this,this.parent);
   }
 }
 
@@ -7434,6 +8000,17 @@ Hooks.once("ready", () => {
   registerResizeOtherSocket();
   registerFocusMaintenanceHooks();
   registerPowerConditionHooks();
+  registerNativePriorityLot1Hooks();
+  registerNativePriorityLot2Hooks();
+  registerNativePriorityLot3Hooks();
+  registerNativePriorityLot4Hooks();
+  registerNativePriorityLot6Hooks();
+  registerNativePriorityLot7Hooks();
+  registerNativePriorityLot10Hooks();
+  registerNativePriorityLot11Hooks();
+  registerNativePriorityLot12Hooks();
+  registerPowerControlHooks();
+  registerRetroactiveReinforcementHooks();
   registerCustomAutomationHooks();
   registerPowerGrabbedHooks();
   registerPowerEscapeHooks();

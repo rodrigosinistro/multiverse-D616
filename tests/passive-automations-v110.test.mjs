@@ -27,7 +27,7 @@ test('v110: Blazing Fast Fists grants one Edge only on attack and only to its ho
   assign([mkRule()]);const owner=actor(),other=actor([]);
   const melee={attack:true,ability:'mle',kind:'close',action:'standard'};
   const result=resolveConditionEdges({actor:owner,...melee});
-  assert.equal(result.edgeMode,1);assert.equal(result.net,1);assert.equal(result.autoCount,1);
+  assert.equal(result.edgeMode,1);assert.equal(result.net,1);assert.equal(result.autoCount,0);
   assert.match(result.sources[0].source,/Blazing Fast Fists/);
   assert.equal(resolveConditionEdges({actor:other,...melee}).net,0);
   assert.equal(resolveConditionEdges({actor:owner,attack:false,ability:'mle'}).net,0);
@@ -87,5 +87,5 @@ test('v110: builder offers passive trigger, source power, type scope and guided 
  assert.match(ui,/data-load-example/);assert.match(ui,/Blazing Fast Fists/);
  assert.match(ui,/CUSTOM_ATTACK_SCOPES/);
  const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url),'utf8'));
- assert.equal(manifest.version,'0.2.178');
+ assert.equal(manifest.version,'0.2.237');
 });

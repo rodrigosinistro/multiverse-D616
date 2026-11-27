@@ -66,7 +66,7 @@ export function automationCatalog(){
   for(const power of ['Hellfire Chains','Coiling Crush'])
     items.extraAttacks.push(makeEntry(power,'Habilita o ataque de acompanhamento de um alvo mantido, no turno válido.'));
   for(const power of RICOCHET_POWERS)
-    items.extraAttacks.push(makeEntry(power,'Libera o ricochete após Sucesso Fantástico com dano confirmado.'));
+    items.extraAttacks.push(makeEntry(power,'Libera o ricochete após Sucesso Fantástico resolvido pelo Mestre, mesmo com dano totalmente absorvido.'));
 
   for(const [id,rule] of Object.entries(ELEMENTAL_FANTASTIC_RULES)){
     if(rule.noteOnly)continue; // Hellfire is a GM note, not an automatic status.

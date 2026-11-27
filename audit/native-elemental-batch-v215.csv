@@ -1,0 +1,8 @@
+﻿Power Set,Poder,Power ID,Situação,Handler,Macro ID,Execução
+Elemental Control,Elemental Barrage,x5OfOd7ILzUlNNyJ,reference-existing,elemental-damage-factor,ef8a2767e206797b,existing-area-half-to-full-damage
+Elemental Control,Elemental Burst,JHf4TJL7ALLgVN3l,reference-existing,elemental-attack,9fd171f1e483cb51,existing-attack-fantastic-elemental-effect
+Elemental Control,Elemental Grab,mWXeEvjajUtWX39E,reference-existing,elemental-grab,bab64ecea9db7302,existing-concentration-grab-escape
+Elemental Control,Elemental Prison,lr3rThthGHpix0tv,reference-existing,elemental-prison,f4b43c3000c4f86a,existing-area-prison-concentration
+Elemental Control,Elemental Push,KOGbtsAQoEHQm7gg,reference-existing,elemental-push,b7cc0ed5f4564d13,existing-attack-fantastic-movement
+Elemental Control,Elemental Ricochet,ZzRySxUQjMJ6rZ7S,native-partial,elemental-ricochet,c2dac051f489485d,native-existing-fantastic-gm-confirmed-chain
+Elemental Control,Elemental Suffocation,a5rTPgLh7aQov52M,reference-existing,elemental-suffocation,75d4f204fec16d1e,existing-grab-requirement-attack

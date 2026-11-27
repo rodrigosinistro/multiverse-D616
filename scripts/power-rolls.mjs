@@ -38,6 +38,16 @@ const POWER_ROLLS = Object.freeze({
   // under existing mechanics / Narrator control (Brain Drain Focus recovery).
   'Supernova': { ability: 'ego', attackTarget: 'res', attack: true, damageType: 'health' },
   'Brain Drain': { ability: 'ego', attackTarget: 'vig', attack: true, damageType: 'focus' },
+  'Leech Life': { ability: 'ego', attackTarget: 'res', attack: true, damageType: 'health' },
+  // Dispel Spell is an opposed Ego check, never a damage roll.
+  'Dispel Spell': { ability: 'ego', attackTarget: 'ego', checkOnly: true },
+  'Dampen Power': { ability: 'ego', attackTarget: 'ego', checkOnly: true },
+  // Quick Toss is a ranged Agility attack. Only the struck target rolls
+  // against Agility; the thrown creature takes normal damage even on a miss.
+  'Quick Toss': {ability:'agl',attackTarget:'agl',attack:true,damageType:'health'},
+  // Lot 12: the *grappling* mode of Body Sphere rolls Agility vs Agility;
+  // the group protection mode returns before any roll is generated.
+  'Body Sphere': {ability:'agl',attackTarget:'agl',checkOnly:true},
 
   'Elemental Grab': { ability: 'ego', attackTarget: 'mle', checkOnly: true },
   'Telekinetic Grab': { ability: 'log', attackTarget: 'mle', checkOnly: true },

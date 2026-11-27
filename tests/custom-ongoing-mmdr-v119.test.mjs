@@ -43,6 +43,37 @@ test('v119: native protection intercepts a recurring tick before Health changes'
   assert.equal(actor.effects.length,0,'shield is consumed by native code after intercepting a strong tick');
 });
 
+test('v224: world setting OFF passes personal shield overflow to target with DR and destroys shield',async()=>{
+  const settings=game.settings;
+  game.settings={get:(_namespace,key)=>key==='noExcessProtectionDamage'?false:undefined};
+  try{
+    actor.system.health.value=35;actor.system.healthDamageReduction=1;
+    actor.items.set('protection',{id:'protection',name:'Telekinetic Protection 1'});
+    actor.effects=[{id:'s1',disabled:false,flags:{'multiverse-d616':{concentrationPower:{itemId:'protection'}}}}];
+    const result=await applyCustomRecurringDamage({actor,combatant:{actor},amount:30,resource:'health'});
+    assert.equal(result.delta,15,'30 bruto - 5 por RD - 10 da proteção');
+    assert.equal(result.blocked,false);
+    assert.equal(actor.system.health.value,20);
+    assert.equal(actor.effects.length,0,'a proteção se desfaz');
+  }finally{game.settings=settings;}
+});
+
+test('v224: world setting ON preserves absorption; Focus protection uses same switch',async()=>{
+ const settings=game.settings;
+ try{
+   game.settings={get:()=>true};
+   actor.system.focus.value=30;
+   actor.items.set('pFocus',{id:'pFocus',name:'Elemental Protection 1'});
+   actor.effects=[{id:'sf',disabled:false,flags:{'multiverse-d616':{concentrationPower:{itemId:'pFocus'}}}}];
+   const shielded=await applyCustomRecurringDamage({actor,combatant:{actor},amount:22,resource:'focus'});
+   assert.equal(shielded.delta,0);assert.equal(actor.system.focus.value,30);
+   actor.effects=[{id:'sf2',disabled:false,flags:{'multiverse-d616':{concentrationPower:{itemId:'pFocus'}}}}];
+   game.settings={get:()=>false};
+   const overflow=await applyCustomRecurringDamage({actor,combatant:{actor},amount:22,resource:'focus'});
+   assert.equal(overflow.delta,12);assert.equal(actor.system.focus.value,18);
+ }finally{game.settings=settings;}
+});
+
 test('v119: MMDR rejects invalid recurring damage and non-GM mutations',async()=>{
   for(const amount of [-1,0,1.5,101,'wat'])
     assert.equal((await applyCustomRecurringDamage({actor,amount,resource:'health'})).applied,false);

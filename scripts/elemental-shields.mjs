@@ -9,9 +9,8 @@ import {crossingWalls} from './elemental-wall-geometry.mjs';
 const SYS='multiverse-d616';
 const array=c=>Array.from(c?.contents??c?.values?.()??c??[]);
 export const GUARD_NAMES=new Set(AREA_STRUCTURE_NAMES);
-/** Personal shields described in the shipped power catalog. These absorb the
- * COMPLETE incoming attack before normal DR; exceeding the threshold removes
- * the sustaining Concentration but still inflicts no damage from that hit.
+/** Personal shields described in the shipped power catalog. Their limit and
+ * concentration behavior are unchanged by the optional excess-damage rule.
  * Shield Bearer Shield 1–4 are DR, not absorption barriers.
  */
 export function personalProtectionSpec(name){
@@ -23,7 +22,9 @@ export function personalProtectionSpec(name){
   return null;
 }
 export function activeElementalGuards(actor){
-  return array(actor?.effects).filter(e=>!e.disabled).map(effect=>{
+  // A broken shield awaiting an optional post-damage Reinforcement exists as
+  // an effect but is INACTIVE for all subsequent attacks until conversion.
+  return array(actor?.effects).filter(e=>!e.disabled&&!e.flags?.[SYS]?.pendingReinforcement).map(effect=>{
     const id=effect.flags?.[SYS]?.concentrationPower?.itemId;
     const item=actor?.items?.get?.(id)??array(actor?.items).find(i=>i.id===id)??findUsableAttachedPower(actor,id);
     const spec=personalProtectionSpec(item?.name);
@@ -55,10 +56,33 @@ export function selectElementalDefense({actor,boundary=null,mode='auto',category
   const guard=selectGuard(activeElementalGuards(actor),mode,category);
   return guard?{guard,owner:actor,source:'personal'}:null;
 }
-export function assessGuardHit(rawDamage,guard){
-  if(!guard)return {blocked:false,damageToTarget:Math.max(0,Number(rawDamage)||0),destroyed:false};
-  const result=absorbElementalStructureHit(Math.max(0,Number(rawDamage)||0),guard.threshold);
-  return {blocked:true,damageToTarget:0,destroyed:result.destroyed,threshold:guard.threshold,name:guard.name};
+/** Classify the shield before applying Health/Focus and before ordinary DR.
+ * Default is the pre-v0.2.224 rule: a protection absorbs an entire attack,
+ * even if the same attack destroys it. When enabled, overflow passes through
+ * to the protected target; damageAfterGuardProtection then respects the
+ * already calculated DR and any one-attack shield bonuses.
+ */
+export function assessGuardHit(rawDamage,guard,{allowOverflow=false}={}){
+  const raw=Math.max(0,Number(rawDamage)||0);
+  if(!guard)return {blocked:false,damageToTarget:raw,destroyed:false};
+  const result=absorbElementalStructureHit(raw,guard.threshold);
+  const overflow=Math.max(0,raw-result.threshold);
+  return {blocked:!allowOverflow||overflow===0,
+    damageToTarget:allowOverflow?overflow:0,destroyed:result.destroyed,
+    threshold:result.threshold,name:guard.name};
+}
+/** Damage after threshold absorption. The normal-damage input has ALREADY had
+ * the target's DR applied by the existing damage-card pipeline, including
+ * Adamantium, team benefits and temporary DR. Subtracting the shield's limit
+ * from that net attack cannot charge the target twice or ignore their DR.
+ * Never permit more than the original raw overflow to reach the target.
+ */
+export function damageAfterGuardProtection(guarded,normalDamage){
+  const normal=Math.max(0,Number(normalDamage)||0);
+  if(!guarded)return normal;
+  if(guarded.blocked||!(guarded.damageToTarget>0))return 0;
+  return Math.max(0,Math.min(guarded.damageToTarget,
+    normal-Math.max(0,Number(guarded.threshold)||0)));
 }
 export async function consumeGuard(actor,guard,result){
   if(!guard||!result.destroyed)return;

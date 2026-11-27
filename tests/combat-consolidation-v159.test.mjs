@@ -135,7 +135,7 @@ test('Fantastic is resolved per target rank; reaction traits and new turn reset 
 
 test('review package version and unchanged Combat/Focus/damage entry points',()=>{
   const system=JSON.parse(readFileSync(new URL('../system.json',import.meta.url),'utf8'));
-  assert.equal(system.version,'0.2.178');
+  assert.equal(system.version,'0.2.237');
   const src=readFileSync(new URL('../multiverse-d616.mjs',import.meta.url),'utf8');
   assert.match(src,/teamOffensive3ForcesRoll\(this\.actor,markedActors\)/);
   assert.match(src,/effectiveTeamDamageReduction\(target,drCategory\)/);

@@ -1,3 +1,5 @@
+import {ADVANCE_CREDIT,validateAdvanceCredit} from '../native-priority-lot3.mjs';
+import {groupMoveIsForced} from '../native-priority-lot7.mjs';
 import {vehicleCrewCombatant} from '../vehicles/vehicle-combat-core.mjs';
 import {hasEquipmentPermanentPower} from '../equipment-permanent-effects.mjs';
 import { automationEnabled } from '../automation-settings.mjs';
@@ -17,9 +19,11 @@ import {
   sanitizeTurnState,
   validateTurnConsumption,
 } from "./turn-tracker-core.mjs";
-import { resolveTurnResourceState } from "./reaction-limits.mjs";
+import { resolveTurnResourceState, genericReactionMaximum } from "./reaction-limits.mjs";
+import {nativeScopedReactionDecision,nativeReactionUsage,nativeReactionSpendOrder,GENERIC_REACTION} from './native-scoped-reactions.mjs';
 import {passivePowerBenefits} from '../custom-automations.mjs';
 import { findCombatById } from "./combat-lookup.mjs";
+import {createTurnTrackerResult,turnTrackerResultForRecipient} from './turn-tracker-result-protocol.mjs';
 
 const SYSTEM_ID = "multiverse-d616";
 const FLAG_KEY = "turnTracker";
@@ -124,6 +128,7 @@ function canControl(combatant, user = game.user) {
   return !!actor?.testUserPermission?.(user, ownerLevel);
 }
 
+import {HIT_N_RUN_CREDIT,spendHitNRunCredit} from '../native-power-hit-n-run-movement.mjs';
 const TEMP_MOVEMENT_FLAG = 'temporaryMovementPower';
 function movementGrant(combatant) {
   const grant = combatant?.getFlag?.(SYSTEM_ID, TEMP_MOVEMENT_FLAG);
@@ -191,10 +196,12 @@ async function grantMovementPower(combatant,payload) {
 
 function stateFor(combatant) {
   const movementMax = movementSpeedFor(combatant);
-  return resolveTurnResourceState(sanitizeTurnState(
-    combatant?.getFlag?.(SYSTEM_ID, FLAG_KEY) ?? {},
-    movementMax
-  ), combatantActor(combatant));
+  const raw=combatant?.getFlag?.(SYSTEM_ID, FLAG_KEY) ?? {};
+  const state={...resolveTurnResourceState(sanitizeTurnState(
+    raw, movementMax
+  ), combatantActor(combatant)),scopedReactionUsed:nativeReactionUsage(raw.scopedReactionUsed),
+    reactionSpendOrder:raw.reactionSpendOrder};
+  return {...state,reactionSpendOrder:nativeReactionSpendOrder({state})};
 }
 
 function statesEqual(left, right) {
@@ -203,6 +210,8 @@ function statesEqual(left, right) {
     Number(left?.actionMax) === Number(right?.actionMax) &&
     Number(left?.reactionUsed) === Number(right?.reactionUsed) &&
     Number(left?.reactionMax) === Number(right?.reactionMax) &&
+    JSON.stringify(nativeReactionUsage(left?.scopedReactionUsed)) === JSON.stringify(nativeReactionUsage(right?.scopedReactionUsed)) &&
+    JSON.stringify(nativeReactionSpendOrder({state:left})) === JSON.stringify(nativeReactionSpendOrder({state:right})) &&
     Number(left?.movementUsed) === Number(right?.movementUsed) &&
     !!left?.movementExtraActionUsed === !!right?.movementExtraActionUsed &&
     Number(left?.movementMax) === Number(right?.movementMax) &&
@@ -232,25 +241,61 @@ async function applyRequest(payload, requestingUser) {
 
   const movementMax = movementSpeedFor(combatant);
   const current = stateFor(combatant);
+  const actor=combatantActor(combatant);
   let next = current;
+  let scopeToSpend=null;
 
   if (payload.operation === "adjust") {
-    next = adjustTurnState(
-      current,
-      payload.resource,
-      Number(payload.delta),
-      movementMax
-    );
+    next = adjustTurnState(current,payload.resource,Number(payload.delta),movementMax);
+    if(payload.resource==='reaction'){
+      const delta=Number(payload.delta);
+      // A generic HUD control may never spend a category-restricted Reaction.
+      // Track the exact spend order so refunds restore the last slot actually
+      // used, even if that slot is an extra Reaction consumed before a generic.
+      if(!Number.isInteger(delta))return false;
+      const order=nativeReactionSpendOrder({state:current});
+      if(delta>0){
+        const genericUsed=order.filter(s=>s===GENERIC_REACTION).length;
+        if(genericUsed+delta>genericReactionMaximum(actor))return false;
+        next.reactionSpendOrder=[...order,...Array(delta).fill(GENERIC_REACTION)];
+      }else if(delta<0){
+        next.reactionSpendOrder=order.slice(0,Math.max(0,next.reactionUsed));
+      }else{
+        next.reactionSpendOrder=order;
+      }
+      next.scopedReactionUsed=nativeReactionUsage(next.reactionSpendOrder);
+    }else{
+      next.scopedReactionUsed=current.scopedReactionUsed;
+      next.reactionSpendOrder=current.reactionSpendOrder;
+    }
   } else if (payload.operation === "consume") {
     const resources = payload.resources;
-    // Validate on the GM after each queued request. Reject stale, malformed,
-    // duplicate or already-exhausted spends before modifying combatant flags.
+    // Every GM-authorized spend uses the same serial queue and the live Actor.
     if (!validateTurnConsumption(current, resources, movementMax)) return false;
+    if(resources?.includes('reaction')){
+      const decision=nativeScopedReactionDecision({actor,state:current,
+        itemId:payload.itemId,genericMax:genericReactionMaximum(actor)});
+      if(!decision.ok)return false;
+      scopeToSpend=decision.scope;
+    }
     next = consumeTurnResources(current, resources, movementMax);
+    next.reactionSpendOrder=resources?.includes('reaction')
+      ?[...current.reactionSpendOrder,scopeToSpend??GENERIC_REACTION]
+      :current.reactionSpendOrder;
+    next.scopedReactionUsed=nativeReactionUsage(next.reactionSpendOrder);
   } else if (payload.operation === 'movementDistance') {
-    const move = recordMovementDistance(current,Number(payload.distance),movementMax);
-    next = move.state;
+    const grant=combatant.getFlag?.(SYSTEM_ID,HIT_N_RUN_CREDIT);
+    const credit=spendHitNRunCredit(grant,Number(payload.distance),combatant.combat??game.combat,combatant);
+    const move = recordMovementDistance(current,credit.charged,movementMax);
+    next = {...move.state,scopedReactionUsed:current.scopedReactionUsed,reactionSpendOrder:current.reactionSpendOrder};
     await persistState(combatant,next);
+    // Only GM decrements the authenticated one-turn credit. A single long
+    // movement may be partly free and partly charged to ordinary Movement.
+    if(grant && (credit.free>0||!credit.valid)){
+      if(credit.valid&&credit.remaining>0)
+        await combatant.setFlag(SYSTEM_ID,HIT_N_RUN_CREDIT,{...grant,remaining:credit.remaining});
+      else await combatant.unsetFlag(SYSTEM_ID,HIT_N_RUN_CREDIT);
+    }
     if (move.actionSpent) movementAlert(combatant,
       `${combatant.name}: movimento excedeu ${movementMax} espaços. Ação Padrão utilizada para uma segunda Ação de Movimento.`);
     else if (move.exceeded && (move.needsExtra || current.movementUsed <= 2*movementMax)) movementAlert(combatant,
@@ -259,7 +304,7 @@ async function applyRequest(payload, requestingUser) {
   } else if (payload.operation === 'grantPowerMovement') {
     return grantMovementPower(combatant,payload);
   } else if (payload.operation === "reset") {
-    next = resetTurnState(current, current.resetKey, movementMax);
+    next = {...resetTurnState(current, current.resetKey, movementMax),scopedReactionUsed:[],reactionSpendOrder:[]};
   } else {
     return false;
   }
@@ -314,8 +359,12 @@ async function handleSocket(payload, senderId) {
   const sender=authorizedTurnSocketSender(payload,senderId,game.users);
   if(!sender)return;
   if(payload.type==='turnTrackerResult'){
-    if(!sender.isGM)return;
-    if(payload.userId===game.user?.id&&spendAcks.has(payload.requestId))spendAcks.get(payload.requestId)(!!payload.success);
+    // The authenticated sender is the GM, not the player who requested the
+    // spend. v208/209 incorrectly encoded payload.userId as the recipient:
+    // authorizedTurnSocketSender rejected every legitimate response, even
+    // after the GM had already spent the Reaction. Keep them separate.
+    if(!turnTrackerResultForRecipient(payload,sender,game.user?.id))return;
+    if(spendAcks.has(payload.requestId))spendAcks.get(payload.requestId)(payload.success);
     return;
   }
 
@@ -345,7 +394,10 @@ async function handleSocket(payload, senderId) {
   try {
     if (payload.type === "turnTrackerRequest") {
       const success=await serializeSpend(payload, requestingUser);
-      if(payload.requestId)game.socket.emit(SOCKET_NAME,{type:'turnTrackerResult',requestId:payload.requestId,userId:requestingUser.id,success});
+      if(payload.requestId)game.socket.emit(SOCKET_NAME,createTurnTrackerResult({
+        requestId:payload.requestId,senderUserId:game.user.id,
+        recipientUserId:requestingUser.id,success,
+      }));
       return;
     }
     if (payload.type === "initiativeRollRequest") {
@@ -361,10 +413,10 @@ async function handleSocket(payload, senderId) {
     }
   } catch (error) {
     if (payload.type === "turnTrackerRequest" && payload.requestId) {
-      game.socket.emit(SOCKET_NAME, {
-        type: "turnTrackerResult", requestId: payload.requestId,
-        userId: requestingUser.id, success: false,
-      });
+      game.socket.emit(SOCKET_NAME,createTurnTrackerResult({
+        requestId:payload.requestId,senderUserId:game.user.id,
+        recipientUserId:requestingUser.id,success:false,
+      }));
     }
     console.error(`[${SYSTEM_ID}] Turn Tracker socket update failed`, error);
   }
@@ -1199,7 +1251,10 @@ async function trackItemUse(item) {
     resources = [chosen];
   }
 
-  const accepted = await requestUpdate(combatant, {operation:'consume',resources});
+  // GM resolves itemId from the combatant's Actor; do not trust client-sent
+  // Power Set or let a generic Reaction consume a restricted bonus slot.
+  const accepted = await requestUpdate(combatant, {operation:'consume',resources,itemId:item?.id},
+    {waitForAck:resources.includes('reaction')});
   if (accepted) {
     const power = teleportPowerGrant(item);
     if (power) {
@@ -1735,9 +1790,9 @@ async function resetActiveCombatant(combat, { force = false } = {}) {
     const current = stateFor(combatant);
     if (!key || (!force && current.resetKey === key)) return false;
     if (movementGrant(combatant)) await clearMovementGrant(combatant);
-    return persistState(combatant, resetTurnState(
+    return persistState(combatant, {...resetTurnState(
       stateFor(combatant), key, movementSpeedFor(combatant)
-    ));
+    ),scopedReactionUsed:[],reactionSpendOrder:[]});
   });
 }
 
@@ -1848,7 +1903,7 @@ async function recordMovementForCombatant(combatant, spaces, source = "movement"
 async function trackTokenMovement(tokenDocument, movement, _operation, _user) {
   // Embarked passengers follow their vehicle. The synchronized token movement
   // is not their own Movement Action and must never consume their tracker.
-  if (tokenDocument?.getFlag?.(SYSTEM_ID,'embarked')) return;
+  if (tokenDocument?.getFlag?.(SYSTEM_ID,'embarked') || groupMoveIsForced(tokenDocument)) return;
   if (!automationEnabled('turnActions')) return;
   // The v14 moveToken hook fires on every connected client after the update.
   // Only the primary GM records it, preventing duplicate socket requests and
@@ -1865,6 +1920,24 @@ async function trackTokenMovement(tokenDocument, movement, _operation, _user) {
   if (IGNORED_MOVEMENT_METHODS.has(method)) {
     rememberProcessedDestination(destinationKey);
     return;
+  }
+  // Advance grants exactly one out-of-turn free movement toward the trigger.
+  // Check source/target/range *on the GM*, then consume the grant. Invalid
+  // moves are charged normally and reported, never silently made free.
+  const advance=combatant.getFlag?.(SYSTEM_ID,ADVANCE_CREDIT);
+  if(advance){
+    const enemy=tokenDocument.parent?.tokens?.get?.(advance.enemyTokenId);
+    const origin=movement?.origin??{x:tokenDocument.x,y:tokenDocument.y};
+    const destination=movement?.destination??{x:tokenDocument.x,y:tokenDocument.y};
+    const allowance=movementSpacesFromHook(movement,sceneDistancePerSpace(tokenDocument)) ||
+      movementSpacesFromPositions(tokenDocument,origin,destination);
+    const result=validateAdvanceCredit(advance,{combat:game.combat,combatant,source:origin,
+      destination,enemy,maximum:movementSpeedFor(combatant)});
+    await combatant.unsetFlag(SYSTEM_ID,ADVANCE_CREDIT);
+    if(result.valid && allowance<=Number(advance.maximum)+1e-6){
+      rememberProcessedDestination(destinationKey);return;
+    }
+    movementAlert(combatant,`${combatant.name}: ${result.reason??'Advance excedeu o limite; movimento contado normalmente.'}`,true);
   }
   const grant = movementGrant(combatant);
   if (grant) {
@@ -1909,7 +1982,7 @@ function coordinateOriginKey(tokenDocument) {
 }
 
 function captureCoordinateOrigin(tokenDocument, changed, options) {
-  if (options?.d616VehicleSync || tokenDocument?.getFlag?.(SYSTEM_ID,'embarked')) return;
+  if (options?.d616VehicleSync || options?.d616GroupForced || groupMoveIsForced(tokenDocument) || tokenDocument?.getFlag?.(SYSTEM_ID,'embarked')) return;
   if (!isPrimaryGM()) return;
   if (!("x" in (changed ?? {})) && !("y" in (changed ?? {})) && !("elevation" in (changed ?? {}))) return;
 
@@ -1922,7 +1995,7 @@ function captureCoordinateOrigin(tokenDocument, changed, options) {
 }
 
 function scheduleCoordinateMovementFallback(tokenDocument, changed, options) {
-  if (options?.d616VehicleSync || tokenDocument?.getFlag?.(SYSTEM_ID,'embarked')) {
+  if (options?.d616VehicleSync || options?.d616GroupForced || groupMoveIsForced(tokenDocument) || tokenDocument?.getFlag?.(SYSTEM_ID,'embarked')) {
     pendingCoordinateOrigins.delete(coordinateOriginKey(tokenDocument));
     return;
   }

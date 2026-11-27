@@ -95,7 +95,7 @@ test('character sheet and HUD expose Team Maneuvers; no permanent condition, DR 
 test('README is byte-for-byte identical to approved release; CHANGELOG records latest 157',()=>{
  const readme=readFileSync(new URL('../README.md',import.meta.url));
  assert.equal(createHash('sha256').update(readme).digest('hex'),'04838f7de55c47a833f548639088158f9827c26be17f8a12ea8f49164bdf45cf');
- assert.match(source('../CHANGELOG.md'),/^## v0\.2\.178/);
+ assert.match(source('../CHANGELOG.md'),/^## v0\.2\.237/);
 });
 
 test('a maneuver cannot be executed in a later round than it was prepared',async()=>{

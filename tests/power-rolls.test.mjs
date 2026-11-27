@@ -10,8 +10,8 @@ import {
 const items = JSON.parse(readFileSync(new URL('../apps/charactermancer/data/powers.json', import.meta.url))).items;
 const names = new Set(items.map(i => i.name));
 
-test('67 poderes mapeados cobrem entradas reais e fornecem atributo válido', () => {
-  assert.equal(Object.keys(POWER_ROLL_RULES).length, 67);
+test('72 poderes mapeados cobrem entradas reais e fornecem atributo válido', () => {
+  assert.equal(Object.keys(POWER_ROLL_RULES).length, 72);
   for (const [name, rule] of Object.entries(POWER_ROLL_RULES)) {
     assert.ok(names.has(name), name);
     const item = items.find(i => i.name === name);

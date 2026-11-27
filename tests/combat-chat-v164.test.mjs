@@ -80,7 +80,7 @@ test('v164 dice and 3 Edge/Trouble per-die controls are intact, Trouble locked o
   assert.match(tooltip,/data-retro-action="trouble"/);
   assert.match(main,/naturalUltimateRoll && action === "trouble"/);
   assert.match(main,/action === "trouble" && naturalSixM6\(chatMessage\.rolls\?\.\[0\]\)/);
-  assert.match(main,/const naturalUltimate = naturalSixM6\(attackRoll\)/);
+  assert.match(main,/const naturalUltimate = !suppressFantastic\(attackRoll,this\)&&\(naturalSixM6\(attackRoll\)/);
 });
 
 test('v164 GM attack displays all 3 controls and hooks existing damage/guard pipeline; players cannot apply',()=>{

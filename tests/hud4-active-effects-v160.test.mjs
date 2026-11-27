@@ -62,5 +62,5 @@ test('v160 UI is read-only, uses shared classic/persistent panels and all icons 
   assert.match(css,/__hud4-chip\.is-defensive/);
   assert.doesNotMatch(readFileSync(new URL('../scripts/hud4-active-effects.mjs',import.meta.url),'utf8'),/\.update\(|\.setFlag\(|createEmbeddedDocuments\(/);
   const system=JSON.parse(readFileSync(new URL('../system.json',import.meta.url)));
-  assert.equal(system.version,'0.2.178');
+  assert.equal(system.version,'0.2.237');
 });

@@ -19,10 +19,14 @@ export const POWER_DAMAGE_FACTORS = Object.freeze({
   'Venom Burst': [0, 0.5],
   'Coiling Crush': [0, 1], // Initial grasp: no damage normally; normal on Fantastic.
   'Headshot': [2, 3],
+  'Snap Shooting': [0.5, 1], // two-target attack: half on success, full on Fantastic
+  'Furious Attacks': [0.5, 1], // focused multi-hit: half on success, full on Fantastic
+  'Sniping': [1, 3], // official ranged sniper Fantastic is triple damage
   'Banging Heads': [1, 1],
   'Supernova': [0.5, 1], // Half on a normal hit; full on a successful Fantastic.
   'Leg Sweep': [1, 1],
   'Rico-Shield': [1, 1],
+  'Jinx You': [0, 1], // Melee touch: only Fantastic hits deal NORMAL (not doubled) damage.
   // Blind/deafen effects deal NO damage on ordinary success; exactly normal damage on Fantastic.
   'Flare': [0, 1],
   'Dazzle': [0, 1],
@@ -32,6 +36,9 @@ export const POWER_DAMAGE_FACTORS = Object.freeze({
 export const HALF_TO_FULL_POWERS = Object.freeze(HALF_TO_FULL);
 
 export function getPowerDamageFactor(name,{fantastic=false, suppressFantastic=false, enabled=undefined}={}) {
+  // Jinx You's official Melee touch has no normal-hit damage and only NORMAL
+  // damage on a Fantastic. Enforce even when optional generic overrides are off.
+  if(String(name??'').trim()==='Jinx You')return fantastic?1:0;
   const canApply=enabled===undefined?automationEnabled('fantasticDamage',undefined,name):Boolean(enabled);
   const factors=canApply?POWER_DAMAGE_FACTORS[String(name??'').trim()]:null;
   if(factors) return factors[fantastic?1:0];

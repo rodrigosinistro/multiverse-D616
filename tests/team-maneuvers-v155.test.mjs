@@ -72,8 +72,8 @@ test('chat report has guaranteed light background/dark foreground, dialog retain
 
 test('release metadata advanced without changing README or base catalog',()=>{
   const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url),'utf8'));
-  assert.equal(manifest.version,'0.2.178');
-  assert.match(manifest.download,/v0\.2\.178/);
-  assert.match(readFileSync(new URL('../CHANGELOG.md',import.meta.url),'utf8'),/^## v0\.2\.178/);
+  assert.equal(manifest.version,'0.2.237');
+  assert.equal(manifest.download,`https://github.com/rodrigosinistro/multiverse-D616/releases/download/v${manifest.version}/multiverse-d616-v${manifest.version}.zip`);
+  assert.match(readFileSync(new URL('../CHANGELOG.md',import.meta.url),'utf8'),/^## v0\.2\.237/);
   assert.match(readFileSync(new URL('../README.md',import.meta.url),'utf8'),/Multiverse-D616/);
 });

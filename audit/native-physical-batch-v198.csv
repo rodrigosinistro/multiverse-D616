@@ -1,0 +1,28 @@
+﻿Power Set,Poder,Power ID,Situação na v0.2.198,Natureza da entrega,Macro ID,Controlador
+Basic,Additional Limbs,909yho4GgMb4QRlE,native-active,comportamento novo/ampliado,8aa9fb090d502503,physical-edge
+Basic,Combat Trickery,4zdHtVusW1bpoMQR,reference-existing,referência a mecanismo existente,5ae9fbc1b1a46230,combat-trickery
+Basic,Wisecracker,EeGxUE2qC2D2xw4W,reference-existing,referência a mecanismo existente,80533612b303c6fc,power-roll-existing
+Plasticity,Extended Reach 1,UxgMUMU0XKHyujjv,reference-existing,referência a mecanismo existente,c606b1d1b9507b60,passive-movement
+Plasticity,Extended Reach 2,U05Ab1iyXVoqifyw,reference-existing,referência a mecanismo existente,c9d93669f294e85d,passive-movement
+Plasticity,Flexible Bones 1,BSwvmn7hr3cMkOJA,reference-existing,referência a mecanismo existente,6ff8b4e7278bdbf4,passive-active-effect
+Plasticity,Flexible Bones 2,tdZP26lpAxILt7kG,reference-existing,referência a mecanismo existente,8077d22b020e5f2f,passive-active-effect
+Plasticity,Stilt Steps,TECXR5BEZFzL5Tmo,reference-existing,referência a mecanismo existente,d0b23b1b605e66e5,passive-movement
+Spider-Powers,Jump 1,7FP7kE6VVzbJYeCy,reference-existing,referência a mecanismo existente,50ba079d45077fe3,passive-movement
+Spider-Powers,Jump 2,bomm8Jlthfh9RQju,reference-existing,referência a mecanismo existente,c79ff12b343f5007,passive-movement
+Spider-Powers,Jump 3,YJHm4A0kJqEr2f6A,reference-existing,referência a mecanismo existente,79758cc682f6c469,passive-movement
+Spider-Powers,Spider Sense,InUekWyvSZpy4TCE,native-partial,comportamento novo/ampliado,84bd55c9e1121086,spider-sense
+Spider-Powers,Wallcrawling,lPOjxlvu0CXXalJ1,reference-existing,referência a mecanismo existente,4015618396e989f4,passive-movement
+Super-Speed,Blazing Fast Fists,aJk0RuuAOQjkSWW7,native-active,comportamento novo/ampliado,f3ddb2657bfcd021,physical-edge
+Basic,Disguise,ody1G0sSPcvPumiu,not-registered,não implementado (planejado),,
+Basic,Environmental Protection,hMqJO6IadE92wPVq,not-registered,não implementado (planejado),,
+Basic,Heightened Senses 1,tqrL9HjOYeRX1IXh,not-registered,não implementado (planejado),,
+Basic,Heightened Senses 2,IJYTfpo7A0tahxPO,not-registered,não implementado (planejado),,
+Basic,Group Flight,40tLCuK4uHYERhs3,not-registered,não implementado (planejado),,
+Plasticity,Body Sheet,R128rlNSkXlJSpx4,not-registered,não implementado (planejado),,
+Plasticity,Body Sphere,BYuRscd9D6akdwkr,not-registered,não implementado (planejado),,
+Plasticity,Flexible Fingers,IIO8sNoSsyZbmq6h,not-registered,não implementado (planejado),,
+Spider-Powers,Spider-Dodge,xcAIS7tsxb4uo29Z,not-registered,não implementado (planejado),,
+Spider-Powers,Spider-Pheromones,aJK1lFLcA37cZC5u,not-registered,não implementado (planejado),,
+Spider-Powers,Webcasting,LM4JxdAYxlijsBRm,not-registered,não implementado (planejado),,
+Super-Speed,Blur,H3W9CEnugIldggLw,not-registered,não implementado (planejado),,
+Super-Speed,Catch Bullets,1bYpIpXW3Lh9TCyg,not-registered,não implementado (planejado),,

@@ -62,11 +62,11 @@ test('Trouble obrigatório rerrola o melhor dado, prioriza M, respeita 6-M-6',()
  assert.equal(mandatoryTroubleDieIndex(mock([6,4,5])),0);
  assert.equal(mandatoryTroubleDieIndex(mock([6,1,6])),null);
 });
-test('aplicação de Trouble único delega ao motor de retro Edge existente; Edge deixa escolha ao jogador',async()=>{
+test('v188: Trouble e Edge líquidos nunca disparam rerolls automáticos',async()=>{
  const calls=[];const msg={id:'m',flavor:'test',rolls:[mock([2,1,5])],_handleChatButton:async(...args)=>calls.push(args)};
  await resolveConditionReroll(msg,{autoCount:1,edgeMode:-1});
- assert.equal(calls.length,1);assert.deepEqual(calls[0].slice(0,3),['trouble','m',1]);
- await resolveConditionReroll(msg,{autoCount:1,edgeMode:1});assert.equal(calls.length,1);
+ assert.equal(calls.length,0);
+ await resolveConditionReroll(msg,{autoCount:1,edgeMode:1});assert.equal(calls.length,0);
 });
 test('todas as principais origens de rolagem importam o motor de condições',()=>{
  for(const name of ['multiverse-d616.mjs','scripts/native-action-hud.mjs','scripts/power-escapes.mjs']){
@@ -83,9 +83,9 @@ test('Force temporário conta como uma única origem mesmo com vários efeitos, 
  assert.equal(r.troubles,1);assert.equal(r.edgeMode,0);assert.equal(r.sources.filter(x=>x.source.includes('Force')).length,1);
 });
 
-test('Combat Trickery impede Trouble no dado Marvel, mas deixa os outros dados afetados',async()=>{
+test('v188: Combat Trickery preserva seleção manual de Trouble sem dado adicional automático',async()=>{
  const calls=[];const msg={id:'ct',flavor:'ct',rolls:[mock([3,1,5])],
    getFlag:()=>({noMarvelTrouble:true}),_handleChatButton:async(...args)=>calls.push(args)};
  await resolveConditionReroll(msg,{autoCount:1,edgeMode:-1});
- assert.equal(calls.length,1);assert.equal(calls[0][2],2);
+ assert.equal(calls.length,0);
 });

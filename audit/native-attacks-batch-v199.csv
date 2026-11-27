@@ -1,0 +1,30 @@
+﻿Power Set,Poder,Power ID,Ação,Custo,Duração,Situação de cobertura,Tipo de evolução,Macro ID,Controlador
+Martial Arts,Chain Strikes,VgnrsJpoaA3ysnyT,Standard,5 Focus,Instant,reference-existing,pré-existente: referência,54d2d2357ee95ac0,attack-existing
+Martial Arts,Defense Stance,UiskRuZdy6bbwGEx,Standard,,Concentration,reference-existing,pré-existente: referência,5e3dd20ec9f54279,attack-existing
+Martial Arts,Grappling Technique,0f6fOwThDIGLrbxE,Standard,5 Focus,instant,reference-existing,pré-existente: referência,4b9e5a3c28fe06c8,attack-existing
+Martial Arts,Leg Sweep,fM2OkLfs31Qs3pVv,Standard,5 Focus,Instant,reference-existing,pré-existente: referência,e8058eb1afdb1be9,attack-existing
+Martial Arts,Untouchable Position,owsgvdOSYAkIY3Ip,,,Permanent,native-partial,comportamento novo/parcial,24045ee5e0dae362,untouchable-position
+Melee Weapons,Exploit,f1IE064VUilnDSXd,Reaction,5 Focus,Instant,not-registered,não registrado,,
+Melee Weapons,Fast Attacks,oHdjIgnfjQUQYAlS,Standard,,Instantâneo,reference-existing,pré-existente: referência,e8d558cc04db109b,attack-existing
+Melee Weapons,Focused Fury,8DvKqA6FlcJxPMl3,Standard,5 or more Focus,Instant,native-partial,automação parcial,b47416a6e09e9ac0,focused-fury
+Melee Weapons,Furious Attacks,Tk0OXCyok6Xa7eaG,Standard,10 or more Focus,Instant,native-partial,comportamento novo/parcial,65d05936e09f78e3,furious-attacks
+Melee Weapons,Hit n Run,lhbm38sUTPjW0FuB,Standard,,Instant,not-registered,não registrado,,
+Melee Weapons,Riposte,HAHFUMq6WfsIo18p,Reaction,,Instant,not-registered,não registrado,,
+Melee Weapons,Unstoppable Assault,7S1bp3kpzzuaQSue,Standard,15 Focus,Instant,reference-existing,pré-existente: referência,61aeb8b4cc593e69,attack-existing
+Melee Weapons,Vicious Attack,wJyB7ojAhEU1JsPL,Standard,,instant,reference-existing,pré-existente: referência,0cf0f0b62cf72dec,attack-existing
+Melee Weapons,Whirling Frenzy,3M1lf4tmhqJFOo9x,Standard,5 Focus,Instant,reference-existing,pré-existente: referência,40fb84d86c9c54b2,attack-existing
+Ranged Weapons,Covering Fire,XtA2YAaGIAKjObvj,Reaction,10 Focus,Instant,reference-existing,pré-existente: referência,810ea3d21396470f,attack-existing
+Ranged Weapons,Dance of Death,491xrGpqoQAbGdGo,Standard,10 Focus,Instant,reference-existing,pré-existente: referência,9e4b4b85b42751f9,attack-existing
+Ranged Weapons,Double Tap,Lx9D5wFvpmUAGt5U,Standard,,Instant,reference-existing,pré-existente: referência,295e4abbcae354d4,attack-existing
+Ranged Weapons,Fast Hands,Qm24O1PO8Lyd8eB9,,,Permanent,not-registered,não registrado,,
+Ranged Weapons,Headshot,ktORqNBc2M6xdogx,Standard,15 Focus,Instant,reference-existing,pré-existente: referência,9adbda424b8817b0,attack-existing
+Ranged Weapons,Kill Zone,K6nJnrQ41nJ4w0e4,Reaction,15 Focus,Instant,not-registered,não registrado,,
+Ranged Weapons,Orchestra of Overkill,LZGpOUPnHc7wRNKe,Standard,15 Focus,Instant,reference-existing,pré-existente: referência,c108f297bf04a888,attack-existing
+Ranged Weapons,Point-Blank Parry,wFTyQv5mjVnEk97k,Reaction,5 Focus,Instant,not-registered,não registrado,,
+Ranged Weapons,Return Fire,fd3AyzufIQFe4TqS,Reaction,5 Focus,Instant,reference-existing,pré-existente: referência,2533f7f5fb8f7f92,attack-existing
+Ranged Weapons,Slow-Motion Shoot-Dodge,mXIb03zwBJSJ2IAW,Standard,10 Focus,Instant + 1 round,reference-existing,pré-existente: referência,5ab7cc84e7b14d66,attack-existing
+Ranged Weapons,Snap Shooting,UTTdPifPgsvPH09T,Standard,,Instant,native-partial,comportamento novo/parcial,92353d1061a900ea,snap-shooting
+Ranged Weapons,Sniping,PvXIGZdzrBsLyW6g,Both standard and movement (character cannot move this turn),5 Focus,Instant,native-partial,comportamento novo/parcial,eb76ce122857cad1,sniping
+Ranged Weapons,Stopping Power,hwp96jSC9kAeqdLK,Standard,5 Focus,Instant,not-registered,não registrado,,
+Ranged Weapons,Suppressive Fire,PGzLVF1dCQPTILej,Standard,,Instantâneo,reference-existing,pré-existente: referência,9b43bce84373742f,attack-existing
+Ranged Weapons,Weapons Blazing,4ngchITUUlOsBT09,Standard,,Instant,reference-existing,pré-existente: referência,29fdb670b1fd5a31,attack-existing

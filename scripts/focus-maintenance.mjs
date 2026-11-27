@@ -1,3 +1,4 @@
+import {dampenFactor} from './power-control-rules.mjs';
 import { automationEnabled } from './automation-settings.mjs';
 /** Multiverse-D616 v0.2.9 — persistence and upkeep for per-turn Focus powers.
  * Active Effect is the source of truth; deleting it ends the maintenance.
@@ -36,7 +37,7 @@ export async function beginFocusMaintenance(actor, item, cost = parseFocusCost(i
   const data = {
     itemId: String(item.id ?? ''), itemUuid: String(item.uuid ?? ''),
     amount: cost.min, lastPaidKey, turnsElapsed: 0,
-    maxTurns: focusMaintenanceDuration(item, actor),
+    maxTurns: focusMaintenanceDuration(item, actor)===null?null:Math.max(1,Math.floor(focusMaintenanceDuration(item, actor)*dampenFactor(item))),
   };
   const current = maintenanceEffects(actor).find(e => flags(e).itemId === data.itemId);
   if (current?.id) {

@@ -1,21 +1,45 @@
 import { effectiveTeamDamageReduction } from './team-maneuvers-effects.mjs';
+import {hurledShieldDamageForEntry,consumeHurledShield} from './native-power-hurled-shield.mjs';
+import { scrollCombatChatToResult } from './combat-chat-scroll.mjs';
+import { installPlayerCombatChatAutoScroll } from './combat-chat-player-scroll.mjs';
 import { calculateD616Damage } from "./damage-calculation.js";
 import {damageCardStillCurrent, rollSignature} from "./multi-target-combat.mjs";
 import {combatChatPublicResolution} from "./combat-chat-v164.mjs";
-import { confirmRepeatedAttackDamage, confirmHeldHellfireHealthDamage } from "./repeat-power-attacks.mjs";
+import { confirmRepeatedAttackDamage, confirmStoppingPowerDamage, confirmHitNRunDamage, confirmHeldHellfireHealthDamage } from "./repeat-power-attacks.mjs";
 import { confirmRicoShieldDamage } from "./rico-shield-chain.mjs";
+import { confirmBrainDrain } from './native-priority-lot1.mjs';
+import { confirmLeechLife } from './native-priority-lot4.mjs';
+import {armExploitFromDamage,postExploitSpecial,canceledCatchEntry} from './native-priority-lot2.mjs';
 import { confirmFaltineDamage } from './ongoing-power-effects.mjs';
 import { confirmPowerDamageFromCard, getMarvelOutcome } from "./power-conditions.mjs";
 import { confirmCustomTargetDamageFromCard } from "./custom-automations.mjs";
 import {tryAbsorbHealthDamage} from './energy-absorption-custom.mjs';
-import { activeElementalGuards, selectGuard, selectElementalDefense, assessGuardHit, consumeGuard, guardTargetDefense, findCrossingElementalBarrier } from "./elemental-shields.mjs";
+import { activeElementalGuards, selectGuard, selectElementalDefense, assessGuardHit, damageAfterGuardProtection, consumeGuard, guardTargetDefense, findCrossingElementalBarrier } from "./elemental-shields.mjs";
 import { applyElementalFantasticFromDamageMessage, eligibleElementalDamageResults, postElementalFantasticConfirmation } from "./elemental-fantastic.mjs";
+import {reinforcementOption,commitReinforcement,infusionEligibleTargets} from './native-priority-lot5.mjs';
+import {eligibleRetroactiveReinforcement,holdReinforcementGuard} from './reinforcement-after-damage.mjs';
 
 const MODULE_ID = "multiverse-d616";
 const MMDR_VER = "1.0.0";
+const NO_EXCESS_PROTECTION_DAMAGE = 'noExcessProtectionDamage';
+
+/** Safe default for worlds created before this setting existed. World-scoped,
+ * read on GM damage confirmation, never from an attacker's client flag. */
+function noExcessProtectionDamage(){
+  try { return game.settings.get(MODULE_ID,NO_EXCESS_PROTECTION_DAMAGE)!==false; }
+  catch (_error){return true;}
+}
 
 /* ---------------- Settings / Debug ---------------- */
 Hooks.once("init", () => {
+  game.settings.register(MODULE_ID, NO_EXCESS_PROTECTION_DAMAGE, {
+    name: "Sem dano Excedente em Proteções",
+    hint: "Marcado (padrão): proteções absorvem todo o ataque, mesmo se forem destruídas. Desmarcado: ao ultrapassar o limite de uma proteção, o dano excedente (após a redução de dano aplicável) atinge o personagem. Após o Mestre aplicar o excedente, ative Elemental/Telekinetic Reinforcement no HUD para estornar Health e pagar em Focus (se houver outra Reação).",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: true,
+  });
   game.settings.register(MODULE_ID, "debug", {
     name: "Enable debug logs",
     hint: "Prints [MMDR] logs to the console.",
@@ -234,6 +258,8 @@ function getStructuredEntries(message) {
       flatBonus: Number(entry?.flatBonus ?? 0) || 0,
       normalDamage: Math.max(0,Number(entry?.normalDamage ?? 0) || 0),
       fantastic: Boolean(entry?.fantastic),
+      damageFactor: Number.isFinite(Number(entry?.damageFactor))?Number(entry.damageFactor):undefined,
+      customDamageMultiplier: Number.isFinite(Number(entry?.customDamageMultiplier))?Number(entry.customDamageMultiplier):undefined,
     }))
     .filter((entry) => entry.targetUuid || entry.actorUuid);
 }
@@ -322,6 +348,9 @@ function getLegacyEntries(message, rootElement) {
       rawDamage: computedRaw??Math.max(0,Number(match.groups.damage)||0),
       damageReduction: 0,
       effectiveDamageMultiplier: 0,
+      marvelDie:sourceFormula.marvelDie,damageMultiplier:sourceFormula.damageMultiplier,
+      abilityDamage:sourceFormula.ability,fantastic:sourceFormula.isFantastic,
+      damageFactor:sourceFormula.isFantastic?2:1,
     });
   }
 
@@ -401,8 +430,19 @@ function renderGuardSelector(entry, damageMessage) {
   const structure=guards.find(g=>g.kind==='structure');
   const sphere=guards.find(g=>g.name==='Elemental Sphere');
   if(!auto&&!structure&&!boundary)return '';
-  const choices=[`<option value="auto">${boundary?`Intercepção: ${escapeHtml(boundary.guard.name)} (Ego do criador, proteção ${boundary.guard.threshold})`:auto?`${escapeHtml(auto.name)} — absorção automática (${auto.threshold})`:sphere?`Elemental Sphere — proteção do conjurador (${sphere.threshold})`:'Ataque direto ao personagem'}</option>`];
+  const overflowHint=noExcessProtectionDamage()?'':'; excedente atinge o alvo';
+  const choices=[`<option value="auto">${boundary?`Intercepção: ${escapeHtml(boundary.guard.name)} (Ego do criador, proteção ${boundary.guard.threshold}${overflowHint})`:auto?`${escapeHtml(auto.name)} — absorção automática (${auto.threshold}${overflowHint})`:sphere?`Elemental Sphere — proteção do conjurador (${sphere.threshold}${overflowHint})`:'Ataque direto ao personagem'}</option>`];
   if(structure||boundary)choices.push(`<option value="structure">Atacar estrutura: ${escapeHtml((structure??boundary.guard).name)} (defesa Ego, proteção ${(structure??boundary.guard).threshold})</option>`);
+  // Reinforcement is offered ONLY on a personal Health shield that would break.
+  // The GM confirms the redirect when applying damage, never on a detached roll.
+  const candidate=boundary?.guard??auto;
+  const candidateOwner=boundary?.actor??actor;
+  const overflow=reinforcementOption({actor:candidateOwner,guard:candidate,
+    rawDamage:entry.rawDamage,category:entry.category});
+  if(overflow){
+    const half=Math.max(0,Math.ceil(entry.rawDamage/2)-candidate.threshold);
+    choices.push(`<option value="reinforce">${escapeHtml(overflow.name)} — Reação; ${overflow.overflow} Focus (1/2 DANO: ${half}), manter proteção</option>`);
+  }
   if(auto||structure||boundary)choices.push('<option value="bypass">Ataque direto sem absorção (decisão do Mestre)</option>');
   return `<label class="mmdr-guard-line">Proteção ativa:<select class="mmdr-guard-mode" data-target="${escapeHtml(entry.targetUuid)}">${choices.join('')}</select></label>`;
 }
@@ -492,6 +532,7 @@ function appendUi(message, rootElement) {
     formula?.isFantastic ??
     false;
   const badge = category.toUpperCase();
+  const isCounterstrike=Boolean(message?.getFlag?.(MODULE_ID,'nativeCounterstrikeDamage'));
   const canApply =
     Boolean(game.user?.isGM) && !message?.getFlag?.(MODULE_ID,'mmdrResolved') &&
     targetRefs.some((target) => target.uuid || target.actorUuid);
@@ -500,8 +541,8 @@ function appendUi(message, rootElement) {
     ? `
       <div class="mmdr-actions">
         <button type="button" class="mmdr-apply-btn ${category}" data-action="full">DANO</button>
-        <button type="button" class="mmdr-apply-btn ${category}" data-action="half">1/2 DANO</button>
-        <button type="button" class="mmdr-apply-btn ${category}" data-action="heal">CURA</button>
+        ${isCounterstrike?'':`<button type="button" class="mmdr-apply-btn ${category}" data-action="half">1/2 DANO</button>
+        <button type="button" class="mmdr-apply-btn ${category}" data-action="heal">CURA</button>`}
       </div>`
     : "";
 
@@ -532,6 +573,9 @@ function appendUi(message, rootElement) {
     rootElement.querySelector(".message-content") ?? rootElement;
   content.appendChild(wrapper);
 }
+
+// GM's damage buttons and the player's remote ChatLog must scroll independently.
+installPlayerCombatChatAutoScroll();
 
 Hooks.on("renderChatMessageHTML", (message, html) => {
   try {
@@ -565,6 +609,15 @@ async function applyExactEntries(entries, action, modes={}, damageMessage=null) 
     // caster owns the barrier, even if the recipient is a different actor.
     const sourceId=damageMessage?.getFlag?.(MODULE_ID,'sourceMessageId');
     const source=sourceId?game.messages?.get?.(sourceId):null;
+    // Catch Bullets' GM confirmation is bound to the unchanged original roll,
+    // not to a global damage modifier. Even previously prepared damage cards
+    // respect the intercept at application time.
+    if(!heal&&canceledCatchEntry(source,entry)){
+      results.push({name:entry.name,targetUuid:entry.targetUuid,actorUuid:entry.actorUuid,
+        category:entry.category,delta:0,heal:false,blocked:true,
+        description:'Catch Bullets: projétil físico interceptado; ataque anulado.'});
+      continue;
+    }
     const srcScene=source?.speaker?.scene?game.scenes?.get?.(source.speaker.scene):null;
     const attacker=srcScene?.tokens?.get?.(source?.speaker?.token);
     const victimToken=entry.targetUuid?fromUuidSync?.(entry.targetUuid):null;
@@ -574,7 +627,14 @@ async function applyExactEntries(entries, action, modes={}, damageMessage=null) 
     const defense=heal?null:selectElementalDefense({actor,boundary,mode,category:entry.category});
     const guard=defense?.guard??null;
     const guardOwner=defense?.owner??actor;
-    let guarded=null;
+    let guarded=null,reinforced=null,retroactiveCandidate=null;
+    const beforeHealth=Number(actor.system?.health?.value??0);
+    const option=mode==='reinforce'&&!heal ?reinforcementOption({actor:guardOwner,guard,
+      rawDamage:rawAmount,category:entry.category}):null;
+    // The damage may have been halved after the selector was rendered. In
+    // that case the barrier survives as normal, without spending any resource.
+    if(mode==='reinforce'&&!option && !(guard&&entry.category==='health'&&rawAmount<=guard.threshold))
+      throw Error('Reinforcement não é válido para esta proteção/ataque.');
     if(guard){
       if(guard.kind==='structure'){
         const outcome=getMarvelOutcome(source?.rolls?.[0],guardTargetDefense(guardOwner,guard));
@@ -585,11 +645,27 @@ async function applyExactEntries(entries, action, modes={}, damageMessage=null) 
           continue;
         }
       }
-      guarded=assessGuardHit(rawAmount,guard);
-      await consumeGuard(guardOwner,guard,guarded);
+      if(option){
+        reinforced=await commitReinforcement(guardOwner,option,
+          {tokenDoc:guardOwner===actor?victimToken:null});
+        guarded={blocked:true,damageToTarget:0,destroyed:false,reinforced:true};
+      }else{
+        guarded=assessGuardHit(rawAmount,guard,{allowOverflow:!noExcessProtectionDamage()});
+        // Do not destroy until the Narrator's damage is applied: a player may
+        // still convert its confirmed Health overflow with a later Reaction.
+      }
     }
-    const delta=guarded?.blocked ? 0 :
-      (action==='half'?Math.ceil(Math.max(0,Number(entry.damage)||0)/2):Math.max(0,Number(entry.damage)||0));
+    // Hurled Shield Block is declared AFTER the attack card may already have
+    // been rolled. Read its one-attack marker at GM damage-confirmation time,
+    // never by altering permanent Health DR or the saved attack card.
+    const oneShield=!heal?hurledShieldDamageForEntry(entry,{actor,
+      tokenId:victimToken?.id,sceneId:victimToken?.parent?.id,combat:game.combat,damageMessage,action,
+      piercing:source?.getFlag?.(MODULE_ID,'adamantiumHealthDrIgnore')??null}):null;
+    const damageNow=oneShield?.damage??entry.damage;
+    const damageAfterDR=action==='half'
+      ?Math.ceil(Math.max(0,Number(damageNow)||0)/2)
+      :Math.max(0,Number(damageNow)||0);
+    const delta=damageAfterGuardProtection(guarded,damageAfterDR);
     // Energy Absorption was already paid and armed by the defender on Item.roll().
     // GM damage application converts Health into Focus without another prompt.
     let absorption=null;
@@ -597,15 +673,42 @@ async function applyExactEntries(entries, action, modes={}, damageMessage=null) 
       absorption=await tryAbsorbHealthDamage(actor,delta,{tokenDoc:victimToken});
     }
     if(!absorption&&(delta>0||heal))await applyDelta({actor,category:entry.category,delta,heal});
+    if(guard&&!reinforced){
+      const actualAfterHealth=Number(actor.system?.health?.value??0);
+      const candidate=game.combat?.started&&guarded?.destroyed&&!heal&&!absorption&&damageMessage
+        ?eligibleRetroactiveReinforcement({owner:guardOwner,guard,entry,delta,heal,absorption,
+          mode,damageMessageId:damageMessage.id,
+          healthBefore:beforeHealth,healthAfter:actualAfterHealth})
+        :null;
+      if(candidate&&await holdReinforcementGuard(guard,candidate)){
+        retroactiveCandidate=candidate;
+      }else{
+        await consumeGuard(guardOwner,guard,guarded);
+      }
+    }
+    // Consume only AFTER Health/Focus resolution succeeds, including zero
+    // damage, and only on an actual attack card (not ongoing ticks or healing).
+    if(oneShield?.guard)await consumeHurledShield(actor,oneShield.guard);
+    const reinforcementNote=reinforced
+      ?`${reinforced.powerName}: ${reinforced.redirected} dano excedente transferido de Health para Focus; Reação gasta; proteção preservada. `:'';
+    const shieldNote=oneShield?.guard
+      ?`Hurled Shield Block: RD ${oneShield.guard.level}, reduziu ${action==='half'?Math.ceil((Number(entry.damage)||0)/2)-Math.ceil((Number(damageNow)||0)/2):oneShield.mitigated} dano; proteção consumida. `:'';
+    const guardDescription=guarded?.damageToTarget>0
+      ?`${guard.name} absorveu ${Math.min(rawAmount,guard.threshold)} dano e foi destruída; `+
+        `${delta} ${entry.category==='health'?'Health':'Focus'} de dano excedente após a proteção`+
+        `${delta<guarded.damageToTarget?' após RD':''}.`
+      :guarded?.blocked
+        ?`${guard.name} absorveu ${rawAmount} dano${guarded.destroyed?' e foi destruída':' e permanece ativa'}.`
+        :'';
     results.push({
       name: entry.name || actor.name,
       targetUuid: entry.targetUuid, actorUuid: entry.actorUuid,
       category: entry.category,
+      reinforcementCandidate:retroactiveCandidate,
       delta:absorption?0:delta,heal,absorbed:Boolean(absorption),
-      blocked:Boolean(guarded?.blocked),
-      description:absorption?`Energy Absorption: ${absorption.absorbed} Health ignorados; +${absorption.focusGained} Focus (15 Focus e 1 Reação já gastos na ativação).`:guarded?.blocked
-        ? `${guard.name} absorveu ${rawAmount} dano${guarded.destroyed?' e foi destruída':' e permanece ativa'}.`
-        : '',
+      blocked:Boolean(guarded&&(guarded.blocked||delta===0)),
+      description:reinforcementNote+shieldNote+(absorption?`Energy Absorption: ${absorption.absorbed} Health ignorados; +${absorption.focusGained} Focus (15 Focus e 1 Reação já gastos na ativação). ${guardDescription}`
+        :guardDescription|| (oneShield?.guard?`${delta} ${entry.category==='health'?'Health':'Focus'} de dano após a proteção.`:'')),
     });
   }
 
@@ -652,7 +755,9 @@ async function applyLegacyFormula(message, rootElement, action, modes={}) {
     const rawDamage=calculateD616Damage({...common,damageReduction:0}).damage;
     const damage=calculateD616Damage({...common,damageReduction:readDamageReduction(actor,category)}).damage;
     normalized.push({targetUuid:target.uuid,actorUuid:target.actorUuid,name:target.name||actor.name,
-      category,damage,rawDamage});
+      category,damage,rawDamage,marvelDie:formula.marvelDie,
+      damageMultiplier:formula.damageMultiplier,abilityDamage:formula.ability,
+      fantastic:formula.isFantastic,damageFactor:formula.isFantastic?2:1});
   }
   // Legacy and modern card variants now share the authoritative hit/guard
   // path. Only this function applies the damage; no double update occurs.
@@ -697,6 +802,9 @@ const pendingAttackActions=new Set();
 async function confirmDamageMessage(message,action='full',messageElement=null,button=null){
   if(!game.user?.isGM){ui.notifications?.warn?.('Somente o Mestre pode aplicar dano ou cura.');return;}
   if(!message || !['full','half','heal'].includes(action))return;
+  if(message.getFlag?.(MODULE_ID,'nativeCounterstrikeDamage')&&action!=='full'){
+    ui.notifications?.warn?.('Counterstrike Technique permite apenas DANO, sem metade/cura adicional.');return;
+  }
     if(pendingDamageCards.has(message.id)){
       ui.notifications?.warn?.('Este card já está processando o dano.');
       return;
@@ -749,7 +857,16 @@ async function confirmDamageMessage(message,action='full',messageElement=null,bu
       const receipt=results.map(r=>({targetUuid:r.targetUuid,name:r.name,
         delta:Math.max(0,Number(r.delta)||0),category:r.category,
         heal:!!r.heal,blocked:!!r.blocked}));
-      await message.setFlag(MODULE_ID,'mmdrResolved',{action,at:Date.now(),results:receipt});
+      await message.setFlag(MODULE_ID,'mmdrResolved',{action,at:Date.now(),results:receipt,
+        reinforcementCandidates:results.map(r=>r.reinforcementCandidate).filter(Boolean)});
+      try{await armExploitFromDamage({damageMessage:message,action,receipt});}
+      catch(error){console.error('[D616] Exploit: erro ao armar gatilho confirmado',error);}
+      try{await postExploitSpecial({damageMessage:message,action,receipt});}
+      catch(error){console.warn('[D616] Exploit: efeito da arma requer Mestre',error);}
+      try{await confirmBrainDrain({damageMessage:message,action,results:receipt});}
+      catch(error){console.error('[D616] Brain Drain: falha ao recuperar Focus',error);}
+      try{await confirmLeechLife({damageMessage:message,action,results:receipt});}
+      catch(error){console.error('[D616] Leech Life: falha ao recuperar Health',error);}
       await postConfirmation(results, action);
       await confirmPowerDamageFromCard(message, action, results.filter(r=>!r.blocked));
       // Uma falha em regra personalizada nunca desfaz nem interrompe o dano já aplicado.
@@ -758,14 +875,20 @@ async function confirmDamageMessage(message,action='full',messageElement=null,bu
       await confirmFaltineDamage(message,action,results);
       await confirmRicoShieldDamage(message,action,results);
       await confirmRepeatedAttackDamage(message,action,results);
+      try{await confirmHitNRunDamage(message,action,results);}
+      catch(error){console.warn('[D616] Hit n Run: falha ao conceder movimento gratuito',error);}
+      try{await confirmStoppingPowerDamage(message,action,results);}
+      catch(error){console.warn('[D616] Stopping Power: falha ao publicar segundo disparo',error);}
       await confirmHeldHellfireHealthDamage(message,action,results);
       // O efeito especial deve ser aplicado apenas em alvos com dano REAL > 0;
       // não publicar um segundo card solto, pois isso duplica o aviso.
       let elementalApplied=[];
       try{
+        const infusionTargets=infusionEligibleTargets(sourceMessage,
+          message.getFlag(MODULE_ID,'damageApplication')?.entries,receipt,action);
         elementalApplied=await applyElementalFantasticFromDamageMessage(message,action,
           new Set(results.filter(r=>r.blocked).map(r=>r.targetUuid)),
-          eligibleElementalDamageResults(receipt,action));
+          infusionTargets??eligibleElementalDamageResults(receipt,action));
       }catch(error){console.error('[D616] Falha no efeito Fantástico elemental',error);}
       // Somente agora o Mestre libera o resultado do ataque e os efeitos
       // realmente aplicados, sem a Defesa ou o cálculo reservado.
@@ -790,6 +913,8 @@ async function confirmDamageMessage(message,action='full',messageElement=null,bu
         .join(", ");
       ui.notifications?.info(`MMDR: ${summary}`);
       dbg("applied", { messageId:message.id, action, results });
+      // The confirmation and the updated attack can be below the fold.
+      void scrollCombatChatToResult();
       return {resolved:true,results};
     } catch (error) {
       console.error("[MMDR] apply error", error);
@@ -830,12 +955,14 @@ async function applyAttackQuickAction(source,action='full'){
     if(card?.noHit){
       const published=combatChatPublicResolution(card.targets,[],{action,signature});
       if(published.targets.length)await source.setFlag(MODULE_ID,'combatChatResolution',published);
+      void scrollCombatChatToResult();
       return {resolved:true,results:[]};
     }
     if(!card?.getFlag?.(MODULE_ID,'damageApplication'))return;
     const entries=getStructuredEntries(card);
     if(entries.some(entry=>Boolean(renderGuardSelector(entry,card)))){
       ui.notifications?.info?.('O alvo possui proteção ativa: confirme o modo de proteção no card de dano do Mestre.');
+      void scrollCombatChatToResult();
       return {requiresGuardDecision:true};
     }
     return await confirmDamageMessage(card,action,null,null);

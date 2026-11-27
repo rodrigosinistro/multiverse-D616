@@ -75,6 +75,6 @@ test('existing modern and legacy damage paths share protection selection and per
   assert.match(source,/selectGuard\(guards,'auto',entry\.category\)/);
   assert.match(source,/selectElementalDefense\(\{actor,boundary,mode,category:entry\.category\}\)/);
   assert.match(source,/await consumeGuard\(guardOwner,guard,guarded\)/);
-  assert.match(source,/guarded\?\.blocked \? 0/);
+  assert.match(source,/damageAfterGuardProtection\(guarded,damageAfterDR\)/);
   assert.match(source,/return applyExactEntries\(normalized,action,modes,message\)/);
 });

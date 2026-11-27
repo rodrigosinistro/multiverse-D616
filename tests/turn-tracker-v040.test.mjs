@@ -59,5 +59,6 @@ test('HUD retains scroll and refreshes for nested power effects', () => {
 test('failure ACK is sent when GM rejects by exception', () => {
  const code=readFileSync(new URL('../scripts/combat/turn-tracker.mjs',import.meta.url),'utf8');
  assert.match(code,/payload\.type === "turnTrackerRequest" && payload\.requestId/);
- assert.match(code,/userId: requestingUser\.id, success: false/);
+ assert.match(code,/senderUserId:game\.user\.id/);
+ assert.match(code,/recipientUserId:requestingUser\.id,success:false/);
 });

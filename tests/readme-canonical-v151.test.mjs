@@ -15,6 +15,6 @@ test('README aprovado do mantenedor permanece sem histórico de versões',()=>{
  assert.doesNotMatch(md,/\bv0\.2\.\d+\b/);
 });
 test('Novidades e correções da publicação ficam somente no CHANGELOG',()=>{
- assert.match(changelog,/^## v0\.2\.178/);
+ assert.match(changelog,/^## v0\.2\.237/);
  assert.match(changelog,/README canônico/);
 });

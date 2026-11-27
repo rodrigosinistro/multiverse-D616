@@ -103,7 +103,7 @@ test('v117: real UI and original damage card include the bonus before MMDR, with
   assert.match(ui,/data-effect-field="damageBonusMode"/);
   assert.match(ui,/damageBonusAmount:field\('damageBonusAmount'\)/);
   assert.match(engine,/const customDamage=customDamageBonusForTarget/);
-  assert.match(engine,/bonus:focusBonus\+customDamage.bonus/);
+  assert.match(engine,/bonus:focusBonus\+nativeAngerBonus\+nativeStanceBonus\+customDamage.bonus/);
   assert.match(engine,/customDamageBonus:customDamage.bonus/);
   assert.match(mmdr,/await applyExactEntries\(exactEntries, action,modes,message\)/);
 });

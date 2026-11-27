@@ -131,5 +131,5 @@ test('attack damage, MMDR and ongoing scripts use transient DR and Rank-target F
  assert.match(ongoing,/effectiveTeamDamageReduction\(actor,'health'\)/);
  assert.match(power,/getMarvelOutcome\(roll, defense, \{message=null,targetActor=null\}=\{\}\)/);
  const config=JSON.parse(readFileSync(new URL('../system.json',import.meta.url),'utf8'));
- assert.equal(config.version,'0.2.178');
+ assert.equal(config.version,'0.2.237');
 });

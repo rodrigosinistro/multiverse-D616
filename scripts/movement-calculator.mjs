@@ -206,11 +206,29 @@ export function prepareD616Movement(system, actor, labels = {}) {
       combat = greatestPowerSpeed(flightReference, key, movement.calc, rank, flightReference, actor);
       // A manually set Flight base (without a power calculation) is preserved.
       if (!calcCandidates(actor, key, movement.calc).length) combat = safeSpeed(original);
+      // Group Flight's caster also flies at HALF speed while carrying allies.
+      // Read the already-paid concentration's stored uncapped speed; don't
+      // modify their permanent Flight 1/2 items or double-halved previews.
+      const group = Array.from(actor?.effects?.contents ?? actor?.effects ?? [])
+        .find(e => e?.disabled !== true && e?.duration?.expired !== true &&
+          e?.flags?.['multiverse-d616']?.concentrationPower?.transient === true &&
+          e?.flags?.['multiverse-d616']?.nativeGroupLot7?.kind === 'flight' &&
+          e.flags['multiverse-d616'].nativeGroupLot7.tokenIds?.length);
+      const groupSpeed = Number(group?.flags?.['multiverse-d616']?.nativeGroupLot7?.speed);
+      if (group && Number.isFinite(groupSpeed)) combat = Math.min(combat, Math.max(0, groupSpeed));
     } else {
       // Other modes (Glide, Swingline, Levitation) keep their own base speed
       // and modifiers. Size multiplies these non-flight speeds.
       const regular = sizeRun(original, size);
       combat = greatestPowerSpeed(regular, key, movement.calc, rank, neutralRunBySize, actor);
+    }
+    // Mists of Munnopor: existing flight/gliding/web-swing powers remain on
+    // the sheet but cannot be used while this environment status is active.
+    const munnoporBlocked = Array.from(actor?.effects?.contents ?? actor?.effects ?? [])
+      .some(e=>e?.disabled!==true&&e?.flags?.['multiverse-d616']?.nativeMunnoporRegionId);
+    if(munnoporBlocked && ['flight','glide','swingline'].includes(key)){
+      combat=0;
+      movement.active=false;
     }
     movement.value = safeSpeed(combat);
     const multiplier = readOutOfCombatMultiplier(movement, rawMovement[key], actor, key);

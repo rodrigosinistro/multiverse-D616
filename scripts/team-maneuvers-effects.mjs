@@ -120,6 +120,7 @@ export function keptMarvelValue(roll) {
 }
 
 export function teamFantasticForTarget(roll, message, targetActor) {
+  if(roll?.options?.nativeDampenedPower||message?.getFlag?.(SYSTEM,'nativeDampenedPower'))return null;
   const flag=message?.getFlag?.(SYSTEM,'teamAttackBenefits')??
     message?.flags?.[SYSTEM]?.teamAttackBenefits;
   if (!flag || !targetActor) return null;

@@ -16,7 +16,7 @@ test('same +1 Edge from different target conditions needs no Narrator interventi
   assert.equal(r.edgeMode,1);
   assert.equal(r.ambiguousTargets,false);
   assert.equal(r.targetSourcesDiffer,true);
-  assert.equal(r.autoCount,1);
+  assert.equal(r.autoCount,0);
   assert.equal(r.requiresDecision,false);
   assert.ok(r.sources.some(s=>s.source.includes('modificador equivalente')));
   assert.ok(!r.sources.some(s=>s.source.includes('Caído')),'shared note must not mislabel all targets as prone');

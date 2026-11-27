@@ -1,0 +1,28 @@
+﻿Power Set,Poder,Power ID,Situação v0.2.202,Situação v0.2.203,Observação
+Healing,Let's Go,SFcAMa7qxFfSbeaG,not-registered,not-registered,Ainda manual: alvo com Health 0 conserva movimento e perde Ação/Reação enquanto Concentrado
+Healing,Never Surrender,NckTxGoxDB7CAQTN,not-registered,not-registered,Ainda manual: supressão condicional de Desmoralizado no Focus 0 e expiração inteligente
+Healing,Resurrect,bYUfeVm2l1Bru6Zs,not-registered,not-registered,"Ainda manual: Ego contra TN 10+horas, restauração seletiva de Health e Focus conforme resultado"
+Luck,Charmed Life,XGaRTk8xwYBUUYdo,not-registered,native-partial,"NOVO parcial: ativação voluntária para um teste por rodada, sem acumular com outro Edge"
+Martial Arts,Always Ready,8MaB6fHzANxJzpbq,not-registered,not-registered,Ainda manual: Reação extra somente para Artes Marciais exige controle separado do orçamento de reações
+Martial Arts,Banging Heads,3YPAuV8JaTpZ0cEy,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Martial Arts,Brace for Impact,0Q2XBi8YlDhDtZFu,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Martial Arts,Counterstrike Technique,Z2bM6AFg0F0jtzm3,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Martial Arts,Crushing Grip,uWguE3aZGX6ZuHYv,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Martial Arts,Flying Double Kick,zwMNsvxAe63Xdw8S,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Martial Arts,Leaping Leglock,fOFxcjAdSKeQZus0,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Martial Arts,Reverse-Momentum Throw,GEmxVDGmNMFNgsnP,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Martial Arts,Spin & Throw,JEItlxBepX3mNGdp,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Melee Weapons,Exploit,f1IE064VUilnDSXd,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Melee Weapons,Hit n Run,lhbm38sUTPjW0FuB,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Melee Weapons,Riposte,HAHFUMq6WfsIo18p,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Ranged Weapons,Fast Hands,Qm24O1PO8Lyd8eB9,not-registered,not-registered,Ainda manual: Reação extra restrita a Ranged Weapons requer contabilidade de uso por família
+Ranged Weapons,Kill Zone,K6nJnrQ41nJ4w0e4,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Ranged Weapons,Point-Blank Parry,wFTyQv5mjVnEk97k,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Ranged Weapons,Stopping Power,hwp96jSC9kAeqdLK,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Super-Speed,Catch Bullets,1bYpIpXW3Lh9TCyg,not-registered,not-registered,Ainda manual: defesa de Agility contra ataque e restituição de Reação no Fantástico
+Super-Speed,Molecular Destabilization,S2XOLo1hmGeyPR8v,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Super-Speed,Run on Water,POmZq28ocIhnO6Hn,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Super-Speed,Speed Blast,iIdSnxWEbckUMfpE,not-registered,not-registered,Parcial existente: teste Agility e condições; requer conferir a condição Caído no próprio lançador no Fantástico
+Tactics,Advance,mwPsFUHZIK5L4zYC,not-registered,not-registered,"Auditado; sem nova automação: exige gatilho, alvo, custo ou resultado ainda não coberto integralmente"
+Tactics,Change of Plans,Iqikk9oo5YrtztBc,not-registered,native-partial,NOVO parcial: Edge de uso único no próximo teste; Mestre confirma audição e momento da Reação
+Tactics,Combat Support,n7LkZDiJaeOk3ChY,not-registered,native-partial,"NOVO parcial: próximo dado Marvel forçado M (1), sem Trouble no dado; uma vez por combate"

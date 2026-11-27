@@ -1,0 +1,28 @@
+﻿Power Set,Poder,Power ID,Ação,Custo,Duração,Situação de cobertura,Tipo de evolução,Macro ID,Controlador
+Healing,Cure-All,6goSiNmcwFHgClky,Standard,15 Focus,Instant,not-registered,não registrado,,
+Healing,Healing Hands,v4wnQsxkb32CNQay,Standard,10 or more Focus,Instant,native-active,pré-existente,1b4688040aee86c4,heal
+Healing,Let's Go,SFcAMa7qxFfSbeaG,Standard or reaction,5 Focus,Concentration,not-registered,não registrado,,
+Healing,Never Surrender,NckTxGoxDB7CAQTN,Standard,5 Focus,Concentração,not-registered,não registrado,,
+Healing,Restore,z976UT36V8Bl8Raw,Standard,20 Focus,Instant,not-registered,não registrado,,
+Healing,Resurrect,bYUfeVm2l1Bru6Zs,Standard,20 ou mais Focus,Instantâneo,not-registered,não registrado,,
+Healing,Soothing Touch,9I9DWkokKaIbn5Z6,Standard,10 or more Focus,Instant,native-active,pré-existente,4ae2bd57dd674ab3,heal
+Luck,Charmed Life,XGaRTk8xwYBUUYdo,,,Permanent,not-registered,não registrado,,
+Luck,Evil Eye,zFthXeiXzdI646hT,Standard,5 Focus per turn,Concentration,native-partial,novo comportamento parcial v0.2.197,04ac62813ccbf5c2,fortune
+Luck,Jinx You,c2t2WUvH8Bx4Qnzi,Standard,5 Focus per turn,Concentration,native-partial,novo comportamento parcial v0.2.197,1cc3bd5699241811,fortune
+Luck,Jinx You All,5BtL6zSWMG42soLy,Standard,10 Focus per turn,Concentration,native-partial,novo comportamento parcial v0.2.197,c76a59cf9d66e087,fortune
+Luck,Lucky Me,UZ4cyX6vkKsp2qKU,Standard,3 Focus por turno,Concentration,native-active,pré-existente,0c22b54924dceb58,lucky-me
+Luck,Lucky Us,MfC05kdl2BW3ql4R,Standard,10 Focus por turno,Concentração,native-partial,novo comportamento parcial v0.2.197,fc6a699a06728371,fortune
+Luck,Lucky You,aDQAA9CNtLbW8OoP,Standard,5 Focus por turno,Concentração,native-partial,novo comportamento parcial v0.2.197,bb37e9804ce14d1a,fortune
+Luck,Real Jinx,melmQel0EKI6x1Dz,,,Permanent,native-active,pré-existente,77f38d974089b854,real-jinx
+Luck,Wish You Luck,ZG9F6lSg6MlALFvP,Standard,5 Focus per turn,Concentration,native-partial,novo comportamento parcial v0.2.197,ea939b08d07aa513,fortune
+Tactics,Advance,mwPsFUHZIK5L4zYC,Reaction,15 Focus,1 round,not-registered,não registrado,,
+Tactics,Battle Plan,bOANdTD4xJzT89Wh,Standard,10 Focus,1 rodada,native-partial,pré-existente,097a5c75095cfc3a,edge
+Tactics,Change of Plans,Iqikk9oo5YrtztBc,Reaction,5 Focus,1 round,not-registered,não registrado,,
+Tactics,Combat Support,n7LkZDiJaeOk3ChY,Standard,10 Focus,1 round,not-registered,não registrado,,
+Tactics,Focus Fire,inK06lDXeL653TFf,Standard,10 Focus,Concentration,native-partial,novo comportamento parcial v0.2.197,40faf9815d5a92d3,fortune
+Tactics,Hit the Dirt,P98NrsKdIy43geOF,Reação,5 Focus,Instantâneo,not-registered,não registrado,,
+Tactics,Keep Moving,OGG5E7tOsgNjYN9h,Reaction,,Instantâneo,native-partial,pré-existente,d817b9cba965282a,clear
+Tactics,On Your Feet,cyTvEpX8ksmKkRRJ,Reaction,5 focus,Instant,native-partial,pré-existente,a50394f23ea006fc,stand
+Tactics,Operations Center,j9lS4vUptRActg2k,Standard,15 focus,Concentration,native-partial,novo comportamento parcial v0.2.197,20a0dc67cd34d58f,fortune
+Tactics,Rally on Me,cqeheSqQsI2QgOHA,Standard,10 focus,Instant,native-partial,pré-existente,679cf8d859979ca1,rally
+Tactics,Scatter,ZuG8VGoLf8zsQtGz,Reaction,10 focus,Instant,not-registered,não registrado,,

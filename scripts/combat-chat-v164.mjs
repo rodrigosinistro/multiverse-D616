@@ -17,7 +17,7 @@ export function combatChatPool(roll){
  * Forced M from Combat Trickery/Offensive 3 never impersonates a natural 6-M-6.
  */
 export function naturalSixM6(roll){
-  if(!roll || roll.options?.forceMarvelM || roll.options?.ultimateFantasticApplied ||
+  if(!roll || roll.options?.nativeDampenedPower || roll.options?.forceMarvelM || roll.options?.ultimateFantasticApplied ||
       roll.options?.combatTrickery)return false;
   const pool=combatChatPool(roll);
   if(!pool || pool.rolls?.length!==3)return false;

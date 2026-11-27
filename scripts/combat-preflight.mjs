@@ -1,3 +1,4 @@
+import {dampenFactor,halveKnownRange} from './power-control-rules.mjs';
 /**
  * Multiverse-D616 v0.2.24 — conservative, non-blocking pre-attack validation.
  * Uses the explicit range on an Item whenever available, plus a small set of
@@ -5,7 +6,7 @@
  * Foundry V14 sight walls are consulted via PointSourcePolygon.testCollision.
  * No Focus, concentration, targets, or actor state are changed by inspection.
  */
-import {tokenCenter} from './elemental-area-geometry.mjs';
+import {tokenCenter,fogSightBlocked} from './elemental-area-geometry.mjs';
 import {chooseSmartTargets} from './smart-targets.mjs';
 
 const SYSTEM='multiverse-d616';
@@ -46,7 +47,8 @@ export function parseAttackRange(raw,rank=0) {
   if(rankSyntax.test(tail))return level>0?{type:'rank',spaces:value*level}:{type:'unknown',spaces:null};
   return {type:'unknown',spaces:null};
 }
-export function resolveItemRange(item,actor) {
+export function resolveItemRange(item,actor) {return halveKnownRange(resolveOriginalItemRange(item,actor),item);}
+function resolveOriginalItemRange(item,actor) {
   const s=item?.system??{};
   const rank=Number(actor?.system?.attributes?.rank?.value??actor?.system?.rank??0);
   const numeric=Number(s.attackRange);
@@ -132,7 +134,7 @@ export function sightCollision({source,target,scene,polygonClass}){
 export function evaluateAttackTargets({item,actor,source,targets,scene,grid,polygonClass}){
   if(!item||!source||!scene||!Array.isArray(targets)||!targets.length)return [];
   const range=resolveItemRange(item,actor);
-  const reach=Number(actor?.system?.reach??1);
+  const reach=Number(actor?.system?.reach??1)*dampenFactor(item);
   const isArea=IGNORED_AREA.has(item.name);
   const isAttack=item?.type==='weapon'||Boolean(item?.system?.attackTarget)||Boolean(item?.system?.attackKind);
   if(!isAttack || isArea)return [];
@@ -150,7 +152,10 @@ export function evaluateAttackTargets({item,actor,source,targets,scene,grid,poly
     const sight=ranged?sightCollision({source,target:doc,scene,polygonClass}):'not-checked';
     const warning=[];
     if(outOfRange)warning.push(`fora do alcance (${dec(dist)} de ${dec(limit)} espaços)`);
+    if(item?.type==='power'&&item?.name==='Sniping'&&item?.system?.powerSet==='Ranged Weapons'&&Number.isFinite(dist)&&dist<20-1e-6)
+      warning.push(`Sniping exige alvo a pelo menos 20 espaços (${dec(dist)} espaços)`);
     if(sight==='blocked')warning.push('possível bloqueio de linha de visão');
+    if(ranged&&fogSightBlocked(scene,source,doc))warning.push('Control Fog: visão bloqueada após 10 espaços de névoa');
     return {id:doc.id,name:String(doc.name??doc.actor?.name??'Alvo'),distance:dist,limit,rangeType:range.type,sight,warning};
   });
 }
@@ -186,7 +191,7 @@ export async function askCombatPreflight(title,content){
 
 /** Warn only on concrete violations. Continue is GM/player override, never an auto block. */
 export async function confirmAttackPreflight(item,rollInfo){
-  if(combatIntelligenceDisabled())return {ok:true,results:[],overridden:[]};
+  if(combatIntelligenceDisabled()&&dampenFactor(item)===1)return {ok:true,results:[],overridden:[]};
   if(!usableCanvas()||!item?.actor)return {ok:true,results:[],overridden:[]};
   if(item.type!=='weapon'&&!(rollInfo?.attackTarget||rollInfo?.attack))return {ok:true,results:[],overridden:[]};
   const scene=canvas.scene;

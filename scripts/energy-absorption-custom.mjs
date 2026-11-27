@@ -12,6 +12,20 @@ const SYSTEM = 'multiverse-d616';
 const list = collection => Array.from(collection?.contents ?? collection?.values?.() ?? collection ?? []);
 const concurrent = new Set();
 const pendingSpendBalance = new WeakMap();
+// Player requests travel as owner-authorized Actor updates. Foundry's updateActor
+// hook supplies the authenticated updating user ID; the generic system socket
+// does NOT supply a trustworthy sender ID as its second callback argument.
+const PLAYER_REQUEST_KEY='energyAbsorptionPlayerRequest';
+const PLAYER_RESULT_KEY='energyAbsorptionPlayerResult';
+const playerRequests=new Map();
+const gmRequests=new Set();
+const flagFromChanges=(changes,key)=>{
+  const nested=changes?.flags?.[SYSTEM]?.[key];
+  if(nested!==undefined)return nested;
+  const dotted=changes?.[`flags.${SYSTEM}.${key}`];
+  if(dotted!==undefined)return dotted;
+  return changes?.flags?.[`${SYSTEM}.${key}`];
+};
 const own = (object,key) => Object.prototype.hasOwnProperty.call(object??{},key);
 const positive = value => Number.isFinite(Number(value)) ? Math.max(0,Number(value)) : 0;
 const activeGM = () => !!globalThis.game?.user?.isGM && (!game.users?.activeGM || game.users.activeGM.id === game.user.id);
@@ -129,6 +143,13 @@ export async function activateEnergyAbsorption(item,{tokenDoc=null,tracker=globa
     if(!combatant||!state||!tracker?.consumeReaction||positive(state.reactionUsed)>=positive(state.reactionMax)) {
       ui?.notifications?.warn?.('Energy Absorption exige uma Reação disponível em um combate ativo.');return false;
     }
+    // A normal player cannot rely on the system socket's unauthenticated
+    // sender argument. The owner submits a bounded request via an Actor update;
+    // Foundry enforces Actor permissions and supplies the true userId to the GM.
+    // Focus and Reaction are BOTH spent by the GM only after validation.
+    if(!game.user?.isGM && game.socket){
+      return await requestPlayerEnergyAbsorption(item,combatant);
+    }
     // Deduct Focus first, then request authoritative Reaction consumption.
     // If the GM rejects a stale or exhausted reaction, refund the Focus.
     await actor.update({'system.focus.value':focus-15},{d616EnergyAbsorptionInternal:true});
@@ -167,6 +188,117 @@ export async function activateEnergyAbsorption(item,{tokenDoc=null,tracker=globa
   }catch(error){console.error('[D616] Falha ao ativar Energy Absorption',error);ui?.notifications?.error?.('Energy Absorption não foi ativado.');return false;}
   finally{concurrent.delete(lock);}
 }
+/** Player-side transaction: never spend local Focus or Reaction while awaiting
+ * the GM. A response contains only success/reason, not executable commands.
+ */
+export async function requestPlayerEnergyAbsorption(item,combatant){
+  const actor=item?.actor;
+  const gm=globalThis.game?.users?.activeGM;
+  if(!actor || !combatant || !gm?.active || !gm.isGM){
+    ui?.notifications?.warn?.('Energy Absorption precisa de um Mestre conectado para registrar a Reação.');
+    return false;
+  }
+  const owner=globalThis.CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER??3;
+  if(!actor?.testUserPermission?.(game.user,owner)){
+    ui?.notifications?.warn?.('Você precisa ser DONO do personagem para usar Energy Absorption.');
+    return false;
+  }
+  const id=globalThis.foundry?.utils?.randomID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const request={id,itemId:item.id,combatId:game.combat?.id,combatantId:combatant.id};
+  // Register BEFORE sending so a fast GM response cannot be lost.
+  const result=new Promise(resolve=>{
+    const timeout=setTimeout(()=>{
+      playerRequests.delete(id);
+      resolve({ok:false,timeout:true});
+    },15000);
+    playerRequests.set(id,response=>{
+      clearTimeout(timeout);
+      playerRequests.delete(id);
+      resolve(response);
+    });
+  });
+  try{
+    await actor.update({[`flags.${SYSTEM}.${PLAYER_REQUEST_KEY}`]:request},
+      {d616EnergyAbsorptionRequest:true});
+  }catch(error){
+    playerRequests.get(id)?.({ok:false,reason:'Não foi possível solicitar a ativação ao Mestre.'});
+    console.warn('[D616] Solicitação Energy Absorption não foi registrada',error);
+  }
+  const ack=await result;
+  if(!ack.ok){
+    ui?.notifications?.warn?.(ack.timeout?
+      'Energy Absorption: sem confirmação do Mestre. Nenhum recurso foi descontado por esta solicitação no cliente; verifique o HUD antes de tentar novamente.':
+      (ack.reason??'Energy Absorption não foi autorizado. Focus e Reação não foram gastos nesta solicitação.'));
+  }
+  return !!ack.ok;
+}
+
+/** The trusted request comes from a Foundry Actor document update, which
+ * provides authenticated userId. Never trust a userId inside the flag data.
+ * The GM revalidates the Actor owner, Power and active Combatant before any
+ * spending. No macro, function name, or arbitrary JS comes from the request.
+ */
+export async function processPlayerEnergyAbsorptionRequest(actor,request,userId){
+  if(!activeGM() || !request || typeof request!=='object' || typeof request.id!=='string' ||
+     !request.id || request.id.length>128)return false;
+  const gm=game.user;
+  const user=game.users?.get?.(userId);
+  if(!user || user.isGM || !user.active)return false;
+  const owner=globalThis.CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER??3;
+  if(!actor?.testUserPermission?.(user,owner))return false;
+  const requestKey=`${actor.uuid??actor.id}:${request.id}`;
+  if(gmRequests.has(requestKey))return false;
+  const previous=actor.getFlag?.(SYSTEM,PLAYER_RESULT_KEY)??actor.flags?.[SYSTEM]?.[PLAYER_RESULT_KEY];
+  if(previous?.id===request.id)return !!previous.ok;
+  gmRequests.add(requestKey);
+  let ok=false,reason='Ativação recusada: confira Focus, Reação e condições do poder.';
+  try{
+    const item=actor.items?.get?.(request.itemId)??list(actor.items).find(i=>i.id===request.itemId);
+    const combat=game.combat;
+    const c=combat?.combatants?.get?.(request.combatantId)??list(combat?.combatants).find(c=>c.id===request.combatantId);
+    const sameActor=!!c && (c.actor?.uuid===actor.uuid || c.actor?.id===actor.id || c.actorId===actor.id);
+    if(!isEnergyAbsorptionPower(item)||item.actor?.uuid!==actor.uuid||!combat?.started||
+       request.combatId!==combat.id||!sameActor){
+      reason='Solicitação inválida ou personagem fora do combate atual.';
+    }else{
+      const state=game.multiverseD616?.turnTracker?.getState?.(c);
+      if(!state || positive(state.reactionUsed)>=positive(state.reactionMax)){
+        reason='O personagem não possui uma Reação disponível.';
+      }else if(pendingAbsorption(actor)||activeAbsorption(actor)){
+        reason='Energy Absorption já está preparado ou ativo.';
+      }else{
+        ok=!!await activateEnergyAbsorption(item,{tokenDoc:c.token,tracker:game.multiverseD616?.turnTracker});
+        if(!ok)reason='Energy Absorption não foi ativado. Confira as condições e os recursos.';
+      }
+    }
+  }catch(error){
+    reason='Falha ao registrar a ativação de Energy Absorption.';
+    console.error('[D616] Energy Absorption: pedido autenticado falhou',error);
+  }finally{
+    try{await actor.update({[`flags.${SYSTEM}.${PLAYER_RESULT_KEY}`]:{id:request.id,ok,reason}},
+      {d616EnergyAbsorptionResult:true});}
+    catch(error){console.error('[D616] Energy Absorption: resposta ao jogador falhou',error);}
+    gmRequests.delete(requestKey);
+  }
+  return ok;
+}
+
+/** GM and player receive core document changes (including real userId).
+ * The player only accepts the response if it was saved by the current GM.
+ */
+export function handlePlayerEnergyAbsorptionActorUpdate(actor,changes,userId){
+  const response=flagFromChanges(changes,PLAYER_RESULT_KEY);
+  if(response?.id && game.users?.get?.(userId)?.isGM &&
+      userId===game.users?.activeGM?.id){
+    playerRequests.get(response.id)?.(response);
+  }
+  const request=flagFromChanges(changes,PLAYER_REQUEST_KEY);
+  if(request?.id && userId && activeGM() && !game.users?.get?.(userId)?.isGM){
+    void processPlayerEnergyAbsorptionRequest(actor,request,userId).catch(error=>
+      console.error('[D616] Energy Absorption: falha no processamento de solicitação',error));
+  }
+}
+
 /** GM applies already-paid prepared reaction exactly once. No extra dialog. */
 export async function tryAbsorbHealthDamage(actor,damage,{tokenDoc=null}={}) {
   if(!activeGM()||!actor||!Number.isFinite(Number(damage))||Number(damage)<=0)return null;
@@ -336,6 +468,9 @@ export function registerEnergyAbsorptionHooks(){
   // returns false when an update is unrelated to absorption. Never forward
   // that status to the Hook dispatcher: doing so blocks ordinary Health and
   // Focus damage, power costs, healing and other Actor updates for everyone.
+  Hooks.on('updateActor',(actor,changes,options,userId)=>{
+    handlePlayerEnergyAbsorptionActorUpdate(actor,changes,userId);
+  });
   Hooks.on('preUpdateActor',(actor,changes,options)=>{
     applyAbsorbedFocusSpend(actor,changes,options);
     // No return: always allow Foundry to commit this Actor update.

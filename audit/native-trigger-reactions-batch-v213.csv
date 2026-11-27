@@ -1,0 +1,28 @@
+﻿Power Set,Poder,ID oficial,Ação,Gatilho,Resultado v0.2.213,Limitações
+Resize,Shrinking Dodge,AgfTMeLAADgDBA6K,Reaction,O personagem é atacado.,Nova automação parcial: custo/Reação + card oficial,Trouble manual no ataque original; sem efeito antecipado
+Resize,Shrink 1,WbQIqHF2MLbVn47W,Standard or reaction,O personagem é atacado.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Resize,Shrink 2,UvENT4K4L5O6J5R8,Standard or reaction,O personagem é atacado.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Resize,Shrink 3,AoEtrRpFspT01MwY,Standard or reaction,O personagem é atacado.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Resize,Shrink 4,2T19iEyEyNMNmhHB,Standard or reaction,O personagem é atacado.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Resize,Grow 1,ARp7PZPZOSmO8GS7,Standard or reaction,O personagem é atacado.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Resize,Grow 2,uXEh42PCsVE2X8Po,Standard or reaction,O personagem é atacado.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Resize,Grow 3,wzdmGXQ3MfhVfHcr,Standard or reaction,O personagem é atacado.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Resize,Grow 4,xU0g0C5AEocqXkXq,Standard or reaction,O personagem é atacado.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Resize,Growing Attack,REycjx8WtqE07N5m,Reaction,O personagem cresce.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Melee Weapons,Riposte,HAHFUMq6WfsIo18p,Reaction,Um inimigo faz um ataque corpo a corpo contra o personagem e falha.,Nova automação parcial: custo/Reação + card oficial,Novo ataque Melee e dano/efeitos resolvidos manualmente
+Melee Weapons,Exploit,f1IE064VUilnDSXd,Reaction,Um sucesso Fantástico em um ataque usando a arma do personagem que cause pelo menos 1 ponto de dano.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Melee Weapons,Hit n Run,lhbm38sUTPjW0FuB,Standard,,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Ranged Weapons,Point-Blank Parry,wFTyQv5mjVnEk97k,Reaction,Um inimigo a até 2 espaços erra um ataque contra o personagem.,Nova automação parcial: custo/Reação + card oficial,Novo ataque Ranged e Sangrando resolvidos manualmente
+Ranged Weapons,Kill Zone,K6nJnrQ41nJ4w0e4,Reaction,Um inimigo na linha de visão do personagem começa a se mover.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Ranged Weapons,Stopping Power,hwp96jSC9kAeqdLK,Standard,,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Super-Speed,Catch Bullets,1bYpIpXW3Lh9TCyg,Reaction,"Um ataque à distância usando projéteis físicos (flechas, balas e assim por diante) é feito contra o personagem — ou contra um personagem dentro do alcance do personagem.",Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Super-Speed,Molecular Destabilization,S2XOLo1hmGeyPR8v,Standard,,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Super-Speed,Run on Water,POmZq28ocIhnO6Hn,,,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Healing,Let's Go,SFcAMa7qxFfSbeaG,Standard or reaction,O alvo é nocauteado.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Healing,Never Surrender,NckTxGoxDB7CAQTN,Standard,,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Healing,Resurrect,bYUfeVm2l1Bru6Zs,Standard,,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Tactics,Advance,mwPsFUHZIK5L4zYC,Reaction,O personagem (ou um aliado em sua linha de visão) atordoa ou derrota um inimigo.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Martial Arts,Reverse-Momentum Throw,GEmxVDGmNMFNgsnP,Reaction,"Enquanto Defense Stance está ativo, um ataque corpo a corpo contra o personagem erra.",Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Martial Arts,Spin & Throw,JEItlxBepX3mNGdp,Reaction,Um inimigo que o personagem pode levantar é agarrado.,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Martial Arts,Flying Double Kick,zwMNsvxAe63Xdw8S,Standard,,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre
+Martial Arts,Leaping Leglock,fOFxcjAdSKeQZus0,Standard,,Sem nova automação; continua manual/não catalogado,Gatilho e efeitos exigem implementação ou decisão do Mestre

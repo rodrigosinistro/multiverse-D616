@@ -1,4 +1,5 @@
 import { isRemovableConcentrationStatusId, requestRemoveConcentrationStatus } from "./concentration.js";
+import {activeZeroRescue} from "./native-priority-lot11.mjs";
 import { publishConditionReferences } from "./condition-reference.mjs";
 import { ELEMENTAL_TRAY_PREFIX, getElementalFantasticTrayEntries, findElementalFantasticTrayEffect } from "./condition-visuals.mjs";
 import { retireElementalFantasticEffect } from "./elemental-fantastic.mjs";
@@ -1035,8 +1036,8 @@ async function __mmrpg_applyFromStats2(actor) {
   await installConditions();
   const hp = Number(__MMRPG_FU2.getProperty(actor, "system.health.value")) || 0;
   const fp = Number(__MMRPG_FU2.getProperty(actor, "system.focus.value")) || 0;
-  await __mmrpg_ensureStatus2(actor, "mmrpg.incapacitated", hp <= 0);
-  await __mmrpg_ensureStatus2(actor, "mmrpg.demoralized",  fp <= 0);
+  await __mmrpg_ensureStatus2(actor, "mmrpg.incapacitated", hp <= 0 && !activeZeroRescue(actor,"health"));
+  await __mmrpg_ensureStatus2(actor, "mmrpg.demoralized",  fp <= 0 && !activeZeroRescue(actor,"focus"));
 }
 
 function __mmrpg_statsChanged(changes) {

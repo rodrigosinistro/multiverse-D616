@@ -88,6 +88,6 @@ test('v136 coalesces fast events in one frame and upgrades to forced render for 
 
 test('v136 release has correct version', () => {
   const json = JSON.parse(readFileSync(new URL('../system.json',import.meta.url)));
-  assert.equal(json.version, '0.2.178');
-  assert.match(json.download,/v0\.2\.178\/multiverse-d616-v0\.2\.178\.zip$/);
+  assert.equal(json.version, '0.2.237');
+  assert.equal(json.download,`https://github.com/rodrigosinistro/multiverse-D616/releases/download/v${json.version}/multiverse-d616-v${json.version}.zip`);
 });

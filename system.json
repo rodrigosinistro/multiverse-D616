@@ -27,7 +27,7 @@
       "thumbnail": "systems/multiverse-d616/ui/official/mmrpg-setup-thumbnail.png"
     }
   ],
-  "version": "0.2.178",
+  "version": "0.2.237",
   "compatibility": {
     "minimum": "14",
     "verified": "14"
@@ -52,7 +52,8 @@
     "scripts/native-action-hud.mjs",
     "apps/charactermancer/scripts/charactermancer.js",
     "apps/charactermancer/scripts/utils/mmc-load-traits-tags.js",
-    "features/sheet-export-m616/m616-export.js"
+    "features/sheet-export-m616/m616-export.js",
+    "scripts/native-power-automations.mjs"
   ],
   "styles": [
     "css/multiverse-d616.css",
@@ -141,6 +142,20 @@
       "type": "Item",
       "private": false,
       "flags": {}
+    },
+    {
+      "name": "macros-d616",
+      "label": "Macros_D616",
+      "system": "multiverse-d616",
+      "path": "packs/macros-d616",
+      "type": "Macro",
+      "private": false,
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "TRUSTED": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "flags": {}
     }
   ],
   "packFolders": [
@@ -156,11 +171,19 @@
         "items",
         "powers"
       ]
+    },
+    {
+      "name": "Automações Nativas",
+      "sorting": "m",
+      "color": "#3e2b73",
+      "packs": [
+        "macros-d616"
+      ]
     }
   ],
   "socket": true,
   "manifest": "https://raw.githubusercontent.com/rodrigosinistro/multiverse-D616/main/system.json",
-  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.2.178/multiverse-d616-v0.2.178.zip",
+  "download": "https://github.com/rodrigosinistro/multiverse-D616/releases/download/v0.2.237/multiverse-d616-v0.2.237.zip",
   "background": "systems/multiverse-d616/ui/official/mmrpg-background.webp",
   "grid": {
     "distance": 5,

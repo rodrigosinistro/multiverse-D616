@@ -1,0 +1,28 @@
+﻿Power Set,Poder,Power ID,Ação,Custo,Duração,Situação de cobertura,Tipo de evolução,Macro ID,Controlador,Resumo da auditoria
+Healing,Cure-All,6goSiNmcwFHgClky,Standard,15 Focus,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Healing,Let's Go,SFcAMa7qxFfSbeaG,Standard or reaction,5 Focus,Concentration,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Healing,Never Surrender,NckTxGoxDB7CAQTN,Standard,5 Focus,Concentração,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Healing,Restore,z976UT36V8Bl8Raw,Standard,20 Focus,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Healing,Resurrect,bYUfeVm2l1Bru6Zs,Standard,20 ou mais Focus,Instantâneo,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Luck,Charmed Life,XGaRTk8xwYBUUYdo,,,Permanent,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Martial Arts,Always Ready,8MaB6fHzANxJzpbq,,,Permanent,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Martial Arts,Banging Heads,3YPAuV8JaTpZ0cEy,Standard,,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Martial Arts,Brace for Impact,0Q2XBi8YlDhDtZFu,Reaction,5 or more Focus,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Martial Arts,Counterstrike Technique,Z2bM6AFg0F0jtzm3,Reaction,5 Focus,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Martial Arts,Crushing Grip,uWguE3aZGX6ZuHYv,Reaction,5 Focus,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Martial Arts,Flying Double Kick,zwMNsvxAe63Xdw8S,Standard,10 Focus,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Martial Arts,Leaping Leglock,fOFxcjAdSKeQZus0,Standard,15 Focus,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Ranged Weapons,Fast Hands,Qm24O1PO8Lyd8eB9,,,Permanent,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Ranged Weapons,Kill Zone,K6nJnrQ41nJ4w0e4,Reaction,15 Focus,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Ranged Weapons,Point-Blank Parry,wFTyQv5mjVnEk97k,Reaction,5 Focus,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Ranged Weapons,Stopping Power,hwp96jSC9kAeqdLK,Standard,5 Focus,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Super-Speed,Blur,H3W9CEnugIldggLw,Standard or reaction,5 Focus,1 round,native-partial,novo: Trouble defensivo por uma rodada,(gerado no Macros_D616),blur,Implementação nova parcial
+Super-Speed,Catch Bullets,1bYpIpXW3Lh9TCyg,Reaction,10 Focus,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Super-Speed,Molecular Destabilization,S2XOLo1hmGeyPR8v,Standard,15 Focus,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Super-Speed,Run on Water,POmZq28ocIhnO6Hn,,,Permanent,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Super-Speed,Speed Blast,iIdSnxWEbckUMfpE,Standard,5 Focus,Instant,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Tactics,Advance,mwPsFUHZIK5L4zYC,Reaction,15 Focus,1 round,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Tactics,Change of Plans,Iqikk9oo5YrtztBc,Reaction,5 Focus,1 round,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Tactics,Combat Support,n7LkZDiJaeOk3ChY,Standard,10 Focus,1 round,not-registered,não registrado,,,Sem implementação nativa comprovada neste lote
+Tactics,Hit the Dirt,P98NrsKdIy43geOF,Reação,5 Focus,Instantâneo,native-partial,novo: Caído voluntário selecionado; Mestre decide o ataque,(gerado no Macros_D616),prone,Implementação nova parcial
+Tactics,Scatter,ZuG8VGoLf8zsQtGz,Reaction,10 focus,Instant,native-partial,novo: Caído voluntário após movimento manual,(gerado no Macros_D616),prone,Implementação nova parcial

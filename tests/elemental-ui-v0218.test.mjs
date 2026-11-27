@@ -23,5 +23,5 @@ test('Sphere/Prison show drawing controls but no obsolete manual structure-attac
   const damage=file('scripts/damage-reduction-helper.js');
   assert.match(shields,/findCrossingElementalBarrier/);
   assert.match(damage,/findCrossingElementalBarrier/);
-  assert.match(damage,/assessGuardHit\(rawAmount,guard\)/);
+  assert.match(damage,/assessGuardHit\(rawAmount,guard/);
 });

@@ -48,6 +48,7 @@ function targetNames(ids,scene){return ids.map(id=>scene.tokens.get(id)?.name??'
 function selectionSummary(ids,scene){return ids.length?esc(targetNames(ids,scene)):'Nenhum';}
 function canUseCanvas(){return !!(canvas?.ready&&canvas?.scene?.id&&canvas?.app?.view&&canvas?.stage&&canvas?.tokens);}
 export function shouldPromptForTargets(item,powerRoll){
+  if(item?.type==='power'&&item.name==='Catch Bullets'&&item.system?.powerSet==='Super-Speed')return false;
   if(item?.type==='weapon')return true;
   if(item?.type!=='power')return false;
   if(['Resize Other','Resize Others'].includes(item.name))return true;
@@ -99,22 +100,22 @@ export function pickTokensOnMap(scene,initialIds=[]){
     tearDownHook=Hooks.on('canvasTearDown',()=>finish(null));
   });
 }
-async function chooseTargetAction({item,marked,scene}){
+async function chooseTargetAction({item,marked,scene,requireTargets=false}){
   const buttons=[];
   if(marked.length)buttons.push({action:'marked',label:'Usar alvos marcados',value:{type:'marked'}});
-  buttons.push({action:'new',label:'Selecionar no mapa',value:{type:'map'}},
-    {action:'none',label:'Sem alvo',value:{type:'none'}},
-    {action:'cancel',label:'Cancelar',value:null});
+  buttons.push({action:'new',label:'Selecionar no mapa',value:{type:'map'}});
+  if(!requireTargets)buttons.push({action:'none',label:'Sem alvo',value:{type:'none'}});
+  buttons.push({action:'cancel',label:'Cancelar',value:null});
   const summary=selectionSummary(marked,scene);
   return chooseD616Dialog({title:`${item.name} — Alvos`,
     content:`<div class="m616-smart-target-prompt">
       <p class="m616-smart-target-prompt__eyebrow">SELEÇÃO DE ALVOS</p>
       <div class="m616-smart-target-prompt__current"><span>Alvos marcados no Foundry</span><strong>${summary}</strong></div>
-      <p class="m616-smart-target-prompt__hint">Use os alvos já marcados, selecione diretamente no mapa ou continue sem alvo.</p>
+      <p class="m616-smart-target-prompt__hint">${requireTargets?'Escolha um ou mais alvos para utilizar este poder.':'Use os alvos já marcados, selecione diretamente no mapa ou continue sem alvo.'}</p>
     </div>`,
     buttons,defaultAction:marked.length?'marked':'new',width:410,className:'m616-smart-target-dialog'});
 }
-export async function chooseSmartTargets(item,{force=false}={}){
+export async function chooseSmartTargets(item,{force=false,requireTargets=false}={}){
   const scene=canvas?.scene;
   if(!scene||!game.user)return true; // Theatre of mind: preserve original flow.
   let mode='manual';try{mode=game.settings.get(SYSTEM,SETTING);}catch{}
@@ -122,7 +123,7 @@ export async function chooseSmartTargets(item,{force=false}={}){
   if(!force&&mode!=='confirm')return true;
   if(!item?.actor)return true;
   const marked=currentIds(scene);
-  const result=await chooseTargetAction({item,marked,scene});
+  const result=await chooseTargetAction({item,marked,scene,requireTargets});
   if(!result)return false;
   let chosen;
   if(result.type==='marked')chosen=marked;
@@ -130,6 +131,9 @@ export async function chooseSmartTargets(item,{force=false}={}){
   else if(result.type==='map')chosen=await pickTokensOnMap(scene,[]);
   if(chosen===null||chosen===undefined)return false;
   const valid=filterValidTargetIds(chosen,scene);
+  // A target-required power must not silently clear valid Foundry targets or
+  // continue with an empty selection. Cancellation leaves them unchanged.
+  if(requireTargets&&!valid.length)return false;
   // Foundry targets change only after confirming the entire dialog.
   if(typeof game.user.updateTokenTargets==='function')await game.user.updateTokenTargets(valid);
   else for(const token of canvas.tokens?.placeables??[]){

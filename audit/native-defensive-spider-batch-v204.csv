@@ -1,0 +1,28 @@
+﻿Power Set,Poder,Power ID,Status antes,Status depois,Handler
+Basic,Disguise,ody1G0sSPcvPumiu,not-registered,not-registered,
+Basic,Environmental Protection,hMqJO6IadE92wPVq,not-registered,not-registered,
+Basic,Group Flight,40tLCuK4uHYERhs3,not-registered,not-registered,
+Basic,Iconic Item,69b22b0631e25e41,not-registered,not-registered,
+Basic,Iconic Weapon,fignqKXlBvAnD4xy,not-registered,not-registered,
+Basic,Power Cosmic,4c105215c4ef5fbd,not-registered,not-registered,
+Basic,Shape-Shift,OsAk3mhZAtvGrl4e,not-registered,not-registered,
+Basic,Slow-Motion Dodge,7baXplrfXa9PmJAf,not-registered,native-partial,prepared-dodge
+Spider-Powers,Razorwebs,8b6b6w1QGZ5LUYJ7,not-registered,reference-existing,power-roll-condition
+Spider-Powers,Repulse,gBhSkCzvoUozsRf4,not-registered,not-registered,
+Spider-Powers,Spider-Dodge,xcAIS7tsxb4uo29Z,not-registered,native-partial,prepared-dodge
+Spider-Powers,Spider-Pheromones,aJK1lFLcA37cZC5u,not-registered,native-partial,spider-pheromones
+Spider-Powers,Spider-Strike,awztSZyX0TbL3rZt,not-registered,reference-existing,power-roll-condition
+Spider-Powers,Stick Around,SQnYnTVUIBMLnCyP,not-registered,not-registered,
+Spider-Powers,Venom Bash,BxD7F1yfUKtqWdUV,not-registered,reference-existing,power-roll-condition
+Spider-Powers,Venom Blast,Ox7pFCX1oOzG2lcl,not-registered,reference-existing,power-roll-condition
+Spider-Powers,Venom Burst,KQxISBVt5QDnkh6C,not-registered,reference-existing,power-roll-condition
+Spider-Powers,Venom Sword,jfISSBuNO0LIlRpT,not-registered,not-registered,
+Spider-Powers,Webcasting,LM4JxdAYxlijsBRm,not-registered,reference-existing,power-roll-condition
+Spider-Powers,Webgliding,U9a1HC2Pyw10QB6D,not-registered,not-registered,
+Spider-Powers,Webgrabbing,4VONBF8NIzNb7KTd,not-registered,reference-existing,power-roll-condition
+Spider-Powers,Webslinging,OUnWsLp4rRXvnWvu,not-registered,not-registered,
+Spider-Powers,Webtrapping,o5RpcWtwpi2LDW4X,not-registered,not-registered,
+Super-Speed,Catch Bullets,1bYpIpXW3Lh9TCyg,not-registered,not-registered,
+Super-Speed,Molecular Destabilization,S2XOLo1hmGeyPR8v,not-registered,not-registered,
+Super-Speed,Run on Water,POmZq28ocIhnO6Hn,not-registered,not-registered,
+Super-Speed,Speed Blast,iIdSnxWEbckUMfpE,not-registered,reference-existing,power-roll-condition

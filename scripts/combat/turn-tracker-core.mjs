@@ -151,6 +151,12 @@ export function actorMovementForAction(actor, action) {
   const mode = movementModeForAction(action);
   // Teleport is a separate power, not spendable movement.
   if (mode === 'teleport') return { mode, maximum: 0 };
+  // Authoritative combat movement check even before a sheet re-render:
+  // Mists of Munnopor prevents flight, gliding and webslinging in the fog.
+  if(['flight','glide','swingline'].includes(mode) &&
+    Array.from(actor?.effects?.contents ?? actor?.effects ?? []).some(e=>
+      e?.disabled!==true&&e?.flags?.['multiverse-d616']?.nativeMunnoporRegionId))
+    return {mode,maximum:0};
   const entry = actor?.system?.movement?.[mode];
   const fallback = actorMovementMaximum(actor);
   // Unavailable modes should not silently grant movement from placeholder fields.

@@ -11,14 +11,15 @@ const EXPECTED={
 };
 test('v126: all six LevelDB compendiums include their document logs, not just control files',()=>{
   const manifest=JSON.parse(readFileSync(new URL('../system.json',import.meta.url)));
-  assert.equal(manifest.packs.length,6);
+  assert.equal(manifest.packs.length,7);
   const seen=new Set();
   for(const p of manifest.packs){
     assert.ok(p.path.startsWith('packs/'),'Pack path must remain under the system');
     const data=readFileSync(new URL(`../${p.path}/000002.log`,import.meta.url));
-    assert.ok(data.length>EXPECTED[p.name],`${p.name}: LevelDB data is empty or missing`);
+    assert.ok(data.length>(EXPECTED[p.name]??1000),`${p.name}: LevelDB data is empty or missing`);
     for(const name of ['CURRENT','MANIFEST-000001'])assert.ok(readFileSync(new URL(`../${p.path}/${name}`,import.meta.url)).length>0);
     seen.add(p.name);
   }
-  assert.deepEqual([...seen].sort(),Object.keys(EXPECTED).sort());
+  assert.deepEqual([...seen].filter(name=>name!=='macros-d616').sort(),Object.keys(EXPECTED).sort());
+  assert.ok(seen.has('macros-d616'));
 });

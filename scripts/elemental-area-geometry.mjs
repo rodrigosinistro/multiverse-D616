@@ -86,3 +86,46 @@ export function regionDataForPower(name,center,radius,metadata={}){
   };
 }
 
+
+/** v228: Control Fog obstructs lines of sight LONGER than 10 spaces if
+ * the sight ray encounters fog. Distance is measured from the observer,
+ * not merely the length of the segment INSIDE a fog circle. The previous
+ * sum-of-intersections algorithm let a five-space cloud be completely
+ * transparent to viewers 15+ spaces away (the v227 field regression).
+ * These pure functions drive token visibility and the on-screen fog curtain.
+ */
+export const FOG_SIGHT_SPACES=10;
+export function fogRayOcclusionStart(scene,observer,angle){
+ const grid=Number(scene?.grid?.size)||100;
+ if(!observer||![observer.x,observer.y,angle].every(Number.isFinite))return Infinity;
+ const dirX=Math.cos(angle),dirY=Math.sin(angle);
+ let firstOcclusion=Infinity;
+ for(const region of all(scene?.regions)){
+  const fog=region?.flags?.[SYS]?.nativeEnvironment;
+  if(fog?.kind!=='fog'||!fog.center||!(Number(fog.radius)>0))continue;
+  const radius=Number(fog.radius)*grid;
+  const ox=observer.x-Number(fog.center.x),oy=observer.y-Number(fog.center.y);
+  const projection=-(ox*dirX+oy*dirY);
+  const perpendicularSquared=ox*ox+oy*oy-projection*projection;
+  const remaining=radius*radius-perpendicularSquared;
+  if(remaining<=1e-7)continue; // Tangency is not an obscured path.
+  const offset=Math.sqrt(Math.max(0,remaining));
+  const near=projection-offset,far=projection+offset;
+  if(far<=0)continue;
+  const limit=Number.isFinite(Number(fog.visibilitySpaces))&&Number(fog.visibilitySpaces)>0?Number(fog.visibilitySpaces):FOG_SIGHT_SPACES;
+  firstOcclusion=Math.min(firstOcclusion,Math.max(limit*grid,Math.max(0,near))); 
+ }
+ return firstOcclusion;
+}
+/** True if the sight ray to a target passes through fog AND the target
+ * lies beyond the allowed 10-space visibility horizon.
+ * Unaffected rays continue using Foundry's normal walls/light/vision.
+ */
+export function fogSightBlocked(scene,source,target){
+ const a=tokenCenter(source,scene),b=tokenCenter(target,scene);
+ if(!a||!b)return false;
+ const dx=b.x-a.x,dy=b.y-a.y,length=Math.hypot(dx,dy);
+ const grid=Number(scene?.grid?.size)||100;
+ const start=fogRayOcclusionStart(scene,a,Math.atan2(dy,dx));
+ return start<length-1e-5;
+}

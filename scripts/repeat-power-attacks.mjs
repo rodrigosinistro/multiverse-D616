@@ -13,8 +13,11 @@ import { chooseSmartTargets } from './smart-targets.mjs';
 import { rollSignature } from './multi-target-combat.mjs';
 import { getMarvelOutcome, normalizeConditionDefense } from './power-conditions.mjs';
 import { calculatePowerDamage } from './power-fantastic-damage.mjs';
+import {hitNRunGrant,HIT_N_RUN_CREDIT} from './native-power-hit-n-run-movement.mjs';
+import {actorMovementForAction} from './combat/turn-tracker-core.mjs';
 const SYS='multiverse-d616';
 const LOOP_NAMES=Object.freeze(['Unstoppable Assault','Unrelenting Smash']);
+const STOPPING_POWER='Stopping Power';
 const HOLD_NAMES=Object.freeze(['Hellfire Chains','Coiling Crush']);
 const pending=new Set();
 const list=c=>Array.from(c?.contents??c?.values?.()??c??[]);
@@ -61,6 +64,72 @@ function contextForNewRoll(actor,item,token,targets){
    movementAtRoll:state?Number(state.movementUsed??0):null};
 }
 export function originalRepeatContext(item,actor,targets,token){return contextForNewRoll(actor,item,token,targets);}
+/** v214: bounded original target for Stopping Power. The extra shot is earned
+ * only after a REAL Fantastic hit has damage confirmed by the Narrator. */
+export function hitNRunOriginalContext(item,targets,combat=globalThis.game?.combat){
+ if(item?.type!=='power'||item.name!=='Hit n Run'||item.system?.powerSet!=='Melee Weapons'||
+    !combat?.started||targets?.length!==1||!targets[0]?.uuid)return null;
+ return {version:1,combatId:combat.id,round:Number(combat.round),turn:Number(combat.turn),
+   targetUuid:targets[0].uuid};
+}
+export function stoppingPowerOriginalContext(item,targets,combat=globalThis.game?.combat){
+ if(item?.type!=='power'||item.name!==STOPPING_POWER||item.system?.powerSet!=='Ranged Weapons'||
+    !combat?.started||targets?.length!==1||!targets[0]?.uuid)return null;
+ return {version:1,combatId:combat.id,round:Number(combat.round),
+   targetUuid:targets[0].uuid};
+}
+export function stoppingPowerConfirmed({source,damageMessage,action,results}={}){
+ const context=source?.getFlag?.(SYS,'stoppingPower');
+ if(!context||context.version!==1||!context.targetUuid||source?.getFlag?.(SYS,'stoppingPowerConsumed'))return false;
+ if(action==='heal'||!['full','half'].includes(action))return false;
+ const snap=damageMessage?.getFlag?.(SYS,'damageApplication');
+ if(snap?.sourceMessageId!==source?.id||snap?.rollSignature!==rollSignature(source?.rolls?.[0]))return false;
+ const entries=list(snap.entries);
+ const entry=entries.find(e=>e.targetUuid===context.targetUuid);
+ if(!entry||entry.hit===false||!(entry.fantastic===true||(entry.fantastic==null&&snap.isFantastic===true)))return false;
+ // A confirmed strike which did not actually hurt the target cannot unlock a new shot.
+ return list(results).some(r=>r.targetUuid===context.targetUuid&&Number(r.delta)>0&&!r.heal&&!r.blocked);
+}
+/** The follow-up uses the same ordinary Marvel attack roll and GM damage
+ * confirmation card, but charges no new Focus nor Standard Action. */
+export function stoppingPowerFollowUpEligibility({source,actor,item,scene,combat,trigger,target}={}){
+ if(!source?.id||!actor||!item||!scene?.id||!combat?.started||!trigger?.confirmed)
+   return {ok:false,reason:'Ataque original ainda não foi confirmado.'};
+ if(item.type!=='power'||item.name!==STOPPING_POWER||item.system?.powerSet!=='Ranged Weapons')
+   return {ok:false,reason:'Poder Stopping Power indisponível.'};
+ if(!isOwner(actor))return {ok:false,reason:'Sem permissão para usar o poder.'};
+ const snap=source.getFlag?.(SYS,'stoppingPower');
+ if(!snap||snap.combatId!==combat.id||Number(snap.round)!==Number(combat.round) ||
+    trigger.rollSignature!==rollSignature(source.rolls?.[0]))
+   return {ok:false,reason:'O ataque adicional só pode ocorrer na mesma rodada e com o dado confirmado.'};
+ if(source.getFlag?.(SYS,'stoppingPowerConsumed'))return {ok:false,reason:'Este ataque adicional já foi utilizado.'};
+ if(!target?.actor||target.uuid!==snap.targetUuid||target.parent?.id!==scene.id)
+   return {ok:false,reason:'O segundo disparo deve atingir o mesmo alvo, na mesma cena.'};
+ return {ok:true};
+}
+export async function stoppingPowerExtraShot(source,{createRoll=makeRoll}={}){
+ const {scene,actor,item}=speakerInfo(source);
+ const context=source?.getFlag?.(SYS,'stoppingPower');
+ const trigger=source?.getFlag?.(SYS,'stoppingPowerReady');
+ const target=list(scene?.tokens).find(t=>t.uuid===context?.targetUuid);
+ const check=stoppingPowerFollowUpEligibility({source,scene,actor,item,combat:currentCombat(),trigger,target});
+ if(!check.ok)throw Error(check.reason);
+ const key=`stopping:${source.id}`;
+ if(pending.has(key))throw Error('Ataque adicional já está sendo processado.');
+ pending.add(key);let marked=false;
+ try{
+   // Mark before publication; a second client should not be allowed to start
+   // another extra shot using an already consumed confirmed Fantastic hit.
+   await source.setFlag(SYS,'stoppingPowerConsumed',true);marked=true;
+   const card=await createRoll(item,source,[target],{ability:'agl',defense:'agl',
+     label:'Stopping Power — disparo adicional gratuito',
+     extras:{stoppingPowerExtra:{version:1,originAttackMessageId:source.id}},damageType:'health'});
+   if(!card?.id)throw Error('O segundo ataque não foi publicado no chat.');
+   return card;
+ }catch(error){if(marked)try{await source.unsetFlag(SYS,'stoppingPowerConsumed');}catch(e){console.error('[D616] Stopping Power: estorno falhou',e);}throw error;
+ }finally{pending.delete(key);}
+}
+
 export function repeatEligibility({item,chain,combat,combatant,actor,state,targets}={}){
  if(!automationEnabled('extraAttacks',undefined,item?.name))return {ok:false,reason:'Repetição desativada pelo Mestre.'};
  if(!LOOP_NAMES.includes(item?.name)||!chain)return {ok:false,reason:'Não é uma sequência de ataques repetidos.'};
@@ -298,6 +367,64 @@ export async function confirmHeldHellfireHealthDamage(damageMessage,action,resul
 }
 
 /** Only the Narrator's actual DAMAGE confirmation unlocks a repeat. */
+/** GM-confirms the original Melee hit and grants half Run Speed without
+ * consuming standard Movement. Manual movement still uses the usual token tool. */
+export async function confirmHitNRunDamage(damageMessage,action,results){
+ if(!game.user?.isGM||action==='heal')return false;
+ const sourceId=damageMessage?.getFlag?.(SYS,'sourceMessageId');
+ const source=sourceId?game.messages?.get?.(sourceId):null;
+ const snap=source?.getFlag?.(SYS,'hitNRun');
+ if(!snap||snap.version!==1||source.getFlag(SYS,'hitNRunGranted'))return false;
+ const result=damageMessage?.getFlag?.(SYS,'damageApplication');
+ if(!result||result.sourceMessageId!==source?.id||result.rollSignature!==rollSignature(source.rolls?.[0])||
+   !['full','half'].includes(action)||!list(result.entries).some(e=>e.targetUuid===snap.targetUuid&&e.hit!==false)||
+   !list(results).some(r=>r.targetUuid===snap.targetUuid&&!r.heal&&!r.blocked))return false;
+ const {actor,item}=speakerInfo(source),combat=currentCombat();
+ if(item?.name!=='Hit n Run'||item.type!=='power'||item.system?.powerSet!=='Melee Weapons'||!actor||
+   combat?.id!==snap.combatId||Number(combat.round)!==Number(snap.round)||Number(combat.turn)!==Number(snap.turn))return false;
+ const speakerToken=source.speaker?.token;
+ const matching=list(combat.combatants).filter(c=>c.tokenId===speakerToken&&(c.actor?.id===actor.id||c.actor?.uuid===actor.uuid));
+ const c=matching.length===1?matching[0]:null;
+ const move=hitNRunGrant({combat,combatant:c,runSpeed:actorMovementForAction(actor,'run').maximum,
+   sourceMessageId:source.id});
+ if(!move)return false;
+ const before=c.getFlag?.(SYS,HIT_N_RUN_CREDIT);
+ await source.setFlag(SYS,'hitNRunGranted',true);
+ try{
+   // The current unspent credit is not stacked if another effect already
+   // granted free movement in the same turn.
+   if(!before||Number(before.remaining)<move.remaining)
+     await c.setFlag(SYS,HIT_N_RUN_CREDIT,move);
+   await ChatMessage.create({speaker:source.speaker,
+     content:`<p><b>Hit n Run — acerto confirmado!</b> O personagem ganhou até <b>${move.remaining} espaços de movimento gratuito</b> (metade da Run Speed). O rastreador descontará esse crédito primeiro no próximo deslocamento deste turno. O Edge do ataque já veio do Item original e não foi duplicado.</p>`,
+     flags:{[SYS]:{hitNRunMovementGranted:{sourceMessageId:source.id,combatantId:c.id,maximum:move.remaining}}}});
+ }catch(error){
+   try{await source.unsetFlag?.(SYS,'hitNRunGranted');}catch{}
+   try{if(before)await c.setFlag(SYS,HIT_N_RUN_CREDIT,before);else await c.unsetFlag?.(SYS,HIT_N_RUN_CREDIT);}catch{}
+   throw error;
+ }
+ return true;
+}
+
+export async function confirmStoppingPowerDamage(damageMessage,action,results){
+ if(!game.user?.isGM)return false;
+ const sourceId=damageMessage?.getFlag?.(SYS,'sourceMessageId');
+ const source=sourceId?game.messages?.get?.(sourceId):null;
+ if(!stoppingPowerConfirmed({source,damageMessage,action,results}))return false;
+ if(source.getFlag(SYS,'stoppingPowerReady'))return false;
+ const signature=rollSignature(source.rolls?.[0]);
+ const confirmed={confirmed:true,damageMessageId:damageMessage.id,rollSignature:signature};
+ await source.setFlag(SYS,'stoppingPowerReady',confirmed);
+ try{
+   const card=await ChatMessage.create({speaker:source.speaker,
+     content:'<div class="m616-followup-card"><b>Stopping Power — segundo disparo disponível!</b><p>O Mestre confirmou dano de um Sucesso Fantástico. O personagem pode disparar novamente contra o MESMO alvo, sem nova Ação Padrão nem custo adicional de Focus. A nova rolagem terá seu próprio card e confirmação de dano.</p></div>',
+     flags:{[SYS]:{stoppingPowerFollowUpReady:{sourceMessageId:source.id,damageMessageId:damageMessage.id,
+       rollSignature:signature}}}});
+   await source.setFlag(SYS,'stoppingPowerReady',{...confirmed,followUpCardId:card?.id??null});
+ }catch(error){await source.unsetFlag(SYS,'stoppingPowerReady');throw error;}
+ return true;
+}
+
 export async function confirmRepeatedAttackDamage(damageMessage,action,results){
  if(!automationEnabled('extraAttacks')||action==='heal'||!game.user?.isGM)return false;
  const sourceId=damageMessage?.getFlag?.(SYS,'sourceMessageId');
@@ -331,6 +458,28 @@ export async function confirmRepeatedAttackDamage(damageMessage,action,results){
  return true;
 }
 export function installRepeatPowerHooks(){
+ Hooks.on('renderChatMessageHTML',(message,html)=>{
+   if(!(html instanceof HTMLElement))return;
+   const grant=message.getFlag?.(SYS,'stoppingPowerFollowUpReady');
+   if(!grant)return;
+   const source=game.messages?.get?.(grant.sourceMessageId);
+   const {item,actor,scene}=source?speakerInfo(source):{};
+   const target=list(scene?.tokens).find(t=>t.uuid===source?.getFlag?.(SYS,'stoppingPower')?.targetUuid);
+   const eligible=stoppingPowerFollowUpEligibility({source,item,actor,scene,combat:currentCombat(),
+     trigger:source?.getFlag?.(SYS,'stoppingPowerReady'),target});
+   if(!eligible.ok||!isOwner(actor)||source.getFlag(SYS,'stoppingPowerReady')?.damageMessageId!==grant.damageMessageId)return;
+   if(html.querySelector('.m616-stopping-extra'))return;
+   const b=document.createElement('button');b.type='button';b.className='m616-stopping-extra';
+   b.dataset.messageId=source.id;b.textContent='↪ Stopping Power: segundo disparo (grátis)';
+   (html.querySelector('.message-content')??html).appendChild(b);
+ });
+ document.addEventListener('click',async event=>{
+   const b=event.target?.closest?.('.m616-stopping-extra');if(!b)return;
+   event.preventDefault();event.stopImmediatePropagation();b.disabled=true;
+   try{const source=game.messages?.get?.(b.dataset.messageId);if(source)await stoppingPowerExtraShot(source);}
+   catch(error){ui.notifications?.warn?.(`Stopping Power: ${error.message}`);}
+   finally{b.disabled=false;}
+ },true);
  Hooks.on('renderChatMessageHTML',(message,html)=>{
    if(!(html instanceof HTMLElement))return;
    // The follow-up control belongs UNDER the already confirmed DAMAGE card.

@@ -1,3 +1,4 @@
+import {suppressFantastic} from './power-control-rules.mjs';
 import { teamFantasticForTarget } from './team-maneuvers-effects.mjs';
 import { automationEnabled } from './automation-settings.mjs';
 import {hasEquipmentPermanentPower} from './equipment-permanent-effects.mjs';
@@ -19,8 +20,14 @@ export const POWER_CONDITIONS = Object.freeze({
   'Disrupt Nerves': [C('stunned','success','round'), C('prone','fantastic')],
   'Flare': [C('blinded','success','turn')],
   'Dazzle': [C('blinded','success','turn')],
+  // The attack is available ONLY on turns AFTER the Valtorr fog is created.
+  // A Fantastic success doubles the default damage and blinds for one turn.
+  'Vapors of Valtorr': [C('blinded','fantastic','turn')],
   // Deafen succeeds without damage; its Fantastic additionally opens the normal DAMAGE card.
   'Deafen': [C('deafened','success','turn')],
+  // Hex Bolt is a Health attack; only a GM-confirmed Fantastic places a
+  // one-round Trouble effect. Keep the effect scoped to the original roll.
+  'Hex Bolt': [C(null,'fantastic','round',{label:'Desvantagem — Hex Bolt'})],
   'Wisecracker': [C('stunned','fantastic','round')],
   'Razorwebs': [C('bleeding','fantastic',null,{requiresDamage:true})],
   'Shield Bash': [C('prone','fantastic')],
@@ -57,6 +64,7 @@ export const POWER_CONDITIONS = Object.freeze({
   'Hellfire Chains': [C('grabbed','fantastic',null,{concentration:true}), C('paralyzed','fantastic',null,{concentration:true})],
   'Ground-Shaking Stomp': [C('prone','fantastic')],
   'Grappling Technique': [C('grabbed'), C('pinned','fantastic')],
+  'Body Sphere': [C('grabbed','success',null,{concentration:true}), C('pinned','fantastic',null,{concentration:true})],
   'Spin & Throw': [C('prone'), C('pinned','fantastic'), C('stunned','fantastic','turn')],
   'Leaping Leglock': [C('grabbed'), C('stunned','fantastic','turn'), C('prone','success',null,{self:true})],
   // v0.2.45 — explicit attack consequences, reconciled only AFTER the GM
@@ -75,6 +83,7 @@ export const POWER_CONDITIONS = Object.freeze({
   'Venom Blast': [C('stunned','fantastic','round',{requiresDamage:true,damageCategory:'health'})],
   'Point-Blank Parry': [C('bleeding','fantastic')],
   'Telekinetic Toss': [C('prone','fantastic')],
+  'Quick Toss': [C('prone','fantastic')],
   'Flying Double Kick': [C('prone','fantastic')],
   'Dance of Death': [C('bleeding','fantastic')],
   'Orchestra of Overkill': [C('bleeding','fantastic')],
@@ -100,6 +109,17 @@ export const POWER_CONDITIONS = Object.freeze({
   'Return Fire': [C('stunned','fantastic','turn',{requiresDamage:true,damageCategory:'focus'})],
 });
 const ICONS = Object.freeze({stunned:'stunned', prone:'prone', blinded:'blinded', bleeding:'bleeding', paralyzed:'paralyzed', pinned:'restrained', grabbed:'grappled', deafened:'deafened'});
+const VENOM_SWORD_RULES = Object.freeze([C('stunned','fantastic','turn',{requiresDamage:true,damageCategory:'health'})]);
+export function venomSwordConditionRules(outcome,confirmedDamage){
+  if(!outcome?.success||!outcome?.fantastic)return [];
+  return filterDamageDependentRules(VENOM_SWORD_RULES,confirmedDamage);
+}
+const swordAttackFromMessage=(message,item)=>{
+  const snap=message?.getFlag?.(SYSTEM,'nativeVenomSword');
+  const marker=item?.flags?.[SYSTEM]?.nativeVenomSwordWeapon;
+  return snap?.version===1&&item?.type==='weapon'&&item.id===snap.weaponId&&
+    marker?.version===1&&marker.sourceItemId===snap.sourcePowerId;
+};
 const LABELS = Object.freeze({stunned:'Atordoado', prone:'Caído', blinded:'Cego', bleeding:'Sangrando', paralyzed:'Paralisado', pinned:'Imobilizado', grabbed:'Agarrado', deafened:'Surdo', ablaze:'Em Chamas', surprised:'Surpreso', poisoned:'Envenenado', corroding:'Corroído', frightened:'Amedrontado'});
 // These are damaging attacks.  Do not apply their status effects until the
 // Narrator confirms damage on the damage card.  Non-damaging checks, holds,
@@ -113,9 +133,9 @@ export const DAMAGE_CONFIRMATION_POWERS = new Set([
   'Smash','Reverse Punch','Telekinetic Attack','Disrupt Person',
   'Bolts of Balthakk','Focused Strike','Mental Punch','Telepathic Blast',
   'Venom Bash','Venom Blast','Point-Blank Parry','Telekinetic Toss',
-  'Flying Double Kick','Dance of Death','Orchestra of Overkill','Unrelenting Smash',
+  'Quick Toss','Flying Double Kick','Dance of Death','Orchestra of Overkill','Unrelenting Smash',
   'Headshot','Penance Stare','Double Tap','Growing Attack','Snap Shooting','Spider-Strike',
-  'Crushing Grip','Telekinetic Crush','Suppressive Fire','Covering Fire','Return Fire',
+  'Hex Bolt','Vapors of Valtorr','Crushing Grip','Telekinetic Crush','Suppressive Fire','Covering Fire','Return Fire',
 ]);
 export function mustConfirmPowerDamage(power) {return DAMAGE_CONFIRMATION_POWERS.has(String(power??'').trim());}
 // Damage Reduction prevents damage, not necessarily an effect explicitly
@@ -188,10 +208,11 @@ export function getMarvelOutcome(roll, defense, {message=null,targetActor=null}=
     face(pool.rolls[0])===6 && face(pool.rolls[2])===6 &&
     !roll.options?.forceMarvelM && !roll.options?.ultimateFantasticApplied &&
     !roll.options?.combatTrickery;
-  const ultimate = naturalPool || hasNaturalUltimateFantastic(roll, fantastic);
-  const adjustment=teamFantasticForTarget(roll,message,targetActor);
+  const dampened=suppressFantastic(roll,message);
+  const ultimate = !dampened&&(naturalPool || hasNaturalUltimateFantastic(roll, fantastic));
+  const adjustment=dampened?null:teamFantasticForTarget(roll,message,targetActor);
   const outcome=checkPowerOutcome(Number(roll.total)+(adjustment?.delta??0), defense,
-    {fantastic:fantastic||Boolean(adjustment), ultimate});
+    {fantastic:!dampened&&(fantastic||Boolean(adjustment)), ultimate});
   // Carry the natural 6-M-6 signal through GM target adjudication. It is an
   // unconditional success, not a result requiring Trouble/target decisions.
   return outcome && ultimate ? {...outcome,ultimate:true} : outcome;
@@ -299,7 +320,12 @@ export async function syncPowerConditions(message){
   if(message.getFlag?.(SYSTEM,'skipPowerConditions')===true)return;
   const {actor:sourceActor,token:casterToken}=await sourceActorFromMessage(message);
   const item=sourceActor?.items?.get?.(message.getFlag(SYSTEM,'itemId'));
-  if(item?.type!=='power'||!POWER_CONDITIONS[item.name] || !automationEnabled('powerConditions',undefined,item.name))return;
+  const venomSword=swordAttackFromMessage(message,item);
+  const powerName=venomSword?'Venom Sword':item?.name;
+  if(!venomSword && (item?.type!=='power'||!POWER_CONDITIONS[powerName]))return;
+  if(venomSword){
+    if(!automationEnabled('powerConditions',undefined,'Venom Sword'))return;
+  }else if(!automationEnabled('powerConditions',undefined,item.name))return;
   const refs=message.getFlag(SYSTEM,'targets');
   if(!Array.isArray(refs)||!refs.length)return;
   const roll=message.rolls[0];
@@ -311,8 +337,8 @@ export async function syncPowerConditions(message){
   const damageConfirmation=message.getFlag(SYSTEM,'powerConditionDamage');
   // Values derived only from this roll/card are shared across target evaluations.
   // Never cache them between messages: rerolls and GM decisions must re-evaluate.
-  const requiresConfirmedDamage=mustConfirmPowerDamage(item.name);
-  const powerRules=POWER_CONDITIONS[item.name]??[];
+  const requiresConfirmedDamage=venomSword||mustConfirmPowerDamage(powerName);
+  const powerRules=venomSword?VENOM_SWORD_RULES:(POWER_CONDITIONS[powerName]??[]);
   // Elemental Prison traps on a regular success immediately. Its Fantastic
   // damage and additional elemental effect wait for GM damage confirmation.
   const prisonImmediate=item.name==='Elemental Prison';
@@ -348,10 +374,13 @@ export async function syncPowerConditions(message){
     const key=normalizeConditionDefense(defenseKey,token.actor);
     const defense=tn||Number(token.actor.system?.abilities?.[key]?.defense??0);
     if(!Number.isFinite(defense)||defense<=0)continue;
-    const outcome=adjudicateTargetOutcome(getMarvelOutcome(roll,defense,
-      {message,targetActor:token.actor}),{
-      requiresReview:mixed,
-      decision:decisions[token.uuid],
+    const toss=message.getFlag?.(SYSTEM,'nativeQuickToss');
+    const isThrown=toss?.version===1&&toss.thrownUuid===token.uuid;
+    const baseOutcome=isThrown?{success:true,fantastic:false,label:'ARREMESSADO',pending:false}:
+      getMarvelOutcome(roll,defense,{message,targetActor:token.actor});
+    const outcome=adjudicateTargetOutcome(baseOutcome,{
+      requiresReview:mixed&&!isThrown,
+      decision:isThrown?null:decisions[token.uuid],
     });
     if(outcome.pending){
       await syncActorFixed(token.actor,token.uuid,message,sourceActor,casterToken,[],item.name,concentration);
@@ -366,14 +395,14 @@ export async function syncPowerConditions(message){
       await syncActorFixed(token.actor,token.uuid,message,sourceActor,casterToken,[],item.name,concentration);
       continue;
     }
-    const rawRules=conditionsForOutcome(item.name,outcome,{self:false});
+    const rawRules=venomSword?venomSwordConditionRules(outcome,confirmedDamage.get(token.uuid)):conditionsForOutcome(powerName,outcome,{self:false});
     const rules=filterDamageDependentRules(rawRules,confirmedDamage.get(token.uuid));
     // Original indices must be stable across normal/fantastic reconciliation.
     const indexedRules=powerRules.flatMap((r,i)=>rules.includes(r)?[{...r,_id:i}]:[]);
     // Never apply fantastic elemental consequences before the damage card.
     if((!requiresConfirmedDamage || confirmedDamage.has(token.uuid)))
       indexedRules.push(...elementalSpecialForPower(item,sourceActor,outcome,indexedRules));
-    await syncActorFixed(token.actor,token.uuid,message,sourceActor,casterToken,indexedRules,item.name,concentration);
+    await syncActorFixed(token.actor,token.uuid,message,sourceActor,casterToken,indexedRules,powerName,concentration);
     if(outcome?.success) selfRules.push(...conditionsForOutcome(item.name,outcome,{self:true}));
   }
   if(powerRules.some(r=>r.self)){
@@ -486,7 +515,9 @@ export async function confirmPowerDamageFromCard(damageMessage, action, results)
   if(!original?.rolls?.length)return false;
   const {actor}=await sourceActorFromMessage(original);
   const item=actor?.items?.get?.(original.getFlag(SYSTEM,'itemId'));
-  if(!item || !mustConfirmPowerDamage(item.name) || !automationEnabled('powerConditions',undefined,item.name))return false;
+  const powerName=swordAttackFromMessage(original,item)?'Venom Sword':item?.name;
+  if(!item || !(powerName==='Venom Sword'||mustConfirmPowerDamage(powerName)) ||
+      !automationEnabled('powerConditions',undefined,powerName))return false;
   const safeResults=results.filter(r=>!r.heal && !r.blocked && r.targetUuid).map(r=>({
     targetUuid:r.targetUuid,delta:Math.max(0,Number(r.delta)||0),
     category:String(r.category??'').trim().toLowerCase(),

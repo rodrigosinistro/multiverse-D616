@@ -64,7 +64,7 @@ test('v0.2.123: both Banging Heads are damaging and retain their 1x Fantastic ru
 });
 
 test('v0.2.123: resolved classifications clear the 12-candidate review queue, source unchanged',()=>{
- assert.equal(Object.keys(POWER_ROLL_RULES).length,67);
+ assert.equal(Object.keys(POWER_ROLL_RULES).length,72);
  const {totals,findings}=auditPowerCatalog(items);
  assert.equal(totals.records,398);
  assert.equal(findings.filter(f=>f.code==='attack-kind').length,0);

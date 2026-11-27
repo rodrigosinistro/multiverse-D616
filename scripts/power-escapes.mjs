@@ -13,6 +13,7 @@ export const POWER_ESCAPE_RULES=Object.freeze({
   'Telekinetic Grab': {ability:'mle',tn:20, statuses:['grabbed','pinned']},
   'Webgrabbing': {ability:'mle',tn:16, statuses:['grabbed','pinned']},
   'Webcasting': {ability:'mle',tn:16, statuses:['paralyzed','pinned']},
+  'Webtrapping': {ability:'mle',tn:16, statuses:['paralyzed']},
   'Crimson Bands of Cyttorak': {ability:'mle',tn:20,statuses:['paralyzed','pinned']},
   'Hellfire Chains': {ability:'mle',tn:20,statuses:['grabbed','paralyzed']},
   // The source specifies an opposed Melee test, not a fixed TN.

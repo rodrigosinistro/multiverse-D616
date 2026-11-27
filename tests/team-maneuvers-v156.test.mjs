@@ -46,7 +46,7 @@ test('GM grants one round-scoped Edge to participants, not to bystanders or ordi
  assert.equal(attack.edgeMode,1);
  assert.equal(attack.net,1);
  assert.equal(attack.sources[0].source,'Manobra de Equipe: Ofensiva — Nível 1');
- assert.equal(attack.autoCount,1);
+ assert.equal(attack.autoCount,0);
  assert.equal(resolveConditionEdges({actor:actors[0],ability:'agl',attack:false}).edgeMode,0);
  assert.match(messages[0].content,/Todos os participantes recebem 1 Edge/);
  assert.doesNotMatch(messages[0].content,/The team members/);

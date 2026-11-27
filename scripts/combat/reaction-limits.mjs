@@ -1,3 +1,4 @@
+import {nativeReactionScopes} from './native-scoped-reactions.mjs';
 import {passivePowerBenefits} from '../custom-automations.mjs';
 /**
  * Multiverse-D616: resource maximums derived from owned traits.
@@ -24,8 +25,11 @@ export function hasCombatReflexes(actor) {
 }
 
 /** Combat Reflexes grants one additional Reaction each round. */
-export function actorReactionMaximum(actor) {
+export function genericReactionMaximum(actor) {
   return (hasCombatReflexes(actor) ? 2 : 1) + passivePowerBenefits(actor).extraReactions;
+}
+export function actorReactionMaximum(actor) {
+  return genericReactionMaximum(actor) + nativeReactionScopes(actor).length;
 }
 
 /**

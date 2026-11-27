@@ -47,11 +47,13 @@ function mock(name='Rico-Shield',fantastic=true){
  }}};
  return {item,sourceActor,flags,scene,original,combat,attackToken,t1,t2,t3,created,
   ready:()=>({rollSignature:rollSignature(original.rolls[0]),targetUuid:t1.uuid,confirmed:true}),
-  confirmMessage:()=>({getFlag(_ns,key){return {
-   sourceMessageId:original.id,damageApplication:{rollSignature:rollSignature(original.rolls[0])}}[key]}})};
+  confirmMessage:()=>({id:'dmg0',getFlag(_ns,key){return {
+   sourceMessageId:original.id,damageApplication:{sourceMessageId:original.id,rollSignature:rollSignature(original.rolls[0]),
+    entries:[{targetUuid:t1.uuid,hit:true,fantastic:true}]}}[key]}})};
 }
 test('auditoria: Rico-Shield e Elemental Ricochet repetem em Fantástico; poderes de gasto adicional são distintos',()=>{
- for(const n of ['Rico-Shield','Elemental Ricochet'])assert.ok(isRicochetPower({type:'power',name:n}));
+ for(const n of ['Rico-Shield','Elemental Ricochet'])assert.ok(isRicochetPower({type:'power',name:n,system:fixturePower(n).system}));
+ assert.equal(isRicochetPower({type:'power',name:'Elemental Ricochet',system:{powerSet:'Shield Bearer'}}),false);
  for(const n of ['Unstoppable Assault','Unrelenting Smash','Hellfire Chains'])assert.equal(isRicochetPower({type:'power',name:n}),false);
  assert.equal(resolvePowerRoll(fixturePower('Elemental Ricochet')).attack,true,'legado attack:false corrigido apenas em runtime');
 });
@@ -61,19 +63,41 @@ test('primeiro ataque registra alvo e trajetória, sem fabricar alvo extra',()=>
  assert.equal(ricoOriginalContext(f.item,f.sourceActor,[],f.attackToken,f.scene,canvas.grid),null);
  assert.equal(ricoOriginalContext(f.item,f.sourceActor,[{uuid:f.t1.uuid},{uuid:f.t2.uuid}],f.attackToken,f.scene,canvas.grid),null);
 });
-test('só o Mestre confirma um acerto Fantástico; sem dano confirmado, nenhum botão',async()=>{
+test('só o Mestre confirma o ataque Fantástico resolvido; sem resolução, nenhum botão',async()=>{
  const f=mock();assert.equal(ricoEligibility({source:f.original,actor:f.sourceActor,item:f.item,user:game.user,combat:f.combat}).ok,false);
- assert.equal(await confirmRicoShieldDamage(f.confirmMessage(),'full',[{targetUuid:f.t1.uuid,blocked:false}]),false,'jogador não confirma');
+ assert.equal(await confirmRicoShieldDamage(f.confirmMessage(),'full',[{targetUuid:f.t1.uuid,blocked:false,delta:7}]),false,'jogador não confirma');
  game.user={id:'gm',isGM:true};
- assert.equal(await confirmRicoShieldDamage(f.confirmMessage(),'full',[{targetUuid:f.t1.uuid,blocked:false}]),true);
+ assert.equal(await confirmRicoShieldDamage(f.confirmMessage(),'full',[{targetUuid:f.t1.uuid,blocked:false,delta:7}]),true);
  assert.equal(f.flags.ricoShieldReady.targetUuid,f.t1.uuid);
  assert.equal(ricoEligibility({source:f.original,ready:f.flags.ricoShieldReady,actor:f.sourceActor,item:f.item,user:game.user,combat:f.combat}).ok,true);
 });
-test('falha/fantástico sem acerto/proteção que absorveu bloqueia ricochete',async()=>{
- for(const {total,marvel,blocked} of [{total:21,marvel:2,blocked:false},{total:4,marvel:1,blocked:false},{total:21,marvel:1,blocked:true}]){
+test('falha e sucesso comum não liberam ricochete, mesmo que o dano seja confirmado',async()=>{
+ for(const {total,marvel} of [{total:21,marvel:2},{total:4,marvel:1}]){
   const f=mock();f.original.rolls=[dice(total,marvel)];game.user={id:'gm',isGM:true};
-  assert.equal(await confirmRicoShieldDamage(f.confirmMessage(),'full',[{targetUuid:f.t1.uuid,blocked}]),false);
+  assert.equal(await confirmRicoShieldDamage(f.confirmMessage(),'full',[{targetUuid:f.t1.uuid,blocked:false,delta:7}]),false);
   assert.equal(f.flags.ricoShieldReady,undefined);
+ }
+});
+test('Sucesso Fantástico libera próximo ricochete mesmo quando proteção elimina todo o dano',async()=>{
+ for(const name of ['Elemental Ricochet','Rico-Shield']){
+  for(const defenseResult of [
+   {blocked:true,delta:0,description:'Telekinetic Protection 2 absorveu tudo'},
+   {blocked:false,delta:0,description:'Redução de Dano anulou o dano'},
+   {blocked:false,absorbed:true,delta:0,description:'Energy Absorption ignorou Health'},
+  ]){
+   const f=mock(name);game.user={id:'gm',isGM:true};
+   assert.equal(await confirmRicoShieldDamage(f.confirmMessage(),'full',[
+    {targetUuid:f.t1.uuid,heal:false,...defenseResult}
+   ]),true,`${name} deve ricochetear mesmo quando ${defenseResult.description}`);
+   assert.equal(f.flags.ricoShieldReady.targetUuid,f.t1.uuid);
+   // Idempotência: reconfirmar o mesmo resultado não concede dois ricochetes.
+   assert.equal(await confirmRicoShieldDamage(f.confirmMessage(),'full',[
+    {targetUuid:f.t1.uuid,heal:false,...defenseResult}
+   ]),false);
+   game.user={id:'player',isGM:false};
+   const next=await useRicoShieldBounce(f.original,{targets:[f.t2]});
+   assert.equal(next.getFlag(null,'ricoShield').step,1);
+  }
  }
 });
 test('alcance acumulado, alvos distintos e cena são verificados',()=>{
@@ -88,6 +112,9 @@ test('novo ricochete cria rolagem independente sem novo Focus, ação ou Shield 
  const f=mock();f.flags.ricoShieldReady=f.ready();
  const next=await useRicoShieldBounce(f.original,{targets:[f.t2]});
  assert.equal(f.created.length,1);assert.equal(next.getFlag(null,'ricoShield').step,1);
+ assert.equal(f.created[0].content,undefined,'card de rolagem normal deve renderizar os dados e EDGE/TROUBLE');
+ assert.match(f.created[0].flavor,/Ricochete 1.*novo ataque contra/);
+ assert.match(f.created[0].flavor,/Distância acumulada/);
  assert.equal(next.getFlag(null,'ricoShield').traveledSpaces,2);
  assert.deepEqual(next.getFlag(null,'ricoShield').visited,[f.t1.uuid,f.t2.uuid]);
  assert.equal(next.getFlag(null,'focusSpent'),0);
@@ -121,7 +148,14 @@ test('o botão no card realmente despacha o ricochete; não aparece antes da con
  globalThis.Hooks={on:(event,cb)=>hooks.set(event,cb)};
  globalThis.ui={notifications:{warn(str){throw Error(str)}}};
  const {registerRicoShieldHooks}=await import('../scripts/rico-shield-chain.mjs');
- registerRicoShieldHooks();
+ let pickerCalls=0;
+ registerRicoShieldHooks({chooseTargets:async(item,opts)=>{
+  pickerCalls++;
+  assert.equal(item.name,f.item.name);
+  assert.deepEqual(opts,{force:true,requireTargets:true});
+  game.user.targets=new Set([f.t2]);
+  return true;
+ }});
  hooks.get('renderChatMessageHTML')(f.original,html);
  assert.equal(container.children.length,0,'sem Fantástico confirmado não existe botão');
  f.flags.ricoShieldReady=f.ready();
@@ -129,11 +163,35 @@ test('o botão no card realmente despacha o ricochete; não aparece antes da con
  assert.equal(container.children.length,1);
  const button=container.children[0];assert.equal(button.dataset.messageId,f.original.id);
  assert.match(button.textContent,/Rico-Shield/);
- game.user.targets=new Set([f.t2]);
+ // Even when the old target is marked, the button asks to select a new one.
+ game.user.targets=new Set([f.t1]);
  await listeners.get('click')({target:{closest(selector){return selector==='.m616-rico-follow-up'?button:null}},
    preventDefault(){},stopImmediatePropagation(){}});
+ assert.equal(pickerCalls,1,'a janela de ALVO é aberta no botão do ricochete');
  assert.equal(f.created.length,1,'clicar no botão cria o ataque extra');
  assert.equal(f.flags.ricoShieldConsumed.targetUuid,f.t2.uuid);
+});
+test('cancelar janela de ALVO não rola dados, não consome a cadeia e não gasta Focus',async()=>{
+ const f=mock('Elemental Ricochet');f.flags.ricoShieldReady=f.ready();
+ const hooks=new Map(),listeners=new Map();
+ globalThis.HTMLElement=class {};
+ const body={children:[],appendChild(c){this.children.push(c)}};
+ const html=new HTMLElement();html.querySelector=s=>s==='.message-content'?body:null;
+ globalThis.document={createElement:()=>({dataset:{},disabled:false}),addEventListener:(e,cb)=>listeners.set(e,cb)};
+ globalThis.Hooks={on:(e,cb)=>hooks.set(e,cb)};
+ globalThis.ui={notifications:{warn(str){throw Error(str)}}};
+ const {registerRicoShieldHooks}=await import('../scripts/rico-shield-chain.mjs');
+ let calls=0;
+ registerRicoShieldHooks({chooseTargets:async()=>{calls++;return false}});
+ hooks.get('renderChatMessageHTML')(f.original,html);
+ assert.equal(body.children.length,1);
+ const button=body.children[0];
+ await listeners.get('click')({target:{closest(selector){return selector==='.m616-rico-follow-up'?button:null}},
+  preventDefault(){},stopImmediatePropagation(){}});
+ assert.equal(calls,1);
+ assert.equal(f.created.length,0);
+ assert.equal(f.flags.ricoShieldConsumed,undefined);
+ assert.equal(button.disabled,false);
 });
 test('integração dos pontos de entrada registra confirmação do GM e hook do HUD',()=>{
  const code=(path)=>readFileSync(new URL(path,import.meta.url),'utf8');
@@ -153,16 +211,18 @@ test('cadeia completa: dois Fantásticos confirmados permitem 2 ricochetes; suce
  const f=mock();f.flags.ricoShieldReady=f.ready();
  const second=await useRicoShieldBounce(f.original,{targets:[f.t2]});
  game.user={id:'gm',isGM:true};
- const secondDamage={getFlag(_ns,k){return {sourceMessageId:second.id,
-  damageApplication:{rollSignature:rollSignature(second.rolls[0])}}[k]}};
- assert.equal(await confirmRicoShieldDamage(secondDamage,'full',[{targetUuid:f.t2.uuid,blocked:false}]),true);
+ const secondDamage={id:'damageSecond',getFlag(_ns,k){return {sourceMessageId:second.id,
+  damageApplication:{sourceMessageId:second.id,rollSignature:rollSignature(second.rolls[0]),
+   entries:[{targetUuid:f.t2.uuid,hit:true,fantastic:true}]}}[k]}};
+ assert.equal(await confirmRicoShieldDamage(secondDamage,'full',[{targetUuid:f.t2.uuid,blocked:false,delta:11}]),true);
  game.user={id:'player',isGM:false};
  const third=await useRicoShieldBounce(second,{targets:[f.t3]});
  assert.equal(third.getFlag(null,'ricoShield').step,2);
  assert.equal(third.getFlag(null,'ricoShield').traveledSpaces,3);
  third.rolls=[dice(21,2)];game.user={id:'gm',isGM:true};
- const thirdDamage={getFlag(_ns,k){return {sourceMessageId:third.id,
-  damageApplication:{rollSignature:rollSignature(third.rolls[0])}}[k]}};
- assert.equal(await confirmRicoShieldDamage(thirdDamage,'full',[{targetUuid:f.t3.uuid,blocked:false}]),false);
+ const thirdDamage={id:'damageThird',getFlag(_ns,k){return {sourceMessageId:third.id,
+  damageApplication:{sourceMessageId:third.id,rollSignature:rollSignature(third.rolls[0]),
+   entries:[{targetUuid:f.t3.uuid,hit:true,fantastic:false}]}}[k]}};
+ assert.equal(await confirmRicoShieldDamage(thirdDamage,'full',[{targetUuid:f.t3.uuid,blocked:false,delta:13}]),false);
  assert.equal(third.getFlag(null,'ricoShieldReady'),undefined);
 });
